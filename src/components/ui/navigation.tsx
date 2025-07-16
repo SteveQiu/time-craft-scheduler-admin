@@ -9,9 +9,9 @@ interface NavigationProps {
 
 export function Navigation({ activeTab, onTabChange }: NavigationProps) {
   const navItems = [
+    { id: 'browse', label: 'Browse', icon: Search },
     { id: 'dashboard', label: 'Dashboard', icon: Home },
     { id: 'calendar', label: 'Calendar', icon: Calendar },
-    { id: 'browse', label: 'Browse & Book', icon: Search },
     { id: 'workers', label: 'Workers', icon: Users },
     { id: 'appointments', label: 'Appointments', icon: Clock },
     { id: 'settings', label: 'Settings', icon: Settings },

@@ -4,7 +4,8 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Input } from './ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Search, Filter, Calendar, Clock, User, Phone, Mail } from 'lucide-react';
+import { Checkbox } from './ui/checkbox';
+import { Search, Filter, Calendar, Clock, User, Phone, Mail, Check, X } from 'lucide-react';
 
 interface Appointment {
   id: string;
@@ -23,6 +24,7 @@ interface Appointment {
 export function Appointments() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [selectedAppointments, setSelectedAppointments] = useState<string[]>([]);
 
   const appointments: Appointment[] = [
     {
@@ -112,6 +114,32 @@ export function Appointments() {
     return matchesSearch && matchesStatus;
   });
 
+  const handleSelectAppointment = (appointmentId: string) => {
+    setSelectedAppointments(prev => 
+      prev.includes(appointmentId) 
+        ? prev.filter(id => id !== appointmentId)
+        : [...prev, appointmentId]
+    );
+  };
+
+  const handleSelectAll = () => {
+    setSelectedAppointments(
+      selectedAppointments.length === filteredAppointments.length 
+        ? [] 
+        : filteredAppointments.map(apt => apt.id)
+    );
+  };
+
+  const handleApprove = () => {
+    console.log('Approving appointments:', selectedAppointments);
+    setSelectedAppointments([]);
+  };
+
+  const handleReject = () => {
+    console.log('Rejecting appointments:', selectedAppointments);
+    setSelectedAppointments([]);
+  };
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -119,16 +147,42 @@ export function Appointments() {
           <h2 className="text-3xl font-bold text-foreground">Appointments</h2>
           <p className="text-muted-foreground">Manage all your bookings</p>
         </div>
-        <Button className="flex items-center space-x-2">
-          <Calendar className="h-4 w-4" />
-          <span>New Appointment</span>
-        </Button>
+        <div className="flex items-center space-x-2">
+          {selectedAppointments.length > 0 && (
+            <>
+              <Button 
+                variant="default" 
+                className="flex items-center space-x-2"
+                onClick={handleApprove}
+              >
+                <Check className="h-4 w-4" />
+                <span>Approve ({selectedAppointments.length})</span>
+              </Button>
+              <Button 
+                variant="destructive" 
+                className="flex items-center space-x-2"
+                onClick={handleReject}
+              >
+                <X className="h-4 w-4" />
+                <span>Reject ({selectedAppointments.length})</span>
+              </Button>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Filters */}
       <Card className="shadow-soft border-card-border">
         <CardContent className="pt-6">
           <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                checked={selectedAppointments.length === filteredAppointments.length && filteredAppointments.length > 0}
+                onCheckedChange={handleSelectAll}
+                className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+              />
+              <span className="text-sm text-muted-foreground">Select all</span>
+            </div>
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
@@ -165,6 +219,11 @@ export function Appointments() {
               <div className="flex flex-col lg:flex-row lg:items-center justify-between space-y-4 lg:space-y-0">
                 {/* Client Info */}
                 <div className="flex items-center space-x-4">
+                  <Checkbox
+                    checked={selectedAppointments.includes(appointment.id)}
+                    onCheckedChange={() => handleSelectAppointment(appointment.id)}
+                    className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                  />
                   <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center">
                     <span className="text-primary-foreground font-semibold">
                       {appointment.clientName.split(' ').map(n => n[0]).join('')}
@@ -212,10 +271,7 @@ export function Appointments() {
                     </Badge>
                     <div className="flex space-x-1">
                       <Button variant="outline" size="sm">
-                        Edit
-                      </Button>
-                      <Button variant="outline" size="sm">
-                        Cancel
+                        View
                       </Button>
                     </div>
                   </div>

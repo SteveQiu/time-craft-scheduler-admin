@@ -87,7 +87,7 @@ export function Calendar() {
         <h2 className="text-3xl font-bold text-foreground">Calendar</h2>
         <Button className="flex items-center space-x-2">
           <Plus className="h-4 w-4" />
-          <span>New Appointment</span>
+          <span>List Opening</span>
         </Button>
       </div>
 
