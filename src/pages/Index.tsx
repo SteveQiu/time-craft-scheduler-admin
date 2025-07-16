@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Navigation } from '../components/ui/navigation';
 import { Dashboard } from '../components/Dashboard';
 import { Calendar } from '../components/Calendar';
+import { BookingBrowse } from '../components/BookingBrowse';
 import { Workers } from '../components/Workers';
 import { Appointments } from '../components/Appointments';
 
@@ -14,6 +15,8 @@ const Index = () => {
         return <Dashboard />;
       case 'calendar':
         return <Calendar />;
+      case 'browse':
+        return <BookingBrowse />;
       case 'workers':
         return <Workers />;
       case 'appointments':

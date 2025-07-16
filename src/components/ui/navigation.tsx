@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar, Users, Settings, Home, Clock } from 'lucide-react';
+import { Calendar, Users, Settings, Home, Clock, Search } from 'lucide-react';
 import { Button } from './button';
 
 interface NavigationProps {
@@ -11,6 +11,7 @@ export function Navigation({ activeTab, onTabChange }: NavigationProps) {
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Home },
     { id: 'calendar', label: 'Calendar', icon: Calendar },
+    { id: 'browse', label: 'Browse & Book', icon: Search },
     { id: 'workers', label: 'Workers', icon: Users },
     { id: 'appointments', label: 'Appointments', icon: Clock },
     { id: 'settings', label: 'Settings', icon: Settings },
