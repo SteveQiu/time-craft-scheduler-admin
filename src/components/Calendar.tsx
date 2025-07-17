@@ -348,19 +348,21 @@ export function Calendar() {
               </Select>
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="duration">Duration</Label>
-              <Select value={newOpening.duration.toString()} onValueChange={(value) => setNewOpening({...newOpening, duration: parseInt(value)})}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select duration" />
-                </SelectTrigger>
-                <SelectContent>
-                  {generateDurationOptions().map((option) => (
-                    <SelectItem key={option.value} value={option.value.toString()}>{option.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {!newOpening.multipleSlots && (
+              <div className="space-y-2">
+                <Label htmlFor="duration">Duration</Label>
+                <Select value={newOpening.duration.toString()} onValueChange={(value) => setNewOpening({...newOpening, duration: parseInt(value)})}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select duration" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {generateDurationOptions().map((option) => (
+                      <SelectItem key={option.value} value={option.value.toString()}>{option.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             <div className="space-y-2">
               <Label htmlFor="worker">Worker</Label>

@@ -5,7 +5,7 @@ import { Badge } from './ui/badge';
 import { Input } from './ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Checkbox } from './ui/checkbox';
-import { Search, Filter, Calendar, Clock, User, Phone, Mail, Check, X } from 'lucide-react';
+import { Search, Filter, Calendar, Clock, User, Phone, Mail, Check, X, CheckCircle } from 'lucide-react';
 
 interface Appointment {
   id: string;
@@ -25,8 +25,7 @@ export function Appointments() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedAppointments, setSelectedAppointments] = useState<string[]>([]);
-
-  const appointments: Appointment[] = [
+  const [appointments, setAppointments] = useState<Appointment[]>([
     {
       id: '1',
       clientName: 'John Doe',
@@ -91,7 +90,7 @@ export function Appointments() {
       status: 'cancelled',
       notes: 'Client cancelled due to illness'
     }
-  ];
+  ]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -131,13 +130,35 @@ export function Appointments() {
   };
 
   const handleApprove = () => {
-    console.log('Approving appointments:', selectedAppointments);
+    setAppointments(prev => 
+      prev.map(appointment => 
+        selectedAppointments.includes(appointment.id) && appointment.status === 'pending'
+          ? { ...appointment, status: 'confirmed' as const }
+          : appointment
+      )
+    );
     setSelectedAppointments([]);
   };
 
   const handleReject = () => {
-    console.log('Rejecting appointments:', selectedAppointments);
+    setAppointments(prev => 
+      prev.map(appointment => 
+        selectedAppointments.includes(appointment.id) && appointment.status === 'pending'
+          ? { ...appointment, status: 'cancelled' as const }
+          : appointment
+      )
+    );
     setSelectedAppointments([]);
+  };
+
+  const handleComplete = (appointmentId: string) => {
+    setAppointments(prev => 
+      prev.map(appointment => 
+        appointment.id === appointmentId && appointment.status === 'confirmed'
+          ? { ...appointment, status: 'completed' as const }
+          : appointment
+      )
+    );
   };
 
   return (
@@ -273,6 +294,17 @@ export function Appointments() {
                       <Button variant="outline" size="sm">
                         View
                       </Button>
+                      {appointment.status === 'confirmed' && (
+                        <Button 
+                          variant="default" 
+                          size="sm"
+                          onClick={() => handleComplete(appointment.id)}
+                          className="flex items-center space-x-1"
+                        >
+                          <CheckCircle className="h-3 w-3" />
+                          <span>Complete</span>
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </div>
