@@ -4,7 +4,8 @@ import { Button } from './ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Label } from './ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { ChevronLeft, ChevronRight, Plus, Clock, User, X } from 'lucide-react';
+import { Switch } from './ui/switch';
+import { ChevronLeft, ChevronRight, Plus, Clock, User, X, DollarSign } from 'lucide-react';
 
 interface TimeSlot {
   id: string;
@@ -22,6 +23,7 @@ interface Opening {
   duration: number;
   worker: string;
   service: string;
+  rate: number;
 }
 
 export function Calendar() {
@@ -31,9 +33,12 @@ export function Calendar() {
   const [openings, setOpenings] = useState<Opening[]>([]);
   const [newOpening, setNewOpening] = useState({
     startTime: '',
+    endTime: '',
     duration: 1,
     worker: '',
-    service: ''
+    service: '',
+    multipleSlots: false,
+    interval: 1
   });
 
   const monthNames = [
@@ -106,21 +111,78 @@ export function Calendar() {
     return openings.filter(opening => opening.date === dateStr);
   };
 
+  const getWorkerRate = (workerName: string) => {
+    const rates: Record<string, number> = {
+      'Sarah Johnson': 65,
+      'Mike Wilson': 80,
+      'Lisa Chen': 120
+    };
+    return rates[workerName] || 50;
+  };
+
   const addOpening = () => {
     if (!newOpening.startTime || !newOpening.worker || !newOpening.service) return;
     
-    const opening: Opening = {
-      id: Date.now().toString(),
-      date: selectedDate.toDateString(),
-      startTime: newOpening.startTime,
-      duration: newOpening.duration,
-      worker: newOpening.worker,
-      service: newOpening.service
-    };
+    const rate = getWorkerRate(newOpening.worker);
     
-    setOpenings([...openings, opening]);
-    setNewOpening({ startTime: '', duration: 1, worker: '', service: '' });
+    if (newOpening.multipleSlots && newOpening.endTime) {
+      // Create multiple slots with intervals
+      const newOpenings: Opening[] = [];
+      const start = parseTime(newOpening.startTime);
+      const end = parseTime(newOpening.endTime);
+      let current = start;
+      
+      while (current < end) {
+        const timeStr = formatTime(current);
+        newOpenings.push({
+          id: `${Date.now()}-${current}`,
+          date: selectedDate.toDateString(),
+          startTime: timeStr,
+          duration: newOpening.interval,
+          worker: newOpening.worker,
+          service: newOpening.service,
+          rate: rate * newOpening.interval
+        });
+        current += newOpening.interval * 60; // Add interval in minutes
+      }
+      
+      setOpenings([...openings, ...newOpenings]);
+    } else {
+      // Create single slot
+      const opening: Opening = {
+        id: Date.now().toString(),
+        date: selectedDate.toDateString(),
+        startTime: newOpening.startTime,
+        duration: newOpening.duration,
+        worker: newOpening.worker,
+        service: newOpening.service,
+        rate: rate * newOpening.duration
+      };
+      
+      setOpenings([...openings, opening]);
+    }
+    
+    setNewOpening({ 
+      startTime: '', 
+      endTime: '',
+      duration: 1, 
+      worker: '', 
+      service: '',
+      multipleSlots: false,
+      interval: 1
+    });
     setShowAddOpening(false);
+  };
+
+  const parseTime = (timeStr: string): number => {
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    return hours * 60 + minutes;
+  };
+
+  const formatTime = (minutes: number): string => {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
   };
 
   const removeOpening = (id: string) => {
@@ -243,12 +305,16 @@ export function Calendar() {
                       <X className="h-3 w-3" />
                     </Button>
                   </div>
-                  <div className="text-sm space-y-1">
+                   <div className="text-sm space-y-1">
                     <div className="flex items-center space-x-2">
                       <User className="h-3 w-3" />
                       <span>{opening.worker}</span>
                     </div>
                     <div className="font-medium">{opening.service}</div>
+                    <div className="flex items-center space-x-2">
+                      <DollarSign className="h-3 w-3" />
+                      <span>${opening.rate}</span>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -323,6 +389,58 @@ export function Calendar() {
                 </SelectContent>
               </Select>
             </div>
+
+            <div className="flex items-center space-x-2">
+              <Switch 
+                checked={newOpening.multipleSlots} 
+                onCheckedChange={(checked) => setNewOpening({...newOpening, multipleSlots: checked})}
+              />
+              <Label>Create multiple time slots</Label>
+            </div>
+
+            {newOpening.multipleSlots && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="endTime">End Time</Label>
+                  <Select value={newOpening.endTime} onValueChange={(value) => setNewOpening({...newOpening, endTime: value})}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select end time" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {generateTimeOptions().map((time) => (
+                        <SelectItem key={time} value={time}>{time}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="interval">Interval (hours)</Label>
+                  <Select value={newOpening.interval.toString()} onValueChange={(value) => setNewOpening({...newOpening, interval: parseInt(value)})}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select interval" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {generateDurationOptions().map((option) => (
+                        <SelectItem key={option.value} value={option.value.toString()}>{option.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </>
+            )}
+
+            {newOpening.worker && (
+              <div className="bg-secondary/30 p-3 rounded-lg">
+                <div className="text-sm text-muted-foreground">Rate Preview</div>
+                <div className="font-medium">${getWorkerRate(newOpening.worker)}/hour</div>
+                {newOpening.multipleSlots ? (
+                  <div className="text-sm">Each slot: ${getWorkerRate(newOpening.worker) * newOpening.interval}</div>
+                ) : (
+                  <div className="text-sm">Total: ${getWorkerRate(newOpening.worker) * newOpening.duration}</div>
+                )}
+              </div>
+            )}
 
             <div className="flex justify-end space-x-2 pt-4">
               <Button variant="outline" onClick={() => setShowAddOpening(false)}>

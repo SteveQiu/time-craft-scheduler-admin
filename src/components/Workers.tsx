@@ -3,7 +3,10 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Input } from './ui/input';
-import { Plus, Search, Edit, Trash2, Clock, Star, Mail, Phone } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
+import { Label } from './ui/label';
+import { Textarea } from './ui/textarea';
+import { Plus, Search, Edit, Trash2, Clock, Star, Mail, Phone, Calendar } from 'lucide-react';
 
 interface Worker {
   id: string;
@@ -19,6 +22,15 @@ interface Worker {
 
 export function Workers() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [editingWorker, setEditingWorker] = useState<Worker | null>(null);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [editForm, setEditForm] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    skills: '',
+    hourlyRate: 0
+  });
   
   const workers: Worker[] = [
     {
@@ -67,6 +79,25 @@ export function Workers() {
     worker.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     worker.skills.some(skill => skill.toLowerCase().includes(searchTerm.toLowerCase()))
   );
+
+  const openEditDialog = (worker: Worker) => {
+    setEditingWorker(worker);
+    setEditForm({
+      name: worker.name,
+      email: worker.email,
+      phone: worker.phone,
+      skills: worker.skills.join(', '),
+      hourlyRate: worker.hourlyRate
+    });
+    setShowEditDialog(true);
+  };
+
+  const handleSaveEdit = () => {
+    // In a real app, this would update the worker in the database
+    console.log('Saving worker:', editForm);
+    setShowEditDialog(false);
+    setEditingWorker(null);
+  };
 
   return (
     <div className="p-6 space-y-6">
@@ -117,7 +148,7 @@ export function Workers() {
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Button variant="ghost" size="sm">
+                  <Button variant="ghost" size="sm" onClick={() => openEditDialog(worker)}>
                     <Edit className="h-4 w-4" />
                   </Button>
                   <Button variant="ghost" size="sm">
@@ -139,9 +170,9 @@ export function Workers() {
                 </div>
               </div>
 
-              {/* Skills */}
+              {/* Service to provide */}
               <div>
-                <p className="text-sm font-medium text-foreground mb-2">Skills</p>
+                <p className="text-sm font-medium text-foreground mb-2">Service to provide</p>
                 <div className="flex flex-wrap gap-1">
                   {worker.skills.map((skill) => (
                     <Badge key={skill} variant="secondary" className="text-xs">
@@ -151,13 +182,13 @@ export function Workers() {
                 </div>
               </div>
 
-              {/* Availability */}
+              {/* Openings */}
               <div>
-                <p className="text-sm font-medium text-foreground mb-2">Availability</p>
+                <p className="text-sm font-medium text-foreground mb-2">Openings</p>
                 <div className="flex items-center space-x-1">
-                  <Clock className="h-4 w-4 text-muted-foreground" />
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm text-muted-foreground">
-                    {worker.availability.join(', ')}
+                    3 openings this week
                   </span>
                 </div>
               </div>
@@ -185,6 +216,73 @@ export function Workers() {
           </CardContent>
         </Card>
       )}
+
+      {/* Edit Worker Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Worker</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Name</Label>
+              <Input
+                id="name"
+                value={editForm.name}
+                onChange={(e) => setEditForm({...editForm, name: e.target.value})}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                value={editForm.email}
+                onChange={(e) => setEditForm({...editForm, email: e.target.value})}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="phone">Phone</Label>
+              <Input
+                id="phone"
+                value={editForm.phone}
+                onChange={(e) => setEditForm({...editForm, phone: e.target.value})}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="skills">Service to provide (comma separated)</Label>
+              <Textarea
+                id="skills"
+                value={editForm.skills}
+                onChange={(e) => setEditForm({...editForm, skills: e.target.value})}
+                placeholder="Hair Cut, Hair Color, Styling"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="hourlyRate">Hourly Rate ($)</Label>
+              <Input
+                id="hourlyRate"
+                type="number"
+                value={editForm.hourlyRate}
+                onChange={(e) => setEditForm({...editForm, hourlyRate: parseInt(e.target.value) || 0})}
+              />
+            </div>
+
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button variant="outline" onClick={() => setShowEditDialog(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleSaveEdit}>
+                Save Changes
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
