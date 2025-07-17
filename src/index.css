@@ -10,10 +10,10 @@
     --background: 0 0% 100%;
     --foreground: 223 47% 11%;
     
-    /* Primary Brand - Professional Blue */
-    --primary: 221 83% 53%;
-    --primary-hover: 221 83% 43%;
-    --primary-light: 221 83% 93%;
+    /* Primary Brand - Professional Black */
+    --primary: 0 0% 9%;
+    --primary-hover: 0 0% 15%;
+    --primary-light: 0 0% 95%;
     --primary-foreground: 0 0% 100%;
 
     /* Cards & Surfaces */
@@ -50,16 +50,16 @@
     /* Interactive Elements */
     --border: 220 13% 91%;
     --input: 220 13% 91%;
-    --ring: 221 83% 53%;
+    --ring: 0 0% 9%;
     
     /* Calendar Specific */
-    --calendar-today: 221 83% 53%;
-    --calendar-selected: 221 83% 53%;
+    --calendar-today: 0 0% 9%;
+    --calendar-selected: 0 0% 9%;
     --calendar-booked: 142 71% 45%;
     --calendar-unavailable: 220 13% 91%;
 
     /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(221 83% 53%), hsl(221 83% 43%));
+    --gradient-primary: linear-gradient(135deg, hsl(0 0% 9%), hsl(0 0% 15%));
     --gradient-subtle: linear-gradient(180deg, hsl(0 0% 100%), hsl(220 13% 98%));
     
     /* Shadows */
@@ -85,9 +85,9 @@
     --card-foreground: 0 0% 98%;
     --card-border: 215 25% 25%;
 
-    --primary: 221 83% 53%;
-    --primary-hover: 221 83% 63%;
-    --primary-light: 221 83% 15%;
+    --primary: 0 0% 9%;
+    --primary-hover: 0 0% 15%;
+    --primary-light: 0 0% 15%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 215 25% 18%;
@@ -115,10 +115,10 @@
 
     --border: 215 25% 25%;
     --input: 215 25% 25%;
-    --ring: 221 83% 53%;
+    --ring: 0 0% 9%;
 
-    --calendar-today: 221 83% 53%;
-    --calendar-selected: 221 83% 53%;
+    --calendar-today: 0 0% 9%;
+    --calendar-selected: 0 0% 9%;
     --calendar-booked: 142 71% 45%;
     --calendar-unavailable: 215 25% 25%;
 

@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
-import { ChevronLeft, ChevronRight, Plus, Clock, User } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
+import { Label } from './ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { ChevronLeft, ChevronRight, Plus, Clock, User, X } from 'lucide-react';
 
 interface TimeSlot {
   id: string;
@@ -12,9 +15,26 @@ interface TimeSlot {
   status: 'available' | 'booked' | 'blocked';
 }
 
+interface Opening {
+  id: string;
+  date: string;
+  startTime: string;
+  duration: number;
+  worker: string;
+  service: string;
+}
+
 export function Calendar() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [showAddOpening, setShowAddOpening] = useState(false);
+  const [openings, setOpenings] = useState<Opening[]>([]);
+  const [newOpening, setNewOpening] = useState({
+    startTime: '',
+    duration: 1,
+    worker: '',
+    service: ''
+  });
 
   const monthNames = [
     'January', 'February', 'March', 'April', 'May', 'June',
@@ -81,13 +101,56 @@ export function Calendar() {
     return date1.toDateString() === date2.toDateString();
   };
 
+  const getOpeningsForDate = (date: Date) => {
+    const dateStr = date.toDateString();
+    return openings.filter(opening => opening.date === dateStr);
+  };
+
+  const addOpening = () => {
+    if (!newOpening.startTime || !newOpening.worker || !newOpening.service) return;
+    
+    const opening: Opening = {
+      id: Date.now().toString(),
+      date: selectedDate.toDateString(),
+      startTime: newOpening.startTime,
+      duration: newOpening.duration,
+      worker: newOpening.worker,
+      service: newOpening.service
+    };
+    
+    setOpenings([...openings, opening]);
+    setNewOpening({ startTime: '', duration: 1, worker: '', service: '' });
+    setShowAddOpening(false);
+  };
+
+  const removeOpening = (id: string) => {
+    setOpenings(openings.filter(opening => opening.id !== id));
+  };
+
+  const generateTimeOptions = () => {
+    const options = [];
+    for (let hour = 0; hour < 24; hour++) {
+      options.push(`${hour.toString().padStart(2, '0')}:00`);
+      options.push(`${hour.toString().padStart(2, '0')}:30`);
+    }
+    return options;
+  };
+
+  const generateDurationOptions = () => {
+    const options = [];
+    for (let i = 1; i <= 24; i++) {
+      options.push({ value: i, label: `${i} hour${i > 1 ? 's' : ''}` });
+    }
+    return options;
+  };
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold text-foreground">Calendar</h2>
-        <Button className="flex items-center space-x-2">
+        <h2 className="text-3xl font-bold text-foreground">Opening</h2>
+        <Button onClick={() => setShowAddOpening(true)} className="flex items-center space-x-2">
           <Plus className="h-4 w-4" />
-          <span>List Opening</span>
+          <span>Add Opening</span>
         </Button>
       </div>
 
@@ -160,36 +223,118 @@ export function Calendar() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {timeSlots.map((slot) => (
+              {getOpeningsForDate(selectedDate).map((opening) => (
                 <div
-                  key={slot.id}
-                  className={`p-3 rounded-lg border transition-all calendar-slot ${getStatusColor(slot.status)}`}
+                  key={opening.id}
+                  className="p-3 rounded-lg border transition-all bg-success-light text-success border-success"
                 >
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center space-x-2">
                       <Clock className="h-4 w-4" />
-                      <span className="font-medium">{slot.time}</span>
+                      <span className="font-medium">{opening.startTime}</span>
+                      <span className="text-xs">({opening.duration}h)</span>
                     </div>
-                    <span className="text-xs font-medium uppercase tracking-wide">
-                      {slot.status}
-                    </span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeOpening(opening.id)}
+                      className="h-6 w-6 p-0 text-destructive hover:text-destructive"
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
                   </div>
                   <div className="text-sm space-y-1">
                     <div className="flex items-center space-x-2">
                       <User className="h-3 w-3" />
-                      <span>{slot.worker}</span>
+                      <span>{opening.worker}</span>
                     </div>
-                    <div className="font-medium">{slot.service}</div>
-                    {slot.client && (
-                      <div className="text-xs opacity-75">Client: {slot.client}</div>
-                    )}
+                    <div className="font-medium">{opening.service}</div>
                   </div>
                 </div>
               ))}
+              {getOpeningsForDate(selectedDate).length === 0 && (
+                <div className="text-center text-muted-foreground py-8">
+                  No openings for this date
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
       </div>
+
+      <Dialog open={showAddOpening} onOpenChange={setShowAddOpening}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add Opening for {selectedDate.toLocaleDateString()}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-4">
+            <div className="space-y-2">
+              <Label htmlFor="startTime">Start Time</Label>
+              <Select value={newOpening.startTime} onValueChange={(value) => setNewOpening({...newOpening, startTime: value})}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select start time" />
+                </SelectTrigger>
+                <SelectContent>
+                  {generateTimeOptions().map((time) => (
+                    <SelectItem key={time} value={time}>{time}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="duration">Duration</Label>
+              <Select value={newOpening.duration.toString()} onValueChange={(value) => setNewOpening({...newOpening, duration: parseInt(value)})}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select duration" />
+                </SelectTrigger>
+                <SelectContent>
+                  {generateDurationOptions().map((option) => (
+                    <SelectItem key={option.value} value={option.value.toString()}>{option.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="worker">Worker</Label>
+              <Select value={newOpening.worker} onValueChange={(value) => setNewOpening({...newOpening, worker: value})}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select worker" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Sarah Johnson">Sarah Johnson</SelectItem>
+                  <SelectItem value="Mike Wilson">Mike Wilson</SelectItem>
+                  <SelectItem value="Lisa Chen">Lisa Chen</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="service">Service</Label>
+              <Select value={newOpening.service} onValueChange={(value) => setNewOpening({...newOpening, service: value})}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select service" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Hair Cut">Hair Cut</SelectItem>
+                  <SelectItem value="Massage">Massage</SelectItem>
+                  <SelectItem value="Consultation">Consultation</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button variant="outline" onClick={() => setShowAddOpening(false)}>
+                Cancel
+              </Button>
+              <Button onClick={addOpening}>
+                Add Opening
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
