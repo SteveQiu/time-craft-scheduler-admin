@@ -111,6 +111,11 @@ export function Calendar() {
     return openings.filter(opening => opening.date === dateStr);
   };
 
+  const hasOpenings = (date: Date | null) => {
+    if (!date) return false;
+    return getOpeningsForDate(date).length > 0;
+  };
+
   const getWorkerRate = (workerName: string) => {
     const rates: Record<string, number> = {
       'Sarah Johnson': 65,
@@ -254,7 +259,7 @@ export function Calendar() {
               {getDaysInMonth(currentDate).map((date, index) => (
                 <div
                   key={index}
-                  className={`p-2 h-12 flex items-center justify-center text-sm cursor-pointer rounded-lg transition-colors ${
+                  className={`p-2 h-12 flex flex-col items-center justify-center text-sm cursor-pointer rounded-lg transition-colors relative ${
                     !date
                       ? ''
                       : isToday(date)
@@ -265,7 +270,10 @@ export function Calendar() {
                   }`}
                   onClick={() => date && setSelectedDate(date)}
                 >
-                  {date?.getDate()}
+                  <span>{date?.getDate()}</span>
+                  {date && hasOpenings(date) && (
+                    <div className="w-1.5 h-1.5 bg-primary rounded-full mt-1 animate-pulse" />
+                  )}
                 </div>
               ))}
             </div>
