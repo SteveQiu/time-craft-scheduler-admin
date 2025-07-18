@@ -272,7 +272,7 @@ export function Calendar() {
                 >
                   <span>{date?.getDate()}</span>
                   {date && hasOpenings(date) && (
-                    <div className="w-1.5 h-1.5 bg-primary rounded-full mt-1 animate-pulse" />
+                    <div className="w-2 h-2 bg-primary rounded-full mt-0.5 animate-pulse shadow-sm" />
                   )}
                 </div>
               ))}
