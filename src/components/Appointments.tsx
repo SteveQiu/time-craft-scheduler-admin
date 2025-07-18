@@ -290,10 +290,7 @@ export function Appointments() {
                     <Badge className={getStatusColor(appointment.status)}>
                       {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
                     </Badge>
-                    <div className="flex space-x-1">
-                      <Button variant="outline" size="sm">
-                        View
-                      </Button>
+                    <div className="flex gap-1">
                       {appointment.status === 'confirmed' && (
                         <Button 
                           variant="default" 
@@ -305,6 +302,9 @@ export function Appointments() {
                           <span>Complete</span>
                         </Button>
                       )}
+                      <Button variant="outline" size="sm">
+                        View
+                      </Button>
                     </div>
                   </div>
                 </div>
