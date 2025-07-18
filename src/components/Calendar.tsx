@@ -334,6 +334,14 @@ export function Calendar() {
             <DialogTitle>Add Opening for {selectedDate.toLocaleDateString()}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 pt-4">
+            <div className="flex items-center space-x-2">
+              <Switch 
+                checked={newOpening.multipleSlots} 
+                onCheckedChange={(checked) => setNewOpening({...newOpening, multipleSlots: checked})}
+              />
+              <Label>Create multiple time slots</Label>
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="startTime">Start Time</Label>
               <Select value={newOpening.startTime} onValueChange={(value) => setNewOpening({...newOpening, startTime: value})}>
@@ -347,6 +355,38 @@ export function Calendar() {
                 </SelectContent>
               </Select>
             </div>
+
+            {newOpening.multipleSlots && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="endTime">End Time</Label>
+                  <Select value={newOpening.endTime} onValueChange={(value) => setNewOpening({...newOpening, endTime: value})}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select end time" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {generateTimeOptions().map((time) => (
+                        <SelectItem key={time} value={time}>{time}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="interval">Interval (hours)</Label>
+                  <Select value={newOpening.interval.toString()} onValueChange={(value) => setNewOpening({...newOpening, interval: parseInt(value)})}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select interval" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {generateDurationOptions().map((option) => (
+                        <SelectItem key={option.value} value={option.value.toString()}>{option.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </>
+            )}
             
             {!newOpening.multipleSlots && (
               <div className="space-y-2">
@@ -391,46 +431,6 @@ export function Calendar() {
                 </SelectContent>
               </Select>
             </div>
-
-            <div className="flex items-center space-x-2">
-              <Switch 
-                checked={newOpening.multipleSlots} 
-                onCheckedChange={(checked) => setNewOpening({...newOpening, multipleSlots: checked})}
-              />
-              <Label>Create multiple time slots</Label>
-            </div>
-
-            {newOpening.multipleSlots && (
-              <>
-                <div className="space-y-2">
-                  <Label htmlFor="endTime">End Time</Label>
-                  <Select value={newOpening.endTime} onValueChange={(value) => setNewOpening({...newOpening, endTime: value})}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select end time" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {generateTimeOptions().map((time) => (
-                        <SelectItem key={time} value={time}>{time}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="interval">Interval (hours)</Label>
-                  <Select value={newOpening.interval.toString()} onValueChange={(value) => setNewOpening({...newOpening, interval: parseInt(value)})}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select interval" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {generateDurationOptions().map((option) => (
-                        <SelectItem key={option.value} value={option.value.toString()}>{option.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </>
-            )}
 
             {newOpening.worker && (
               <div className="bg-secondary/30 p-3 rounded-lg">
