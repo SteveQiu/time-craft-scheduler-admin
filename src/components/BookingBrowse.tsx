@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Input } from './ui/input';
+import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from './ui/alert-dialog';
 import { Calendar, Clock, User, MapPin, Star, Search, Filter } from 'lucide-react';
 
 interface Provider {
@@ -30,6 +31,8 @@ export function BookingBrowse() {
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [selectedService, setSelectedService] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState<string>('');
+  const [showBookingDialog, setShowBookingDialog] = useState(false);
+  const [selectedSlot, setSelectedSlot] = useState<AvailableSlot | null>(null);
 
   const providers: Provider[] = [
     {
@@ -105,8 +108,13 @@ export function BookingBrowse() {
   const uniqueServices = [...new Set(availableSlots.map(slot => slot.service))];
 
   const handleBooking = (slot: AvailableSlot) => {
-    const provider = getProvider(slot.providerId);
-    alert(`Booking confirmed!\n\nProvider: ${provider?.name}\nService: ${slot.service}\nDate: ${slot.date}\nTime: ${slot.time}\nPrice: $${slot.price}`);
+    setSelectedSlot(slot);
+    setShowBookingDialog(true);
+  };
+
+  const confirmBooking = () => {
+    setShowBookingDialog(false);
+    setSelectedSlot(null);
   };
 
   return (
@@ -245,6 +253,52 @@ export function BookingBrowse() {
           </CardContent>
         </Card>
       )}
+
+      {/* Booking Confirmation Dialog */}
+      <AlertDialog open={showBookingDialog} onOpenChange={setShowBookingDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Booking</AlertDialogTitle>
+            <AlertDialogDescription>
+              Please confirm your appointment booking details:
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          
+          {selectedSlot && (
+            <div className="space-y-3 py-4">
+              <div className="flex justify-between">
+                <span className="text-sm font-medium">Provider:</span>
+                <span className="text-sm">{getProvider(selectedSlot.providerId)?.name}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm font-medium">Service:</span>
+                <span className="text-sm">{selectedSlot.service}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm font-medium">Date:</span>
+                <span className="text-sm">{new Date(selectedSlot.date).toLocaleDateString()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm font-medium">Time:</span>
+                <span className="text-sm">{selectedSlot.time} ({selectedSlot.duration}min)</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm font-medium">Price:</span>
+                <span className="text-sm font-bold">${selectedSlot.price}</span>
+              </div>
+            </div>
+          )}
+          
+          <AlertDialogFooter>
+            <Button variant="outline" onClick={() => setShowBookingDialog(false)}>
+              Cancel
+            </Button>
+            <AlertDialogAction onClick={confirmBooking}>
+              Confirm Booking
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
