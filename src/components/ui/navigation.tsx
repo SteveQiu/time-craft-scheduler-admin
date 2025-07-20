@@ -1,6 +1,7 @@
 import React from 'react';
-import { Calendar, Users, Settings, Home, Clock, Search } from 'lucide-react';
+import { Calendar, Users, Settings, Home, Clock, Search, LogIn } from 'lucide-react';
 import { Button } from './button';
+import { useAuth } from '@/hooks/useAuth';
 
 interface NavigationProps {
   activeTab: string;
@@ -8,13 +9,18 @@ interface NavigationProps {
 }
 
 export function Navigation({ activeTab, onTabChange }: NavigationProps) {
+  const { user } = useAuth();
+  
   const navItems = [
     { id: 'browse', label: 'Browse', icon: Search },
     { id: 'dashboard', label: 'Dashboard', icon: Home },
     { id: 'calendar', label: 'Opening', icon: Calendar },
     { id: 'workers', label: 'Workers', icon: Users },
     { id: 'appointments', label: 'Appointments', icon: Clock },
-    { id: 'settings', label: 'Settings', icon: Settings },
+    ...(user 
+      ? [{ id: 'settings', label: 'Settings', icon: Settings }]
+      : [{ id: 'signin', label: 'Sign In', icon: LogIn }]
+    ),
   ];
 
   return (
