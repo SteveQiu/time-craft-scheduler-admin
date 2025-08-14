@@ -265,7 +265,7 @@ export function Calendar() {
                       : isToday(date)
                       ? 'bg-calendar-today text-primary-foreground font-bold'
                       : isSameDate(date, selectedDate)
-                      ? 'bg-primary-light text-primary'
+                      ? 'bg-primary-light text-primary ring-2 ring-primary ring-offset-2 ring-offset-background'
                       : 'hover:bg-secondary'
                   }`}
                   onClick={() => date && setSelectedDate(date)}
