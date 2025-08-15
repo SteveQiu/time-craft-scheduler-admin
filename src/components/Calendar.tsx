@@ -1,11 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Label } from './ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Switch } from './ui/switch';
+import { Input } from './ui/input';
 import { ChevronLeft, ChevronRight, Plus, Clock, User, X, DollarSign } from 'lucide-react';
+import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 
 interface TimeSlot {
   id: string;
@@ -18,12 +22,16 @@ interface TimeSlot {
 
 interface Opening {
   id: string;
+  user_id: string;
   date: string;
-  startTime: string;
+  start_time: string;
+  end_time: string;
   duration: number;
   worker: string;
   service: string;
-  rate: number;
+  is_available: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 export function Calendar() {
@@ -31,6 +39,10 @@ export function Calendar() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showAddOpening, setShowAddOpening] = useState(false);
   const [openings, setOpenings] = useState<Opening[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const { user } = useAuth();
+  
   const [newOpening, setNewOpening] = useState({
     startTime: '09:00',
     endTime: '',
@@ -45,6 +57,73 @@ export function Calendar() {
     'January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December'
   ];
+
+  // Load openings for selected date
+  useEffect(() => {
+    if (selectedDate && user) {
+      loadOpenings();
+    }
+  }, [selectedDate, user]);
+
+  const loadOpenings = async () => {
+    if (!selectedDate || !user) return;
+    
+    try {
+      const dateStr = selectedDate.toISOString().split('T')[0];
+      const { data, error } = await supabase
+        .from('openings')
+        .select('*')
+        .eq('date', dateStr)
+        .order('start_time');
+
+      if (error) throw error;
+      setOpenings(data || []);
+    } catch (error) {
+      console.error('Error loading openings:', error);
+      toast.error('Failed to load openings');
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors: { [key: string]: string } = {};
+    
+    if (!newOpening.startTime) {
+      newErrors.startTime = 'Start time is required';
+    }
+    
+    if (!newOpening.worker) {
+      newErrors.worker = 'Worker selection is required';
+    }
+    
+    if (!newOpening.service) {
+      newErrors.service = 'Service selection is required';
+    }
+    
+    if (newOpening.duration <= 0) {
+      newErrors.duration = 'Duration must be greater than 0';
+    }
+    
+    if (newOpening.multipleSlots && newOpening.interval <= 0) {
+      newErrors.interval = 'Interval must be greater than 0';
+    }
+    
+    if (newOpening.multipleSlots && !newOpening.endTime) {
+      newErrors.endTime = 'End time is required for multiple slots';
+    }
+    
+    // Validate time format
+    const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+    if (newOpening.startTime && !timeRegex.test(newOpening.startTime)) {
+      newErrors.startTime = 'Invalid time format';
+    }
+    
+    if (newOpening.multipleSlots && newOpening.endTime && !timeRegex.test(newOpening.endTime)) {
+      newErrors.endTime = 'Invalid time format';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const getDaysInMonth = (date: Date) => {
     const year = date.getFullYear();
@@ -77,24 +156,6 @@ export function Calendar() {
     });
   };
 
-  const timeSlots: TimeSlot[] = [
-    { id: '1', time: '9:00 AM', worker: 'Sarah Johnson', service: 'Hair Cut', status: 'available' },
-    { id: '2', time: '10:00 AM', worker: 'Sarah Johnson', service: 'Hair Cut', client: 'John Doe', status: 'booked' },
-    { id: '3', time: '11:00 AM', worker: 'Mike Wilson', service: 'Massage', status: 'available' },
-    { id: '4', time: '2:00 PM', worker: 'Lisa Chen', service: 'Consultation', client: 'Jane Smith', status: 'booked' },
-    { id: '5', time: '3:00 PM', worker: 'Sarah Johnson', service: 'Hair Cut', status: 'blocked' },
-    { id: '6', time: '4:00 PM', worker: 'Mike Wilson', service: 'Massage', status: 'available' },
-  ];
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'available': return 'bg-success-light text-success border-success';
-      case 'booked': return 'bg-primary-light text-primary border-primary';
-      case 'blocked': return 'bg-muted text-muted-foreground border-muted';
-      default: return 'bg-secondary text-secondary-foreground border-card-border';
-    }
-  };
-
   const isToday = (date: Date | null) => {
     if (!date) return false;
     const today = new Date();
@@ -107,7 +168,7 @@ export function Calendar() {
   };
 
   const getOpeningsForDate = (date: Date) => {
-    const dateStr = date.toDateString();
+    const dateStr = date.toISOString().split('T')[0];
     return openings.filter(opening => opening.date === dateStr);
   };
 
@@ -125,60 +186,6 @@ export function Calendar() {
     return rates[workerName] || 50;
   };
 
-  const addOpening = () => {
-    if (!newOpening.startTime || !newOpening.worker || !newOpening.service) return;
-    
-    const rate = getWorkerRate(newOpening.worker);
-    
-    if (newOpening.multipleSlots && newOpening.endTime) {
-      // Create multiple slots with intervals
-      const newOpenings: Opening[] = [];
-      const start = parseTime(newOpening.startTime);
-      const end = parseTime(newOpening.endTime);
-      let current = start;
-      
-      while (current < end) {
-        const timeStr = formatTime(current);
-        newOpenings.push({
-          id: `${Date.now()}-${current}`,
-          date: selectedDate.toDateString(),
-          startTime: timeStr,
-          duration: newOpening.interval,
-          worker: newOpening.worker,
-          service: newOpening.service,
-          rate: rate * newOpening.interval
-        });
-        current += newOpening.interval * 60; // Add interval in minutes
-      }
-      
-      setOpenings([...openings, ...newOpenings]);
-    } else {
-      // Create single slot
-      const opening: Opening = {
-        id: Date.now().toString(),
-        date: selectedDate.toDateString(),
-        startTime: newOpening.startTime,
-        duration: newOpening.duration,
-        worker: newOpening.worker,
-        service: newOpening.service,
-        rate: rate * newOpening.duration
-      };
-      
-      setOpenings([...openings, opening]);
-    }
-    
-    setNewOpening({ 
-      startTime: '09:00', 
-      endTime: '',
-      duration: 1, 
-      worker: 'Sarah Johnson', 
-      service: 'Hair Cut',
-      multipleSlots: false,
-      interval: 1
-    });
-    setShowAddOpening(false);
-  };
-
   const parseTime = (timeStr: string): number => {
     const [hours, minutes] = timeStr.split(':').map(Number);
     return hours * 60 + minutes;
@@ -190,8 +197,126 @@ export function Calendar() {
     return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
   };
 
-  const removeOpening = (id: string) => {
-    setOpenings(openings.filter(opening => opening.id !== id));
+  const calculateEndTime = (startTime: string, duration: number): string => {
+    const startMinutes = parseTime(startTime);
+    const endMinutes = startMinutes + (duration * 60);
+    return formatTime(endMinutes);
+  };
+
+  const addOpening = async () => {
+    if (!user) {
+      toast.error('Please sign in to add openings');
+      return;
+    }
+
+    if (!validateForm()) {
+      toast.error('Please fix validation errors');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const dateStr = selectedDate.toISOString().split('T')[0];
+      
+      if (newOpening.multipleSlots && newOpening.endTime) {
+        // Create multiple slots with intervals
+        const newOpenings = [];
+        const start = parseTime(newOpening.startTime);
+        const end = parseTime(newOpening.endTime);
+        let current = start;
+        
+        while (current < end) {
+          const startTimeStr = formatTime(current);
+          const endTimeStr = calculateEndTime(startTimeStr, newOpening.interval);
+          
+          newOpenings.push({
+            user_id: user.id,
+            date: dateStr,
+            start_time: startTimeStr,
+            end_time: endTimeStr,
+            duration: newOpening.interval,
+            worker: newOpening.worker,
+            service: newOpening.service,
+            is_available: true
+          });
+          
+          current += newOpening.interval * 60; // Add interval in minutes
+        }
+        
+        const { error } = await supabase
+          .from('openings')
+          .insert(newOpenings);
+
+        if (error) throw error;
+        
+        toast.success(`${newOpenings.length} openings added successfully`);
+      } else {
+        // Create single slot
+        const opening = {
+          user_id: user.id,
+          date: dateStr,
+          start_time: newOpening.startTime,
+          end_time: calculateEndTime(newOpening.startTime, newOpening.duration),
+          duration: newOpening.duration,
+          worker: newOpening.worker,
+          service: newOpening.service,
+          is_available: true
+        };
+        
+        const { error } = await supabase
+          .from('openings')
+          .insert([opening]);
+
+        if (error) throw error;
+        
+        toast.success('Opening added successfully');
+      }
+      
+      await loadOpenings();
+      resetForm();
+      setShowAddOpening(false);
+    } catch (error) {
+      console.error('Error adding opening:', error);
+      toast.error('Failed to add opening');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resetForm = () => {
+    setNewOpening({ 
+      startTime: '09:00', 
+      endTime: '',
+      duration: 1, 
+      worker: 'Sarah Johnson', 
+      service: 'Hair Cut',
+      multipleSlots: false,
+      interval: 1
+    });
+    setErrors({});
+  };
+
+  const removeOpening = async (id: string) => {
+    if (!user) {
+      toast.error('Please sign in to remove openings');
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('openings')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', user.id); // Additional security check
+
+      if (error) throw error;
+      
+      await loadOpenings();
+      toast.success('Opening removed successfully');
+    } catch (error) {
+      console.error('Error removing opening:', error);
+      toast.error('Failed to remove opening');
+    }
   };
 
   const generateTimeOptions = () => {
@@ -215,11 +340,21 @@ export function Calendar() {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold text-foreground">Opening</h2>
-        <Button onClick={() => setShowAddOpening(true)} className="flex items-center space-x-2">
+        <Button 
+          onClick={() => setShowAddOpening(true)} 
+          className="flex items-center space-x-2"
+          disabled={!user}
+        >
           <Plus className="h-4 w-4" />
           <span>Add Opening</span>
         </Button>
       </div>
+
+      {!user && (
+        <div className="bg-warning/10 border border-warning text-warning-foreground p-4 rounded-lg">
+          Please sign in to manage your openings.
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Calendar Grid */}
@@ -301,7 +436,7 @@ export function Calendar() {
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center space-x-2">
                       <Clock className="h-4 w-4" />
-                      <span className="font-medium">{opening.startTime}</span>
+                      <span className="font-medium">{opening.start_time} - {opening.end_time}</span>
                       <span className="text-xs">({opening.duration}h)</span>
                     </div>
                     <Button
@@ -309,6 +444,7 @@ export function Calendar() {
                       size="sm"
                       onClick={() => removeOpening(opening.id)}
                       className="h-6 w-6 p-0 text-destructive hover:text-destructive"
+                      disabled={!user}
                     >
                       <X className="h-3 w-3" />
                     </Button>
@@ -321,7 +457,7 @@ export function Calendar() {
                     <div className="font-medium">{opening.service}</div>
                     <div className="flex items-center space-x-2">
                       <DollarSign className="h-3 w-3" />
-                      <span>${opening.rate}</span>
+                      <span>${getWorkerRate(opening.worker) * opening.duration}</span>
                     </div>
                   </div>
                 </div>
@@ -345,15 +481,24 @@ export function Calendar() {
             <div className="flex items-center space-x-2">
               <Switch 
                 checked={newOpening.multipleSlots} 
-                onCheckedChange={(checked) => setNewOpening({...newOpening, multipleSlots: checked})}
+                onCheckedChange={(checked) => {
+                  setNewOpening({...newOpening, multipleSlots: checked});
+                  setErrors(prev => ({ ...prev, endTime: '' }));
+                }}
               />
               <Label>Create multiple time slots</Label>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="startTime">Start Time</Label>
-              <Select value={newOpening.startTime} onValueChange={(value) => setNewOpening({...newOpening, startTime: value})}>
-                <SelectTrigger>
+              <Select 
+                value={newOpening.startTime} 
+                onValueChange={(value) => {
+                  setNewOpening({...newOpening, startTime: value});
+                  setErrors(prev => ({ ...prev, startTime: '' }));
+                }}
+              >
+                <SelectTrigger className={errors.startTime ? 'border-destructive' : ''}>
                   <SelectValue placeholder="Select start time" />
                 </SelectTrigger>
                 <SelectContent>
@@ -362,14 +507,21 @@ export function Calendar() {
                   ))}
                 </SelectContent>
               </Select>
+              {errors.startTime && <p className="text-sm text-destructive">{errors.startTime}</p>}
             </div>
 
             {newOpening.multipleSlots && (
               <>
                 <div className="space-y-2">
                   <Label htmlFor="endTime">End Time</Label>
-                  <Select value={newOpening.endTime} onValueChange={(value) => setNewOpening({...newOpening, endTime: value})}>
-                    <SelectTrigger>
+                  <Select 
+                    value={newOpening.endTime} 
+                    onValueChange={(value) => {
+                      setNewOpening({...newOpening, endTime: value});
+                      setErrors(prev => ({ ...prev, endTime: '' }));
+                    }}
+                  >
+                    <SelectTrigger className={errors.endTime ? 'border-destructive' : ''}>
                       <SelectValue placeholder="Select end time" />
                     </SelectTrigger>
                     <SelectContent>
@@ -378,12 +530,19 @@ export function Calendar() {
                       ))}
                     </SelectContent>
                   </Select>
+                  {errors.endTime && <p className="text-sm text-destructive">{errors.endTime}</p>}
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="interval">Interval (hours)</Label>
-                  <Select value={newOpening.interval.toString()} onValueChange={(value) => setNewOpening({...newOpening, interval: parseInt(value)})}>
-                    <SelectTrigger>
+                  <Select 
+                    value={newOpening.interval.toString()} 
+                    onValueChange={(value) => {
+                      setNewOpening({...newOpening, interval: parseInt(value)});
+                      setErrors(prev => ({ ...prev, interval: '' }));
+                    }}
+                  >
+                    <SelectTrigger className={errors.interval ? 'border-destructive' : ''}>
                       <SelectValue placeholder="Select interval" />
                     </SelectTrigger>
                     <SelectContent>
@@ -392,6 +551,7 @@ export function Calendar() {
                       ))}
                     </SelectContent>
                   </Select>
+                  {errors.interval && <p className="text-sm text-destructive">{errors.interval}</p>}
                 </div>
               </>
             )}
@@ -399,8 +559,14 @@ export function Calendar() {
             {!newOpening.multipleSlots && (
               <div className="space-y-2">
                 <Label htmlFor="duration">Duration</Label>
-                <Select value={newOpening.duration.toString()} onValueChange={(value) => setNewOpening({...newOpening, duration: parseInt(value)})}>
-                  <SelectTrigger>
+                <Select 
+                  value={newOpening.duration.toString()} 
+                  onValueChange={(value) => {
+                    setNewOpening({...newOpening, duration: parseInt(value)});
+                    setErrors(prev => ({ ...prev, duration: '' }));
+                  }}
+                >
+                  <SelectTrigger className={errors.duration ? 'border-destructive' : ''}>
                     <SelectValue placeholder="Select duration" />
                   </SelectTrigger>
                   <SelectContent>
@@ -409,13 +575,20 @@ export function Calendar() {
                     ))}
                   </SelectContent>
                 </Select>
+                {errors.duration && <p className="text-sm text-destructive">{errors.duration}</p>}
               </div>
             )}
 
             <div className="space-y-2">
               <Label htmlFor="worker">Worker</Label>
-              <Select value={newOpening.worker} onValueChange={(value) => setNewOpening({...newOpening, worker: value})}>
-                <SelectTrigger>
+              <Select 
+                value={newOpening.worker} 
+                onValueChange={(value) => {
+                  setNewOpening({...newOpening, worker: value});
+                  setErrors(prev => ({ ...prev, worker: '' }));
+                }}
+              >
+                <SelectTrigger className={errors.worker ? 'border-destructive' : ''}>
                   <SelectValue placeholder="Select worker" />
                 </SelectTrigger>
                 <SelectContent>
@@ -424,12 +597,19 @@ export function Calendar() {
                   <SelectItem value="Lisa Chen">Lisa Chen</SelectItem>
                 </SelectContent>
               </Select>
+              {errors.worker && <p className="text-sm text-destructive">{errors.worker}</p>}
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="service">Service</Label>
-              <Select value={newOpening.service} onValueChange={(value) => setNewOpening({...newOpening, service: value})}>
-                <SelectTrigger>
+              <Select 
+                value={newOpening.service} 
+                onValueChange={(value) => {
+                  setNewOpening({...newOpening, service: value});
+                  setErrors(prev => ({ ...prev, service: '' }));
+                }}
+              >
+                <SelectTrigger className={errors.service ? 'border-destructive' : ''}>
                   <SelectValue placeholder="Select service" />
                 </SelectTrigger>
                 <SelectContent>
@@ -438,6 +618,7 @@ export function Calendar() {
                   <SelectItem value="Consultation">Consultation</SelectItem>
                 </SelectContent>
               </Select>
+              {errors.service && <p className="text-sm text-destructive">{errors.service}</p>}
             </div>
 
             {newOpening.worker && (
@@ -456,8 +637,8 @@ export function Calendar() {
               <Button variant="outline" onClick={() => setShowAddOpening(false)}>
                 Cancel
               </Button>
-              <Button onClick={addOpening}>
-                Add Opening
+              <Button onClick={addOpening} disabled={loading || !user}>
+                {loading ? 'Adding...' : 'Add Opening'}
               </Button>
             </div>
           </div>
