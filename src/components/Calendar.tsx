@@ -32,11 +32,11 @@ export function Calendar() {
   const [showAddOpening, setShowAddOpening] = useState(false);
   const [openings, setOpenings] = useState<Opening[]>([]);
   const [newOpening, setNewOpening] = useState({
-    startTime: '',
+    startTime: '09:00',
     endTime: '',
     duration: 1,
-    worker: '',
-    service: '',
+    worker: 'Sarah Johnson',
+    service: 'Hair Cut',
     multipleSlots: false,
     interval: 1
   });
@@ -168,11 +168,11 @@ export function Calendar() {
     }
     
     setNewOpening({ 
-      startTime: '', 
+      startTime: '09:00', 
       endTime: '',
       duration: 1, 
-      worker: '', 
-      service: '',
+      worker: 'Sarah Johnson', 
+      service: 'Hair Cut',
       multipleSlots: false,
       interval: 1
     });
