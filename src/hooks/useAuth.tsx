@@ -43,10 +43,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signInWithGoogle = async () => {
     try {
       console.log('Attempting Google sign-in...');
+      console.log('Current origin:', window.location.origin);
+      console.log('Current href:', window.location.href);
+      
+      // Clear any existing session first
+      await supabase.auth.signOut();
+      
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: 'https://time-craft-scheduler-admin.lovable.app',
+          redirectTo: window.location.href,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
