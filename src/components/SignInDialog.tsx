@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -21,17 +22,27 @@ export function SignInDialog({ open, onOpenChange }: SignInDialogProps) {
       await signInWithGoogle();
       toast({
         title: "Redirecting to Google",
-        description: "Please complete the sign-in process in the new window.",
+        description: "You will be redirected to Google to complete sign-in.",
       });
-      onOpenChange(false);
-    } catch (error) {
+      // Don't close the dialog immediately - let the redirect happen
+    } catch (error: any) {
       console.error('Sign-in error:', error);
+      
+      let errorMessage = "An unexpected error occurred. Please try again.";
+      
+      if (error?.message?.includes('Invalid login credentials')) {
+        errorMessage = "Invalid credentials. Please check your email and password.";
+      } else if (error?.message?.includes('Email not confirmed')) {
+        errorMessage = "Please check your email and click the confirmation link.";
+      } else if (error?.message?.includes('OAuth')) {
+        errorMessage = "Google authentication failed. Please ensure Google OAuth is properly configured.";
+      }
+      
       toast({
         title: "Sign-in Failed",
-        description: "Google authentication is not properly configured. Please contact support.",
+        description: errorMessage,
         variant: "destructive",
       });
-    } finally {
       setLoading(false);
     }
   };
