@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/use-toast';
 import { Chrome } from 'lucide-react';
 
 interface SignInDialogProps {
@@ -11,10 +12,28 @@ interface SignInDialogProps {
 
 export function SignInDialog({ open, onOpenChange }: SignInDialogProps) {
   const { signInWithGoogle } = useAuth();
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
 
   const handleGoogleSignIn = async () => {
-    await signInWithGoogle();
-    onOpenChange(false);
+    try {
+      setLoading(true);
+      await signInWithGoogle();
+      toast({
+        title: "Redirecting to Google",
+        description: "Please complete the sign-in process in the new window.",
+      });
+      onOpenChange(false);
+    } catch (error) {
+      console.error('Sign-in error:', error);
+      toast({
+        title: "Sign-in Failed",
+        description: "Google authentication is not properly configured. Please contact support.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -30,10 +49,11 @@ export function SignInDialog({ open, onOpenChange }: SignInDialogProps) {
           <Button 
             onClick={handleGoogleSignIn} 
             variant="outline" 
+            disabled={loading}
             className="w-full flex items-center justify-center space-x-2 py-6"
           >
             <Chrome className="h-5 w-5" />
-            <span>Continue with Google</span>
+            <span>{loading ? 'Connecting...' : 'Continue with Google'}</span>
           </Button>
         </div>
       </DialogContent>
