@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
@@ -28,6 +29,7 @@ interface AvailableSlot {
 }
 
 export function BookingBrowse() {
+  const { user, signOut } = useAuth();
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [selectedService, setSelectedService] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -77,16 +79,33 @@ export function BookingBrowse() {
     }
   ];
 
-  const availableSlots: AvailableSlot[] = [
-    { id: '1', providerId: '1', date: '2024-07-18', time: '9:00 AM', duration: 60, service: 'Hair Cut', price: 85 },
-    { id: '2', providerId: '1', date: '2024-07-18', time: '11:00 AM', duration: 90, service: 'Hair Coloring', price: 120 },
-    { id: '3', providerId: '2', date: '2024-07-18', time: '2:00 PM', duration: 60, service: 'Deep Tissue Massage', price: 120 },
-    { id: '4', providerId: '3', date: '2024-07-19', time: '10:00 AM', duration: 45, service: 'Health Consultation', price: 110 },
-    { id: '5', providerId: '2', date: '2024-07-19', time: '3:00 PM', duration: 60, service: 'Swedish Massage', price: 120 },
-    { id: '6', providerId: '4', date: '2024-07-20', time: '8:00 AM', duration: 60, service: 'Personal Training', price: 75 },
-    { id: '7', providerId: '1', date: '2024-07-20', time: '1:00 PM', duration: 60, service: 'Hair Cut', price: 85 },
-    { id: '8', providerId: '3', date: '2024-07-20', time: '4:00 PM', duration: 60, service: 'Wellness Coaching', price: 150 }
-  ];
+  // Use mock data if running on localhost, otherwise use remote API (placeholder for real fetch)
+  let availableSlots: AvailableSlot[] = [];
+  if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+    // Mock some openings in the middle of the current month
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = today.getMonth();
+    const mid = 15;
+    availableSlots = [
+      { id: 'm1', providerId: '1', date: `${year}-${String(month+1).padStart(2,'0')}-${mid}`, time: '10:00 AM', duration: 60, service: 'Hair Cut', price: 85 },
+      { id: 'm2', providerId: '2', date: `${year}-${String(month+1).padStart(2,'0')}-${mid+1}`, time: '2:00 PM', duration: 60, service: 'Deep Tissue Massage', price: 120 },
+      { id: 'm3', providerId: '3', date: `${year}-${String(month+1).padStart(2,'0')}-${mid+2}`, time: '11:00 AM', duration: 45, service: 'Health Consultation', price: 110 },
+      { id: 'm4', providerId: '4', date: `${year}-${String(month+1).padStart(2,'0')}-${mid+3}`, time: '8:00 AM', duration: 60, service: 'Personal Training', price: 75 }
+    ];
+  } else {
+    // TODO: Replace with real API fetch for production
+    availableSlots = [
+      { id: '1', providerId: '1', date: '2024-07-18', time: '9:00 AM', duration: 60, service: 'Hair Cut', price: 85 },
+      { id: '2', providerId: '1', date: '2024-07-18', time: '11:00 AM', duration: 90, service: 'Hair Coloring', price: 120 },
+      { id: '3', providerId: '2', date: '2024-07-18', time: '2:00 PM', duration: 60, service: 'Deep Tissue Massage', price: 120 },
+      { id: '4', providerId: '3', date: '2024-07-19', time: '10:00 AM', duration: 45, service: 'Health Consultation', price: 110 },
+      { id: '5', providerId: '2', date: '2024-07-19', time: '3:00 PM', duration: 60, service: 'Swedish Massage', price: 120 },
+      { id: '6', providerId: '4', date: '2024-07-20', time: '8:00 AM', duration: 60, service: 'Personal Training', price: 75 },
+      { id: '7', providerId: '1', date: '2024-07-20', time: '1:00 PM', duration: 60, service: 'Hair Cut', price: 85 },
+      { id: '8', providerId: '3', date: '2024-07-20', time: '4:00 PM', duration: 60, service: 'Wellness Coaching', price: 150 }
+    ];
+  }
 
   const getProvider = (providerId: string) => providers.find(p => p.id === providerId);
 
@@ -119,6 +138,14 @@ export function BookingBrowse() {
 
   return (
     <div className="p-6 space-y-6">
+      {/* Sign Out button, only visible when signed in */}
+      {user && (
+        <div className="flex justify-end mb-4">
+          <Button variant="outline" onClick={signOut}>
+            Sign Out
+          </Button>
+        </div>
+      )}
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold text-foreground">Browse & Book Appointments</h2>
         <div className="text-sm text-muted-foreground">
