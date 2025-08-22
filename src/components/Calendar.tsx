@@ -35,6 +35,25 @@ interface Opening {
 }
 
 export function Calendar() {
+  // Helper to parse time string (e.g., '09:00') to minutes since midnight
+  const parseTime = (timeStr: string): number => {
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    return hours * 60 + minutes;
+  };
+
+  // Helper to format minutes since midnight to 'HH:MM'
+  const formatTime = (minutes: number): string => {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
+  };
+
+  // Helper to calculate end time string given start time and duration (in hours)
+  const calculateEndTime = (startTime: string, duration: number): string => {
+    const startMinutes = parseTime(startTime);
+    const endMinutes = startMinutes + duration * 60;
+    return formatTime(endMinutes);
+  };
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showAddOpening, setShowAddOpening] = useState(false);
@@ -58,22 +77,30 @@ export function Calendar() {
     'July', 'August', 'September', 'October', 'November', 'December'
   ];
 
-  // Load openings for selected date
+  // Load all openings for the selected month once
   useEffect(() => {
-    if (selectedDate && user) {
-      loadOpenings();
+    if (currentDate && user) {
+      loadOpeningsForMonth();
     }
-  }, [selectedDate, user]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentDate, user]);
 
-  const loadOpenings = async () => {
-    if (!selectedDate || !user) return;
-    
+  // Only fetch once per month, store all in state
+  const loadOpeningsForMonth = async () => {
+    if (!currentDate || !user) return;
     try {
-      const dateStr = selectedDate.toISOString().split('T')[0];
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth();
+      const firstDay = new Date(year, month, 1);
+      const lastDay = new Date(year, month + 1, 0);
+      const startStr = firstDay.toISOString().split('T')[0];
+      const endStr = lastDay.toISOString().split('T')[0];
       const { data, error } = await supabase
         .from('openings')
         .select('*')
-        .eq('date', dateStr)
+        .gte('date', startStr)
+        .lte('date', endStr)
+        .order('date')
         .order('start_time');
 
       if (error) throw error;
@@ -167,6 +194,7 @@ export function Calendar() {
     return date1.toDateString() === date2.toDateString();
   };
 
+  // Use only stored openings for per-date display
   const getOpeningsForDate = (date: Date) => {
     const dateStr = date.toISOString().split('T')[0];
     return openings.filter(opening => opening.date === dateStr);
@@ -177,111 +205,85 @@ export function Calendar() {
     return getOpeningsForDate(date).length > 0;
   };
 
-  const getWorkerRate = (workerName: string) => {
+  const getWorkerRate = (workerName: string): number => {
     const rates: Record<string, number> = {
       'Sarah Johnson': 65,
       'Mike Wilson': 80,
       'Lisa Chen': 120
     };
-    return rates[workerName] || 50;
+    const rate = rates[workerName];
+    return typeof rate === 'number' ? rate : 0;
   };
 
-  const parseTime = (timeStr: string): number => {
-    const [hours, minutes] = timeStr.split(':').map(Number);
-    return hours * 60 + minutes;
-  };
-
-  const formatTime = (minutes: number): string => {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
-  };
-
-  const calculateEndTime = (startTime: string, duration: number): string => {
-    const startMinutes = parseTime(startTime);
-    const endMinutes = startMinutes + (duration * 60);
-    return formatTime(endMinutes);
-  };
-
+  // --- addOpening function restored below ---
   const addOpening = async () => {
     if (!user) {
       toast.error('Please sign in to add openings');
       return;
     }
-
     if (!validateForm()) {
       toast.error('Please fix validation errors');
       return;
     }
-
     setLoading(true);
     try {
-      const dateStr = selectedDate.toISOString().split('T')[0];
-      
-      if (newOpening.multipleSlots && newOpening.endTime) {
-        // Create multiple slots with intervals
-        const newOpenings = [];
-        const start = parseTime(newOpening.startTime);
-        const end = parseTime(newOpening.endTime);
-        let current = start;
-        
-        while (current < end) {
-          const startTimeStr = formatTime(current);
-          const endTimeStr = calculateEndTime(startTimeStr, newOpening.interval);
-          
-          newOpenings.push({
+        const dateStr = selectedDate.toISOString().split('T')[0];
+        if (newOpening.multipleSlots && newOpening.endTime) {
+          // Create multiple slots with intervals
+          const newOpenings = [];
+          const start = parseTime(newOpening.startTime);
+          const end = parseTime(newOpening.endTime);
+          let current = start;
+          while (current < end) {
+            const startTimeStr = formatTime(current);
+            const endTimeStr = calculateEndTime(startTimeStr, newOpening.interval);
+            newOpenings.push({
+              user_id: user.id,
+              date: dateStr,
+              start_time: startTimeStr,
+              end_time: endTimeStr,
+              duration: newOpening.interval,
+              worker: newOpening.worker,
+              service: newOpening.service,
+              is_available: true
+            });
+            current += newOpening.interval * 60; // Add interval in minutes
+          }
+          const { error } = await supabase
+            .from('openings')
+            .insert(newOpenings);
+          if (error) throw error;
+          toast.success(`${newOpenings.length} openings added successfully`);
+        } else {
+          // Create single slot
+          const opening = {
             user_id: user.id,
             date: dateStr,
-            start_time: startTimeStr,
-            end_time: endTimeStr,
-            duration: newOpening.interval,
+            start_time: newOpening.startTime,
+            end_time: calculateEndTime(newOpening.startTime, newOpening.duration),
+            duration: newOpening.duration,
             worker: newOpening.worker,
             service: newOpening.service,
             is_available: true
-          });
-          
-          current += newOpening.interval * 60; // Add interval in minutes
+          };
+          const { error } = await supabase
+            .from('openings')
+            .insert([opening]);
+          if (error) throw error;
+          toast.success('Opening added successfully');
         }
-        
-        const { error } = await supabase
-          .from('openings')
-          .insert(newOpenings);
-
-        if (error) throw error;
-        
-        toast.success(`${newOpenings.length} openings added successfully`);
-      } else {
-        // Create single slot
-        const opening = {
-          user_id: user.id,
-          date: dateStr,
-          start_time: newOpening.startTime,
-          end_time: calculateEndTime(newOpening.startTime, newOpening.duration),
-          duration: newOpening.duration,
-          worker: newOpening.worker,
-          service: newOpening.service,
-          is_available: true
-        };
-        
-        const { error } = await supabase
-          .from('openings')
-          .insert([opening]);
-
-        if (error) throw error;
-        
-        toast.success('Opening added successfully');
+        // Refresh all openings for the month after add
+        await loadOpeningsForMonth();
+        resetForm();
+        setShowAddOpening(false);
+      } catch (error) {
+        console.error('Error adding opening:', error);
+        toast.error('Failed to add opening');
+      } finally {
+        setLoading(false);
       }
-      
-      await loadOpenings();
-      resetForm();
-      setShowAddOpening(false);
-    } catch (error) {
-      console.error('Error adding opening:', error);
-      toast.error('Failed to add opening');
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+// ...existing code...
 
   const resetForm = () => {
     setNewOpening({ 
@@ -311,7 +313,7 @@ export function Calendar() {
 
       if (error) throw error;
       
-      await loadOpenings();
+  await loadOpeningsForMonth();
       toast.success('Opening removed successfully');
     } catch (error) {
       console.error('Error removing opening:', error);
@@ -391,26 +393,35 @@ export function Calendar() {
               ))}
             </div>
             <div className="grid grid-cols-7 gap-1">
-              {getDaysInMonth(currentDate).map((date, index) => (
-                <div
-                  key={index}
-                  className={`p-2 h-12 flex flex-col items-center justify-center text-sm cursor-pointer rounded-lg transition-colors relative ${
-                    !date
-                      ? ''
-                      : isToday(date)
-                      ? 'bg-calendar-today text-primary-foreground font-bold'
-                      : isSameDate(date, selectedDate)
-                      ? 'bg-primary-light text-primary ring-2 ring-primary ring-offset-2 ring-offset-background'
-                      : 'hover:bg-secondary'
-                  }`}
-                  onClick={() => date && setSelectedDate(date)}
-                >
-                  <span>{date?.getDate()}</span>
-                  {date && hasOpenings(date) && (
-                    <div className="w-2 h-2 bg-primary rounded-full mt-0.5 animate-pulse shadow-sm" />
-                  )}
-                </div>
-              ))}
+              {getDaysInMonth(currentDate).map((date, index) => {
+                const openingCount = date ? getOpeningsForDate(date).length : 0;
+                return (
+                  <div
+                    key={index}
+                    className={`p-2 h-12 flex flex-col items-center justify-center text-sm cursor-pointer rounded-lg transition-colors relative ${
+                      !date
+                        ? ''
+                        : isToday(date)
+                        ? 'bg-calendar-today text-primary-foreground font-bold'
+                        : isSameDate(date, selectedDate)
+                        ? 'bg-primary-light text-primary ring-2 ring-primary ring-offset-2 ring-offset-background'
+                        : 'hover:bg-secondary'
+                    }`}
+                    onClick={() => date && setSelectedDate(date)}
+                  >
+                    <span>{date?.getDate()}</span>
+                    {/* Show indicator with count for dates with openings */}
+                    {date && openingCount > 0 && (
+                      <span
+                        className="block text-xs rounded-full bg-primary text-primary-foreground px-1 mt-1 mx-auto min-w-[1.5em] text-center"
+                        title={`${openingCount} opening${openingCount > 1 ? 's' : ''}`}
+                      >
+                        {openingCount}
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </CardContent>
         </Card>
@@ -457,7 +468,7 @@ export function Calendar() {
                     <div className="font-medium">{opening.service}</div>
                     <div className="flex items-center space-x-2">
                       <DollarSign className="h-3 w-3" />
-                      <span>${getWorkerRate(opening.worker) * opening.duration}</span>
+                      <span>${Number(getWorkerRate(opening.worker)) * Number(opening.duration)}</span>
                     </div>
                   </div>
                 </div>
@@ -624,11 +635,11 @@ export function Calendar() {
             {newOpening.worker && (
               <div className="bg-secondary/30 p-3 rounded-lg">
                 <div className="text-sm text-muted-foreground">Rate Preview</div>
-                <div className="font-medium">${getWorkerRate(newOpening.worker)}/hour</div>
+                <div className="font-medium">${Number(getWorkerRate(newOpening.worker))}/hour</div>
                 {newOpening.multipleSlots ? (
-                  <div className="text-sm">Each slot: ${getWorkerRate(newOpening.worker) * newOpening.interval}</div>
+                  <div className="text-sm">Each slot: ${Number(getWorkerRate(newOpening.worker)) * Number(newOpening.interval)}</div>
                 ) : (
-                  <div className="text-sm">Total: ${getWorkerRate(newOpening.worker) * newOpening.duration}</div>
+                  <div className="text-sm">Total: ${Number(getWorkerRate(newOpening.worker)) * Number(newOpening.duration)}</div>
                 )}
               </div>
             )}

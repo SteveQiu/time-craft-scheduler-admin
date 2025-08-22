@@ -43,25 +43,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signInWithGoogle = async () => {
     try {
       console.log('Attempting Google sign-in...');
-      console.log('Current origin:', window.location.origin);
-      console.log('Current href:', window.location.href);
-      
+      const dynamicRedirectUri = window.location.origin;
+      console.log('Dynamic redirect URI:', dynamicRedirectUri);
       // Clear any existing session first
       await supabase.auth.signOut();
-      
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.href,
+          redirectTo: dynamicRedirectUri,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
           },
         }
       });
-      
       console.log('Sign-in response:', { data, error });
-      
       if (error) {
         console.error('Error signing in:', error);
         throw error;
