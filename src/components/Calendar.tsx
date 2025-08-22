@@ -353,7 +353,7 @@ export function Calendar() {
       </div>
 
       {!user && (
-        <div className="bg-warning/10 border border-warning text-warning-foreground p-4 rounded-lg">
+  <div className="bg-warning/10 border border-warning text-black p-4 rounded-lg">
           Please sign in to manage your openings.
         </div>
       )}

@@ -5,7 +5,8 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Input } from './ui/input';
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from './ui/alert-dialog';
-import { Calendar, Clock, User, MapPin, Star, Search, Filter } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, User, MapPin, Star, Search, Filter } from 'lucide-react';
+import { Calendar as DayPickerCalendar } from './ui/calendar';
 
 interface Provider {
   id: string;
@@ -178,11 +179,24 @@ export function BookingBrowse() {
             
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">Date</label>
-              <Input
-                type="date"
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
+              <DayPickerCalendar
+                mode="single"
+                selected={selectedDate ? new Date(selectedDate) : undefined}
+                onSelect={(date: Date | undefined) => {
+                  if (date) setSelectedDate(date.toISOString().split('T')[0]);
+                }}
+                modifiers={{
+                  hasSlots: (date: Date) => {
+                    const dateStr = date.toISOString().split('T')[0];
+                    return availableSlots.some(slot => slot.date === dateStr);
+                  }
+                }}
+                modifiersClassNames={{
+                  hasSlots: 'has-slots-indicator'
+                }}
               />
+/* Add this to your global CSS (e.g., index.css) if not present already: */
+/*
             </div>
             
             <div className="space-y-2">
@@ -234,7 +248,7 @@ export function BookingBrowse() {
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div className="flex items-center space-x-2">
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <CalendarIcon className="h-4 w-4 text-muted-foreground" />
                     <span>{new Date(slot.date).toLocaleDateString()}</span>
                   </div>
                   <div className="flex items-center space-x-2">
@@ -274,7 +288,7 @@ export function BookingBrowse() {
       {filteredSlots.length === 0 && (
         <Card className="shadow-soft border-card-border">
           <CardContent className="text-center py-12">
-            <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <CalendarIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-medium text-foreground mb-2">No appointments found</h3>
             <p className="text-muted-foreground">Try adjusting your search criteria or check back later for new availability.</p>
           </CardContent>
