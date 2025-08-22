@@ -11,6 +11,7 @@ import { Calendar } from "@/components/Calendar";
 import { BookingBrowse } from "@/components/BookingBrowse";
 import { Workers } from "@/components/Workers";
 import { Appointments } from "@/components/Appointments";
+import { Navigation } from "@/components/ui/navigation";
 // Settings can be a placeholder for now
 const Settings = () => (
   <div className="p-6">
@@ -28,6 +29,9 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <div className="min-h-screen bg-background">
+            <Navigation />
+            <main className="max-w-7xl mx-auto">
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/dashboard" element={<Dashboard />} />
@@ -39,6 +43,8 @@ const App = () => (
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
+            </main>
+          </div>
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>
