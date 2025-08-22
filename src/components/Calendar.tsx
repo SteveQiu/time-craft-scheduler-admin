@@ -392,36 +392,43 @@ export function Calendar() {
                 </div>
               ))}
             </div>
-            <div className="grid grid-cols-7 gap-1">
-              {getDaysInMonth(currentDate).map((date, index) => {
-                const openingCount = date ? getOpeningsForDate(date).length : 0;
-                return (
-                  <div
-                    key={index}
-                    className={`p-2 h-12 flex flex-col items-center justify-center text-sm cursor-pointer rounded-lg transition-colors relative ${
-                      !date
-                        ? ''
-                        : isToday(date)
-                        ? 'bg-calendar-today text-primary-foreground font-bold'
-                        : isSameDate(date, selectedDate)
-                        ? 'bg-primary-light text-primary ring-2 ring-primary ring-offset-2 ring-offset-background'
-                        : 'hover:bg-secondary'
-                    }`}
-                    onClick={() => date && setSelectedDate(date)}
-                  >
-                    <span>{date?.getDate()}</span>
-                    {/* Show indicator with count for dates with openings */}
-                    {date && openingCount > 0 && (
-                      <span
-                        className="block text-xs rounded-full bg-primary text-primary-foreground px-1 mt-1 mx-auto min-w-[1.5em] text-center"
-                        title={`${openingCount} opening${openingCount > 1 ? 's' : ''}`}
-                      >
-                        {openingCount}
-                      </span>
-                    )}
-                  </div>
-                );
-              })}
+            <div className="relative">
+              {loading && (
+                <div className="absolute inset-0 bg-white bg-opacity-70 flex items-center justify-center z-10">
+                  <span className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></span>
+                </div>
+              )}
+              <div className="grid grid-cols-7 gap-1">
+                {getDaysInMonth(currentDate).map((date, index) => {
+                  const openingCount = date ? getOpeningsForDate(date).length : 0;
+                  return (
+                    <div
+                      key={index}
+                      className={`p-2 h-12 flex flex-col items-center justify-center text-sm cursor-pointer rounded-lg transition-colors relative ${
+                        !date
+                          ? ''
+                          : isToday(date)
+                          ? 'bg-calendar-today text-primary-foreground font-bold'
+                          : isSameDate(date, selectedDate)
+                          ? 'bg-primary-light text-primary ring-2 ring-primary ring-offset-2 ring-offset-background'
+                          : 'hover:bg-secondary'
+                      }`}
+                      onClick={() => date && setSelectedDate(date)}
+                    >
+                      <span>{date?.getDate()}</span>
+                      {/* Show indicator with count for dates with openings */}
+                      {date && openingCount > 0 && (
+                        <span
+                          className="block text-xs rounded-full bg-primary text-primary-foreground px-1 mt-1 mx-auto min-w-[1.5em] text-center"
+                          title={`${openingCount} opening${openingCount > 1 ? 's' : ''}`}
+                        >
+                          {openingCount}
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </CardContent>
         </Card>

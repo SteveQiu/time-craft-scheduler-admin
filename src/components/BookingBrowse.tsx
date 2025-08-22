@@ -179,22 +179,6 @@ export function BookingBrowse() {
             
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">Date</label>
-              <DayPickerCalendar
-                mode="single"
-                selected={selectedDate ? new Date(selectedDate) : undefined}
-                onSelect={(date: Date | undefined) => {
-                  if (date) setSelectedDate(date.toISOString().split('T')[0]);
-                }}
-                modifiers={{
-                  hasSlots: (date: Date) => {
-                    const dateStr = date.toISOString().split('T')[0];
-                    return availableSlots.some(slot => slot.date === dateStr);
-                  }
-                }}
-                modifiersClassNames={{
-                  hasSlots: 'has-slots-indicator'
-                }}
-              />
 /* Add this to your global CSS (e.g., index.css) if not present already: */
 /*
             </div>
