@@ -11,6 +11,7 @@ import { Calendar } from "@/components/Calendar";
 import { BookingBrowse } from "@/components/BookingBrowse";
 import { Workers } from "@/components/Workers";
 import { Appointments } from "@/components/Appointments";
+import { AppointmentView } from "@/pages/AppointmentView";
 import { Navigation } from "@/components/ui/navigation";
 // Settings can be a placeholder for now
 const Settings = () => (
@@ -39,6 +40,7 @@ const App = () => (
             <Route path="/browse" element={<BookingBrowse />} />
             <Route path="/workers" element={<Workers />} />
             <Route path="/appointments" element={<Appointments />} />
+            <Route path="/appointments/:id" element={<AppointmentView />} />
             <Route path="/settings" element={<Settings />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

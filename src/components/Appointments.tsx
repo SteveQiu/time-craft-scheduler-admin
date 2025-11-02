@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
@@ -22,6 +23,7 @@ interface Appointment {
 }
 
 export function Appointments() {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedAppointments, setSelectedAppointments] = useState<string[]>([]);
@@ -302,7 +304,11 @@ export function Appointments() {
                           <span>Complete</span>
                         </Button>
                       )}
-                      <Button variant="outline" size="sm">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => navigate(`/appointments/${appointment.id}`)}
+                      >
                         View
                       </Button>
                     </div>

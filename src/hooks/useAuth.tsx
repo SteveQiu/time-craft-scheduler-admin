@@ -19,6 +19,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Dev mode bypass for lovable.dev
+    if (window.location.hostname.includes('lovable.dev')) {
+      const mockUser = {
+        id: 'dev-mock-user',
+        email: 'dev@lovable.dev',
+        app_metadata: {},
+        user_metadata: {},
+        aud: 'authenticated',
+        created_at: new Date().toISOString(),
+      } as User;
+      
+      const mockSession = {
+        user: mockUser,
+        access_token: 'mock-token',
+        refresh_token: 'mock-refresh',
+        expires_in: 3600,
+        expires_at: Date.now() + 3600000,
+        token_type: 'bearer',
+      } as Session;
+      
+      setUser(mockUser);
+      setSession(mockSession);
+      setLoading(false);
+      return;
+    }
+
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
