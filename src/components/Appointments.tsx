@@ -6,7 +6,7 @@ import { Badge } from './ui/badge';
 import { Input } from './ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Checkbox } from './ui/checkbox';
-import { Search, Filter, Calendar, Clock, User, Phone, Mail, Check, X, CheckCircle } from 'lucide-react';
+import { Search, Filter, Calendar, Clock, User, Phone, Mail, Check, X, CheckCircle, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface Appointment {
   id: string;
@@ -27,6 +27,7 @@ export function Appointments() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedAppointments, setSelectedAppointments] = useState<string[]>([]);
+  const [showInactive, setShowInactive] = useState(false);
   const [appointments, setAppointments] = useState<Appointment[]>([
     {
       id: '1',
@@ -365,26 +366,41 @@ export function Appointments() {
       {/* Inactive Appointments Section */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-xl font-semibold text-foreground">Inactive Appointments</h3>
+          <Button
+            variant="ghost"
+            onClick={() => setShowInactive(!showInactive)}
+            className="flex items-center space-x-2 p-0 h-auto hover:bg-transparent"
+          >
+            <h3 className="text-xl font-semibold text-foreground">Inactive Appointments</h3>
+            {showInactive ? (
+              <ChevronUp className="h-5 w-5" />
+            ) : (
+              <ChevronDown className="h-5 w-5" />
+            )}
+          </Button>
           <Badge variant="outline" className="text-sm">
             {inactiveAppointments.length} {inactiveAppointments.length === 1 ? 'appointment' : 'appointments'}
           </Badge>
         </div>
         
-        {inactiveAppointments.length > 0 ? (
-          <div className="space-y-4">
-            {inactiveAppointments.map(renderAppointmentCard)}
-          </div>
-        ) : (
-          <Card className="shadow-soft border-card-border">
-            <CardContent className="text-center py-12">
-              <div className="text-muted-foreground">
-                <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p className="text-lg">No inactive appointments</p>
-                <p className="text-sm">Completed and cancelled appointments will appear here</p>
+        {showInactive && (
+          <>
+            {inactiveAppointments.length > 0 ? (
+              <div className="space-y-4">
+                {inactiveAppointments.map(renderAppointmentCard)}
               </div>
-            </CardContent>
-          </Card>
+            ) : (
+              <Card className="shadow-soft border-card-border">
+                <CardContent className="text-center py-12">
+                  <div className="text-muted-foreground">
+                    <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p className="text-lg">No inactive appointments</p>
+                    <p className="text-sm">Completed and cancelled appointments will appear here</p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </>
         )}
       </div>
     </div>
