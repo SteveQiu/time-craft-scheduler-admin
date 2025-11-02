@@ -115,6 +115,15 @@ export function Appointments() {
     return matchesSearch && matchesStatus;
   });
 
+  // Separate active and inactive appointments
+  const activeAppointments = filteredAppointments.filter(
+    apt => apt.status === 'confirmed' || apt.status === 'pending'
+  );
+  
+  const inactiveAppointments = filteredAppointments.filter(
+    apt => apt.status === 'completed' || apt.status === 'cancelled'
+  );
+
   const handleSelectAppointment = (appointmentId: string) => {
     setSelectedAppointments(prev => 
       prev.includes(appointmentId) 
@@ -125,9 +134,9 @@ export function Appointments() {
 
   const handleSelectAll = () => {
     setSelectedAppointments(
-      selectedAppointments.length === filteredAppointments.length 
+      selectedAppointments.length === activeAppointments.length 
         ? [] 
-        : filteredAppointments.map(apt => apt.id)
+        : activeAppointments.map(apt => apt.id)
     );
   };
 
@@ -162,6 +171,99 @@ export function Appointments() {
       )
     );
   };
+
+  const renderAppointmentCard = (appointment: Appointment) => (
+    <Card key={appointment.id} className="shadow-soft border-card-border hover:shadow-medium transition-shadow">
+      <CardContent className="p-6">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between space-y-4 lg:space-y-0">
+          {/* Client Info */}
+          <div className="flex items-center space-x-4">
+            {(appointment.status === 'confirmed' || appointment.status === 'pending') && (
+              <Checkbox
+                checked={selectedAppointments.includes(appointment.id)}
+                onCheckedChange={() => handleSelectAppointment(appointment.id)}
+                className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+              />
+            )}
+            <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center">
+              <span className="text-primary-foreground font-semibold">
+                {appointment.clientName.split(' ').map(n => n[0]).join('')}
+              </span>
+            </div>
+            <div>
+              <h3 className="font-semibold text-foreground">{appointment.clientName}</h3>
+              <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+                <div className="flex items-center space-x-1">
+                  <Mail className="h-3 w-3" />
+                  <span>{appointment.clientEmail}</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <Phone className="h-3 w-3" />
+                  <span>{appointment.clientPhone}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Appointment Details */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-6">
+            <div className="text-center sm:text-left">
+              <p className="font-medium text-foreground">{appointment.service}</p>
+              <div className="flex items-center space-x-1 text-sm text-muted-foreground">
+                <User className="h-3 w-3" />
+                <span>{appointment.workerName}</span>
+              </div>
+            </div>
+
+            <div className="text-center sm:text-left">
+              <div className="flex items-center space-x-1 text-sm font-medium text-foreground">
+                <Calendar className="h-3 w-3" />
+                <span>{new Date(appointment.date).toLocaleDateString()}</span>
+              </div>
+              <div className="flex items-center space-x-1 text-sm text-muted-foreground">
+                <Clock className="h-3 w-3" />
+                <span>{appointment.time} ({appointment.duration}min)</span>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-3">
+              <Badge className={getStatusColor(appointment.status)}>
+                {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
+              </Badge>
+              <div className="flex gap-1">
+                {appointment.status === 'confirmed' && (
+                  <Button 
+                    variant="default" 
+                    size="sm"
+                    onClick={() => handleComplete(appointment.id)}
+                    className="flex items-center space-x-1"
+                  >
+                    <CheckCircle className="h-3 w-3" />
+                    <span>Complete</span>
+                  </Button>
+                )}
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => navigate(`/appointments/${appointment.id}`)}
+                >
+                  View
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {appointment.notes && (
+          <div className="mt-4 p-3 bg-secondary rounded-lg">
+            <p className="text-sm text-muted-foreground">
+              <strong>Notes:</strong> {appointment.notes}
+            </p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
 
   return (
     <div className="p-6 space-y-6">
@@ -200,7 +302,7 @@ export function Appointments() {
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex items-center space-x-2">
               <Checkbox
-                checked={selectedAppointments.length === filteredAppointments.length && filteredAppointments.length > 0}
+                checked={selectedAppointments.length === activeAppointments.length && activeAppointments.length > 0}
                 onCheckedChange={handleSelectAll}
                 className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
               />
@@ -234,111 +336,57 @@ export function Appointments() {
         </CardContent>
       </Card>
 
-      {/* Appointments List */}
+      {/* Active Appointments Section */}
       <div className="space-y-4">
-        {filteredAppointments.map((appointment) => (
-          <Card key={appointment.id} className="shadow-soft border-card-border hover:shadow-medium transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex flex-col lg:flex-row lg:items-center justify-between space-y-4 lg:space-y-0">
-                {/* Client Info */}
-                <div className="flex items-center space-x-4">
-                  <Checkbox
-                    checked={selectedAppointments.includes(appointment.id)}
-                    onCheckedChange={() => handleSelectAppointment(appointment.id)}
-                    className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                  />
-                  <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center">
-                    <span className="text-primary-foreground font-semibold">
-                      {appointment.clientName.split(' ').map(n => n[0]).join('')}
-                    </span>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-foreground">{appointment.clientName}</h3>
-                    <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-                      <div className="flex items-center space-x-1">
-                        <Mail className="h-3 w-3" />
-                        <span>{appointment.clientEmail}</span>
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        <Phone className="h-3 w-3" />
-                        <span>{appointment.clientPhone}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Appointment Details */}
-                <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-6">
-                  <div className="text-center sm:text-left">
-                    <p className="font-medium text-foreground">{appointment.service}</p>
-                    <div className="flex items-center space-x-1 text-sm text-muted-foreground">
-                      <User className="h-3 w-3" />
-                      <span>{appointment.workerName}</span>
-                    </div>
-                  </div>
-
-                  <div className="text-center sm:text-left">
-                    <div className="flex items-center space-x-1 text-sm font-medium text-foreground">
-                      <Calendar className="h-3 w-3" />
-                      <span>{new Date(appointment.date).toLocaleDateString()}</span>
-                    </div>
-                    <div className="flex items-center space-x-1 text-sm text-muted-foreground">
-                      <Clock className="h-3 w-3" />
-                      <span>{appointment.time} ({appointment.duration}min)</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center space-x-3">
-                    <Badge className={getStatusColor(appointment.status)}>
-                      {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
-                    </Badge>
-                    <div className="flex gap-1">
-                      {appointment.status === 'confirmed' && (
-                        <Button 
-                          variant="default" 
-                          size="sm"
-                          onClick={() => handleComplete(appointment.id)}
-                          className="flex items-center space-x-1"
-                        >
-                          <CheckCircle className="h-3 w-3" />
-                          <span>Complete</span>
-                        </Button>
-                      )}
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => navigate(`/appointments/${appointment.id}`)}
-                      >
-                        View
-                      </Button>
-                    </div>
-                  </div>
-                </div>
+        <div className="flex items-center justify-between">
+          <h3 className="text-xl font-semibold text-foreground">Active Appointments</h3>
+          <Badge variant="outline" className="text-sm">
+            {activeAppointments.length} {activeAppointments.length === 1 ? 'appointment' : 'appointments'}
+          </Badge>
+        </div>
+        
+        {activeAppointments.length > 0 ? (
+          <div className="space-y-4">
+            {activeAppointments.map(renderAppointmentCard)}
+          </div>
+        ) : (
+          <Card className="shadow-soft border-card-border">
+            <CardContent className="text-center py-12">
+              <div className="text-muted-foreground">
+                <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p className="text-lg">No active appointments</p>
+                <p className="text-sm">Confirmed and pending appointments will appear here</p>
               </div>
-
-              {appointment.notes && (
-                <div className="mt-4 p-3 bg-secondary rounded-lg">
-                  <p className="text-sm text-muted-foreground">
-                    <strong>Notes:</strong> {appointment.notes}
-                  </p>
-                </div>
-              )}
             </CardContent>
           </Card>
-        ))}
+        )}
       </div>
 
-      {filteredAppointments.length === 0 && (
-        <Card className="shadow-soft border-card-border">
-          <CardContent className="text-center py-12">
-            <div className="text-muted-foreground">
-              <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p className="text-lg">No appointments found</p>
-              <p className="text-sm">Try adjusting your search terms or filters</p>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      {/* Inactive Appointments Section */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-xl font-semibold text-foreground">Inactive Appointments</h3>
+          <Badge variant="outline" className="text-sm">
+            {inactiveAppointments.length} {inactiveAppointments.length === 1 ? 'appointment' : 'appointments'}
+          </Badge>
+        </div>
+        
+        {inactiveAppointments.length > 0 ? (
+          <div className="space-y-4">
+            {inactiveAppointments.map(renderAppointmentCard)}
+          </div>
+        ) : (
+          <Card className="shadow-soft border-card-border">
+            <CardContent className="text-center py-12">
+              <div className="text-muted-foreground">
+                <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p className="text-lg">No inactive appointments</p>
+                <p className="text-sm">Completed and cancelled appointments will appear here</p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </div>
   );
 }
