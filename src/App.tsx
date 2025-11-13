@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
+import { SidebarProvider } from "@/components/ui/sidebar";
 
 import NotFound from "./pages/NotFound";
 import { Dashboard } from "@/components/Dashboard";
@@ -13,6 +14,8 @@ import { Workers } from "@/components/Workers";
 import { Appointments } from "@/components/Appointments";
 import { AppointmentView } from "@/pages/AppointmentView";
 import { Navigation } from "@/components/ui/navigation";
+import { AppSidebar } from "@/components/AppSidebar";
+
 // Settings can be a placeholder for now
 const Settings = () => (
   <div className="p-6">
@@ -30,23 +33,28 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <div className="min-h-screen bg-background">
-            <Navigation />
-            <main className="max-w-7xl mx-auto">
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/calendar" element={<Calendar />} />
-            <Route path="/browse" element={<BookingBrowse />} />
-            <Route path="/workers" element={<Workers />} />
-            <Route path="/appointments" element={<Appointments />} />
-            <Route path="/appointments/:id" element={<AppointmentView />} />
-            <Route path="/settings" element={<Settings />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-            </main>
-          </div>
+          <SidebarProvider defaultOpen={true}>
+            <div className="min-h-screen flex w-full bg-background">
+              <AppSidebar />
+              <div className="flex-1 flex flex-col">
+                <Navigation />
+                <main className="flex-1 max-w-7xl mx-auto w-full">
+                  <Routes>
+                    <Route path="/" element={<Dashboard />} />
+                    <Route path="/dashboard" element={<Dashboard />} />
+                    <Route path="/calendar" element={<Calendar />} />
+                    <Route path="/browse" element={<BookingBrowse />} />
+                    <Route path="/workers" element={<Workers />} />
+                    <Route path="/appointments" element={<Appointments />} />
+                    <Route path="/appointments/:id" element={<AppointmentView />} />
+                    <Route path="/settings" element={<Settings />} />
+                    {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </main>
+              </div>
+            </div>
+          </SidebarProvider>
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>
