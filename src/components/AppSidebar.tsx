@@ -1,4 +1,4 @@
-import { Search, Home, Calendar, Users, Clock, Settings, LogIn, LayoutGrid } from 'lucide-react';
+import { Search, Home, Calendar as CalendarIcon, Users, Clock, Settings, LogIn, User, Building2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRoles } from '@/hooks/useUserRoles';
 import { Link, useLocation } from 'react-router-dom';
@@ -30,7 +30,7 @@ export function AppSidebar() {
 
   const orgNavItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Home, path: '/dashboard' },
-    { id: 'calendar', label: 'Opening Hours', icon: Calendar, path: '/calendar' },
+    { id: 'calendar', label: 'Opening Hours', icon: CalendarIcon, path: '/calendar' },
     { id: 'workers', label: 'Workers', icon: Users, path: '/workers' },
     { id: 'appointments-org', label: 'Manage Appointments', icon: Clock, path: '/appointments' },
   ];
@@ -39,9 +39,10 @@ export function AppSidebar() {
     return location.pathname === path || (path === '/dashboard' && location.pathname === '/');
   };
 
-  // Show organization menu items based on role and view mode
-  const showOrgSection = isInternalDev || isOrganization || (isOrganization && viewMode === 'org');
-  const showUserSection = isInternalDev || isUser || (isOrganization && viewMode === 'user');
+  // Show sections based on role and view mode
+  // When viewMode is 'org', show user section only; when 'user', show org section only
+  const showOrgSection = isInternalDev || (isOrganization && viewMode === 'user');
+  const showUserSection = isInternalDev || isUser || (isOrganization && viewMode === 'org');
 
   if (rolesLoading) {
     return (
@@ -56,29 +57,16 @@ export function AppSidebar() {
   return (
     <Sidebar className="border-r border-border">
       <SidebarContent>
-        {/* View Mode Switcher for Organizations */}
-        {isOrganization && !isInternalDev && (
-          <>
-            <SidebarGroup>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      onClick={() => setViewMode(viewMode === 'user' ? 'org' : 'user')}
-                      className="flex items-center justify-between"
-                    >
-                      <div className="flex items-center gap-2">
-                        <LayoutGrid className="h-4 w-4" />
-                        <span>Switch to {viewMode === 'user' ? 'Organization' : 'User'} View</span>
-                      </div>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-            <Separator className="my-2" />
-          </>
-        )}
+        {/* Logo at the top */}
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <div className="flex items-center space-x-2 px-4 py-3">
+              <CalendarIcon className="h-8 w-8 text-primary" />
+              {open && <h1 className="text-xl font-bold text-foreground">AppointmentPro</h1>}
+            </div>
+          </SidebarGroupContent>
+        </SidebarGroup>
+        <Separator className="my-2" />
 
         {/* User Section */}
         {showUserSection && (
@@ -166,6 +154,37 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {/* View Mode Switcher for Organizations - at bottom */}
+        {isOrganization && !isInternalDev && (
+          <>
+            <Separator className="my-2" />
+            <SidebarGroup>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      onClick={() => setViewMode(viewMode === 'user' ? 'org' : 'user')}
+                      className="flex items-center gap-2"
+                    >
+                      {viewMode === 'org' ? (
+                        <>
+                          <Building2 className="h-4 w-4" />
+                          <span>I am Organization</span>
+                        </>
+                      ) : (
+                        <>
+                          <User className="h-4 w-4" />
+                          <span>I am User</span>
+                        </>
+                      )}
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </>
+        )}
       </SidebarContent>
     </Sidebar>
   );
