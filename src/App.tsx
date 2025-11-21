@@ -13,16 +13,10 @@ import { BookingBrowse } from "@/components/BookingBrowse";
 import { Workers } from "@/components/Workers";
 import { Appointments } from "@/components/Appointments";
 import { AppointmentView } from "@/pages/AppointmentView";
+import Auth from "@/pages/Auth";
+import Settings from "@/pages/Settings";
 import { Navigation } from "@/components/ui/navigation";
 import { AppSidebar } from "@/components/AppSidebar";
-
-// Settings can be a placeholder for now
-const Settings = () => (
-  <div className="p-6">
-    <h2 className="text-3xl font-bold text-foreground mb-4">Settings</h2>
-    <p className="text-muted-foreground">Settings page coming soon.</p>
-  </div>
-);
 
 const queryClient = new QueryClient();
 
@@ -47,6 +41,7 @@ const App = () => (
                     <Route path="/workers" element={<Workers />} />
                     <Route path="/appointments" element={<Appointments />} />
                     <Route path="/appointments/:id" element={<AppointmentView />} />
+                    <Route path="/auth" element={<Auth />} />
                     <Route path="/settings" element={<Settings />} />
                     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                     <Route path="*" element={<NotFound />} />
