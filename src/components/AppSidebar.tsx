@@ -6,6 +6,7 @@ import { useState } from 'react';
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -133,25 +134,14 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {user ? (
-                <>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={isActive('/settings')}>
-                      <Link to="/settings" className="flex items-center">
-                        <Settings className="h-4 w-4" />
-                        <span>Settings</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      onClick={() => signOut()}
-                      className="flex items-center text-destructive hover:text-destructive"
-                    >
-                      <LogOut className="h-4 w-4" />
-                      <span>Sign Out</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                </>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={isActive('/settings')}>
+                    <Link to="/settings" className="flex items-center">
+                      <Settings className="h-4 w-4" />
+                      <span>Settings</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
               ) : (
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={isActive('/auth')}>
@@ -165,38 +155,51 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+      </SidebarContent>
 
-        {/* View Mode Switcher for Organizations - at bottom */}
+      <SidebarFooter>
+        {/* View Mode Switcher for Organizations */}
         {isOrganization && !isInternalDev && (
           <>
-            <Separator className="my-2" />
-            <SidebarGroup>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      onClick={() => setViewMode(viewMode === 'user' ? 'org' : 'user')}
-                      className="flex items-center gap-2"
-                    >
-                      {viewMode === 'org' ? (
-                        <>
-                          <Building2 className="h-4 w-4" />
-                          <span>I am Organization</span>
-                        </>
-                      ) : (
-                        <>
-                          <User className="h-4 w-4" />
-                          <span>I am User</span>
-                        </>
-                      )}
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  onClick={() => setViewMode(viewMode === 'user' ? 'org' : 'user')}
+                  className="flex items-center gap-2"
+                >
+                  {viewMode === 'org' ? (
+                    <>
+                      <Building2 className="h-4 w-4" />
+                      <span>I am Organization</span>
+                    </>
+                  ) : (
+                    <>
+                      <User className="h-4 w-4" />
+                      <span>I am User</span>
+                    </>
+                  )}
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+            <Separator />
           </>
         )}
-      </SidebarContent>
+
+        {/* Sign Out - always last */}
+        {user && (
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                onClick={() => signOut()}
+                className="flex items-center text-destructive hover:text-destructive"
+              >
+                <LogOut className="h-4 w-4" />
+                <span>Sign Out</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        )}
+      </SidebarFooter>
     </Sidebar>
   );
 }
