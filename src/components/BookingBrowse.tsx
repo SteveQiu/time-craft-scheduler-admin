@@ -139,14 +139,6 @@ export function BookingBrowse() {
 
   return (
     <div className="p-6 space-y-6">
-      {/* Sign Out button, only visible when signed in */}
-      {user && (
-        <div className="flex justify-end mb-4">
-          <Button variant="outline" onClick={signOut}>
-            Sign Out
-          </Button>
-        </div>
-      )}
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold text-foreground">Browse & Book Appointments</h2>
         <div className="text-sm text-muted-foreground">

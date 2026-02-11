@@ -1,4 +1,4 @@
-import { Search, Home, Calendar as CalendarIcon, Users, Clock, Settings, LogIn, User, Building2 } from 'lucide-react';
+import { Search, Home, Calendar as CalendarIcon, Users, Clock, Settings, LogIn, LogOut, User, Building2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRoles } from '@/hooks/useUserRoles';
 import { Link, useLocation } from 'react-router-dom';
@@ -17,7 +17,7 @@ import {
 import { Separator } from '@/components/ui/separator';
 
 export function AppSidebar() {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const { isUser, isOrganization, isInternalDev, loading: rolesLoading } = useUserRoles();
   const location = useLocation();
   const { open } = useSidebar();
@@ -133,14 +133,25 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {user ? (
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive={isActive('/settings')}>
-                    <Link to="/settings" className="flex items-center">
-                      <Settings className="h-4 w-4" />
-                      <span>Settings</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+                <>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={isActive('/settings')}>
+                      <Link to="/settings" className="flex items-center">
+                        <Settings className="h-4 w-4" />
+                        <span>Settings</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      onClick={() => signOut()}
+                      className="flex items-center text-destructive hover:text-destructive"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      <span>Sign Out</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </>
               ) : (
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={isActive('/auth')}>
