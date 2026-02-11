@@ -110,7 +110,12 @@ export function BookingBrowse() {
 
   const getProvider = (providerId: string) => providers.find(p => p.id === providerId);
 
+  const today = new Date().toISOString().split('T')[0];
+
   const filteredSlots = availableSlots.filter(slot => {
+    // Only show slots from today onward
+    if (slot.date < today) return false;
+
     const provider = getProvider(slot.providerId);
     if (!provider) return false;
     
