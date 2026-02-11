@@ -117,12 +117,13 @@ export function Appointments() {
   });
 
   // Separate active and inactive appointments
+  const today = new Date().toISOString().split('T')[0];
   const activeAppointments = filteredAppointments.filter(
-    apt => apt.status === 'confirmed' || apt.status === 'pending'
+    apt => (apt.status === 'confirmed' || apt.status === 'pending') && apt.date >= today
   );
   
   const inactiveAppointments = filteredAppointments.filter(
-    apt => apt.status === 'completed' || apt.status === 'cancelled'
+    apt => apt.status === 'completed' || apt.status === 'cancelled' || apt.date < today
   );
 
   const handleSelectAppointment = (appointmentId: string) => {
