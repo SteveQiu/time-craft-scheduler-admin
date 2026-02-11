@@ -15,7 +15,7 @@ import { Appointments } from "@/components/Appointments";
 import { AppointmentView } from "@/pages/AppointmentView";
 import Auth from "@/pages/Auth";
 import Settings from "@/pages/Settings";
-import { Navigation } from "@/components/ui/navigation";
+
 import { AppSidebar } from "@/components/AppSidebar";
 
 const queryClient = new QueryClient();
@@ -31,7 +31,7 @@ const App = () => (
             <div className="min-h-screen flex w-full bg-background">
               <AppSidebar />
               <div className="flex-1 flex flex-col">
-                <Navigation />
+                
                 <main className="flex-1 max-w-7xl mx-auto w-full">
                   <Routes>
                     <Route path="/" element={<Dashboard />} />
