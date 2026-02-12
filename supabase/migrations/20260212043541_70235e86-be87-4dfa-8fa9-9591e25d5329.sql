@@ -1,0 +1,1 @@
+ALTER TABLE public.openings ADD COLUMN location text;

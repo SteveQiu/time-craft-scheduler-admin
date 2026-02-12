@@ -22,6 +22,7 @@ export type Database = {
           end_time: string
           id: string
           is_available: boolean
+          location: string | null
           service: string
           start_time: string
           updated_at: string
@@ -35,6 +36,7 @@ export type Database = {
           end_time: string
           id?: string
           is_available?: boolean
+          location?: string | null
           service: string
           start_time: string
           updated_at?: string
@@ -48,6 +50,7 @@ export type Database = {
           end_time?: string
           id?: string
           is_available?: boolean
+          location?: string | null
           service?: string
           start_time?: string
           updated_at?: string

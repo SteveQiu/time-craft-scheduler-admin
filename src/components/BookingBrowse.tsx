@@ -19,6 +19,7 @@ interface OpeningWithProfile {
   service: string;
   worker: string;
   is_available: boolean;
+  location: string | null;
   provider_name: string | null;
   provider_email: string | null;
 }
@@ -26,6 +27,7 @@ interface OpeningWithProfile {
 export function BookingBrowse() {
   const { user } = useAuth();
   const [selectedService, setSelectedService] = useState<string>('');
+  const [selectedLocation, setSelectedLocation] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [showBookingDialog, setShowBookingDialog] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<OpeningWithProfile | null>(null);
@@ -55,6 +57,7 @@ export function BookingBrowse() {
         service: opening.service,
         worker: opening.worker,
         is_available: opening.is_available,
+        location: opening.location || null,
         provider_name: opening.profiles?.full_name || null,
         provider_email: opening.profiles?.email || null,
       }));
@@ -62,16 +65,19 @@ export function BookingBrowse() {
   });
 
   const uniqueServices = [...new Set(openings.map(o => o.service))];
+  const uniqueLocations = [...new Set(openings.map(o => o.location).filter(Boolean))] as string[];
 
   const filteredSlots = openings.filter(slot => {
     const matchesSearch = searchTerm === '' ||
       slot.worker.toLowerCase().includes(searchTerm.toLowerCase()) ||
       slot.service.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (slot.provider_name || '').toLowerCase().includes(searchTerm.toLowerCase());
+      (slot.provider_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (slot.location || '').toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesService = selectedService === '' || slot.service === selectedService;
+    const matchesLocation = selectedLocation === '' || slot.location === selectedLocation;
 
-    return matchesSearch && matchesService;
+    return matchesSearch && matchesService && matchesLocation;
   });
 
   const handleBooking = (slot: OpeningWithProfile) => {
@@ -102,13 +108,13 @@ export function BookingBrowse() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">Search</label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search workers or services..."
+                  placeholder="Search workers, services, locations..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
@@ -126,6 +132,20 @@ export function BookingBrowse() {
                 <option value="">All Services</option>
                 {uniqueServices.map(service => (
                   <option key={service} value={service}>{service}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">Location</label>
+              <select
+                value={selectedLocation}
+                onChange={(e) => setSelectedLocation(e.target.value)}
+                className="w-full h-10 px-3 py-2 text-sm bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring"
+              >
+                <option value="">All Locations</option>
+                {uniqueLocations.map(location => (
+                  <option key={location} value={location}>{location}</option>
                 ))}
               </select>
             </div>
@@ -173,6 +193,12 @@ export function BookingBrowse() {
                     <User className="h-4 w-4 text-muted-foreground" />
                     <span>{slot.duration} min</span>
                   </div>
+                  {slot.location && (
+                    <div className="flex items-center space-x-2">
+                      <MapPin className="h-4 w-4 text-muted-foreground" />
+                      <span>{slot.location}</span>
+                    </div>
+                  )}
                 </div>
 
                 <Button 
@@ -217,6 +243,12 @@ export function BookingBrowse() {
                 <span className="text-sm font-medium">Service:</span>
                 <span className="text-sm">{selectedSlot.service}</span>
               </div>
+              {selectedSlot.location && (
+                <div className="flex justify-between">
+                  <span className="text-sm font-medium">Location:</span>
+                  <span className="text-sm">{selectedSlot.location}</span>
+                </div>
+              )}
               <div className="flex justify-between">
                 <span className="text-sm font-medium">Date:</span>
                 <span className="text-sm">{new Date(selectedSlot.date).toLocaleDateString()}</span>
