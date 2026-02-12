@@ -1,138 +1,80 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Input } from './ui/input';
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from './ui/alert-dialog';
-import { Calendar as CalendarIcon, Clock, User, MapPin, Star, Search, Filter } from 'lucide-react';
-import { Calendar as DayPickerCalendar } from './ui/calendar';
+import { Calendar as CalendarIcon, Clock, User, MapPin, Search, Filter, Loader2 } from 'lucide-react';
 
-interface Provider {
+interface OpeningWithProfile {
   id: string;
-  name: string;
-  organization: string;
-  skills: string[];
-  rating: number;
-  location: string;
-  avatar: string;
-  hourlyRate: number;
-}
-
-interface AvailableSlot {
-  id: string;
-  providerId: string;
+  user_id: string;
   date: string;
-  time: string;
+  start_time: string;
+  end_time: string;
   duration: number;
   service: string;
-  price: number;
+  worker: string;
+  is_available: boolean;
+  provider_name: string | null;
+  provider_email: string | null;
 }
 
 export function BookingBrowse() {
-  const { user, signOut } = useAuth();
-  const [selectedDate, setSelectedDate] = useState<string>('');
+  const { user } = useAuth();
   const [selectedService, setSelectedService] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [showBookingDialog, setShowBookingDialog] = useState(false);
-  const [selectedSlot, setSelectedSlot] = useState<AvailableSlot | null>(null);
-
-  const providers: Provider[] = [
-    {
-      id: '1',
-      name: 'Sarah Johnson',
-      organization: 'Elite Hair Salon',
-      skills: ['Hair Cut', 'Hair Coloring', 'Styling'],
-      rating: 4.9,
-      location: 'Downtown',
-      avatar: 'SJ',
-      hourlyRate: 85
-    },
-    {
-      id: '2',
-      name: 'Mike Wilson',
-      organization: 'Wellness Center',
-      skills: ['Deep Tissue Massage', 'Swedish Massage', 'Sports Therapy'],
-      rating: 4.8,
-      location: 'Midtown',
-      avatar: 'MW',
-      hourlyRate: 120
-    },
-    {
-      id: '3',
-      name: 'Dr. Lisa Chen',
-      organization: 'Health Consultancy',
-      skills: ['Health Consultation', 'Nutrition Planning', 'Wellness Coaching'],
-      rating: 5.0,
-      location: 'Uptown',
-      avatar: 'LC',
-      hourlyRate: 150
-    },
-    {
-      id: '4',
-      name: 'James Rodriguez',
-      organization: 'Fitness Pro',
-      skills: ['Personal Training', 'Yoga', 'Pilates'],
-      rating: 4.7,
-      location: 'West Side',
-      avatar: 'JR',
-      hourlyRate: 75
-    }
-  ];
-
-  // Use mock data if running on localhost, otherwise use remote API (placeholder for real fetch)
-  let availableSlots: AvailableSlot[] = [];
-  if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
-    // Mock some openings in the middle of the current month
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = today.getMonth();
-    const mid = 15;
-    availableSlots = [
-      { id: 'm1', providerId: '1', date: `${year}-${String(month+1).padStart(2,'0')}-${mid}`, time: '10:00 AM', duration: 60, service: 'Hair Cut', price: 85 },
-      { id: 'm2', providerId: '2', date: `${year}-${String(month+1).padStart(2,'0')}-${mid+1}`, time: '2:00 PM', duration: 60, service: 'Deep Tissue Massage', price: 120 },
-      { id: 'm3', providerId: '3', date: `${year}-${String(month+1).padStart(2,'0')}-${mid+2}`, time: '11:00 AM', duration: 45, service: 'Health Consultation', price: 110 },
-      { id: 'm4', providerId: '4', date: `${year}-${String(month+1).padStart(2,'0')}-${mid+3}`, time: '8:00 AM', duration: 60, service: 'Personal Training', price: 75 }
-    ];
-  } else {
-    // TODO: Replace with real API fetch for production
-    availableSlots = [
-      { id: '1', providerId: '1', date: '2024-07-18', time: '9:00 AM', duration: 60, service: 'Hair Cut', price: 85 },
-      { id: '2', providerId: '1', date: '2024-07-18', time: '11:00 AM', duration: 90, service: 'Hair Coloring', price: 120 },
-      { id: '3', providerId: '2', date: '2024-07-18', time: '2:00 PM', duration: 60, service: 'Deep Tissue Massage', price: 120 },
-      { id: '4', providerId: '3', date: '2024-07-19', time: '10:00 AM', duration: 45, service: 'Health Consultation', price: 110 },
-      { id: '5', providerId: '2', date: '2024-07-19', time: '3:00 PM', duration: 60, service: 'Swedish Massage', price: 120 },
-      { id: '6', providerId: '4', date: '2024-07-20', time: '8:00 AM', duration: 60, service: 'Personal Training', price: 75 },
-      { id: '7', providerId: '1', date: '2024-07-20', time: '1:00 PM', duration: 60, service: 'Hair Cut', price: 85 },
-      { id: '8', providerId: '3', date: '2024-07-20', time: '4:00 PM', duration: 60, service: 'Wellness Coaching', price: 150 }
-    ];
-  }
-
-  const getProvider = (providerId: string) => providers.find(p => p.id === providerId);
+  const [selectedSlot, setSelectedSlot] = useState<OpeningWithProfile | null>(null);
 
   const today = new Date().toISOString().split('T')[0];
 
-  const filteredSlots = availableSlots.filter(slot => {
-    // Only show slots from today onward
-    if (slot.date < today) return false;
+  const { data: openings = [], isLoading } = useQuery({
+    queryKey: ['browse-openings', today],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('openings')
+        .select('*, profiles!openings_user_id_fkey(full_name, email)')
+        .eq('is_available', true)
+        .gte('date', today)
+        .order('date', { ascending: true })
+        .order('start_time', { ascending: true });
 
-    const provider = getProvider(slot.providerId);
-    if (!provider) return false;
-    
-    const matchesSearch = searchTerm === '' || 
-      provider.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      provider.organization.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      slot.service.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesDate = selectedDate === '' || slot.date === selectedDate;
-    const matchesService = selectedService === '' || slot.service === selectedService;
-    
-    return matchesSearch && matchesDate && matchesService;
+      if (error) throw error;
+
+      return (data || []).map((opening: any) => ({
+        id: opening.id,
+        user_id: opening.user_id,
+        date: opening.date,
+        start_time: opening.start_time,
+        end_time: opening.end_time,
+        duration: opening.duration,
+        service: opening.service,
+        worker: opening.worker,
+        is_available: opening.is_available,
+        provider_name: opening.profiles?.full_name || null,
+        provider_email: opening.profiles?.email || null,
+      }));
+    },
   });
 
-  const uniqueServices = [...new Set(availableSlots.map(slot => slot.service))];
+  const uniqueServices = [...new Set(openings.map(o => o.service))];
 
-  const handleBooking = (slot: AvailableSlot) => {
+  const filteredSlots = openings.filter(slot => {
+    const matchesSearch = searchTerm === '' ||
+      slot.worker.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      slot.service.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (slot.provider_name || '').toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesService = selectedService === '' || slot.service === selectedService;
+
+    return matchesSearch && matchesService;
+  });
+
+  const handleBooking = (slot: OpeningWithProfile) => {
     setSelectedSlot(slot);
     setShowBookingDialog(true);
   };
@@ -160,20 +102,19 @@ export function BookingBrowse() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">Search</label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search providers or services..."
+                  placeholder="Search workers or services..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
                 />
               </div>
             </div>
-            
             
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">Service</label>
@@ -192,32 +133,29 @@ export function BookingBrowse() {
         </CardContent>
       </Card>
 
-      {/* Available Appointments */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {filteredSlots.map((slot) => {
-          const provider = getProvider(slot.providerId);
-          if (!provider) return null;
+      {isLoading && (
+        <div className="flex justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      )}
 
-          return (
+      {/* Available Appointments */}
+      {!isLoading && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {filteredSlots.map((slot) => (
             <Card key={slot.id} className="shadow-soft border-card-border hover:shadow-lg transition-shadow">
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="flex items-center space-x-3">
-                    <div className="w-12 h-12 rounded-full bg-primary-light flex items-center justify-center text-primary font-medium">
-                      {provider.avatar}
+                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium">
+                      {slot.worker.substring(0, 2).toUpperCase()}
                     </div>
                     <div>
-                      <h3 className="font-semibold text-foreground">{provider.name}</h3>
-                      <p className="text-sm text-muted-foreground">{provider.organization}</p>
-                      <div className="flex items-center space-x-1 mt-1">
-                        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                        <span className="text-sm font-medium">{provider.rating}</span>
-                      </div>
+                      <h3 className="font-semibold text-foreground">{slot.worker}</h3>
+                      <p className="text-sm text-muted-foreground">{slot.provider_name || 'Organization'}</p>
                     </div>
                   </div>
-                  <Badge variant="secondary" className="text-lg font-bold">
-                    ${slot.price}
-                  </Badge>
+                  <Badge variant="secondary">{slot.service}</Badge>
                 </div>
               </CardHeader>
               
@@ -229,24 +167,12 @@ export function BookingBrowse() {
                   </div>
                   <div className="flex items-center space-x-2">
                     <Clock className="h-4 w-4 text-muted-foreground" />
-                    <span>{slot.time} ({slot.duration}min)</span>
+                    <span>{slot.start_time} - {slot.end_time}</span>
                   </div>
                   <div className="flex items-center space-x-2">
                     <User className="h-4 w-4 text-muted-foreground" />
-                    <span>{slot.service}</span>
+                    <span>{slot.duration} min</span>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <MapPin className="h-4 w-4 text-muted-foreground" />
-                    <span>{provider.location}</span>
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap gap-1">
-                  {provider.skills.map((skill) => (
-                    <Badge key={skill} variant="outline" className="text-xs">
-                      {skill}
-                    </Badge>
-                  ))}
                 </div>
 
                 <Button 
@@ -257,11 +183,11 @@ export function BookingBrowse() {
                 </Button>
               </CardContent>
             </Card>
-          );
-        })}
-      </div>
+          ))}
+        </div>
+      )}
 
-      {filteredSlots.length === 0 && (
+      {!isLoading && filteredSlots.length === 0 && (
         <Card className="shadow-soft border-card-border">
           <CardContent className="text-center py-12">
             <CalendarIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
@@ -284,8 +210,8 @@ export function BookingBrowse() {
           {selectedSlot && (
             <div className="space-y-3 py-4">
               <div className="flex justify-between">
-                <span className="text-sm font-medium">Provider:</span>
-                <span className="text-sm">{getProvider(selectedSlot.providerId)?.name}</span>
+                <span className="text-sm font-medium">Worker:</span>
+                <span className="text-sm">{selectedSlot.worker}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-sm font-medium">Service:</span>
@@ -297,11 +223,7 @@ export function BookingBrowse() {
               </div>
               <div className="flex justify-between">
                 <span className="text-sm font-medium">Time:</span>
-                <span className="text-sm">{selectedSlot.time} ({selectedSlot.duration}min)</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm font-medium">Price:</span>
-                <span className="text-sm font-bold">${selectedSlot.price}</span>
+                <span className="text-sm">{selectedSlot.start_time} - {selectedSlot.end_time} ({selectedSlot.duration}min)</span>
               </div>
             </div>
           )}
