@@ -68,6 +68,7 @@ export function Calendar() {
     duration: 1,
     worker: 'Sarah Johnson',
     service: 'Hair Cut',
+    location: '',
     multipleSlots: false,
     interval: 1
   });
@@ -245,6 +246,7 @@ export function Calendar() {
               duration: newOpening.interval,
               worker: newOpening.worker,
               service: newOpening.service,
+              location: newOpening.location || null,
               is_available: true
             });
             current += newOpening.interval * 60; // Add interval in minutes
@@ -264,6 +266,7 @@ export function Calendar() {
             duration: newOpening.duration,
             worker: newOpening.worker,
             service: newOpening.service,
+            location: newOpening.location || null,
             is_available: true
           };
           const { error } = await supabase
@@ -292,6 +295,7 @@ export function Calendar() {
       duration: 1, 
       worker: 'Sarah Johnson', 
       service: 'Hair Cut',
+      location: '',
       multipleSlots: false,
       interval: 1
     });
@@ -637,6 +641,16 @@ export function Calendar() {
                 </SelectContent>
               </Select>
               {errors.service && <p className="text-sm text-destructive">{errors.service}</p>}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="location">Location</Label>
+              <Input
+                id="location"
+                placeholder="Enter location (optional)"
+                value={newOpening.location}
+                onChange={(e) => setNewOpening({...newOpening, location: e.target.value})}
+              />
             </div>
 
             {newOpening.worker && (
