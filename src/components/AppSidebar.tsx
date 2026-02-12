@@ -31,7 +31,7 @@ export function AppSidebar() {
 
   const orgNavItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Home, path: '/dashboard' },
-    { id: 'calendar', label: 'Opening Hours', icon: CalendarIcon, path: '/calendar' },
+    { id: 'calendar', label: 'Opening', icon: CalendarIcon, path: '/calendar' },
     { id: 'workers', label: 'Workers', icon: Users, path: '/workers' },
     { id: 'appointments-org', label: 'Manage Appointments', icon: Clock, path: '/appointments' },
   ];
