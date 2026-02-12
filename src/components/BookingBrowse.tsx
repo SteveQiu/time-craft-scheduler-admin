@@ -174,11 +174,6 @@ export function BookingBrowse() {
               </div>
             </div>
             
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Date</label>
-/* Add this to your global CSS (e.g., index.css) if not present already: */
-/*
-            </div>
             
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">Service</label>
