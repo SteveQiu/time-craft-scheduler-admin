@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
@@ -25,6 +25,7 @@ interface OpeningWithProfile {
 }
 
 export function BookingBrowse() {
+  const queryClient = useQueryClient();
   const { user } = useAuth();
   const [selectedService, setSelectedService] = useState<string>('');
   const [selectedLocation, setSelectedLocation] = useState<string>('');
@@ -85,9 +86,45 @@ export function BookingBrowse() {
     setShowBookingDialog(true);
   };
 
-  const confirmBooking = () => {
-    setShowBookingDialog(false);
-    setSelectedSlot(null);
+  const [isBooking, setIsBooking] = useState(false);
+
+  const confirmBooking = async () => {
+    if (!selectedSlot || !user) return;
+    setIsBooking(true);
+    try {
+      // Create appointment
+      const { error: appointmentError } = await supabase
+        .from('appointments')
+        .insert({
+          opening_id: selectedSlot.id,
+          user_id: user.id,
+          provider_id: selectedSlot.user_id,
+          worker: selectedSlot.worker,
+          service: selectedSlot.service,
+          location: selectedSlot.location,
+          date: selectedSlot.date,
+          start_time: selectedSlot.start_time,
+          end_time: selectedSlot.end_time,
+          duration: selectedSlot.duration,
+          status: 'pending',
+        });
+      if (appointmentError) throw appointmentError;
+
+      // Mark opening as unavailable
+      const { error: updateError } = await supabase
+        .from('openings')
+        .update({ is_available: false })
+        .eq('id', selectedSlot.id);
+      if (updateError) throw updateError;
+
+      setShowBookingDialog(false);
+      setSelectedSlot(null);
+      queryClient.invalidateQueries({ queryKey: ['browse-openings'] });
+    } catch (error) {
+      console.error('Booking failed:', error);
+    } finally {
+      setIsBooking(false);
+    }
   };
 
   return (
@@ -264,8 +301,8 @@ export function BookingBrowse() {
             <Button variant="outline" onClick={() => setShowBookingDialog(false)}>
               Cancel
             </Button>
-            <AlertDialogAction onClick={confirmBooking}>
-              Confirm Booking
+            <AlertDialogAction onClick={confirmBooking} disabled={isBooking}>
+              {isBooking ? 'Booking...' : 'Confirm Booking'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -14,6 +14,68 @@ export type Database = {
   }
   public: {
     Tables: {
+      appointments: {
+        Row: {
+          created_at: string
+          date: string
+          duration: number
+          end_time: string
+          id: string
+          location: string | null
+          notes: string | null
+          opening_id: string
+          provider_id: string
+          service: string
+          start_time: string
+          status: string
+          updated_at: string
+          user_id: string
+          worker: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          duration: number
+          end_time: string
+          id?: string
+          location?: string | null
+          notes?: string | null
+          opening_id: string
+          provider_id: string
+          service: string
+          start_time: string
+          status?: string
+          updated_at?: string
+          user_id: string
+          worker: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          duration?: number
+          end_time?: string
+          id?: string
+          location?: string | null
+          notes?: string | null
+          opening_id?: string
+          provider_id?: string
+          service?: string
+          start_time?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+          worker?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointments_opening_id_fkey"
+            columns: ["opening_id"]
+            isOneToOne: false
+            referencedRelation: "openings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       openings: {
         Row: {
           created_at: string

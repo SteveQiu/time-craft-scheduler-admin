@@ -1,222 +1,159 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { useAuth } from '@/hooks/useAuth';
+import { useUserRoles } from '@/hooks/useUserRoles';
+import { supabase } from '@/integrations/supabase/client';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Card, CardContent } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Input } from './ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Checkbox } from './ui/checkbox';
-import { Search, Filter, Calendar, Clock, User, Phone, Mail, Check, X, CheckCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { Search, Filter, Calendar, Clock, User, MapPin, Check, X, CheckCircle, ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
 
 interface Appointment {
   id: string;
-  clientName: string;
-  clientEmail: string;
-  clientPhone: string;
-  workerName: string;
+  opening_id: string;
+  user_id: string;
+  provider_id: string;
+  worker: string;
   service: string;
+  location: string | null;
   date: string;
-  time: string;
+  start_time: string;
+  end_time: string;
   duration: number;
-  status: 'confirmed' | 'pending' | 'cancelled' | 'completed';
-  notes?: string;
+  status: string;
+  notes: string | null;
+  created_at: string;
+  booker_name?: string | null;
+  booker_email?: string | null;
+  provider_name?: string | null;
 }
 
 export function Appointments() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { isOrganization, isInternalDev } = useUserRoles();
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedAppointments, setSelectedAppointments] = useState<string[]>([]);
   const [showInactive, setShowInactive] = useState(false);
-  const [appointments, setAppointments] = useState<Appointment[]>([
-    {
-      id: '1',
-      clientName: 'John Doe',
-      clientEmail: 'john@example.com',
-      clientPhone: '+1 (555) 111-2222',
-      workerName: 'Sarah Johnson',
-      service: 'Hair Cut',
-      date: '2024-01-15',
-      time: '10:00 AM',
-      duration: 60,
-      status: 'confirmed',
-      notes: 'Regular customer, prefers short style'
+
+  // Determine if viewing as org (provider) or user (booker)
+  const isOrgView = isOrganization || isInternalDev;
+
+  const { data: appointments = [], isLoading } = useQuery({
+    queryKey: ['appointments', user?.id, isOrgView],
+    queryFn: async () => {
+      if (!user) return [];
+
+      // Fetch appointments - RLS handles access control
+      const { data, error } = await supabase
+        .from('appointments')
+        .select('*')
+        .order('date', { ascending: false })
+        .order('start_time', { ascending: false });
+
+      if (error) throw error;
+      return (data || []) as Appointment[];
     },
-    {
-      id: '2',
-      clientName: 'Jane Smith',
-      clientEmail: 'jane@example.com',
-      clientPhone: '+1 (555) 333-4444',
-      workerName: 'Mike Wilson',
-      service: 'Deep Tissue Massage',
-      date: '2024-01-15',
-      time: '2:00 PM',
-      duration: 90,
-      status: 'pending',
-      notes: 'First time client, focusing on lower back pain'
-    },
-    {
-      id: '3',
-      clientName: 'Bob Johnson',
-      clientEmail: 'bob@example.com',
-      clientPhone: '+1 (555) 555-6666',
-      workerName: 'Lisa Chen',
-      service: 'Business Consultation',
-      date: '2024-01-15',
-      time: '4:30 PM',
-      duration: 120,
-      status: 'confirmed',
-      notes: 'Startup strategy discussion'
-    },
-    {
-      id: '4',
-      clientName: 'Alice Williams',
-      clientEmail: 'alice@example.com',
-      clientPhone: '+1 (555) 777-8888',
-      workerName: 'David Rodriguez',
-      service: 'Personal Training',
-      date: '2024-01-16',
-      time: '8:00 AM',
-      duration: 60,
-      status: 'completed'
-    },
-    {
-      id: '5',
-      clientName: 'Charlie Brown',
-      clientEmail: 'charlie@example.com',
-      clientPhone: '+1 (555) 999-0000',
-      workerName: 'Sarah Johnson',
-      service: 'Hair Color',
-      date: '2024-01-16',
-      time: '11:00 AM',
-      duration: 120,
-      status: 'cancelled',
-      notes: 'Client cancelled due to illness'
-    }
-  ]);
+    enabled: !!user,
+  });
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'confirmed': return 'bg-success-light text-success';
-      case 'pending': return 'bg-warning-light text-warning';
-      case 'cancelled': return 'bg-destructive-light text-destructive';
-      case 'completed': return 'bg-primary-light text-primary';
+      case 'confirmed': return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
+      case 'pending': return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400';
+      case 'cancelled': return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
+      case 'completed': return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
       default: return 'bg-secondary text-secondary-foreground';
     }
   };
 
-  const filteredAppointments = appointments.filter(appointment => {
-    const matchesSearch = 
-      appointment.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      appointment.workerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      appointment.service.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = statusFilter === 'all' || appointment.status === statusFilter;
-    
+  const filteredAppointments = appointments.filter(apt => {
+    const matchesSearch =
+      apt.worker.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      apt.service.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (apt.location || '').toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesStatus = statusFilter === 'all' || apt.status === statusFilter;
+
     return matchesSearch && matchesStatus;
   });
 
-  // Separate active and inactive appointments
   const today = new Date().toISOString().split('T')[0];
   const activeAppointments = filteredAppointments.filter(
     apt => (apt.status === 'confirmed' || apt.status === 'pending') && apt.date >= today
   );
-  
   const inactiveAppointments = filteredAppointments.filter(
     apt => apt.status === 'completed' || apt.status === 'cancelled' || apt.date < today
   );
 
-  const handleSelectAppointment = (appointmentId: string) => {
-    setSelectedAppointments(prev => 
-      prev.includes(appointmentId) 
-        ? prev.filter(id => id !== appointmentId)
-        : [...prev, appointmentId]
+  const handleSelectAppointment = (id: string) => {
+    setSelectedAppointments(prev =>
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
     );
   };
 
   const handleSelectAll = () => {
     setSelectedAppointments(
-      selectedAppointments.length === activeAppointments.length 
-        ? [] 
+      selectedAppointments.length === activeAppointments.length
+        ? []
         : activeAppointments.map(apt => apt.id)
     );
   };
 
-  const handleApprove = () => {
-    setAppointments(prev => 
-      prev.map(appointment => 
-        selectedAppointments.includes(appointment.id) && appointment.status === 'pending'
-          ? { ...appointment, status: 'confirmed' as const }
-          : appointment
-      )
-    );
-    setSelectedAppointments([]);
+  const updateStatus = async (ids: string[], status: string) => {
+    const { error } = await supabase
+      .from('appointments')
+      .update({ status })
+      .in('id', ids);
+    if (!error) {
+      // If cancelling, re-open the openings
+      if (status === 'cancelled') {
+        const openingIds = appointments
+          .filter(a => ids.includes(a.id))
+          .map(a => a.opening_id);
+        await supabase
+          .from('openings')
+          .update({ is_available: true })
+          .in('id', openingIds);
+      }
+      queryClient.invalidateQueries({ queryKey: ['appointments'] });
+      setSelectedAppointments([]);
+    }
   };
 
-  const handleReject = () => {
-    setAppointments(prev => 
-      prev.map(appointment => 
-        selectedAppointments.includes(appointment.id) && appointment.status === 'pending'
-          ? { ...appointment, status: 'cancelled' as const }
-          : appointment
-      )
-    );
-    setSelectedAppointments([]);
-  };
-
-  const handleComplete = (appointmentId: string) => {
-    setAppointments(prev => 
-      prev.map(appointment => 
-        appointment.id === appointmentId && appointment.status === 'confirmed'
-          ? { ...appointment, status: 'completed' as const }
-          : appointment
-      )
-    );
-  };
+  const handleApprove = () => updateStatus(selectedAppointments, 'confirmed');
+  const handleReject = () => updateStatus(selectedAppointments, 'cancelled');
+  const handleComplete = (id: string) => updateStatus([id], 'completed');
 
   const renderAppointmentCard = (appointment: Appointment) => (
-    <Card key={appointment.id} className="shadow-soft border-card-border hover:shadow-medium transition-shadow">
+    <Card key={appointment.id} className="shadow-soft border-card-border hover:shadow-lg transition-shadow">
       <CardContent className="p-6">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between space-y-4 lg:space-y-0">
-          {/* Client Info */}
           <div className="flex items-center space-x-4">
-            {(appointment.status === 'confirmed' || appointment.status === 'pending') && (
+            {isOrgView && (appointment.status === 'confirmed' || appointment.status === 'pending') && (
               <Checkbox
                 checked={selectedAppointments.includes(appointment.id)}
                 onCheckedChange={() => handleSelectAppointment(appointment.id)}
-                className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
               />
             )}
             <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center">
               <span className="text-primary-foreground font-semibold">
-                {appointment.clientName.split(' ').map(n => n[0]).join('')}
+                {appointment.worker.substring(0, 2).toUpperCase()}
               </span>
             </div>
             <div>
-              <h3 className="font-semibold text-foreground">{appointment.clientName}</h3>
-              <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-                <div className="flex items-center space-x-1">
-                  <Mail className="h-3 w-3" />
-                  <span>{appointment.clientEmail}</span>
-                </div>
-                <div className="flex items-center space-x-1">
-                  <Phone className="h-3 w-3" />
-                  <span>{appointment.clientPhone}</span>
-                </div>
-              </div>
+              <h3 className="font-semibold text-foreground">{appointment.worker}</h3>
+              <p className="text-sm text-muted-foreground">{appointment.service}</p>
             </div>
           </div>
 
-          {/* Appointment Details */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-6">
-            <div className="text-center sm:text-left">
-              <p className="font-medium text-foreground">{appointment.service}</p>
-              <div className="flex items-center space-x-1 text-sm text-muted-foreground">
-                <User className="h-3 w-3" />
-                <span>{appointment.workerName}</span>
-              </div>
-            </div>
-
             <div className="text-center sm:text-left">
               <div className="flex items-center space-x-1 text-sm font-medium text-foreground">
                 <Calendar className="h-3 w-3" />
@@ -224,92 +161,82 @@ export function Appointments() {
               </div>
               <div className="flex items-center space-x-1 text-sm text-muted-foreground">
                 <Clock className="h-3 w-3" />
-                <span>{appointment.time} ({appointment.duration}min)</span>
+                <span>{appointment.start_time} - {appointment.end_time} ({appointment.duration}min)</span>
               </div>
             </div>
+
+            {appointment.location && (
+              <div className="flex items-center space-x-1 text-sm text-muted-foreground">
+                <MapPin className="h-3 w-3" />
+                <span>{appointment.location}</span>
+              </div>
+            )}
 
             <div className="flex items-center space-x-3">
               <Badge className={getStatusColor(appointment.status)}>
                 {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
               </Badge>
-              <div className="flex gap-1">
-                {appointment.status === 'confirmed' && (
-                  <Button 
-                    variant="default" 
-                    size="sm"
-                    onClick={() => handleComplete(appointment.id)}
-                    className="flex items-center space-x-1"
-                  >
-                    <CheckCircle className="h-3 w-3" />
-                    <span>Complete</span>
-                  </Button>
-                )}
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => navigate(`/appointments/${appointment.id}`)}
-                >
-                  View
+              {isOrgView && appointment.status === 'confirmed' && (
+                <Button variant="default" size="sm" onClick={() => handleComplete(appointment.id)}>
+                  <CheckCircle className="h-3 w-3 mr-1" />
+                  Complete
                 </Button>
-              </div>
+              )}
             </div>
           </div>
         </div>
-
-        {appointment.notes && (
-          <div className="mt-4 p-3 bg-secondary rounded-lg">
-            <p className="text-sm text-muted-foreground">
-              <strong>Notes:</strong> {appointment.notes}
-            </p>
-          </div>
-        )}
       </CardContent>
     </Card>
   );
+
+  if (!user) {
+    return (
+      <div className="p-6">
+        <Card><CardContent className="text-center py-12">
+          <p className="text-muted-foreground">Please sign in to view appointments.</p>
+        </CardContent></Card>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold text-foreground">Appointments</h2>
-          <p className="text-muted-foreground">Manage all your bookings</p>
+          <h2 className="text-3xl font-bold text-foreground">
+            {isOrgView ? 'Manage Appointments' : 'My Appointments'}
+          </h2>
+          <p className="text-muted-foreground">
+            {isOrgView ? 'Review and manage bookings' : 'Your booked appointments'}
+          </p>
         </div>
-        <div className="flex items-center space-x-2">
-          {selectedAppointments.length > 0 && (
-            <>
-              <Button 
-                variant="default" 
-                className="flex items-center space-x-2"
-                onClick={handleApprove}
-              >
-                <Check className="h-4 w-4" />
-                <span>Approve ({selectedAppointments.length})</span>
-              </Button>
-              <Button 
-                variant="destructive" 
-                className="flex items-center space-x-2"
-                onClick={handleReject}
-              >
-                <X className="h-4 w-4" />
-                <span>Reject ({selectedAppointments.length})</span>
-              </Button>
-            </>
-          )}
-        </div>
+        {isOrgView && selectedAppointments.length > 0 && (
+          <div className="flex items-center space-x-2">
+            <Button variant="default" onClick={handleApprove}>
+              <Check className="h-4 w-4 mr-1" />
+              Approve ({selectedAppointments.length})
+            </Button>
+            <Button variant="destructive" onClick={handleReject}>
+              <X className="h-4 w-4 mr-1" />
+              Reject ({selectedAppointments.length})
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Filters */}
       <Card className="shadow-soft border-card-border">
         <CardContent className="pt-6">
           <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                checked={selectedAppointments.length === activeAppointments.length && activeAppointments.length > 0}
-                onCheckedChange={handleSelectAll}
-                className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-              />
-              <span className="text-sm text-muted-foreground">Select all</span>
-            </div>
+            {isOrgView && (
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  checked={selectedAppointments.length === activeAppointments.length && activeAppointments.length > 0}
+                  onCheckedChange={handleSelectAll}
+                />
+                <span className="text-sm text-muted-foreground">Select all</span>
+              </div>
+            )}
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
@@ -338,72 +265,56 @@ export function Appointments() {
         </CardContent>
       </Card>
 
-      {/* Active Appointments Section */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-xl font-semibold text-foreground">Active Appointments</h3>
-          <Badge variant="outline" className="text-sm">
-            {activeAppointments.length} {activeAppointments.length === 1 ? 'appointment' : 'appointments'}
-          </Badge>
+      {isLoading && (
+        <div className="flex justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
-        
-        {activeAppointments.length > 0 ? (
-          <div className="space-y-4">
-            {activeAppointments.map(renderAppointmentCard)}
-          </div>
-        ) : (
-          <Card className="shadow-soft border-card-border">
-            <CardContent className="text-center py-12">
-              <div className="text-muted-foreground">
-                <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p className="text-lg">No active appointments</p>
-                <p className="text-sm">Confirmed and pending appointments will appear here</p>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-      </div>
+      )}
 
-      {/* Inactive Appointments Section */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <Button
-            variant="ghost"
-            onClick={() => setShowInactive(!showInactive)}
-            className="flex items-center space-x-2 p-0 h-auto hover:bg-transparent"
-          >
-            <h3 className="text-xl font-semibold text-foreground">Inactive Appointments</h3>
-            {showInactive ? (
-              <ChevronUp className="h-5 w-5" />
-            ) : (
-              <ChevronDown className="h-5 w-5" />
-            )}
-          </Button>
-          <Badge variant="outline" className="text-sm">
-            {inactiveAppointments.length} {inactiveAppointments.length === 1 ? 'appointment' : 'appointments'}
-          </Badge>
-        </div>
-        
-        {showInactive && (
-          <>
-            {inactiveAppointments.length > 0 ? (
-              <div className="space-y-4">
-                {inactiveAppointments.map(renderAppointmentCard)}
-              </div>
+      {!isLoading && (
+        <>
+          {/* Active */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xl font-semibold text-foreground">Active Appointments</h3>
+              <Badge variant="outline">{activeAppointments.length}</Badge>
+            </div>
+            {activeAppointments.length > 0 ? (
+              <div className="space-y-4">{activeAppointments.map(renderAppointmentCard)}</div>
             ) : (
               <Card className="shadow-soft border-card-border">
                 <CardContent className="text-center py-12">
-                  <div className="text-muted-foreground">
-                    <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p className="text-lg">No inactive appointments</p>
-                    <p className="text-sm">Completed and cancelled appointments will appear here</p>
-                  </div>
+                  <Calendar className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
+                  <p className="text-lg text-muted-foreground">No active appointments</p>
                 </CardContent>
               </Card>
             )}
-          </>
-        )}
-      </div>
+          </div>
+
+          {/* Inactive */}
+          <div className="space-y-4">
+            <Button
+              variant="ghost"
+              onClick={() => setShowInactive(!showInactive)}
+              className="flex items-center space-x-2 p-0 h-auto hover:bg-transparent"
+            >
+              <h3 className="text-xl font-semibold text-foreground">Inactive Appointments</h3>
+              {showInactive ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+            </Button>
+            {showInactive && (
+              inactiveAppointments.length > 0 ? (
+                <div className="space-y-4">{inactiveAppointments.map(renderAppointmentCard)}</div>
+              ) : (
+                <Card className="shadow-soft border-card-border">
+                  <CardContent className="text-center py-12">
+                    <p className="text-lg text-muted-foreground">No inactive appointments</p>
+                  </CardContent>
+                </Card>
+              )
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 }
