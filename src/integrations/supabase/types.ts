@@ -131,30 +131,130 @@ export type Database = {
       }
       profiles: {
         Row: {
+          address: string | null
           avatar_url: string | null
           created_at: string
           email: string | null
           full_name: string | null
           id: string
+          introduction: string | null
+          phone: string | null
+          slug: string | null
           updated_at: string
         }
         Insert: {
+          address?: string | null
           avatar_url?: string | null
           created_at?: string
           email?: string | null
           full_name?: string | null
           id: string
+          introduction?: string | null
+          phone?: string | null
+          slug?: string | null
           updated_at?: string
         }
         Update: {
+          address?: string | null
           avatar_url?: string | null
           created_at?: string
           email?: string | null
           full_name?: string | null
           id?: string
+          introduction?: string | null
+          phone?: string | null
+          slug?: string | null
           updated_at?: string
         }
         Relationships: []
+      }
+      reports: {
+        Row: {
+          admin_notes: string | null
+          category: Database["public"]["Enums"]["report_category"]
+          created_at: string
+          description: string
+          id: string
+          reported_review_id: string | null
+          reported_user_id: string | null
+          reporter_id: string
+          status: Database["public"]["Enums"]["report_status"]
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          category: Database["public"]["Enums"]["report_category"]
+          created_at?: string
+          description: string
+          id?: string
+          reported_review_id?: string | null
+          reported_user_id?: string | null
+          reporter_id: string
+          status?: Database["public"]["Enums"]["report_status"]
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          category?: Database["public"]["Enums"]["report_category"]
+          created_at?: string
+          description?: string
+          id?: string
+          reported_review_id?: string | null
+          reported_user_id?: string | null
+          reporter_id?: string
+          status?: Database["public"]["Enums"]["report_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reports_reported_review_id_fkey"
+            columns: ["reported_review_id"]
+            isOneToOne: false
+            referencedRelation: "reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reviews: {
+        Row: {
+          appointment_id: string | null
+          created_at: string
+          id: string
+          rating: number
+          review_text: string | null
+          reviewed_id: string
+          reviewer_id: string
+          updated_at: string
+        }
+        Insert: {
+          appointment_id?: string | null
+          created_at?: string
+          id?: string
+          rating: number
+          review_text?: string | null
+          reviewed_id: string
+          reviewer_id: string
+          updated_at?: string
+        }
+        Update: {
+          appointment_id?: string | null
+          created_at?: string
+          id?: string
+          rating?: number
+          review_text?: string | null
+          reviewed_id?: string
+          reviewer_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
@@ -204,6 +304,14 @@ export type Database = {
     }
     Enums: {
       app_role: "USER" | "ORGANIZATION" | "INTERNAL_DEV"
+      report_category:
+        | "spam"
+        | "harassment"
+        | "fraud"
+        | "inappropriate_content"
+        | "fake_review"
+        | "other"
+      report_status: "pending" | "reviewing" | "resolved" | "dismissed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -332,6 +440,15 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["USER", "ORGANIZATION", "INTERNAL_DEV"],
+      report_category: [
+        "spam",
+        "harassment",
+        "fraud",
+        "inappropriate_content",
+        "fake_review",
+        "other",
+      ],
+      report_status: ["pending", "reviewing", "resolved", "dismissed"],
     },
   },
 } as const
