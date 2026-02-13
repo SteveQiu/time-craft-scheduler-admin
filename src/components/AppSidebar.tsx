@@ -1,4 +1,4 @@
-import { Search, Home, Calendar as CalendarIcon, Users, Clock, Settings, LogIn, LogOut, User, Building2 } from 'lucide-react';
+import { Search, Home, Calendar as CalendarIcon, Users, Clock, Settings, LogIn, LogOut, User, Building2, Shield, UserCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRoles } from '@/hooks/useUserRoles';
 import { Link, useLocation } from 'react-router-dom';
@@ -134,14 +134,34 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {user ? (
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive={isActive('/settings')}>
-                    <Link to="/settings" className="flex items-center">
-                      <Settings className="h-4 w-4" />
-                      <span>Settings</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+                <>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={isActive('/profile')}>
+                      <Link to="/profile" className="flex items-center">
+                        <UserCircle className="h-4 w-4" />
+                        <span>My Profile</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  {isInternalDev && (
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild isActive={isActive('/reports')}>
+                        <Link to="/reports" className="flex items-center">
+                          <Shield className="h-4 w-4" />
+                          <span>Report Queue</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  )}
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={isActive('/settings')}>
+                      <Link to="/settings" className="flex items-center">
+                        <Settings className="h-4 w-4" />
+                        <span>Settings</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </>
               ) : (
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={isActive('/auth')}>

@@ -15,6 +15,8 @@ import { Appointments } from "@/components/Appointments";
 import { AppointmentView } from "@/pages/AppointmentView";
 import Auth from "@/pages/Auth";
 import Settings from "@/pages/Settings";
+import Profile from "@/pages/Profile";
+import AdminReports from "@/pages/AdminReports";
 
 import { AppSidebar } from "@/components/AppSidebar";
 
@@ -43,6 +45,9 @@ const App = () => (
                     <Route path="/appointments/:id" element={<AppointmentView />} />
                     <Route path="/auth" element={<Auth />} />
                     <Route path="/settings" element={<Settings />} />
+                    <Route path="/profile" element={<Profile />} />
+                    <Route path="/profile/:slug" element={<Profile />} />
+                    <Route path="/reports" element={<AdminReports />} />
                     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                     <Route path="*" element={<NotFound />} />
                   </Routes>
