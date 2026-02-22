@@ -40,13 +40,22 @@ export function BookingBrowse() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('openings')
-        .select('*, profiles!openings_user_id_fkey(full_name, email)')
+        .select('*')
         .eq('is_available', true)
         .gte('date', today)
         .order('date', { ascending: true })
         .order('start_time', { ascending: true });
 
       if (error) throw error;
+
+      // Fetch provider names via RPC (safe, only returns public fields)
+      const providerIds = [...new Set((data || []).map((o: any) => o.user_id))];
+      let nameMap = new Map<string, string>();
+      if (providerIds.length > 0) {
+        const { data: profiles } = await supabase
+          .rpc('get_public_profile_names', { profile_ids: providerIds });
+        nameMap = new Map((profiles || []).map((p: any) => [p.id, p.full_name]));
+      }
 
       return (data || []).map((opening: any) => ({
         id: opening.id,
@@ -59,8 +68,8 @@ export function BookingBrowse() {
         worker: opening.worker,
         is_available: opening.is_available,
         location: opening.location || null,
-        provider_name: opening.profiles?.full_name || null,
-        provider_email: opening.profiles?.email || null,
+        provider_name: nameMap.get(opening.user_id) || null,
+        provider_email: null,
       }));
     },
   });

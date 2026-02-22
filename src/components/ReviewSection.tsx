@@ -65,13 +65,11 @@ export function ReviewSection({ profileId, profileName }: ReviewSectionProps) {
         .order('created_at', { ascending: false });
       if (error) throw error;
 
-      // Fetch reviewer names
+      // Fetch reviewer names via RPC (bypasses RLS safely, only returns name)
       const reviewerIds = [...new Set((data || []).map((r: any) => r.reviewer_id))];
       if (reviewerIds.length > 0) {
         const { data: profiles } = await supabase
-          .from('profiles')
-          .select('id, full_name')
-          .in('id', reviewerIds);
+          .rpc('get_public_profile_names', { profile_ids: reviewerIds });
         const nameMap = new Map((profiles || []).map((p: any) => [p.id, p.full_name]));
         return (data || []).map((r: any) => ({
           ...r,
