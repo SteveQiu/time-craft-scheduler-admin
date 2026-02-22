@@ -84,38 +84,64 @@ export function ReviewSection({ profileId, profileName }: ReviewSectionProps) {
   });
 
   // Check if user has completed appointments with this profile (to allow review)
-  const { data: canReview } = useQuery({
-    queryKey: ['can-review', user?.id, profileId],
+  // Fetch completed appointments between this user and the profile being viewed
+  const { data: completedAppointments = [] } = useQuery({
+    queryKey: ['completed-appointments', user?.id, profileId],
     queryFn: async () => {
-      if (!user || user.id === profileId) return false;
-      // Check for completed appointments between users
+      if (!user || user.id === profileId) return [];
       const { data } = await supabase
         .from('appointments')
         .select('id')
         .eq('status', 'completed')
-        .or(`user_id.eq.${user.id},provider_id.eq.${user.id}`)
-        .limit(1);
-      return (data?.length || 0) > 0;
+        .or(`and(user_id.eq.${user.id},provider_id.eq.${profileId}),and(provider_id.eq.${user.id},user_id.eq.${profileId})`);
+      return data || [];
     },
     enabled: !!user && user.id !== profileId,
   });
 
+  // Check which appointments already have reviews from this user
+  const { data: existingReviewAppointmentIds = [] } = useQuery({
+    queryKey: ['existing-review-appointments', user?.id, profileId],
+    queryFn: async () => {
+      if (!user) return [];
+      const { data } = await supabase
+        .from('reviews')
+        .select('appointment_id')
+        .eq('reviewer_id', user.id)
+        .eq('reviewed_id', profileId);
+      return (data || []).map((r: any) => r.appointment_id).filter(Boolean);
+    },
+    enabled: !!user && user.id !== profileId,
+  });
+
+  const reviewableAppointments = completedAppointments.filter(
+    (a) => !existingReviewAppointmentIds.includes(a.id)
+  );
+  const canReview = reviewableAppointments.length > 0;
+  const [selectedAppointmentId, setSelectedAppointmentId] = useState<string | null>(null);
+
   const submitReview = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error('Not authenticated');
+      const appointmentId = selectedAppointmentId || reviewableAppointments[0]?.id;
+      if (!appointmentId) throw new Error('No eligible appointment to review');
       const { error } = await supabase.from('reviews').insert({
         reviewer_id: user.id,
         reviewed_id: profileId,
         rating: newRating,
         review_text: newText || null,
+        appointment_id: appointmentId,
       } as any);
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reviews', profileId] });
       queryClient.invalidateQueries({ queryKey: ['avg-rating', profileId] });
+      queryClient.invalidateQueries({ queryKey: ['completed-appointments', user?.id, profileId] });
+      queryClient.invalidateQueries({ queryKey: ['existing-review-appointments', user?.id, profileId] });
       setNewText('');
       setNewRating(5);
+      setSelectedAppointmentId(null);
       setShowForm(false);
       toast({ title: 'Review submitted!' });
     },
