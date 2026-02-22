@@ -341,6 +341,17 @@ export type Database = {
           slug: string
         }[]
       }
+      get_public_profile_by_id: {
+        Args: { profile_id: string }
+        Returns: {
+          avatar_url: string
+          created_at: string
+          full_name: string
+          id: string
+          introduction: string
+          slug: string
+        }[]
+      }
       get_public_profile_names: {
         Args: { profile_ids: string[] }
         Returns: {
