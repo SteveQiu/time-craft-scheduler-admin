@@ -163,8 +163,11 @@ export function Appointments() {
                 {appointment.worker.substring(0, 2).toUpperCase()}
               </span>
             </div>
-            <div>
-              <h3 className="font-semibold text-foreground">{appointment.worker}</h3>
+            <div
+              className={appointment.provider_slug ? 'cursor-pointer' : ''}
+              onClick={() => appointment.provider_slug && navigate(`/profile/${appointment.provider_slug}`)}
+            >
+              <h3 className={`font-semibold text-foreground ${appointment.provider_slug ? 'hover:underline' : ''}`}>{appointment.worker}</h3>
               <p className="text-sm text-muted-foreground">{appointment.service}</p>
             </div>
           </div>

@@ -225,9 +225,12 @@ export function BookingBrowse() {
                     >
                       {slot.worker.substring(0, 2).toUpperCase()}
                     </div>
-                    <div>
-                      <h3 className="font-semibold text-foreground">{slot.worker}</h3>
-                      <p className="text-sm text-muted-foreground">{slot.provider_name || 'Organization'}</p>
+                    <div
+                      className={slot.provider_slug ? 'cursor-pointer' : ''}
+                      onClick={() => slot.provider_slug && navigate(`/profile/${slot.provider_slug}`)}
+                    >
+                      <h3 className={`font-semibold text-foreground ${slot.provider_slug ? 'hover:underline' : ''}`}>{slot.worker}</h3>
+                      <p className={`text-sm text-muted-foreground ${slot.provider_slug ? 'hover:underline' : ''}`}>{slot.provider_name || 'Organization'}</p>
                     </div>
                   </div>
                   <Badge variant="secondary">{slot.service}</Badge>
