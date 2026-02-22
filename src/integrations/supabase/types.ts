@@ -346,6 +346,7 @@ export type Database = {
         Returns: {
           full_name: string
           id: string
+          slug: string
         }[]
       }
       get_user_roles: {

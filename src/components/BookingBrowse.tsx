@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -22,9 +23,11 @@ interface OpeningWithProfile {
   location: string | null;
   provider_name: string | null;
   provider_email: string | null;
+  provider_slug: string | null;
 }
 
 export function BookingBrowse() {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const [selectedService, setSelectedService] = useState<string>('');
@@ -51,10 +54,12 @@ export function BookingBrowse() {
       // Fetch provider names via RPC (safe, only returns public fields)
       const providerIds = [...new Set((data || []).map((o: any) => o.user_id))];
       let nameMap = new Map<string, string>();
+      let slugMap = new Map<string, string>();
       if (providerIds.length > 0) {
         const { data: profiles } = await supabase
           .rpc('get_public_profile_names', { profile_ids: providerIds });
         nameMap = new Map((profiles || []).map((p: any) => [p.id, p.full_name]));
+        slugMap = new Map((profiles || []).filter((p: any) => p.slug).map((p: any) => [p.id, p.slug]));
       }
 
       return (data || []).map((opening: any) => ({
@@ -70,6 +75,7 @@ export function BookingBrowse() {
         location: opening.location || null,
         provider_name: nameMap.get(opening.user_id) || null,
         provider_email: null,
+        provider_slug: slugMap.get(opening.user_id) || null,
       }));
     },
   });
@@ -213,7 +219,10 @@ export function BookingBrowse() {
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="flex items-center space-x-3">
-                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium">
+                    <div
+                      className={`w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium ${slot.provider_slug ? 'cursor-pointer hover:ring-2 hover:ring-primary transition-all' : ''}`}
+                      onClick={() => slot.provider_slug && navigate(`/profile/${slot.provider_slug}`)}
+                    >
                       {slot.worker.substring(0, 2).toUpperCase()}
                     </div>
                     <div>

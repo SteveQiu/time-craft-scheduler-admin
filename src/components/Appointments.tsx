@@ -30,6 +30,7 @@ interface Appointment {
   booker_name?: string | null;
   booker_email?: string | null;
   provider_name?: string | null;
+  provider_slug?: string | null;
 }
 
 export function Appointments() {
@@ -50,7 +51,6 @@ export function Appointments() {
     queryFn: async () => {
       if (!user) return [];
 
-      // Fetch appointments - RLS handles access control
       const { data, error } = await supabase
         .from('appointments')
         .select('*')
@@ -58,7 +58,20 @@ export function Appointments() {
         .order('start_time', { ascending: false });
 
       if (error) throw error;
-      return (data || []) as Appointment[];
+
+      // Fetch provider slugs for profile links
+      const providerIds = [...new Set((data || []).map((a: any) => a.provider_id))];
+      let slugMap = new Map<string, string>();
+      if (providerIds.length > 0) {
+        const { data: profiles } = await supabase
+          .rpc('get_public_profile_names', { profile_ids: providerIds });
+        slugMap = new Map((profiles || []).filter((p: any) => p.slug).map((p: any) => [p.id, p.slug]));
+      }
+
+      return (data || []).map((a: any) => ({
+        ...a,
+        provider_slug: slugMap.get(a.provider_id) || null,
+      })) as Appointment[];
     },
     enabled: !!user,
   });
@@ -142,7 +155,10 @@ export function Appointments() {
                 onCheckedChange={() => handleSelectAppointment(appointment.id)}
               />
             )}
-            <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center">
+            <div
+              className={`w-12 h-12 bg-primary rounded-full flex items-center justify-center ${appointment.provider_slug ? 'cursor-pointer hover:ring-2 hover:ring-primary transition-all' : ''}`}
+              onClick={() => appointment.provider_slug && navigate(`/profile/${appointment.provider_slug}`)}
+            >
               <span className="text-primary-foreground font-semibold">
                 {appointment.worker.substring(0, 2).toUpperCase()}
               </span>
