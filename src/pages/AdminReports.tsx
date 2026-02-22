@@ -56,9 +56,7 @@ export default function AdminReports() {
       });
 
       const { data: profiles } = await supabase
-        .from('profiles')
-        .select('id, full_name')
-        .in('id', [...userIds]);
+        .rpc('get_public_profile_names', { profile_ids: [...userIds] });
 
       const nameMap = new Map((profiles || []).map((p: any) => [p.id, p.full_name || 'Unknown']));
 

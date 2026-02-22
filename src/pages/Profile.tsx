@@ -58,13 +58,12 @@ export default function Profile() {
         if (error) throw error;
         return data as ProfileData;
       } else {
+        // Use RPC to get public profile data (no PII exposed)
         const { data, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('slug', slug)
-          .single();
+          .rpc('get_public_profile', { profile_slug: slug });
         if (error) throw error;
-        return data as ProfileData;
+        if (!data || data.length === 0) return null;
+        return data[0] as unknown as ProfileData;
       }
     },
     enabled: isOwnProfile ? !!user : !!slug,
