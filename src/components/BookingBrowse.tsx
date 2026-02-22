@@ -220,17 +220,17 @@ export function BookingBrowse() {
                 <div className="flex items-start justify-between">
                   <div className="flex items-center space-x-3">
                     <div
-                      className={`w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium ${slot.provider_slug ? 'cursor-pointer hover:ring-2 hover:ring-primary transition-all' : ''}`}
-                      onClick={() => slot.provider_slug && navigate(`/profile/${slot.provider_slug}`)}
+                      className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium cursor-pointer hover:ring-2 hover:ring-primary transition-all"
+                      onClick={() => navigate(`/profile/${slot.provider_slug || slot.user_id}`)}
                     >
                       {slot.worker.substring(0, 2).toUpperCase()}
                     </div>
                     <div
-                      className={slot.provider_slug ? 'cursor-pointer' : ''}
-                      onClick={() => slot.provider_slug && navigate(`/profile/${slot.provider_slug}`)}
+                      className="cursor-pointer"
+                      onClick={() => navigate(`/profile/${slot.provider_slug || slot.user_id}`)}
                     >
-                      <h3 className={`font-semibold text-foreground ${slot.provider_slug ? 'hover:underline' : ''}`}>{slot.worker}</h3>
-                      <p className={`text-sm text-muted-foreground ${slot.provider_slug ? 'hover:underline' : ''}`}>{slot.provider_name || 'Organization'}</p>
+                      <h3 className="font-semibold text-foreground hover:underline">{slot.worker}</h3>
+                      <p className="text-sm text-muted-foreground hover:underline">{slot.provider_name || 'Organization'}</p>
                     </div>
                   </div>
                   <Badge variant="secondary">{slot.service}</Badge>

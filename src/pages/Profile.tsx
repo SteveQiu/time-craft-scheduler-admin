@@ -44,6 +44,8 @@ export default function Profile() {
 
   // Determine if viewing own profile or someone else's
   const isOwnProfile = !slug;
+  // Check if slug is a UUID (user ID) vs a custom slug
+  const isUuid = slug ? /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug) : false;
 
   const { data: profile, isLoading } = useQuery({
     queryKey: ['profile', slug, user?.id],
@@ -57,8 +59,15 @@ export default function Profile() {
           .single();
         if (error) throw error;
         return data as ProfileData;
+      } else if (isUuid) {
+        // Lookup by user ID
+        const { data, error } = await supabase
+          .rpc('get_public_profile_by_id', { profile_id: slug });
+        if (error) throw error;
+        if (!data || data.length === 0) return null;
+        return data[0] as unknown as ProfileData;
       } else {
-        // Use RPC to get public profile data (no PII exposed)
+        // Use RPC to get public profile data by slug
         const { data, error } = await supabase
           .rpc('get_public_profile', { profile_slug: slug });
         if (error) throw error;
