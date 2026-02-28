@@ -10,6 +10,7 @@ import { ChevronLeft, ChevronRight, Plus, Clock, User, X, DollarSign } from 'luc
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { workers as workerData, getWorkerRate, getWorkerSkills } from '@/data/workers';
 
 interface TimeSlot {
   id: string;
@@ -206,15 +207,7 @@ export function Calendar() {
     return getOpeningsForDate(date).length > 0;
   };
 
-  const getWorkerRate = (workerName: string): number => {
-    const rates: Record<string, number> = {
-      'Sarah Johnson': 65,
-      'Mike Wilson': 80,
-      'Lisa Chen': 120
-    };
-    const rate = rates[workerName];
-    return typeof rate === 'number' ? rate : 0;
-  };
+  // getWorkerRate is now imported from @/data/workers
 
   // --- addOpening function restored below ---
   const addOpening = async () => {
@@ -606,17 +599,18 @@ export function Calendar() {
               <Select 
                 value={newOpening.worker} 
                 onValueChange={(value) => {
-                  setNewOpening({...newOpening, worker: value});
-                  setErrors(prev => ({ ...prev, worker: '' }));
+                  const skills = getWorkerSkills(value);
+                  setNewOpening({...newOpening, worker: value, service: skills[0] || ''});
+                  setErrors(prev => ({ ...prev, worker: '', service: '' }));
                 }}
               >
                 <SelectTrigger className={errors.worker ? 'border-destructive' : ''}>
                   <SelectValue placeholder="Select worker" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Sarah Johnson">Sarah Johnson</SelectItem>
-                  <SelectItem value="Mike Wilson">Mike Wilson</SelectItem>
-                  <SelectItem value="Lisa Chen">Lisa Chen</SelectItem>
+                  {workerData.map((w) => (
+                    <SelectItem key={w.id} value={w.name}>{w.name}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               {errors.worker && <p className="text-sm text-destructive">{errors.worker}</p>}
@@ -635,9 +629,9 @@ export function Calendar() {
                   <SelectValue placeholder="Select service" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Hair Cut">Hair Cut</SelectItem>
-                  <SelectItem value="Massage">Massage</SelectItem>
-                  <SelectItem value="Consultation">Consultation</SelectItem>
+                  {getWorkerSkills(newOpening.worker).map((skill) => (
+                    <SelectItem key={skill} value={skill}>{skill}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               {errors.service && <p className="text-sm text-destructive">{errors.service}</p>}

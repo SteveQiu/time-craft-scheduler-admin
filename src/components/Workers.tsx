@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { Plus, Search, Edit, Trash2, Clock, Star, Mail, Phone, Calendar } from 'lucide-react';
+import { workers as workerData, WorkerData } from '@/data/workers';
 
 interface Worker {
   id: string;
@@ -32,48 +33,7 @@ export function Workers() {
     hourlyRate: 0
   });
   
-  const workers: Worker[] = [
-    {
-      id: '1',
-      name: 'Sarah Johnson',
-      email: 'sarah@appointmentpro.com',
-      phone: '+1 (555) 123-4567',
-      skills: ['Hair Cut', 'Hair Color', 'Styling'],
-      rating: 4.9,
-      availability: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
-      hourlyRate: 65,
-    },
-    {
-      id: '2',
-      name: 'Mike Wilson',
-      email: 'mike@appointmentpro.com',
-      phone: '+1 (555) 234-5678',
-      skills: ['Deep Tissue Massage', 'Swedish Massage', 'Sports Massage'],
-      rating: 4.8,
-      availability: ['Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
-      hourlyRate: 80,
-    },
-    {
-      id: '3',
-      name: 'Lisa Chen',
-      email: 'lisa@appointmentpro.com',
-      phone: '+1 (555) 345-6789',
-      skills: ['Business Consultation', 'Strategy Planning', 'Market Analysis'],
-      rating: 4.9,
-      availability: ['Mon', 'Wed', 'Fri'],
-      hourlyRate: 120,
-    },
-    {
-      id: '4',
-      name: 'David Rodriguez',
-      email: 'david@appointmentpro.com',
-      phone: '+1 (555) 456-7890',
-      skills: ['Personal Training', 'Nutrition Coaching', 'Weight Loss'],
-      rating: 4.7,
-      availability: ['Mon', 'Tue', 'Thu', 'Fri', 'Sat', 'Sun'],
-      hourlyRate: 55,
-    },
-  ];
+  const workers: Worker[] = workerData;
 
   const filteredWorkers = workers.filter(worker =>
     worker.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
