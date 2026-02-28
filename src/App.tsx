@@ -18,6 +18,7 @@ import Settings from "@/pages/Settings";
 import Profile from "@/pages/Profile";
 import AdminReports from "@/pages/AdminReports";
 
+import { Workplace } from "@/components/Workplace";
 import { AppSidebar } from "@/components/AppSidebar";
 
 const queryClient = new QueryClient();
@@ -41,6 +42,7 @@ const App = () => (
                     <Route path="/calendar" element={<Calendar />} />
                     <Route path="/browse" element={<BookingBrowse />} />
                     <Route path="/workers" element={<Workers />} />
+                    <Route path="/workplace" element={<Workplace />} />
                     <Route path="/appointments" element={<Appointments />} />
                     <Route path="/appointments/:id" element={<AppointmentView />} />
                     <Route path="/auth" element={<Auth />} />
