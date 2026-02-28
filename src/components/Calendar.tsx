@@ -10,6 +10,7 @@ import { ChevronLeft, ChevronRight, Plus, Clock, User, X, DollarSign } from 'luc
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useQuery } from '@tanstack/react-query';
 import { workers as workerData, getWorkerRate, getWorkerSkills } from '@/data/workers';
 
 interface TimeSlot {
@@ -62,7 +63,21 @@ export function Calendar() {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const { user } = useAuth();
-  
+
+  // Fetch saved workplace addresses
+  const { data: savedAddresses = [] } = useQuery({
+    queryKey: ['workplace-addresses', user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('workplace_addresses')
+        .select('*')
+        .order('is_default', { ascending: false })
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
   const [newOpening, setNewOpening] = useState({
     startTime: '09:00',
     endTime: '',
@@ -639,12 +654,38 @@ export function Calendar() {
 
             <div className="space-y-2">
               <Label htmlFor="location">Location</Label>
-              <Input
-                id="location"
-                placeholder="Enter location (optional)"
-                value={newOpening.location}
-                onChange={(e) => setNewOpening({...newOpening, location: e.target.value})}
-              />
+              {savedAddresses.length > 0 ? (
+                <Select
+                  value={newOpening.location}
+                  onValueChange={(value) => setNewOpening({...newOpening, location: value === '__custom__' ? '' : value})}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a saved address or type custom" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {savedAddresses.map((addr: any) => (
+                      <SelectItem key={addr.id} value={addr.address}>
+                        {addr.label} — {addr.address}
+                      </SelectItem>
+                    ))}
+                    <SelectItem value="__custom__">Custom location...</SelectItem>
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Input
+                  id="location"
+                  placeholder="Enter location (optional)"
+                  value={newOpening.location}
+                  onChange={(e) => setNewOpening({...newOpening, location: e.target.value})}
+                />
+              )}
+              {savedAddresses.length > 0 && newOpening.location === '' && (
+                <Input
+                  placeholder="Type custom location"
+                  value={newOpening.location}
+                  onChange={(e) => setNewOpening({...newOpening, location: e.target.value})}
+                />
+              )}
             </div>
 
             {newOpening.worker && (
