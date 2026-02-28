@@ -495,7 +495,7 @@ export function Calendar() {
       </div>
 
       <Dialog open={showAddOpening} onOpenChange={setShowAddOpening}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Add Opening for {selectedDate.toLocaleDateString()}</DialogTitle>
           </DialogHeader>
