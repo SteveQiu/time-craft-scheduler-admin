@@ -130,40 +130,11 @@ export function AppSidebar() {
           </>
         )}
 
-        {/* Account Section */}
-        <SidebarGroup>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {user ? (
-                <>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={isActive('/profile')}>
-                      <Link to="/profile" className="flex items-center">
-                        <UserCircle className="h-4 w-4" />
-                        <span>My Profile</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  {isInternalDev && (
-                    <SidebarMenuItem>
-                      <SidebarMenuButton asChild isActive={isActive('/reports')}>
-                        <Link to="/reports" className="flex items-center">
-                          <Shield className="h-4 w-4" />
-                          <span>Report Queue</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  )}
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={isActive('/settings')}>
-                      <Link to="/settings" className="flex items-center">
-                        <Settings className="h-4 w-4" />
-                        <span>Settings</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                </>
-              ) : (
+        {/* Sign In for unauthenticated */}
+        {!user && (
+          <SidebarGroup>
+            <SidebarGroupContent>
+              <SidebarMenu>
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={isActive('/auth')}>
                     <Link to="/auth" className="flex items-center">
@@ -172,13 +143,47 @@ export function AppSidebar() {
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
-              )}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
       </SidebarContent>
 
       <SidebarFooter>
+        {/* Account Section */}
+        {user && (
+          <>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={isActive('/profile')}>
+                  <Link to="/profile" className="flex items-center">
+                    <UserCircle className="h-4 w-4" />
+                    <span>My Profile</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              {isInternalDev && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={isActive('/reports')}>
+                    <Link to="/reports" className="flex items-center">
+                      <Shield className="h-4 w-4" />
+                      <span>Report Queue</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={isActive('/settings')}>
+                  <Link to="/settings" className="flex items-center">
+                    <Settings className="h-4 w-4" />
+                    <span>Settings</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+            <Separator />
+          </>
+        )}
         {/* View Mode Switcher for Organizations */}
         {isOrganization && !isInternalDev && (
           <>
