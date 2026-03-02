@@ -10,7 +10,8 @@ import { Badge } from './ui/badge';
 import { Input } from './ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Checkbox } from './ui/checkbox';
-import { Search, Filter, Calendar, Clock, User, MapPin, Check, X, CheckCircle, ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
+import { Search, Filter, Calendar, Clock, User, MapPin, Check, X, CheckCircle, ChevronDown, ChevronUp, Loader2, Mail, Phone } from 'lucide-react';
+import { workers } from '@/data/workers';
 
 interface Appointment {
   id: string;
@@ -29,6 +30,7 @@ interface Appointment {
   created_at: string;
   booker_name?: string | null;
   booker_email?: string | null;
+  booker_slug?: string | null;
   provider_name?: string | null;
   provider_slug?: string | null;
 }
@@ -40,6 +42,7 @@ export function Appointments() {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [workerFilter, setWorkerFilter] = useState('all');
   const [selectedAppointments, setSelectedAppointments] = useState<string[]>([]);
   const [showInactive, setShowInactive] = useState(false);
 
@@ -61,16 +64,21 @@ export function Appointments() {
 
       // Fetch provider slugs for profile links
       const providerIds = [...new Set((data || []).map((a: any) => a.provider_id))];
-      let slugMap = new Map<string, string>();
-      if (providerIds.length > 0) {
+      const bookerIds = [...new Set((data || []).map((a: any) => a.user_id))];
+      const allIds = [...new Set([...providerIds, ...bookerIds])];
+      
+      let profileMap = new Map<string, { full_name: string; slug: string | null }>();
+      if (allIds.length > 0) {
         const { data: profiles } = await supabase
-          .rpc('get_public_profile_names', { profile_ids: providerIds });
-        slugMap = new Map((profiles || []).filter((p: any) => p.slug).map((p: any) => [p.id, p.slug]));
+          .rpc('get_public_profile_names', { profile_ids: allIds });
+        profileMap = new Map((profiles || []).map((p: any) => [p.id, { full_name: p.full_name, slug: p.slug }]));
       }
 
       return (data || []).map((a: any) => ({
         ...a,
-        provider_slug: slugMap.get(a.provider_id) || null,
+        provider_slug: profileMap.get(a.provider_id)?.slug || null,
+        booker_name: profileMap.get(a.user_id)?.full_name || null,
+        booker_slug: profileMap.get(a.user_id)?.slug || null,
       })) as Appointment[];
     },
     enabled: !!user,
@@ -90,11 +98,13 @@ export function Appointments() {
     const matchesSearch =
       apt.worker.toLowerCase().includes(searchTerm.toLowerCase()) ||
       apt.service.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (apt.location || '').toLowerCase().includes(searchTerm.toLowerCase());
+      (apt.location || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (apt.booker_name || '').toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesStatus = statusFilter === 'all' || apt.status === statusFilter;
+    const matchesWorker = workerFilter === 'all' || apt.worker === workerFilter;
 
-    return matchesSearch && matchesStatus;
+    return matchesSearch && matchesStatus && matchesWorker;
   });
 
   const today = new Date().toISOString().split('T')[0];
@@ -144,69 +154,111 @@ export function Appointments() {
   const handleReject = () => updateStatus(selectedAppointments, 'cancelled');
   const handleComplete = (id: string) => updateStatus([id], 'completed');
 
-  const renderAppointmentCard = (appointment: Appointment) => (
-    <Card key={appointment.id} className="shadow-soft border-card-border hover:shadow-lg transition-shadow">
-      <CardContent className="p-6">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between space-y-4 lg:space-y-0">
-          <div className="flex items-center space-x-4">
-            {isOrgView && (appointment.status === 'confirmed' || appointment.status === 'pending') && (
-              <Checkbox
-                checked={selectedAppointments.includes(appointment.id)}
-                onCheckedChange={() => handleSelectAppointment(appointment.id)}
-              />
-            )}
-            <div
-              className={`w-12 h-12 bg-primary rounded-full flex items-center justify-center ${appointment.provider_slug ? 'cursor-pointer hover:ring-2 hover:ring-primary transition-all' : ''}`}
-              onClick={() => appointment.provider_slug && navigate(`/profile/${appointment.provider_slug}`)}
-            >
-              <span className="text-primary-foreground font-semibold">
-                {appointment.worker.substring(0, 2).toUpperCase()}
-              </span>
+  const renderAppointmentCard = (appointment: Appointment) => {
+    const workerData = workers.find(w => w.name === appointment.worker);
+    const bookerSlug = (appointment as any).booker_slug;
+    
+    return (
+      <Card key={appointment.id} className="shadow-soft border-card-border hover:shadow-lg transition-shadow">
+        <CardContent className="p-6 space-y-4">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between space-y-4 lg:space-y-0">
+            <div className="flex items-center space-x-4">
+              {isOrgView && (appointment.status === 'confirmed' || appointment.status === 'pending') && (
+                <Checkbox
+                  checked={selectedAppointments.includes(appointment.id)}
+                  onCheckedChange={() => handleSelectAppointment(appointment.id)}
+                />
+              )}
+              <div
+                className={`w-12 h-12 bg-primary rounded-full flex items-center justify-center ${appointment.provider_slug ? 'cursor-pointer hover:ring-2 hover:ring-primary transition-all' : ''}`}
+                onClick={() => appointment.provider_slug && navigate(`/profile/${appointment.provider_slug}`)}
+              >
+                <span className="text-primary-foreground font-semibold">
+                  {appointment.worker.substring(0, 2).toUpperCase()}
+                </span>
+              </div>
+              <div
+                className={appointment.provider_slug ? 'cursor-pointer' : ''}
+                onClick={() => appointment.provider_slug && navigate(`/profile/${appointment.provider_slug}`)}
+              >
+                <h3 className={`font-semibold text-foreground ${appointment.provider_slug ? 'hover:underline' : ''}`}>{appointment.worker}</h3>
+                <p className="text-sm text-muted-foreground">{appointment.service}</p>
+              </div>
             </div>
-            <div
-              className={appointment.provider_slug ? 'cursor-pointer' : ''}
-              onClick={() => appointment.provider_slug && navigate(`/profile/${appointment.provider_slug}`)}
-            >
-              <h3 className={`font-semibold text-foreground ${appointment.provider_slug ? 'hover:underline' : ''}`}>{appointment.worker}</h3>
-              <p className="text-sm text-muted-foreground">{appointment.service}</p>
+
+            <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-6">
+              <div className="text-center sm:text-left">
+                <div className="flex items-center space-x-1 text-sm font-medium text-foreground">
+                  <Calendar className="h-3 w-3" />
+                  <span>{new Date(appointment.date).toLocaleDateString()}</span>
+                </div>
+                <div className="flex items-center space-x-1 text-sm text-muted-foreground">
+                  <Clock className="h-3 w-3" />
+                  <span>{appointment.start_time} - {appointment.end_time} ({appointment.duration}min)</span>
+                </div>
+              </div>
+
+              {appointment.location && (
+                <div className="flex items-center space-x-1 text-sm text-muted-foreground">
+                  <MapPin className="h-3 w-3" />
+                  <span>{appointment.location}</span>
+                </div>
+              )}
+
+              <div className="flex items-center space-x-3">
+                <Badge className={getStatusColor(appointment.status)}>
+                  {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
+                </Badge>
+                {isOrgView && appointment.status === 'confirmed' && (
+                  <Button variant="default" size="sm" onClick={() => handleComplete(appointment.id)}>
+                    <CheckCircle className="h-3 w-3 mr-1" />
+                    Complete
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-6">
-            <div className="text-center sm:text-left">
-              <div className="flex items-center space-x-1 text-sm font-medium text-foreground">
-                <Calendar className="h-3 w-3" />
-                <span>{new Date(appointment.date).toLocaleDateString()}</span>
+          {/* Customer info for org view */}
+          {isOrgView && appointment.booker_name && (
+            <div className="border-t border-border pt-3 flex flex-col sm:flex-row sm:items-center gap-3">
+              <div className="flex items-center space-x-2">
+                <User className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm font-medium text-foreground">Customer:</span>
+                {bookerSlug ? (
+                  <span
+                    className="text-sm font-medium text-primary hover:underline cursor-pointer"
+                    onClick={() => navigate(`/profile/${bookerSlug}`)}
+                  >
+                    {appointment.booker_name}
+                  </span>
+                ) : (
+                  <span
+                    className="text-sm font-medium text-primary hover:underline cursor-pointer"
+                    onClick={() => navigate(`/profile/${appointment.user_id}`)}
+                  >
+                    {appointment.booker_name}
+                  </span>
+                )}
               </div>
-              <div className="flex items-center space-x-1 text-sm text-muted-foreground">
-                <Clock className="h-3 w-3" />
-                <span>{appointment.start_time} - {appointment.end_time} ({appointment.duration}min)</span>
-              </div>
-            </div>
-
-            {appointment.location && (
-              <div className="flex items-center space-x-1 text-sm text-muted-foreground">
-                <MapPin className="h-3 w-3" />
-                <span>{appointment.location}</span>
-              </div>
-            )}
-
-            <div className="flex items-center space-x-3">
-              <Badge className={getStatusColor(appointment.status)}>
-                {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
-              </Badge>
-              {isOrgView && appointment.status === 'confirmed' && (
-                <Button variant="default" size="sm" onClick={() => handleComplete(appointment.id)}>
-                  <CheckCircle className="h-3 w-3 mr-1" />
-                  Complete
-                </Button>
+              {workerData && (
+                <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                  <div className="flex items-center space-x-1">
+                    <Mail className="h-3 w-3" />
+                    <span>{workerData.email}</span>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <Phone className="h-3 w-3" />
+                    <span>{workerData.phone}</span>
+                  </div>
+                </div>
               )}
             </div>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
+          )}
+        </CardContent>
+      </Card>
+    );
+  };
 
   if (!user) {
     return (
@@ -280,6 +332,22 @@ export function Appointments() {
                 <SelectItem value="cancelled">Cancelled</SelectItem>
               </SelectContent>
             </Select>
+            {isOrgView && (
+              <Select value={workerFilter} onValueChange={setWorkerFilter}>
+                <SelectTrigger className="w-full sm:w-48">
+                  <div className="flex items-center space-x-2">
+                    <User className="h-4 w-4" />
+                    <SelectValue placeholder="Filter by worker" />
+                  </div>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Workers</SelectItem>
+                  {workers.map(w => (
+                    <SelectItem key={w.id} value={w.name}>{w.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </div>
         </CardContent>
       </Card>
