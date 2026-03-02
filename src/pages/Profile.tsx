@@ -36,6 +36,7 @@ export default function Profile() {
   const [reportOpen, setReportOpen] = useState(false);
   const [form, setForm] = useState({
     full_name: '',
+    email: '',
     introduction: '',
     phone: '',
     address: '',
@@ -99,6 +100,7 @@ export default function Profile() {
     if (profile) {
       setForm({
         full_name: profile.full_name || '',
+        email: profile.email || '',
         introduction: (profile as any).introduction || '',
         phone: (profile as any).phone || '',
         address: (profile as any).address || '',
@@ -114,6 +116,7 @@ export default function Profile() {
         .from('profiles')
         .update({
           full_name: form.full_name || null,
+          email: form.email || null,
           introduction: form.introduction || null,
           phone: form.phone || null,
           address: form.address || null,
@@ -256,6 +259,15 @@ export default function Profile() {
                   onChange={(e) => setForm({ ...form, introduction: e.target.value })}
                   placeholder="Tell people about yourself..."
                   rows={3}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Email</Label>
+                <Input
+                  type="email"
+                  value={form.email}
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  placeholder="your@email.com"
                 />
               </div>
               <div className="space-y-2">
