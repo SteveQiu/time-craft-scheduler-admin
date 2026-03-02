@@ -30,6 +30,7 @@ interface Appointment {
   created_at: string;
   booker_name?: string | null;
   booker_email?: string | null;
+  booker_phone?: string | null;
   booker_slug?: string | null;
   provider_name?: string | null;
   provider_slug?: string | null;
@@ -62,7 +63,7 @@ export function Appointments() {
 
       if (error) throw error;
 
-      // Fetch provider slugs for profile links
+      // Fetch profile data for providers and bookers
       const providerIds = [...new Set((data || []).map((a: any) => a.provider_id))];
       const bookerIds = [...new Set((data || []).map((a: any) => a.user_id))];
       const allIds = [...new Set([...providerIds, ...bookerIds])];
@@ -74,11 +75,23 @@ export function Appointments() {
         profileMap = new Map((profiles || []).map((p: any) => [p.id, { full_name: p.full_name, slug: p.slug }]));
       }
 
+      // Fetch booker contact info from profiles (RLS allows viewing appointment participants)
+      let bookerContactMap = new Map<string, { email: string | null; phone: string | null }>();
+      if (bookerIds.length > 0) {
+        const { data: bookerProfiles } = await supabase
+          .from('profiles')
+          .select('id, email, phone')
+          .in('id', bookerIds);
+        bookerContactMap = new Map((bookerProfiles || []).map((p: any) => [p.id, { email: p.email, phone: p.phone }]));
+      }
+
       return (data || []).map((a: any) => ({
         ...a,
         provider_slug: profileMap.get(a.provider_id)?.slug || null,
         booker_name: profileMap.get(a.user_id)?.full_name || null,
         booker_slug: profileMap.get(a.user_id)?.slug || null,
+        booker_email: bookerContactMap.get(a.user_id)?.email || null,
+        booker_phone: bookerContactMap.get(a.user_id)?.phone || null,
       })) as Appointment[];
     },
     enabled: !!user,
@@ -155,8 +168,7 @@ export function Appointments() {
   const handleComplete = (id: string) => updateStatus([id], 'completed');
 
   const renderAppointmentCard = (appointment: Appointment) => {
-    const workerData = workers.find(w => w.name === appointment.worker);
-    const bookerSlug = (appointment as any).booker_slug;
+    const bookerSlug = appointment.booker_slug;
     
     return (
       <Card key={appointment.id} className="shadow-soft border-card-border hover:shadow-lg transition-shadow">
@@ -241,16 +253,20 @@ export function Appointments() {
                   </span>
                 )}
               </div>
-              {workerData && (
+              {(appointment.booker_email || appointment.booker_phone) && (
                 <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                  <div className="flex items-center space-x-1">
-                    <Mail className="h-3 w-3" />
-                    <span>{workerData.email}</span>
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    <Phone className="h-3 w-3" />
-                    <span>{workerData.phone}</span>
-                  </div>
+                  {appointment.booker_email && (
+                    <a href={`mailto:${appointment.booker_email}`} className="flex items-center space-x-1 hover:text-primary transition-colors">
+                      <Mail className="h-3 w-3" />
+                      <span>{appointment.booker_email}</span>
+                    </a>
+                  )}
+                  {appointment.booker_phone && (
+                    <a href={`tel:${appointment.booker_phone}`} className="flex items-center space-x-1 hover:text-primary transition-colors">
+                      <Phone className="h-3 w-3" />
+                      <span>{appointment.booker_phone}</span>
+                    </a>
+                  )}
                 </div>
               )}
             </div>
