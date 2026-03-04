@@ -8,6 +8,9 @@ import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { Plus, Search, Edit, Trash2, Clock, Star, Mail, Phone, Calendar } from 'lucide-react';
 import { workers as workerData, WorkerData } from '@/data/workers';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
 
 interface Worker {
   id: string;
@@ -22,6 +25,7 @@ interface Worker {
 }
 
 export function Workers() {
+  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [editingWorker, setEditingWorker] = useState<Worker | null>(null);
   const [showEditDialog, setShowEditDialog] = useState(false);
@@ -34,6 +38,26 @@ export function Workers() {
   });
   
   const workers: Worker[] = workerData;
+
+  // Fetch real opening counts per worker
+  const today = new Date().toISOString().split('T')[0];
+  const { data: openingCounts = {} } = useQuery({
+    queryKey: ['worker-opening-counts', user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('openings')
+        .select('worker, id')
+        .eq('is_available', true)
+        .gte('date', today);
+      if (error) throw error;
+      const counts: Record<string, number> = {};
+      (data || []).forEach((o: any) => {
+        counts[o.worker] = (counts[o.worker] || 0) + 1;
+      });
+      return counts;
+    },
+    enabled: !!user,
+  });
 
   const filteredWorkers = workers.filter(worker =>
     worker.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -148,7 +172,7 @@ export function Workers() {
                 <div className="flex items-center space-x-1">
                   <Calendar className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm text-muted-foreground">
-                    3 openings this week
+                    {openingCounts[worker.name] || 0} available opening{(openingCounts[worker.name] || 0) !== 1 ? 's' : ''}
                   </span>
                 </div>
               </div>
