@@ -33,8 +33,7 @@ export function AppSidebar() {
     { id: 'dashboard', label: 'Dashboard', icon: Home, path: '/dashboard' },
     { id: 'calendar', label: 'Opening', icon: CalendarIcon, path: '/calendar' },
     { id: 'workers', label: 'Workers', icon: Users, path: '/workers' },
-    { id: 'workplace', label: 'Workplace', icon: Building2, path: '/workplace' },
-    { id: 'appointments-org', label: 'Manage Appointments', icon: Clock, path: '/appointments' },
+    { id: 'appointments-org', label: 'Reservations', icon: Clock, path: '/appointments' },
   ];
 
   const isActive = (path: string) => {
