@@ -126,7 +126,6 @@ export function AppSidebar() {
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
-            <Separator className="my-2" />
           </>
         )}
 
@@ -150,6 +149,7 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter>
+        <Separator />
         {/* Account Section */}
         {user && (
           <>
