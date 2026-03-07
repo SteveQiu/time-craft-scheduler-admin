@@ -37,6 +37,7 @@ interface Opening {
 }
 
 export function Calendar() {
+  const { workers: workerData, getWorkerRate, getWorkerSkills } = useOrgWorkers();
   // Helper to parse time string (e.g., '09:00') to minutes since midnight
   const parseTime = (timeStr: string): number => {
     const [hours, minutes] = timeStr.split(':').map(Number);

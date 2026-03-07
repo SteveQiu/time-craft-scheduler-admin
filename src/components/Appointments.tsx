@@ -37,6 +37,7 @@ interface Appointment {
 }
 
 export function Appointments() {
+  const { workers } = useOrgWorkers();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { isOrganization, isInternalDev } = useUserRoles();
