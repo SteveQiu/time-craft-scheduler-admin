@@ -11,7 +11,7 @@ import { Input } from './ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Checkbox } from './ui/checkbox';
 import { Search, Filter, Calendar, Clock, User, MapPin, Check, X, CheckCircle, ChevronDown, ChevronUp, Loader2, Mail, Phone } from 'lucide-react';
-import { workers } from '@/data/workers';
+import { useOrgWorkers } from '@/hooks/useOrgWorkers';
 
 interface Appointment {
   id: string;
