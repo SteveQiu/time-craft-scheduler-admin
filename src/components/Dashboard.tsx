@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Calendar, Users, Clock, DollarSign, TrendingUp, CheckCircle } from 'lucide-react';
+import { WorkerInvites } from './WorkerInvites';
 
 export function Dashboard() {
   const stats = [
@@ -22,6 +23,9 @@ export function Dashboard() {
         <h2 className="text-3xl font-bold text-foreground mb-2">Dashboard</h2>
         <p className="text-muted-foreground">Welcome to your appointment management system</p>
       </div>
+
+      {/* Worker Invites */}
+      <WorkerInvites />
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
