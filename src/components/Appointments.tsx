@@ -360,7 +360,7 @@ export function Appointments() {
                 <SelectContent>
                   <SelectItem value="all">All Workers</SelectItem>
                   {workers.map(w => (
-                    <SelectItem key={w.id} value={w.name}>{w.name}</SelectItem>
+                    <SelectItem key={w.id} value={w.worker_name}>{w.worker_name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>

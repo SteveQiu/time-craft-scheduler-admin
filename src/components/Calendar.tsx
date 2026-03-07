@@ -625,7 +625,7 @@ export function Calendar() {
                 </SelectTrigger>
                 <SelectContent>
                   {workerData.map((w) => (
-                    <SelectItem key={w.id} value={w.name}>{w.name}</SelectItem>
+                    <SelectItem key={w.id} value={w.worker_name}>{w.worker_name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
