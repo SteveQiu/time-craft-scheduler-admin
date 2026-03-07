@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Calendar, Users, Clock, DollarSign, TrendingUp, CheckCircle } from 'lucide-react';
+import { WorkerInvites } from './WorkerInvites';
 
 export function Dashboard() {
   const stats = [
