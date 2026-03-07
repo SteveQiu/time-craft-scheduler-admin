@@ -136,6 +136,77 @@ export type Database = {
           },
         ]
       }
+      org_workers: {
+        Row: {
+          created_at: string
+          hourly_rate: number
+          id: string
+          org_id: string
+          phone: string | null
+          skills: string[]
+          status: Database["public"]["Enums"]["worker_invite_status"]
+          updated_at: string
+          user_id: string | null
+          worker_email: string
+          worker_name: string
+        }
+        Insert: {
+          created_at?: string
+          hourly_rate?: number
+          id?: string
+          org_id: string
+          phone?: string | null
+          skills?: string[]
+          status?: Database["public"]["Enums"]["worker_invite_status"]
+          updated_at?: string
+          user_id?: string | null
+          worker_email: string
+          worker_name: string
+        }
+        Update: {
+          created_at?: string
+          hourly_rate?: number
+          id?: string
+          org_id?: string
+          phone?: string | null
+          skills?: string[]
+          status?: Database["public"]["Enums"]["worker_invite_status"]
+          updated_at?: string
+          user_id?: string | null
+          worker_email?: string
+          worker_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_workers_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "org_workers_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "org_workers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "org_workers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payment_methods: {
         Row: {
           created_at: string
@@ -423,6 +494,21 @@ export type Database = {
       }
     }
     Functions: {
+      accept_invite: {
+        Args: { _invite_id: string; _user_id: string }
+        Returns: undefined
+      }
+      get_my_invites: {
+        Args: { _email: string }
+        Returns: {
+          created_at: string
+          id: string
+          org_id: string
+          org_name: string
+          status: Database["public"]["Enums"]["worker_invite_status"]
+          worker_name: string
+        }[]
+      }
       get_public_profile: {
         Args: { profile_slug: string }
         Returns: {
@@ -457,11 +543,16 @@ export type Database = {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"][]
       }
+      get_worker_org_id: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      is_worker_of: {
+        Args: { _org_id: string; _user_id: string }
         Returns: boolean
       }
     }
@@ -475,6 +566,7 @@ export type Database = {
         | "fake_review"
         | "other"
       report_status: "pending" | "reviewing" | "resolved" | "dismissed"
+      worker_invite_status: "invited" | "accepted" | "declined"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -612,6 +704,7 @@ export const Constants = {
         "other",
       ],
       report_status: ["pending", "reviewing", "resolved", "dismissed"],
+      worker_invite_status: ["invited", "accepted", "declined"],
     },
   },
 } as const
