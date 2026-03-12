@@ -260,12 +260,33 @@ export function BookingBrowse() {
                   )}
                 </div>
 
-                <Button 
-                  onClick={() => handleBooking(slot)}
-                  className="w-full"
-                >
-                  Book Appointment
-                </Button>
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={() => handleBooking(slot)}
+                    className="flex-1"
+                  >
+                    Book Appointment
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => navigate(`/openings/${slot.id}`)}
+                    title="View details"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => {
+                      navigator.clipboard.writeText(`${window.location.origin}/openings/${slot.id}`);
+                      toast.success('Link copied!');
+                    }}
+                    title="Copy share link"
+                  >
+                    <Share2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           ))}
