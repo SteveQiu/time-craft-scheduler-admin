@@ -13,6 +13,7 @@ import { BookingBrowse } from "@/components/BookingBrowse";
 import { Workers } from "@/components/Workers";
 import { Appointments } from "@/components/Appointments";
 import { AppointmentView } from "@/pages/AppointmentView";
+import { OpeningView } from "@/pages/OpeningView";
 import Auth from "@/pages/Auth";
 import Settings from "@/pages/Settings";
 import Profile from "@/pages/Profile";
