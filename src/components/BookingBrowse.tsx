@@ -8,7 +8,8 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Input } from './ui/input';
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from './ui/alert-dialog';
-import { Calendar as CalendarIcon, Clock, User, MapPin, Search, Filter, Loader2 } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, User, MapPin, Search, Filter, Loader2, Share2, ExternalLink } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface OpeningWithProfile {
   id: string;
@@ -259,12 +260,33 @@ export function BookingBrowse() {
                   )}
                 </div>
 
-                <Button 
-                  onClick={() => handleBooking(slot)}
-                  className="w-full"
-                >
-                  Book Appointment
-                </Button>
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={() => handleBooking(slot)}
+                    className="flex-1"
+                  >
+                    Book Appointment
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => navigate(`/openings/${slot.id}`)}
+                    title="View details"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => {
+                      navigator.clipboard.writeText(`${window.location.origin}/openings/${slot.id}`);
+                      toast.success('Link copied!');
+                    }}
+                    title="Copy share link"
+                  >
+                    <Share2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           ))}

@@ -13,6 +13,7 @@ import { BookingBrowse } from "@/components/BookingBrowse";
 import { Workers } from "@/components/Workers";
 import { Appointments } from "@/components/Appointments";
 import { AppointmentView } from "@/pages/AppointmentView";
+import { OpeningView } from "@/pages/OpeningView";
 import Auth from "@/pages/Auth";
 import Settings from "@/pages/Settings";
 import Profile from "@/pages/Profile";
@@ -43,6 +44,7 @@ const App = () => (
                     <Route path="/workers" element={<Workers />} />
                     <Route path="/appointments" element={<Appointments />} />
                     <Route path="/appointments/:id" element={<AppointmentView />} />
+                    <Route path="/openings/:id" element={<OpeningView />} />
                     <Route path="/auth" element={<Auth />} />
                     <Route path="/settings" element={<Settings />} />
                     <Route path="/profile" element={<Profile />} />
