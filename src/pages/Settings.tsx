@@ -220,6 +220,10 @@ export default function Settings() {
             <CreditCard className="h-4 w-4 mr-2" />
             Payment Methods
           </TabsTrigger>
+          <TabsTrigger value="roles">
+            <Star className="h-4 w-4 mr-2" />
+            Roles
+          </TabsTrigger>
         </TabsList>
 
         {/* Addresses Tab */}
@@ -328,30 +332,28 @@ export default function Settings() {
             </div>
           )}
         </TabsContent>
-      </Tabs>
 
-      {/* Roles & Account */}
-      <div className="grid gap-6 max-w-2xl">
-        <Card>
-          <CardHeader>
-            <CardTitle>Roles</CardTitle>
-            <CardDescription>Your assigned roles in the system</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <p className="text-sm text-muted-foreground">Loading roles...</p>
-            ) : roles.length > 0 ? (
-              <div className="flex flex-wrap gap-2">
-                {roles.map((role) => (
-                  <Badge key={role} variant="secondary">{role}</Badge>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground">No roles assigned</p>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+        {/* Roles Tab */}
+        <TabsContent value="roles" className="space-y-4">
+          {loading ? (
+            <p className="text-muted-foreground text-center py-8">Loading roles...</p>
+          ) : roles.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {roles.map((role) => (
+                <Badge key={role} variant="secondary" className="text-sm px-3 py-1">{role}</Badge>
+              ))}
+            </div>
+          ) : (
+            <Card>
+              <CardContent className="text-center py-12">
+                <Star className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
+                <p className="text-lg text-muted-foreground">No roles assigned</p>
+                <p className="text-sm text-muted-foreground">Your assigned roles in the system will appear here</p>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+      </Tabs>
 
       {/* Address Dialog */}
       <Dialog open={showAddressDialog} onOpenChange={setShowAddressDialog}>
