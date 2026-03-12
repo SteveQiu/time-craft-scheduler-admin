@@ -8,7 +8,8 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Input } from './ui/input';
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from './ui/alert-dialog';
-import { Calendar as CalendarIcon, Clock, User, MapPin, Search, Filter, Loader2 } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, User, MapPin, Search, Filter, Loader2, Share2, ExternalLink } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface OpeningWithProfile {
   id: string;
