@@ -10,6 +10,7 @@ import { ChevronLeft, ChevronRight, Plus, Clock, User, X, DollarSign } from 'luc
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useUserRoles } from '@/hooks/useUserRoles';
 import { useQuery } from '@tanstack/react-query';
 import { useOrgWorkers } from '@/hooks/useOrgWorkers';
 
