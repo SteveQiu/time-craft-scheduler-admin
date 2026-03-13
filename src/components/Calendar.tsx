@@ -638,26 +638,34 @@ export function Calendar() {
               </div>
             )}
 
-            <div className="space-y-2">
-              <Label htmlFor="worker">Worker</Label>
-              <Select 
-                value={newOpening.worker} 
-                onValueChange={(value) => {
-                  const skills = getWorkerSkills(value);
-                  setNewOpening({...newOpening, worker: value, service: skills[0] || ''});
-                  setErrors(prev => ({ ...prev, worker: '', service: '' }));
-                }}
-              >
-                <SelectTrigger className={errors.worker ? 'border-destructive' : ''}>
-                  <SelectValue placeholder="Select worker" />
-                </SelectTrigger>
-                <SelectContent>
-                  {workerData.map((w) => (
-                    <SelectItem key={w.id} value={w.worker_name}>{w.worker_name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {errors.worker && <p className="text-sm text-destructive">{errors.worker}</p>}
+            {isOrgMode ? (
+              <div className="space-y-2">
+                <Label htmlFor="worker">Worker</Label>
+                <Select 
+                  value={newOpening.worker} 
+                  onValueChange={(value) => {
+                    const skills = getWorkerSkills(value);
+                    setNewOpening({...newOpening, worker: value, service: skills[0] || ''});
+                    setErrors(prev => ({ ...prev, worker: '', service: '' }));
+                  }}
+                >
+                  <SelectTrigger className={errors.worker ? 'border-destructive' : ''}>
+                    <SelectValue placeholder="Select worker" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {workerData.map((w) => (
+                      <SelectItem key={w.id} value={w.worker_name}>{w.worker_name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {errors.worker && <p className="text-sm text-destructive">{errors.worker}</p>}
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <Label>Worker</Label>
+                <Input value={selfWorkerName} disabled className="bg-muted" />
+              </div>
+            )}
             </div>
 
             <div className="space-y-2">
