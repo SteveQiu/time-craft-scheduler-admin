@@ -681,7 +681,7 @@ export function Calendar() {
                   <SelectValue placeholder="Select service" />
                 </SelectTrigger>
                 <SelectContent>
-                  {getWorkerSkills(newOpening.worker).map((skill) => (
+                  {getWorkerSkills(isOrgMode ? newOpening.worker : selfWorkerName).map((skill) => (
                     <SelectItem key={skill} value={skill}>{skill}</SelectItem>
                   ))}
                 </SelectContent>
