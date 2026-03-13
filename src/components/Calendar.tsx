@@ -282,7 +282,7 @@ export function Calendar() {
               start_time: startTimeStr,
               end_time: endTimeStr,
               duration: newOpening.interval,
-              worker: newOpening.worker,
+              worker: workerName,
               service: newOpening.service,
               location: newOpening.location || null,
               is_available: true
