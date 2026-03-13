@@ -164,7 +164,7 @@ export function Calendar() {
       newErrors.startTime = 'Start time is required';
     }
     
-    if (!newOpening.worker) {
+    if (isOrgMode && !newOpening.worker) {
       newErrors.worker = 'Worker selection is required';
     }
     
