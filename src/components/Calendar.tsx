@@ -666,7 +666,6 @@ export function Calendar() {
                 <Input value={selfWorkerName} disabled className="bg-muted" />
               </div>
             )}
-            </div>
 
             <div className="space-y-2">
               <Label htmlFor="service">Service</Label>
