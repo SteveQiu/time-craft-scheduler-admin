@@ -725,14 +725,14 @@ export function Calendar() {
               )}
             </div>
 
-            {newOpening.worker && (
+            {(isOrgMode ? newOpening.worker : true) && (
               <div className="bg-secondary/30 p-3 rounded-lg">
                 <div className="text-sm text-muted-foreground">Rate Preview</div>
-                <div className="font-medium">${Number(getWorkerRate(newOpening.worker))}/hour</div>
+                <div className="font-medium">${Number(getWorkerRate(isOrgMode ? newOpening.worker : selfWorkerName))}/hour</div>
                 {newOpening.multipleSlots ? (
-                  <div className="text-sm">Each slot: ${Number(getWorkerRate(newOpening.worker)) * Number(newOpening.interval)}</div>
+                  <div className="text-sm">Each slot: ${Number(getWorkerRate(isOrgMode ? newOpening.worker : selfWorkerName)) * Number(newOpening.interval)}</div>
                 ) : (
-                  <div className="text-sm">Total: ${Number(getWorkerRate(newOpening.worker)) * Number(newOpening.duration)}</div>
+                  <div className="text-sm">Total: ${Number(getWorkerRate(isOrgMode ? newOpening.worker : selfWorkerName)) * Number(newOpening.duration)}</div>
                 )}
               </div>
             )}
