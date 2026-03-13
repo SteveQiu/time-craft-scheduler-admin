@@ -302,7 +302,7 @@ export function Calendar() {
             start_time: newOpening.startTime,
             end_time: calculateEndTime(newOpening.startTime, newOpening.duration),
             duration: newOpening.duration,
-            worker: newOpening.worker,
+            worker: workerName,
             service: newOpening.service,
             location: newOpening.location || null,
             is_available: true
