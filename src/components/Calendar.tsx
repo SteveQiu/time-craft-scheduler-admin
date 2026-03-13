@@ -38,7 +38,36 @@ interface Opening {
 }
 
 export function Calendar() {
-  const { workers: workerData, getWorkerRate, getWorkerSkills } = useOrgWorkers();
+  const { isOrganization, isInternalDev } = useUserRoles();
+  const isOrgMode = isOrganization || isInternalDev;
+  const { workers: workerData, getWorkerRate: getOrgWorkerRate, getWorkerSkills: getOrgWorkerSkills } = useOrgWorkers();
+
+  // Fetch own profile for user mode (skills & rate)
+  const { data: ownProfile } = useQuery({
+    queryKey: ['own-profile-for-openings', user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('full_name, skills, hourly_rate')
+        .eq('id', user!.id)
+        .single();
+      if (error) throw error;
+      return data as { full_name: string | null; skills: string[]; hourly_rate: number };
+    },
+    enabled: !!user && !isOrgMode,
+  });
+
+  const getWorkerRate = (name: string) => {
+    if (isOrgMode) return getOrgWorkerRate(name);
+    return ownProfile?.hourly_rate ?? 0;
+  };
+
+  const getWorkerSkills = (name: string) => {
+    if (isOrgMode) return getOrgWorkerSkills(name);
+    return ownProfile?.skills ?? [];
+  };
+
+  const selfWorkerName = ownProfile?.full_name || user?.email || 'Me';
   // Helper to parse time string (e.g., '09:00') to minutes since midnight
   const parseTime = (timeStr: string): number => {
     const [hours, minutes] = timeStr.split(':').map(Number);
