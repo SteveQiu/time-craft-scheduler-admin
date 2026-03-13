@@ -14,7 +14,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { ReviewSection } from '@/components/ReviewSection';
 import { ReportDialog } from '@/components/ReportDialog';
-import { Edit, Save, X, Mail, Phone, MapPin, Star, Flag, Share2 } from 'lucide-react';
+import { Edit, Save, X, Mail, Phone, MapPin, Star, Flag, Share2, DollarSign, Wrench } from 'lucide-react';
 
 interface ProfileData {
   id: string;
@@ -25,6 +25,8 @@ interface ProfileData {
   address: string | null;
   slug: string | null;
   avatar_url: string | null;
+  skills: string[];
+  hourly_rate: number;
 }
 
 export default function Profile() {
@@ -41,11 +43,12 @@ export default function Profile() {
     phone: '',
     address: '',
     slug: '',
+    skills: '' as string,
+    hourly_rate: 0,
   });
 
   // Determine if viewing own profile or someone else's
   const isOwnProfile = !slug;
-  // Check if slug is a UUID (user ID) vs a custom slug
   const isUuid = slug ? /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug) : false;
 
   const { data: profile, isLoading } = useQuery({
@@ -59,16 +62,14 @@ export default function Profile() {
           .eq('id', user.id)
           .single();
         if (error) throw error;
-        return data as ProfileData;
+        return data as unknown as ProfileData;
       } else if (isUuid) {
-        // Lookup by user ID
         const { data, error } = await supabase
           .rpc('get_public_profile_by_id', { profile_id: slug });
         if (error) throw error;
         if (!data || data.length === 0) return null;
         return data[0] as unknown as ProfileData;
       } else {
-        // Use RPC to get public profile data by slug
         const { data, error } = await supabase
           .rpc('get_public_profile', { profile_slug: slug });
         if (error) throw error;
@@ -101,10 +102,12 @@ export default function Profile() {
       setForm({
         full_name: profile.full_name || '',
         email: profile.email || '',
-        introduction: (profile as any).introduction || '',
-        phone: (profile as any).phone || '',
-        address: (profile as any).address || '',
-        slug: (profile as any).slug || '',
+        introduction: profile.introduction || '',
+        phone: profile.phone || '',
+        address: profile.address || '',
+        slug: profile.slug || '',
+        skills: (profile.skills || []).join(', '),
+        hourly_rate: profile.hourly_rate || 0,
       });
     }
   }, [profile]);
@@ -112,6 +115,10 @@ export default function Profile() {
   const saveMutation = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error('Not authenticated');
+      const skillsArray = form.skills
+        .split(',')
+        .map(s => s.trim())
+        .filter(Boolean);
       const { error } = await supabase
         .from('profiles')
         .update({
@@ -121,6 +128,8 @@ export default function Profile() {
           phone: form.phone || null,
           address: form.address || null,
           slug: form.slug || null,
+          skills: skillsArray,
+          hourly_rate: form.hourly_rate,
         } as any)
         .eq('id', user.id);
       if (error) throw error;
@@ -300,8 +309,8 @@ export default function Profile() {
             </>
           ) : (
             <>
-              {(profile as any).introduction && (
-                <p className="text-foreground">{(profile as any).introduction}</p>
+              {profile.introduction && (
+                <p className="text-foreground">{profile.introduction}</p>
               )}
               <div className="space-y-2">
                 {profile.email && (
@@ -310,23 +319,78 @@ export default function Profile() {
                     <span>{profile.email}</span>
                   </div>
                 )}
-                {(profile as any).phone && (
+                {profile.phone && (
                   <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                     <Phone className="h-4 w-4" />
-                    <span>{(profile as any).phone}</span>
+                    <span>{profile.phone}</span>
                   </div>
                 )}
-                {(profile as any).address && (
+                {profile.address && (
                   <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                     <MapPin className="h-4 w-4" />
-                    <span>{(profile as any).address}</span>
+                    <span>{profile.address}</span>
                   </div>
                 )}
               </div>
-              {!(profile as any).introduction && !(profile as any).phone && !(profile as any).address && isOwnProfile && (
+              {!profile.introduction && !profile.phone && !profile.address && isOwnProfile && (
                 <p className="text-sm text-muted-foreground">
                   Click "Edit" to add your introduction, contact info, and address.
                 </p>
+              )}
+            </>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Skills & Rate Section */}
+      <Card className="shadow-soft border-card-border">
+        <CardHeader>
+          <CardTitle className="text-lg">Skills & Rate</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {editing ? (
+            <>
+              <div className="space-y-2">
+                <Label>Skills (comma-separated)</Label>
+                <Input
+                  value={form.skills}
+                  onChange={(e) => setForm({ ...form, skills: e.target.value })}
+                  placeholder="e.g. Hair Cut, Massage, Consultation"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Hourly Rate ($)</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  value={form.hourly_rate}
+                  onChange={(e) => setForm({ ...form, hourly_rate: parseFloat(e.target.value) || 0 })}
+                  placeholder="0"
+                />
+              </div>
+            </>
+          ) : (
+            <>
+              {profile.skills && profile.skills.length > 0 ? (
+                <div className="flex items-start space-x-2">
+                  <Wrench className="h-4 w-4 mt-0.5 text-muted-foreground" />
+                  <div className="flex flex-wrap gap-2">
+                    {profile.skills.map((skill) => (
+                      <Badge key={skill} variant="secondary">{skill}</Badge>
+                    ))}
+                  </div>
+                </div>
+              ) : isOwnProfile ? (
+                <p className="text-sm text-muted-foreground">No skills set. Click "Edit" to add your skills.</p>
+              ) : null}
+              {profile.hourly_rate > 0 && (
+                <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                  <DollarSign className="h-4 w-4" />
+                  <span>${profile.hourly_rate}/hour</span>
+                </div>
+              )}
+              {(!profile.hourly_rate || profile.hourly_rate === 0) && isOwnProfile && (
+                <p className="text-sm text-muted-foreground">No hourly rate set. Click "Edit" to set your rate.</p>
               )}
             </>
           )}

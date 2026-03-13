@@ -26,6 +26,7 @@ export function AppSidebar() {
 
   const userNavItems = [
     { id: 'browse', label: 'Browse', icon: Search, path: '/browse' },
+    { id: 'my-openings', label: 'My Openings', icon: CalendarIcon, path: '/calendar' },
     { id: 'appointments-user', label: 'My Appointments', icon: Clock, path: '/appointments' },
   ];
 
@@ -41,7 +42,6 @@ export function AppSidebar() {
   };
 
   // Show sections based on role and view mode
-  // When viewMode is 'org', show user section only; when 'user', show org section only
   const showOrgSection = isInternalDev || (isOrganization && viewMode === 'user');
   const showUserSection = isInternalDev || isUser || (isOrganization && viewMode === 'org');
 
