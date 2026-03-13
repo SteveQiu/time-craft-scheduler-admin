@@ -264,6 +264,7 @@ export function Calendar() {
       return;
     }
     setLoading(true);
+    const workerName = isOrgMode ? newOpening.worker : selfWorkerName;
     try {
         const dateStr = selectedDate.toISOString().split('T')[0];
         if (newOpening.multipleSlots && newOpening.endTime) {
