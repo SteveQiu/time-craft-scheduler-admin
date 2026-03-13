@@ -38,6 +38,7 @@ interface Opening {
 }
 
 export function Calendar() {
+  const { user } = useAuth();
   const { isOrganization, isInternalDev } = useUserRoles();
   const isOrgMode = isOrganization || isInternalDev;
   const { workers: workerData, getWorkerRate: getOrgWorkerRate, getWorkerSkills: getOrgWorkerSkills } = useOrgWorkers();
@@ -74,14 +75,12 @@ export function Calendar() {
     return hours * 60 + minutes;
   };
 
-  // Helper to format minutes since midnight to 'HH:MM'
   const formatTime = (minutes: number): string => {
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
     return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
   };
 
-  // Helper to calculate end time string given start time and duration (in hours)
   const calculateEndTime = (startTime: string, duration: number): string => {
     const startMinutes = parseTime(startTime);
     const endMinutes = startMinutes + duration * 60;
@@ -93,7 +92,6 @@ export function Calendar() {
   const [openings, setOpenings] = useState<Opening[]>([]);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
-  const { user } = useAuth();
 
   // Fetch saved workplace addresses
   const { data: savedAddresses = [] } = useQuery({
