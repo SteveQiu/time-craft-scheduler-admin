@@ -10,6 +10,7 @@ import { ChevronLeft, ChevronRight, Plus, Clock, User, X, DollarSign } from 'luc
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useUserRoles } from '@/hooks/useUserRoles';
 import { useQuery } from '@tanstack/react-query';
 import { useOrgWorkers } from '@/hooks/useOrgWorkers';
 
@@ -37,21 +38,49 @@ interface Opening {
 }
 
 export function Calendar() {
-  const { workers: workerData, getWorkerRate, getWorkerSkills } = useOrgWorkers();
+  const { user } = useAuth();
+  const { isOrganization, isInternalDev } = useUserRoles();
+  const isOrgMode = isOrganization || isInternalDev;
+  const { workers: workerData, getWorkerRate: getOrgWorkerRate, getWorkerSkills: getOrgWorkerSkills } = useOrgWorkers();
+
+  // Fetch own profile for user mode (skills & rate)
+  const { data: ownProfile } = useQuery({
+    queryKey: ['own-profile-for-openings', user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('full_name, skills, hourly_rate')
+        .eq('id', user!.id)
+        .single();
+      if (error) throw error;
+      return data as { full_name: string | null; skills: string[]; hourly_rate: number };
+    },
+    enabled: !!user && !isOrgMode,
+  });
+
+  const getWorkerRate = (name: string) => {
+    if (isOrgMode) return getOrgWorkerRate(name);
+    return ownProfile?.hourly_rate ?? 0;
+  };
+
+  const getWorkerSkills = (name: string) => {
+    if (isOrgMode) return getOrgWorkerSkills(name);
+    return ownProfile?.skills ?? [];
+  };
+
+  const selfWorkerName = ownProfile?.full_name || user?.email || 'Me';
   // Helper to parse time string (e.g., '09:00') to minutes since midnight
   const parseTime = (timeStr: string): number => {
     const [hours, minutes] = timeStr.split(':').map(Number);
     return hours * 60 + minutes;
   };
 
-  // Helper to format minutes since midnight to 'HH:MM'
   const formatTime = (minutes: number): string => {
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
     return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
   };
 
-  // Helper to calculate end time string given start time and duration (in hours)
   const calculateEndTime = (startTime: string, duration: number): string => {
     const startMinutes = parseTime(startTime);
     const endMinutes = startMinutes + duration * 60;
@@ -63,7 +92,6 @@ export function Calendar() {
   const [openings, setOpenings] = useState<Opening[]>([]);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
-  const { user } = useAuth();
 
   // Fetch saved workplace addresses
   const { data: savedAddresses = [] } = useQuery({
@@ -136,7 +164,7 @@ export function Calendar() {
       newErrors.startTime = 'Start time is required';
     }
     
-    if (!newOpening.worker) {
+    if (isOrgMode && !newOpening.worker) {
       newErrors.worker = 'Worker selection is required';
     }
     
@@ -236,6 +264,7 @@ export function Calendar() {
       return;
     }
     setLoading(true);
+    const workerName = isOrgMode ? newOpening.worker : selfWorkerName;
     try {
         const dateStr = selectedDate.toISOString().split('T')[0];
         if (newOpening.multipleSlots && newOpening.endTime) {
@@ -253,7 +282,7 @@ export function Calendar() {
               start_time: startTimeStr,
               end_time: endTimeStr,
               duration: newOpening.interval,
-              worker: newOpening.worker,
+              worker: workerName,
               service: newOpening.service,
               location: newOpening.location || null,
               is_available: true
@@ -273,7 +302,7 @@ export function Calendar() {
             start_time: newOpening.startTime,
             end_time: calculateEndTime(newOpening.startTime, newOpening.duration),
             duration: newOpening.duration,
-            worker: newOpening.worker,
+            worker: workerName,
             service: newOpening.service,
             location: newOpening.location || null,
             is_available: true
@@ -610,27 +639,34 @@ export function Calendar() {
               </div>
             )}
 
-            <div className="space-y-2">
-              <Label htmlFor="worker">Worker</Label>
-              <Select 
-                value={newOpening.worker} 
-                onValueChange={(value) => {
-                  const skills = getWorkerSkills(value);
-                  setNewOpening({...newOpening, worker: value, service: skills[0] || ''});
-                  setErrors(prev => ({ ...prev, worker: '', service: '' }));
-                }}
-              >
-                <SelectTrigger className={errors.worker ? 'border-destructive' : ''}>
-                  <SelectValue placeholder="Select worker" />
-                </SelectTrigger>
-                <SelectContent>
-                  {workerData.map((w) => (
-                    <SelectItem key={w.id} value={w.worker_name}>{w.worker_name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {errors.worker && <p className="text-sm text-destructive">{errors.worker}</p>}
-            </div>
+            {isOrgMode ? (
+              <div className="space-y-2">
+                <Label htmlFor="worker">Worker</Label>
+                <Select 
+                  value={newOpening.worker} 
+                  onValueChange={(value) => {
+                    const skills = getWorkerSkills(value);
+                    setNewOpening({...newOpening, worker: value, service: skills[0] || ''});
+                    setErrors(prev => ({ ...prev, worker: '', service: '' }));
+                  }}
+                >
+                  <SelectTrigger className={errors.worker ? 'border-destructive' : ''}>
+                    <SelectValue placeholder="Select worker" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {workerData.map((w) => (
+                      <SelectItem key={w.id} value={w.worker_name}>{w.worker_name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {errors.worker && <p className="text-sm text-destructive">{errors.worker}</p>}
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <Label>Worker</Label>
+                <Input value={selfWorkerName} disabled className="bg-muted" />
+              </div>
+            )}
 
             <div className="space-y-2">
               <Label htmlFor="service">Service</Label>
@@ -645,7 +681,7 @@ export function Calendar() {
                   <SelectValue placeholder="Select service" />
                 </SelectTrigger>
                 <SelectContent>
-                  {getWorkerSkills(newOpening.worker).map((skill) => (
+                  {getWorkerSkills(isOrgMode ? newOpening.worker : selfWorkerName).map((skill) => (
                     <SelectItem key={skill} value={skill}>{skill}</SelectItem>
                   ))}
                 </SelectContent>
@@ -689,14 +725,14 @@ export function Calendar() {
               )}
             </div>
 
-            {newOpening.worker && (
+            {(isOrgMode ? newOpening.worker : true) && (
               <div className="bg-secondary/30 p-3 rounded-lg">
                 <div className="text-sm text-muted-foreground">Rate Preview</div>
-                <div className="font-medium">${Number(getWorkerRate(newOpening.worker))}/hour</div>
+                <div className="font-medium">${Number(getWorkerRate(isOrgMode ? newOpening.worker : selfWorkerName))}/hour</div>
                 {newOpening.multipleSlots ? (
-                  <div className="text-sm">Each slot: ${Number(getWorkerRate(newOpening.worker)) * Number(newOpening.interval)}</div>
+                  <div className="text-sm">Each slot: ${Number(getWorkerRate(isOrgMode ? newOpening.worker : selfWorkerName)) * Number(newOpening.interval)}</div>
                 ) : (
-                  <div className="text-sm">Total: ${Number(getWorkerRate(newOpening.worker)) * Number(newOpening.duration)}</div>
+                  <div className="text-sm">Total: ${Number(getWorkerRate(isOrgMode ? newOpening.worker : selfWorkerName)) * Number(newOpening.duration)}</div>
                 )}
               </div>
             )}

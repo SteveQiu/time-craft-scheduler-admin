@@ -262,9 +262,11 @@ export type Database = {
           created_at: string
           email: string | null
           full_name: string | null
+          hourly_rate: number
           id: string
           introduction: string | null
           phone: string | null
+          skills: string[]
           slug: string | null
           updated_at: string
         }
@@ -274,9 +276,11 @@ export type Database = {
           created_at?: string
           email?: string | null
           full_name?: string | null
+          hourly_rate?: number
           id: string
           introduction?: string | null
           phone?: string | null
+          skills?: string[]
           slug?: string | null
           updated_at?: string
         }
@@ -286,9 +290,11 @@ export type Database = {
           created_at?: string
           email?: string | null
           full_name?: string | null
+          hourly_rate?: number
           id?: string
           introduction?: string | null
           phone?: string | null
+          skills?: string[]
           slug?: string | null
           updated_at?: string
         }
