@@ -22,6 +22,7 @@ interface OpeningWithProfile {
   worker: string;
   is_available: boolean;
   location: string | null;
+  hourly_rate: number;
   provider_name: string | null;
   provider_email: string | null;
   provider_slug: string | null;
