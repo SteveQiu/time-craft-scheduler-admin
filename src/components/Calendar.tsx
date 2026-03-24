@@ -34,6 +34,7 @@ interface Opening {
   worker: string;
   service: string;
   is_available: boolean;
+  hourly_rate: number;
   created_at: string;
   updated_at: string;
 }
