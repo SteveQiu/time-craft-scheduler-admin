@@ -251,7 +251,12 @@ export function BookingBrowse() {
                   </div>
                   <div className="flex items-center space-x-2">
                     <User className="h-4 w-4 text-muted-foreground" />
-                    <span>{slot.duration} min</span>
+                    <span>{slot.duration}h</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-sm font-medium">
+                    {Number(slot.hourly_rate) === 0
+                      ? <Badge variant="secondary">Free</Badge>
+                      : <span className="text-primary">${Number(slot.hourly_rate) * Number(slot.duration)}</span>}
                   </div>
                   {slot.location && (
                     <div className="flex items-center space-x-2">
