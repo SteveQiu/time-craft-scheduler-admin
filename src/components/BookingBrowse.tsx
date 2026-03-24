@@ -75,6 +75,7 @@ export function BookingBrowse() {
         worker: opening.worker,
         is_available: opening.is_available,
         location: opening.location || null,
+        hourly_rate: opening.hourly_rate || 0,
         provider_name: nameMap.get(opening.user_id) || null,
         provider_email: null,
         provider_slug: slugMap.get(opening.user_id) || null,
