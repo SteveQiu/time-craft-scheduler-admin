@@ -551,7 +551,11 @@ export function Calendar() {
                     <div className="font-medium">{opening.service}</div>
                     <div className="flex items-center space-x-2">
                       <DollarSign className="h-3 w-3" />
-                      <span>${Number(getWorkerRate(opening.worker)) * Number(opening.duration)}</span>
+                      <span>
+                        {Number(opening.hourly_rate) === 0
+                          ? 'Free'
+                          : `$${Number(opening.hourly_rate) * Number(opening.duration)}`}
+                      </span>
                     </div>
                   </div>
                 </div>
