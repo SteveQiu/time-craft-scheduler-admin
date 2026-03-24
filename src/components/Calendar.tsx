@@ -321,6 +321,7 @@ export function Calendar() {
           toast.success(`${newOpenings.length} openings added successfully`);
         } else {
           // Create single slot
+          const rateValue = newOpening.isFree ? 0 : Number(getWorkerRate(workerName));
           const opening = {
             user_id: user.id,
             date: dateStr,
@@ -330,7 +331,8 @@ export function Calendar() {
             worker: workerName,
             service: newOpening.service,
             location: newOpening.location || null,
-            is_available: true
+            is_available: true,
+            hourly_rate: rateValue
           };
           const { error } = await supabase
             .from('openings')
