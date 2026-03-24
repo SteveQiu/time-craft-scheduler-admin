@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
@@ -38,9 +39,11 @@ interface Opening {
 }
 
 export function Calendar() {
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const { isOrganization, isInternalDev } = useUserRoles();
-  const isOrgMode = isOrganization || isInternalDev;
+  const modeParam = searchParams.get('mode');
+  const isOrgMode = modeParam === 'org' && (isOrganization || isInternalDev);
   const { workers: workerData, getWorkerRate: getOrgWorkerRate, getWorkerSkills: getOrgWorkerSkills } = useOrgWorkers();
 
   // Fetch own profile for user mode (skills & rate)

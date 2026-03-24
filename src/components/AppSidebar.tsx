@@ -26,19 +26,24 @@ export function AppSidebar() {
 
   const userNavItems = [
     { id: 'browse', label: 'Browse', icon: Search, path: '/browse' },
-    { id: 'my-openings', label: 'My Openings', icon: CalendarIcon, path: '/calendar' },
-    { id: 'appointments-user', label: 'My Appointments', icon: Clock, path: '/appointments' },
+    { id: 'my-openings', label: 'My Openings', icon: CalendarIcon, path: '/calendar?mode=user' },
+    { id: 'appointments-user', label: 'My Appointments', icon: Clock, path: '/appointments?mode=user' },
   ];
 
   const orgNavItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Home, path: '/dashboard' },
-    { id: 'calendar', label: 'Opening', icon: CalendarIcon, path: '/calendar' },
+    { id: 'calendar', label: 'Opening', icon: CalendarIcon, path: '/calendar?mode=org' },
     { id: 'workers', label: 'Workers', icon: Users, path: '/workers' },
-    { id: 'appointments-org', label: 'Reservations', icon: Clock, path: '/appointments' },
+    { id: 'appointments-org', label: 'Reservations', icon: Clock, path: '/appointments?mode=org' },
   ];
 
   const isActive = (path: string) => {
-    return location.pathname === path || (path === '/dashboard' && location.pathname === '/');
+    const [pathname, search] = path.split('?');
+    const currentSearch = location.search;
+    if (search) {
+      return location.pathname === pathname && currentSearch === `?${search}`;
+    }
+    return location.pathname === pathname || (pathname === '/dashboard' && location.pathname === '/');
   };
 
   // Show sections based on role and view mode

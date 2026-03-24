@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRoles } from '@/hooks/useUserRoles';
 import { supabase } from '@/integrations/supabase/client';
@@ -39,6 +39,7 @@ interface Appointment {
 export function Appointments() {
   const { workers } = useOrgWorkers();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const { isOrganization, isInternalDev } = useUserRoles();
   const queryClient = useQueryClient();
@@ -49,7 +50,8 @@ export function Appointments() {
   const [showInactive, setShowInactive] = useState(false);
 
   // Determine if viewing as org (provider) or user (booker)
-  const isOrgView = isOrganization || isInternalDev;
+  const modeParam = searchParams.get('mode');
+  const isOrgView = modeParam === 'org' && (isOrganization || isInternalDev);
 
   const { data: appointments = [], isLoading } = useQuery({
     queryKey: ['appointments', user?.id, isOrgView],
