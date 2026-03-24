@@ -118,7 +118,8 @@ export function Calendar() {
     service: '',
     location: '',
     multipleSlots: false,
-    interval: 1
+    interval: 1,
+    isFree: false
   });
 
   // Auto-set defaults when profile/workers load
