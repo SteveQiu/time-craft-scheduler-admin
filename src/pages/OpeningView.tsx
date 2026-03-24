@@ -171,7 +171,15 @@ export function OpeningView() {
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Duration</p>
-                    <p className="font-medium text-foreground">{opening.duration} minutes</p>
+                    <p className="font-medium text-foreground">{opening.duration} hour{opening.duration > 1 ? 's' : ''}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Rate</p>
+                    <p className="font-medium text-foreground">
+                      {Number(opening.hourly_rate) === 0
+                        ? 'Free'
+                        : `$${Number(opening.hourly_rate)}/hr · Total: $${Number(opening.hourly_rate) * Number(opening.duration)}`}
+                    </p>
                   </div>
                   {opening.location && (
                     <div>

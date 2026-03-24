@@ -22,6 +22,7 @@ interface OpeningWithProfile {
   worker: string;
   is_available: boolean;
   location: string | null;
+  hourly_rate: number;
   provider_name: string | null;
   provider_email: string | null;
   provider_slug: string | null;
@@ -74,6 +75,7 @@ export function BookingBrowse() {
         worker: opening.worker,
         is_available: opening.is_available,
         location: opening.location || null,
+        hourly_rate: opening.hourly_rate || 0,
         provider_name: nameMap.get(opening.user_id) || null,
         provider_email: null,
         provider_slug: slugMap.get(opening.user_id) || null,
@@ -250,7 +252,12 @@ export function BookingBrowse() {
                   </div>
                   <div className="flex items-center space-x-2">
                     <User className="h-4 w-4 text-muted-foreground" />
-                    <span>{slot.duration} min</span>
+                    <span>{slot.duration}h</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-sm font-medium">
+                    {Number(slot.hourly_rate) === 0
+                      ? <Badge variant="secondary">Free</Badge>
+                      : <span className="text-primary">${Number(slot.hourly_rate) * Number(slot.duration)}</span>}
                   </div>
                   {slot.location && (
                     <div className="flex items-center space-x-2">

@@ -82,6 +82,7 @@ export type Database = {
           date: string
           duration: number
           end_time: string
+          hourly_rate: number
           id: string
           is_available: boolean
           location: string | null
@@ -96,6 +97,7 @@ export type Database = {
           date: string
           duration: number
           end_time: string
+          hourly_rate?: number
           id?: string
           is_available?: boolean
           location?: string | null
@@ -110,6 +112,7 @@ export type Database = {
           date?: string
           duration?: number
           end_time?: string
+          hourly_rate?: number
           id?: string
           is_available?: boolean
           location?: string | null

@@ -34,6 +34,7 @@ interface Opening {
   worker: string;
   service: string;
   is_available: boolean;
+  hourly_rate: number;
   created_at: string;
   updated_at: string;
 }
@@ -118,7 +119,8 @@ export function Calendar() {
     service: '',
     location: '',
     multipleSlots: false,
-    interval: 1
+    interval: 1,
+    isFree: false
   });
 
   // Auto-set defaults when profile/workers load
@@ -298,6 +300,7 @@ export function Calendar() {
           while (current < end) {
             const startTimeStr = formatTime(current);
             const endTimeStr = calculateEndTime(startTimeStr, newOpening.interval);
+            const rateValue = newOpening.isFree ? 0 : Number(getWorkerRate(workerName));
             newOpenings.push({
               user_id: user.id,
               date: dateStr,
@@ -307,7 +310,8 @@ export function Calendar() {
               worker: workerName,
               service: newOpening.service,
               location: newOpening.location || null,
-              is_available: true
+              is_available: true,
+              hourly_rate: rateValue
             });
             current += newOpening.interval * 60; // Add interval in minutes
           }
@@ -318,6 +322,7 @@ export function Calendar() {
           toast.success(`${newOpenings.length} openings added successfully`);
         } else {
           // Create single slot
+          const rateValue = newOpening.isFree ? 0 : Number(getWorkerRate(workerName));
           const opening = {
             user_id: user.id,
             date: dateStr,
@@ -327,7 +332,8 @@ export function Calendar() {
             worker: workerName,
             service: newOpening.service,
             location: newOpening.location || null,
-            is_available: true
+            is_available: true,
+            hourly_rate: rateValue
           };
           const { error } = await supabase
             .from('openings')
@@ -363,7 +369,8 @@ export function Calendar() {
       service: defaultSkills[0] || '',
       location: '',
       multipleSlots: false,
-      interval: 1
+      interval: 1,
+      isFree: false
     });
     setErrors({});
   };
@@ -545,7 +552,11 @@ export function Calendar() {
                     <div className="font-medium">{opening.service}</div>
                     <div className="flex items-center space-x-2">
                       <DollarSign className="h-3 w-3" />
-                      <span>${Number(getWorkerRate(opening.worker)) * Number(opening.duration)}</span>
+                      <span>
+                        {Number(opening.hourly_rate) === 0
+                          ? 'Free'
+                          : `$${Number(opening.hourly_rate) * Number(opening.duration)}`}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -753,14 +764,35 @@ export function Calendar() {
               )}
             </div>
 
+            {/* Rate Selector */}
+            <div className="space-y-2">
+              <Label>Rate</Label>
+              <Select
+                value={newOpening.isFree ? 'free' : 'paid'}
+                onValueChange={(value) => setNewOpening({...newOpening, isFree: value === 'free'})}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="free">Free ($0/hr)</SelectItem>
+                  <SelectItem value="paid">${Number(getWorkerRate(isOrgMode ? newOpening.worker : selfWorkerName))}/hr</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
             {(isOrgMode ? newOpening.worker : true) && (
               <div className="bg-secondary/30 p-3 rounded-lg">
                 <div className="text-sm text-muted-foreground">Rate Preview</div>
-                <div className="font-medium">${Number(getWorkerRate(isOrgMode ? newOpening.worker : selfWorkerName))}/hour</div>
-                {newOpening.multipleSlots ? (
-                  <div className="text-sm">Each slot: ${Number(getWorkerRate(isOrgMode ? newOpening.worker : selfWorkerName)) * Number(newOpening.interval)}</div>
-                ) : (
-                  <div className="text-sm">Total: ${Number(getWorkerRate(isOrgMode ? newOpening.worker : selfWorkerName)) * Number(newOpening.duration)}</div>
+                <div className="font-medium">
+                  {newOpening.isFree ? 'Free ($0/hr)' : `$${Number(getWorkerRate(isOrgMode ? newOpening.worker : selfWorkerName))}/hr`}
+                </div>
+                {!newOpening.isFree && (
+                  newOpening.multipleSlots ? (
+                    <div className="text-sm">Each slot: ${Number(getWorkerRate(isOrgMode ? newOpening.worker : selfWorkerName)) * Number(newOpening.interval)}</div>
+                  ) : (
+                    <div className="text-sm">Total: ${Number(getWorkerRate(isOrgMode ? newOpening.worker : selfWorkerName)) * Number(newOpening.duration)}</div>
+                  )
                 )}
               </div>
             )}
