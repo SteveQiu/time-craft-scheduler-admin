@@ -299,6 +299,7 @@ export function Calendar() {
           while (current < end) {
             const startTimeStr = formatTime(current);
             const endTimeStr = calculateEndTime(startTimeStr, newOpening.interval);
+            const rateValue = newOpening.isFree ? 0 : Number(getWorkerRate(workerName));
             newOpenings.push({
               user_id: user.id,
               date: dateStr,
@@ -308,7 +309,8 @@ export function Calendar() {
               worker: workerName,
               service: newOpening.service,
               location: newOpening.location || null,
-              is_available: true
+              is_available: true,
+              hourly_rate: rateValue
             });
             current += newOpening.interval * 60; // Add interval in minutes
           }
