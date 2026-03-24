@@ -346,12 +346,18 @@ export function Calendar() {
 // ...existing code...
 
   const resetForm = () => {
+    const defaultWorker = isOrgMode
+      ? (workerData[0]?.worker_name || '')
+      : (ownProfile?.full_name || user?.email || '');
+    const defaultSkills = isOrgMode
+      ? getOrgWorkerSkills(defaultWorker)
+      : (ownProfile?.skills || []);
     setNewOpening({ 
       startTime: '09:00', 
       endTime: '',
       duration: 1, 
-      worker: 'Sarah Johnson', 
-      service: 'Hair Cut',
+      worker: defaultWorker, 
+      service: defaultSkills[0] || '',
       location: '',
       multipleSlots: false,
       interval: 1
