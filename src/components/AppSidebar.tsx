@@ -38,7 +38,12 @@ export function AppSidebar() {
   ];
 
   const isActive = (path: string) => {
-    return location.pathname === path || (path === '/dashboard' && location.pathname === '/');
+    const [pathname, search] = path.split('?');
+    const currentSearch = location.search;
+    if (search) {
+      return location.pathname === pathname && currentSearch === `?${search}`;
+    }
+    return location.pathname === pathname || (pathname === '/dashboard' && location.pathname === '/');
   };
 
   // Show sections based on role and view mode
