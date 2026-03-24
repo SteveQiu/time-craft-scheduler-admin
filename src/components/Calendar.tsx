@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { useSearchParams } from 'react-router-dom';
 import { Button } from './ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Label } from './ui/label';
