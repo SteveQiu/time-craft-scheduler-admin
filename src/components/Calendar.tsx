@@ -111,12 +111,31 @@ export function Calendar() {
     startTime: '09:00',
     endTime: '',
     duration: 1,
-    worker: 'Sarah Johnson',
-    service: 'Hair Cut',
+    worker: '',
+    service: '',
     location: '',
     multipleSlots: false,
     interval: 1
   });
+
+  // Auto-set defaults when profile/workers load
+  useEffect(() => {
+    if (!isOrgMode && ownProfile) {
+      setNewOpening(prev => ({
+        ...prev,
+        worker: ownProfile.full_name || '',
+        service: prev.service || (ownProfile.skills?.[0] || ''),
+      }));
+    } else if (isOrgMode && workerData.length > 0 && !newOpening.worker) {
+      const firstWorker = workerData[0];
+      const skills = getOrgWorkerSkills(firstWorker.worker_name);
+      setNewOpening(prev => ({
+        ...prev,
+        worker: firstWorker.worker_name,
+        service: skills[0] || '',
+      }));
+    }
+  }, [isOrgMode, ownProfile, workerData]);
 
   const monthNames = [
     'January', 'February', 'March', 'April', 'May', 'June',
@@ -327,12 +346,18 @@ export function Calendar() {
 // ...existing code...
 
   const resetForm = () => {
+    const defaultWorker = isOrgMode
+      ? (workerData[0]?.worker_name || '')
+      : (ownProfile?.full_name || user?.email || '');
+    const defaultSkills = isOrgMode
+      ? getOrgWorkerSkills(defaultWorker)
+      : (ownProfile?.skills || []);
     setNewOpening({ 
       startTime: '09:00', 
       endTime: '',
       duration: 1, 
-      worker: 'Sarah Johnson', 
-      service: 'Hair Cut',
+      worker: defaultWorker, 
+      service: defaultSkills[0] || '',
       location: '',
       multipleSlots: false,
       interval: 1
