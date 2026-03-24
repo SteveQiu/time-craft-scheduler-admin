@@ -763,14 +763,35 @@ export function Calendar() {
               )}
             </div>
 
+            {/* Rate Selector */}
+            <div className="space-y-2">
+              <Label>Rate</Label>
+              <Select
+                value={newOpening.isFree ? 'free' : 'paid'}
+                onValueChange={(value) => setNewOpening({...newOpening, isFree: value === 'free'})}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="free">Free ($0/hr)</SelectItem>
+                  <SelectItem value="paid">${Number(getWorkerRate(isOrgMode ? newOpening.worker : selfWorkerName))}/hr</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
             {(isOrgMode ? newOpening.worker : true) && (
               <div className="bg-secondary/30 p-3 rounded-lg">
                 <div className="text-sm text-muted-foreground">Rate Preview</div>
-                <div className="font-medium">${Number(getWorkerRate(isOrgMode ? newOpening.worker : selfWorkerName))}/hour</div>
-                {newOpening.multipleSlots ? (
-                  <div className="text-sm">Each slot: ${Number(getWorkerRate(isOrgMode ? newOpening.worker : selfWorkerName)) * Number(newOpening.interval)}</div>
-                ) : (
-                  <div className="text-sm">Total: ${Number(getWorkerRate(isOrgMode ? newOpening.worker : selfWorkerName)) * Number(newOpening.duration)}</div>
+                <div className="font-medium">
+                  {newOpening.isFree ? 'Free ($0/hr)' : `$${Number(getWorkerRate(isOrgMode ? newOpening.worker : selfWorkerName))}/hr`}
+                </div>
+                {!newOpening.isFree && (
+                  newOpening.multipleSlots ? (
+                    <div className="text-sm">Each slot: ${Number(getWorkerRate(isOrgMode ? newOpening.worker : selfWorkerName)) * Number(newOpening.interval)}</div>
+                  ) : (
+                    <div className="text-sm">Total: ${Number(getWorkerRate(isOrgMode ? newOpening.worker : selfWorkerName)) * Number(newOpening.duration)}</div>
+                  )
                 )}
               </div>
             )}
