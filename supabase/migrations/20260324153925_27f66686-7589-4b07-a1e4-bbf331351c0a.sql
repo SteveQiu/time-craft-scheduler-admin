@@ -1,0 +1,1 @@
+ALTER TABLE public.openings ADD COLUMN hourly_rate numeric NOT NULL DEFAULT 0;
