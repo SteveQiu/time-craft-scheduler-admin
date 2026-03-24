@@ -364,7 +364,8 @@ export function Calendar() {
       service: defaultSkills[0] || '',
       location: '',
       multipleSlots: false,
-      interval: 1
+      interval: 1,
+      isFree: false
     });
     setErrors({});
   };
