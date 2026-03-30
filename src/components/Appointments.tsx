@@ -320,15 +320,13 @@ export function Appointments() {
       <Card className="shadow-soft border-card-border">
         <CardContent className="pt-6">
           <div className="flex flex-col sm:flex-row gap-4">
-            {isOrgView && (
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  checked={selectedAppointments.length === activeAppointments.length && activeAppointments.length > 0}
-                  onCheckedChange={handleSelectAll}
-                />
-                <span className="text-sm text-muted-foreground">Select all</span>
-              </div>
-            )}
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                checked={selectedAppointments.length === activeAppointments.length && activeAppointments.length > 0}
+                onCheckedChange={handleSelectAll}
+              />
+              <span className="text-sm text-muted-foreground">Select all</span>
+            </div>
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
