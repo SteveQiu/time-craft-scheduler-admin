@@ -236,8 +236,8 @@ export function Appointments() {
             </div>
           </div>
 
-          {/* Customer info for org view */}
-          {isOrgView && appointment.booker_name && (
+          {/* Customer info for provider */}
+          {canManage && appointment.booker_name && (
             <div className="border-t border-border pt-3 flex flex-col sm:flex-row sm:items-center gap-3">
               <div className="flex items-center space-x-2">
                 <User className="h-4 w-4 text-muted-foreground" />
