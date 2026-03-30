@@ -172,13 +172,15 @@ export function Appointments() {
 
   const renderAppointmentCard = (appointment: Appointment) => {
     const bookerSlug = appointment.booker_slug;
+    const isProvider = appointment.provider_id === user?.id;
+    const canManage = isOrgView || isProvider;
     
     return (
       <Card key={appointment.id} className="shadow-soft border-card-border hover:shadow-lg transition-shadow">
         <CardContent className="p-6 space-y-4">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between space-y-4 lg:space-y-0">
             <div className="flex items-center space-x-4">
-              {isOrgView && (appointment.status === 'confirmed' || appointment.status === 'pending') && (
+              {canManage && (appointment.status === 'confirmed' || appointment.status === 'pending') && (
                 <Checkbox
                   checked={selectedAppointments.includes(appointment.id)}
                   onCheckedChange={() => handleSelectAppointment(appointment.id)}
@@ -224,7 +226,7 @@ export function Appointments() {
                 <Badge className={getStatusColor(appointment.status)}>
                   {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
                 </Badge>
-                {isOrgView && appointment.status === 'confirmed' && (
+                {canManage && appointment.status === 'confirmed' && (
                   <Button variant="default" size="sm" onClick={() => handleComplete(appointment.id)}>
                     <CheckCircle className="h-3 w-3 mr-1" />
                     Complete
@@ -234,8 +236,8 @@ export function Appointments() {
             </div>
           </div>
 
-          {/* Customer info for org view */}
-          {isOrgView && appointment.booker_name && (
+          {/* Customer info for provider */}
+          {canManage && appointment.booker_name && (
             <div className="border-t border-border pt-3 flex flex-col sm:flex-row sm:items-center gap-3">
               <div className="flex items-center space-x-2">
                 <User className="h-4 w-4 text-muted-foreground" />
@@ -300,7 +302,7 @@ export function Appointments() {
             {isOrgView ? 'Review and manage bookings' : 'Your booked appointments'}
           </p>
         </div>
-        {isOrgView && selectedAppointments.length > 0 && (
+        {selectedAppointments.length > 0 && (
           <div className="flex items-center space-x-2">
             <Button variant="default" onClick={handleApprove}>
               <Check className="h-4 w-4 mr-1" />
@@ -318,15 +320,13 @@ export function Appointments() {
       <Card className="shadow-soft border-card-border">
         <CardContent className="pt-6">
           <div className="flex flex-col sm:flex-row gap-4">
-            {isOrgView && (
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  checked={selectedAppointments.length === activeAppointments.length && activeAppointments.length > 0}
-                  onCheckedChange={handleSelectAll}
-                />
-                <span className="text-sm text-muted-foreground">Select all</span>
-              </div>
-            )}
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                checked={selectedAppointments.length === activeAppointments.length && activeAppointments.length > 0}
+                onCheckedChange={handleSelectAll}
+              />
+              <span className="text-sm text-muted-foreground">Select all</span>
+            </div>
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
