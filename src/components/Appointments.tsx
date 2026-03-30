@@ -226,7 +226,7 @@ export function Appointments() {
                 <Badge className={getStatusColor(appointment.status)}>
                   {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
                 </Badge>
-                {isOrgView && appointment.status === 'confirmed' && (
+                {canManage && appointment.status === 'confirmed' && (
                   <Button variant="default" size="sm" onClick={() => handleComplete(appointment.id)}>
                     <CheckCircle className="h-3 w-3 mr-1" />
                     Complete
