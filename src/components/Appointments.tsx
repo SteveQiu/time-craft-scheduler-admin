@@ -302,7 +302,7 @@ export function Appointments() {
             {isOrgView ? 'Review and manage bookings' : 'Your booked appointments'}
           </p>
         </div>
-        {isOrgView && selectedAppointments.length > 0 && (
+        {selectedAppointments.length > 0 && (
           <div className="flex items-center space-x-2">
             <Button variant="default" onClick={handleApprove}>
               <Check className="h-4 w-4 mr-1" />
