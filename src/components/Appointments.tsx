@@ -172,13 +172,15 @@ export function Appointments() {
 
   const renderAppointmentCard = (appointment: Appointment) => {
     const bookerSlug = appointment.booker_slug;
+    const isProvider = appointment.provider_id === user?.id;
+    const canManage = isOrgView || isProvider;
     
     return (
       <Card key={appointment.id} className="shadow-soft border-card-border hover:shadow-lg transition-shadow">
         <CardContent className="p-6 space-y-4">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between space-y-4 lg:space-y-0">
             <div className="flex items-center space-x-4">
-              {isOrgView && (appointment.status === 'confirmed' || appointment.status === 'pending') && (
+              {canManage && (appointment.status === 'confirmed' || appointment.status === 'pending') && (
                 <Checkbox
                   checked={selectedAppointments.includes(appointment.id)}
                   onCheckedChange={() => handleSelectAppointment(appointment.id)}
