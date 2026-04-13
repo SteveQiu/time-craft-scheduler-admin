@@ -333,7 +333,7 @@ export function OpeningView() {
 
       <SignInDialog open={showSignIn} onOpenChange={(open) => {
         setShowSignIn(open);
-        if (!open) pendingBookingRef.current = false;
+        if (!open) localStorage.removeItem(PENDING_BOOKING_KEY);
       }} />
     </div>
   );
