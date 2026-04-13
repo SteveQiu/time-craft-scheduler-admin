@@ -326,6 +326,11 @@ export function OpeningView() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <SignInDialog open={showSignIn} onOpenChange={(open) => {
+        setShowSignIn(open);
+        if (!open) pendingBookingRef.current = false;
+      }} />
     </div>
   );
 }
