@@ -232,7 +232,7 @@ export function OpeningView() {
               {/* Book Button */}
               {opening.is_available && (
                 <div className="pt-4">
-                  <Button className="w-full" size="lg" onClick={() => setShowBookingDialog(true)}>
+                  <Button className="w-full" size="lg" onClick={handleBookClick}>
                     Book This Appointment
                   </Button>
                 </div>
