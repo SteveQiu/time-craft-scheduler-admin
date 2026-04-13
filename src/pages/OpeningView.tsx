@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -11,6 +11,8 @@ import { SignInDialog } from '@/components/SignInDialog';
 import { ArrowLeft, Calendar, Clock, User, MapPin, Share2, Check, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
+const PENDING_BOOKING_KEY = 'pending_booking_opening_id';
+
 export function OpeningView() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -20,20 +22,22 @@ export function OpeningView() {
   const [showSignIn, setShowSignIn] = useState(false);
   const [isBooking, setIsBooking] = useState(false);
   const [copied, setCopied] = useState(false);
-  const pendingBookingRef = useRef(false);
 
-  // Auto-show booking dialog after sign-in if user clicked book while logged out
+  // Auto-show booking dialog after sign-in (survives OAuth redirect)
   useEffect(() => {
-    if (user && pendingBookingRef.current) {
-      pendingBookingRef.current = false;
-      setShowSignIn(false);
-      setShowBookingDialog(true);
+    if (user) {
+      const pendingId = localStorage.getItem(PENDING_BOOKING_KEY);
+      if (pendingId && pendingId === id) {
+        localStorage.removeItem(PENDING_BOOKING_KEY);
+        setShowSignIn(false);
+        setShowBookingDialog(true);
+      }
     }
-  }, [user]);
+  }, [user, id]);
 
   const handleBookClick = () => {
     if (!user) {
-      pendingBookingRef.current = true;
+      localStorage.setItem(PENDING_BOOKING_KEY, id!);
       setShowSignIn(true);
     } else {
       setShowBookingDialog(true);
@@ -329,7 +333,7 @@ export function OpeningView() {
 
       <SignInDialog open={showSignIn} onOpenChange={(open) => {
         setShowSignIn(open);
-        if (!open) pendingBookingRef.current = false;
+        if (!open) localStorage.removeItem(PENDING_BOOKING_KEY);
       }} />
     </div>
   );
