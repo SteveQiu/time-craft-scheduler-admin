@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { SignInDialog } from '@/components/SignInDialog';
 import { ArrowLeft, Calendar, Clock, User, MapPin, Share2, Check, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -16,8 +17,28 @@ export function OpeningView() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const [showBookingDialog, setShowBookingDialog] = useState(false);
+  const [showSignIn, setShowSignIn] = useState(false);
   const [isBooking, setIsBooking] = useState(false);
   const [copied, setCopied] = useState(false);
+  const pendingBookingRef = useRef(false);
+
+  // Auto-show booking dialog after sign-in if user clicked book while logged out
+  useEffect(() => {
+    if (user && pendingBookingRef.current) {
+      pendingBookingRef.current = false;
+      setShowSignIn(false);
+      setShowBookingDialog(true);
+    }
+  }, [user]);
+
+  const handleBookClick = () => {
+    if (!user) {
+      pendingBookingRef.current = true;
+      setShowSignIn(true);
+    } else {
+      setShowBookingDialog(true);
+    }
+  };
 
   const { data: opening, isLoading, error } = useQuery({
     queryKey: ['opening', id],
@@ -211,7 +232,7 @@ export function OpeningView() {
               {/* Book Button */}
               {opening.is_available && (
                 <div className="pt-4">
-                  <Button className="w-full" size="lg" onClick={() => setShowBookingDialog(true)}>
+                  <Button className="w-full" size="lg" onClick={handleBookClick}>
                     Book This Appointment
                   </Button>
                 </div>
@@ -305,6 +326,11 @@ export function OpeningView() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <SignInDialog open={showSignIn} onOpenChange={(open) => {
+        setShowSignIn(open);
+        if (!open) pendingBookingRef.current = false;
+      }} />
     </div>
   );
 }
