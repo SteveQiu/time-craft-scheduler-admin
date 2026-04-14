@@ -85,17 +85,33 @@ export function SignInDialog({ open, onOpenChange }: SignInDialogProps) {
       });
       if (error) throw error;
 
-      if (data.user) {
+      // If user already exists (repeated signup), inform them
+      if (data.user?.identities?.length === 0) {
+        toast({
+          title: 'Account already exists',
+          description: 'Please sign in with your existing account.',
+        });
+        return;
+      }
+
+      // If signUpRole is ORGANIZATION, insert role (trigger auto-assigns USER)
+      if (data.user && signUpRole === 'ORGANIZATION') {
         await supabase.from('user_roles').insert({
           user_id: data.user.id,
           role: signUpRole,
         });
       }
 
-      toast({
-        title: 'Account created!',
-        description: 'Please check your email to confirm, then sign in.',
-      });
+      // If session is returned, user is auto-confirmed and logged in
+      if (data.session) {
+        toast({ title: 'Welcome!', description: 'Account created and signed in.' });
+        onOpenChange(false);
+      } else {
+        toast({
+          title: 'Account created!',
+          description: 'Please check your email to confirm, then sign in.',
+        });
+      }
     } catch (error: any) {
       toast({
         title: 'Error',
