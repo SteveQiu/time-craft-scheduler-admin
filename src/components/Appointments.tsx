@@ -9,9 +9,9 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Input } from './ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Checkbox } from './ui/checkbox';
-import { Search, Filter, Calendar, Clock, User, MapPin, Check, X, CheckCircle, ChevronDown, ChevronUp, Loader2, Mail, Phone } from 'lucide-react';
+import { Search, Filter, Calendar, Clock, User, MapPin, Check, X, CheckCircle, ChevronDown, ChevronUp, Loader2, Mail, Phone, Users } from 'lucide-react';
 import { useOrgWorkers } from '@/hooks/useOrgWorkers';
+import { toast } from 'sonner';
 
 interface Appointment {
   id: string;
@@ -46,10 +46,8 @@ export function Appointments() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [workerFilter, setWorkerFilter] = useState('all');
-  const [selectedAppointments, setSelectedAppointments] = useState<string[]>([]);
   const [showInactive, setShowInactive] = useState(false);
 
-  // Determine if viewing as org (provider) or user (booker)
   const modeParam = searchParams.get('mode');
   const isOrgView = modeParam === 'org' && (isOrganization || isInternalDev);
 
@@ -66,7 +64,6 @@ export function Appointments() {
 
       if (error) throw error;
 
-      // Fetch profile data for providers and bookers
       const providerIds = [...new Set((data || []).map((a: any) => a.provider_id))];
       const bookerIds = [...new Set((data || []).map((a: any) => a.user_id))];
       const allIds = [...new Set([...providerIds, ...bookerIds])];
@@ -78,7 +75,6 @@ export function Appointments() {
         profileMap = new Map((profiles || []).map((p: any) => [p.id, { full_name: p.full_name, slug: p.slug }]));
       }
 
-      // Fetch booker contact info from profiles (RLS allows viewing appointment participants)
       let bookerContactMap = new Map<string, { email: string | null; phone: string | null }>();
       if (bookerIds.length > 0) {
         const { data: bookerProfiles } = await supabase
@@ -131,47 +127,183 @@ export function Appointments() {
     apt => apt.status === 'completed' || apt.status === 'cancelled' || apt.date < today
   );
 
-  const handleSelectAppointment = (id: string) => {
-    setSelectedAppointments(prev =>
-      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
-    );
-  };
-
-  const handleSelectAll = () => {
-    setSelectedAppointments(
-      selectedAppointments.length === activeAppointments.length
-        ? []
-        : activeAppointments.map(apt => apt.id)
-    );
-  };
-
-  const updateStatus = async (ids: string[], status: string) => {
-    const { error } = await supabase
-      .from('appointments')
-      .update({ status })
-      .in('id', ids);
-    if (!error) {
-      // If cancelling, re-open the openings
-      if (status === 'cancelled') {
-        const openingIds = appointments
-          .filter(a => ids.includes(a.id))
-          .map(a => a.opening_id);
-        await supabase
-          .from('openings')
-          .update({ is_available: true })
-          .in('id', openingIds);
-      }
+  const handleApprove = async (appointmentId: string) => {
+    if (!user) return;
+    try {
+      const { error } = await supabase.rpc('approve_appointment', {
+        _appointment_id: appointmentId,
+        _provider_id: user.id,
+      });
+      if (error) throw error;
+      toast.success('Appointment approved! Other pending requests were automatically declined.');
       queryClient.invalidateQueries({ queryKey: ['appointments'] });
-      setSelectedAppointments([]);
+      queryClient.invalidateQueries({ queryKey: ['browse-openings'] });
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to approve');
     }
   };
 
-  const handleApprove = () => updateStatus(selectedAppointments, 'confirmed');
-  const handleReject = () => updateStatus(selectedAppointments, 'cancelled');
-  const handleComplete = (id: string) => updateStatus([id], 'completed');
+  const handleCancel = async (appointmentId: string) => {
+    if (!user) return;
+    try {
+      const { error } = await supabase.rpc('cancel_appointment', {
+        _appointment_id: appointmentId,
+        _caller_id: user.id,
+      });
+      if (error) throw error;
+      toast.success('Appointment cancelled.');
+      queryClient.invalidateQueries({ queryKey: ['appointments'] });
+      queryClient.invalidateQueries({ queryKey: ['browse-openings'] });
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to cancel');
+    }
+  };
+
+  const handleComplete = async (appointmentId: string) => {
+    const { error } = await supabase
+      .from('appointments')
+      .update({ status: 'completed' })
+      .eq('id', appointmentId);
+    if (error) {
+      toast.error('Failed to complete');
+    } else {
+      toast.success('Appointment completed.');
+      queryClient.invalidateQueries({ queryKey: ['appointments'] });
+    }
+  };
+
+  // Group pending appointments by opening_id for org view
+  const groupedPendingByOpening = (() => {
+    if (!isOrgView) return null;
+    const pendingAppts = activeAppointments.filter(a => a.status === 'pending');
+    const groups = new Map<string, Appointment[]>();
+    for (const apt of pendingAppts) {
+      const existing = groups.get(apt.opening_id) || [];
+      existing.push(apt);
+      groups.set(apt.opening_id, existing);
+    }
+    return groups;
+  })();
+
+  const nonPendingActive = isOrgView
+    ? activeAppointments.filter(a => a.status !== 'pending')
+    : activeAppointments;
+
+  const renderBookerInfo = (appointment: Appointment) => {
+    const bookerSlug = appointment.booker_slug;
+    return (
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+        <div className="flex items-center space-x-2">
+          <User className="h-4 w-4 text-muted-foreground" />
+          {bookerSlug ? (
+            <span
+              className="text-sm font-medium text-primary hover:underline cursor-pointer"
+              onClick={() => navigate(`/profile/${bookerSlug}`)}
+            >
+              {appointment.booker_name || 'Unknown'}
+            </span>
+          ) : (
+            <span
+              className="text-sm font-medium text-primary hover:underline cursor-pointer"
+              onClick={() => navigate(`/profile/${appointment.user_id}`)}
+            >
+              {appointment.booker_name || 'Unknown'}
+            </span>
+          )}
+        </div>
+        {(appointment.booker_email || appointment.booker_phone) && (
+          <div className="flex items-center gap-3 text-sm text-muted-foreground">
+            {appointment.booker_email && (
+              <a href={`mailto:${appointment.booker_email}`} className="flex items-center space-x-1 hover:text-primary transition-colors">
+                <Mail className="h-3 w-3" />
+                <span>{appointment.booker_email}</span>
+              </a>
+            )}
+            {appointment.booker_phone && (
+              <a href={`tel:${appointment.booker_phone}`} className="flex items-center space-x-1 hover:text-primary transition-colors">
+                <Phone className="h-3 w-3" />
+                <span>{appointment.booker_phone}</span>
+              </a>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderGroupedPendingCard = (openingId: string, appts: Appointment[]) => {
+    const first = appts[0];
+    return (
+      <Card key={`group-${openingId}`} className="shadow-soft border-card-border hover:shadow-lg transition-shadow border-l-4 border-l-yellow-400">
+        <CardContent className="p-6 space-y-4">
+          {/* Opening info header */}
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between space-y-3 lg:space-y-0">
+            <div className="flex items-center space-x-4">
+              <div
+                className={`w-12 h-12 bg-primary rounded-full flex items-center justify-center ${first.provider_slug ? 'cursor-pointer hover:ring-2 hover:ring-primary transition-all' : ''}`}
+                onClick={() => first.provider_slug && navigate(`/profile/${first.provider_slug}`)}
+              >
+                <span className="text-primary-foreground font-semibold">
+                  {first.worker.substring(0, 2).toUpperCase()}
+                </span>
+              </div>
+              <div>
+                <h3 className="font-semibold text-foreground">{first.worker}</h3>
+                <p className="text-sm text-muted-foreground">{first.service}</p>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-6">
+              <div className="text-center sm:text-left">
+                <div className="flex items-center space-x-1 text-sm font-medium text-foreground">
+                  <Calendar className="h-3 w-3" />
+                  <span>{new Date(first.date).toLocaleDateString()}</span>
+                </div>
+                <div className="flex items-center space-x-1 text-sm text-muted-foreground">
+                  <Clock className="h-3 w-3" />
+                  <span>{first.start_time} - {first.end_time} ({first.duration}min)</span>
+                </div>
+              </div>
+              {first.location && (
+                <div className="flex items-center space-x-1 text-sm text-muted-foreground">
+                  <MapPin className="h-3 w-3" />
+                  <span>{first.location}</span>
+                </div>
+              )}
+              <div className="flex items-center space-x-2">
+                <Badge className="bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">
+                  <Users className="h-3 w-3 mr-1" />
+                  {appts.length} Pending {appts.length > 1 ? 'Requests' : 'Request'}
+                </Badge>
+              </div>
+            </div>
+          </div>
+
+          {/* List of pending bookers */}
+          <div className="border-t border-border pt-3 space-y-3">
+            <p className="text-sm font-medium text-muted-foreground">Choose one to approve:</p>
+            {appts.map((apt) => (
+              <div key={apt.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-lg bg-muted/50">
+                {renderBookerInfo(apt)}
+                <div className="flex items-center space-x-2">
+                  <Button variant="default" size="sm" onClick={() => handleApprove(apt.id)}>
+                    <Check className="h-3 w-3 mr-1" />
+                    Approve
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => handleCancel(apt.id)}>
+                    <X className="h-3 w-3 mr-1" />
+                    Reject
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
 
   const renderAppointmentCard = (appointment: Appointment) => {
-    const bookerSlug = appointment.booker_slug;
     const isProvider = appointment.provider_id === user?.id;
     const canManage = isOrgView || isProvider;
     
@@ -180,12 +312,6 @@ export function Appointments() {
         <CardContent className="p-6 space-y-4">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between space-y-4 lg:space-y-0">
             <div className="flex items-center space-x-4">
-              {canManage && (appointment.status === 'confirmed' || appointment.status === 'pending') && (
-                <Checkbox
-                  checked={selectedAppointments.includes(appointment.id)}
-                  onCheckedChange={() => handleSelectAppointment(appointment.id)}
-                />
-              )}
               <div
                 className={`w-12 h-12 bg-primary rounded-full flex items-center justify-center ${appointment.provider_slug ? 'cursor-pointer hover:ring-2 hover:ring-primary transition-all' : ''}`}
                 onClick={() => appointment.provider_slug && navigate(`/profile/${appointment.provider_slug}`)}
@@ -232,48 +358,26 @@ export function Appointments() {
                     Complete
                   </Button>
                 )}
+                {appointment.status === 'pending' && !isOrgView && (
+                  <Button variant="outline" size="sm" onClick={() => handleCancel(appointment.id)}>
+                    <X className="h-3 w-3 mr-1" />
+                    Cancel
+                  </Button>
+                )}
+                {canManage && appointment.status === 'confirmed' && (
+                  <Button variant="outline" size="sm" onClick={() => handleCancel(appointment.id)}>
+                    <X className="h-3 w-3 mr-1" />
+                    Cancel
+                  </Button>
+                )}
               </div>
             </div>
           </div>
 
           {/* Customer info for provider */}
           {canManage && appointment.booker_name && (
-            <div className="border-t border-border pt-3 flex flex-col sm:flex-row sm:items-center gap-3">
-              <div className="flex items-center space-x-2">
-                <User className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm font-medium text-foreground">Customer:</span>
-                {bookerSlug ? (
-                  <span
-                    className="text-sm font-medium text-primary hover:underline cursor-pointer"
-                    onClick={() => navigate(`/profile/${bookerSlug}`)}
-                  >
-                    {appointment.booker_name}
-                  </span>
-                ) : (
-                  <span
-                    className="text-sm font-medium text-primary hover:underline cursor-pointer"
-                    onClick={() => navigate(`/profile/${appointment.user_id}`)}
-                  >
-                    {appointment.booker_name}
-                  </span>
-                )}
-              </div>
-              {(appointment.booker_email || appointment.booker_phone) && (
-                <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                  {appointment.booker_email && (
-                    <a href={`mailto:${appointment.booker_email}`} className="flex items-center space-x-1 hover:text-primary transition-colors">
-                      <Mail className="h-3 w-3" />
-                      <span>{appointment.booker_email}</span>
-                    </a>
-                  )}
-                  {appointment.booker_phone && (
-                    <a href={`tel:${appointment.booker_phone}`} className="flex items-center space-x-1 hover:text-primary transition-colors">
-                      <Phone className="h-3 w-3" />
-                      <span>{appointment.booker_phone}</span>
-                    </a>
-                  )}
-                </div>
-              )}
+            <div className="border-t border-border pt-3">
+              {renderBookerInfo(appointment)}
             </div>
           )}
         </CardContent>
@@ -302,31 +406,12 @@ export function Appointments() {
             {isOrgView ? 'Review and manage bookings' : 'Your booked appointments'}
           </p>
         </div>
-        {selectedAppointments.length > 0 && (
-          <div className="flex items-center space-x-2">
-            <Button variant="default" onClick={handleApprove}>
-              <Check className="h-4 w-4 mr-1" />
-              Approve ({selectedAppointments.length})
-            </Button>
-            <Button variant="destructive" onClick={handleReject}>
-              <X className="h-4 w-4 mr-1" />
-              Reject ({selectedAppointments.length})
-            </Button>
-          </div>
-        )}
       </div>
 
       {/* Filters */}
       <Card className="shadow-soft border-card-border">
         <CardContent className="pt-6">
           <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                checked={selectedAppointments.length === activeAppointments.length && activeAppointments.length > 0}
-                onCheckedChange={handleSelectAll}
-              />
-              <span className="text-sm text-muted-foreground">Select all</span>
-            </div>
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
@@ -385,15 +470,24 @@ export function Appointments() {
               <h3 className="text-xl font-semibold text-foreground">Active Appointments</h3>
               <Badge variant="outline">{activeAppointments.length}</Badge>
             </div>
-            {activeAppointments.length > 0 ? (
-              <div className="space-y-4">{activeAppointments.map(renderAppointmentCard)}</div>
+
+            {/* Grouped pending requests (org view only) */}
+            {isOrgView && groupedPendingByOpening && Array.from(groupedPendingByOpening.entries()).map(([openingId, appts]) =>
+              renderGroupedPendingCard(openingId, appts)
+            )}
+
+            {/* Non-pending or user-view appointments */}
+            {nonPendingActive.length > 0 ? (
+              <div className="space-y-4">{nonPendingActive.map(renderAppointmentCard)}</div>
             ) : (
-              <Card className="shadow-soft border-card-border">
-                <CardContent className="text-center py-12">
-                  <Calendar className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
-                  <p className="text-lg text-muted-foreground">No active appointments</p>
-                </CardContent>
-              </Card>
+              !isOrgView || !groupedPendingByOpening || groupedPendingByOpening.size === 0 ? (
+                <Card className="shadow-soft border-card-border">
+                  <CardContent className="text-center py-12">
+                    <Calendar className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
+                    <p className="text-lg text-muted-foreground">No active appointments</p>
+                  </CardContent>
+                </Card>
+              ) : null
             )}
           </div>
 

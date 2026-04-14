@@ -507,9 +507,17 @@ export type Database = {
         Args: { _invite_id: string; _user_id: string }
         Returns: undefined
       }
+      approve_appointment: {
+        Args: { _appointment_id: string; _provider_id: string }
+        Returns: undefined
+      }
       book_opening: {
         Args: { _opening_id: string; _user_id: string }
         Returns: string
+      }
+      cancel_appointment: {
+        Args: { _appointment_id: string; _caller_id: string }
+        Returns: undefined
       }
       get_my_invites: {
         Args: { _email: string }
