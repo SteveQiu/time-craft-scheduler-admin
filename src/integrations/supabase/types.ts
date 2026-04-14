@@ -507,6 +507,10 @@ export type Database = {
         Args: { _invite_id: string; _user_id: string }
         Returns: undefined
       }
+      book_opening: {
+        Args: { _opening_id: string; _user_id: string }
+        Returns: string
+      }
       get_my_invites: {
         Args: { _email: string }
         Returns: {
