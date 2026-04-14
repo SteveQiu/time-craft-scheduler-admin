@@ -162,7 +162,7 @@ export function AppSidebar() {
                 <SidebarMenuButton asChild isActive={isActive('/profile')}>
                   <Link to="/profile" className="flex items-center">
                     <UserCircle className="h-4 w-4" />
-                    <span>My Profile</span>
+                    <span>{user?.user_metadata?.full_name || user?.email || 'My Profile'}</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
