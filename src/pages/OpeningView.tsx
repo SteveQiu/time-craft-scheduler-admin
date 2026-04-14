@@ -87,36 +87,19 @@ export function OpeningView() {
     if (!opening || !user) return;
     setIsBooking(true);
     try {
-      const { error: appointmentError } = await supabase
-        .from('appointments')
-        .insert({
-          opening_id: opening.id,
-          user_id: user.id,
-          provider_id: opening.user_id,
-          worker: opening.worker,
-          service: opening.service,
-          location: opening.location,
-          date: opening.date,
-          start_time: opening.start_time,
-          end_time: opening.end_time,
-          duration: opening.duration,
-          status: 'pending',
-        });
-      if (appointmentError) throw appointmentError;
-
-      const { error: updateError } = await supabase
-        .from('openings')
-        .update({ is_available: false })
-        .eq('id', opening.id);
-      if (updateError) throw updateError;
+      const { data, error } = await supabase.rpc('book_opening', {
+        _opening_id: opening.id,
+        _user_id: user.id,
+      });
+      if (error) throw error;
 
       setShowBookingDialog(false);
       queryClient.invalidateQueries({ queryKey: ['opening', id] });
       queryClient.invalidateQueries({ queryKey: ['browse-openings'] });
       toast.success('Appointment booked successfully!');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Booking failed:', error);
-      toast.error('Failed to book appointment');
+      toast.error(error.message || 'Failed to book appointment');
     } finally {
       setIsBooking(false);
     }
