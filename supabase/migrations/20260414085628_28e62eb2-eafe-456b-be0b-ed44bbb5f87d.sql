@@ -1,0 +1,1 @@
+UPDATE openings SET is_available = false WHERE id IN (SELECT DISTINCT opening_id FROM appointments WHERE status NOT IN ('cancelled')) AND is_available = true;
