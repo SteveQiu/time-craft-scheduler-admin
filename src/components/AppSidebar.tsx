@@ -2,7 +2,8 @@ import { Search, Home, Calendar as CalendarIcon, Users, Clock, Settings, LogIn, 
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRoles } from '@/hooks/useUserRoles';
 import { Link, useLocation } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import {
   Sidebar,
   SidebarContent,
@@ -23,6 +24,13 @@ export function AppSidebar() {
   const location = useLocation();
   const { open } = useSidebar();
   const [viewMode, setViewMode] = useState<'user' | 'org'>('user');
+  const [profileName, setProfileName] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user) { setProfileName(null); return; }
+    supabase.from('profiles').select('full_name').eq('id', user.id).single()
+      .then(({ data }) => setProfileName(data?.full_name || null));
+  }, [user]);
 
   const userNavItems = [
     { id: 'browse', label: 'Browse', icon: Search, path: '/browse' },
