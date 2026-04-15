@@ -12,6 +12,7 @@
 1. Start: `.github/copilot-debugging-skill.md` (6-step cycle)
 2. Check: `.github/TROUBLESHOOTING.md` (common issues)
 3. Deep dive: `.github/ARCHITECTURE.md` (design patterns)
+4. Debug: `.github/DEBUGGING_INFRASTRUCTURE.md` (see network/console/errors)
 
 **🏗️ Understand the project**
 1. Start: `.github/copilot-readme.md` (friendly intro)
@@ -37,6 +38,7 @@
 | File | Purpose | When to Read |
 |------|---------|--------------|
 | **BOOKING_FIX.md** | Step-by-step fix for booking RPC error | 🔴 Booking doesn't work |
+| **DEBUGGING_INFRASTRUCTURE.md** | Playwright-based DevTools capture (network, console, errors) | 🔍 Need detailed debugging visibility |
 | **copilot-readme.md** | Friendly entry point with links | First time here? Start here |
 | **copilot-instructions.md** | Master docs: project overview + 5 skills | Need project context |
 | **copilot-debugging-skill.md** | Quick reference: 6-step debugging cycle | Debugging a bug right now |
