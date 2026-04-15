@@ -14,6 +14,7 @@ All non-code documentation and configuration.
 | **DEPLOYMENT_COMPLETE.md** | Deployment status |
 | **DEPLOY_NOW.md** | Step-by-step deployment (if needed) |
 | **HANDLING_NETWORK_RESTRICTED_MIGRATIONS.md** | Firewall & network solutions |
+| **supabase/migrations/20260415_immediate_opening_lock_clean.sql** | Migration SQL |
 
 ## 🎯 Essential Info
 

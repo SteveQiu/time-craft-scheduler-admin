@@ -30,7 +30,7 @@ The logic to auto-reject other pending appointments when 1 is approved is **alre
 
 ### Layers of Protection:
 
-1. **Immediate Locking** (book_opening RPC):
+1. **Immediate Locking** (book_opening RPC in `supabase/migrations/20260415_immediate_opening_lock_clean.sql`):
    - Opening marked `is_available = false` right after booking
    - Prevents further bookings from being visible
 

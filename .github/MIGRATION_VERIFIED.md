@@ -46,4 +46,4 @@ node scripts/test-rpc-direct.mjs          # Test booking
 ---
 
 ## Deployed: April 15, 2026
-Migration: 20260415_immediate_opening_lock_on_booking.sql
+Migration: `supabase/migrations/20260415_immediate_opening_lock_clean.sql`

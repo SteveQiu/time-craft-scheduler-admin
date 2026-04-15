@@ -9,7 +9,7 @@ Migration SQL saved to `.github/MIGRATION_SQL_TO_APPLY.sql`
 2. Select project: **dbabjfydcllqbjpolhym**
 3. Click: **SQL Editor** (left sidebar)
 4. Click: **+ New Query**
-5. Open file: `.github/MIGRATION_CLEAN.sql` ⬅️ USE THIS ONE (not SQL_TO_APPLY)
+5. Open file: `supabase/migrations/20260415_immediate_opening_lock_clean.sql`
 6. Copy entire SQL content
 7. Paste into Supabase editor
 8. Click: **RUN** button
