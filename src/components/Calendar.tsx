@@ -7,7 +7,7 @@ import { Label } from './ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Switch } from './ui/switch';
 import { Input } from './ui/input';
-import { ChevronLeft, ChevronRight, Plus, Clock, User, X, DollarSign } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Clock, User, X, DollarSign, ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -96,6 +96,7 @@ export function Calendar() {
   const [openings, setOpenings] = useState<Opening[]>([]);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [collapsedWorkers, setCollapsedWorkers] = useState<Set<string>>(new Set());
 
   // Fetch saved workplace addresses
   const { data: savedAddresses = [] } = useQuery({
@@ -523,49 +524,94 @@ export function Calendar() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {getOpeningsForDate(selectedDate).map((opening) => (
-                <div
-                  key={opening.id}
-                  className="p-3 rounded-lg border transition-all bg-success-light text-success border-success"
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center space-x-2">
-                      <Clock className="h-4 w-4" />
-                      <span className="font-medium">{opening.start_time} - {opening.end_time}</span>
-                      <span className="text-xs">({opening.duration}h)</span>
+              {(() => {
+                const openingsForDate = getOpeningsForDate(selectedDate);
+                
+                // Group by worker
+                const groupedByWorker = openingsForDate.reduce((acc, opening) => {
+                  if (!acc[opening.worker]) {
+                    acc[opening.worker] = [];
+                  }
+                  acc[opening.worker].push(opening);
+                  return acc;
+                }, {} as { [key: string]: Opening[] });
+
+                const workers = Object.keys(groupedByWorker).sort();
+
+                if (workers.length === 0) {
+                  return (
+                    <div className="text-center text-muted-foreground py-8">
+                      No openings for this date
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeOpening(opening.id)}
-                      className="h-6 w-6 p-0 text-destructive hover:text-destructive"
-                      disabled={!user}
-                    >
-                      <X className="h-3 w-3" />
-                    </Button>
-                  </div>
-                   <div className="text-sm space-y-1">
-                    <div className="flex items-center space-x-2">
-                      <User className="h-3 w-3" />
-                      <span>{opening.worker}</span>
+                  );
+                }
+
+                return workers.map((worker) => {
+                  const isCollapsed = collapsedWorkers.has(worker);
+                  const workerOpenings = groupedByWorker[worker];
+
+                  return (
+                    <div key={worker} className="border border-input rounded-lg overflow-hidden">
+                      <button
+                        onClick={() => {
+                          const newCollapsed = new Set(collapsedWorkers);
+                          if (isCollapsed) {
+                            newCollapsed.delete(worker);
+                          } else {
+                            newCollapsed.add(worker);
+                          }
+                          setCollapsedWorkers(newCollapsed);
+                        }}
+                        className="w-full flex items-center justify-between p-3 hover:bg-accent transition-colors"
+                      >
+                        <div className="flex items-center gap-2">
+                          <ChevronDown
+                            className={`h-4 w-4 transition-transform ${isCollapsed ? '-rotate-90' : ''}`}
+                          />
+                          <span className="font-semibold text-foreground">{worker}</span>
+                          <span className="text-xs text-muted-foreground">({workerOpenings.length})</span>
+                        </div>
+                      </button>
+
+                      {!isCollapsed && (
+                        <div className="space-y-2 p-3 bg-card/50 border-t border-input">
+                          {workerOpenings.map((opening) => (
+                            <div
+                              key={opening.id}
+                              className="p-3 rounded-lg border border-input bg-card hover:bg-accent transition-all flex items-center justify-between gap-3"
+                            >
+                              <div className="text-sm space-y-1">
+                                <div className="flex items-center space-x-2">
+                                  <Clock className="h-4 w-4" />
+                                  <span className="font-medium">{opening.start_time} - {opening.end_time}</span>
+                                  <span className="text-xs">({opening.duration}h)</span>
+                                </div>
+                                <div className="font-medium">{opening.service}</div>
+                                <div className="flex items-center space-x-2">
+                                  <DollarSign className="h-3 w-3" />
+                                  <span>
+                                    {Number(opening.hourly_rate) === 0
+                                      ? 'Free'
+                                      : `$${Number(opening.hourly_rate) * Number(opening.duration)}`}
+                                  </span>
+                                </div>
+                              </div>
+                              <Button
+                                onClick={() => removeOpening(opening.id)}
+                                disabled={!user}
+                                className="gap-2 bg-transparent border border-destructive text-destructive hover:bg-destructive/10 flex-shrink-0"
+                              >
+                                <X className="h-4 w-4" />
+                                Remove
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                    <div className="font-medium">{opening.service}</div>
-                    <div className="flex items-center space-x-2">
-                      <DollarSign className="h-3 w-3" />
-                      <span>
-                        {Number(opening.hourly_rate) === 0
-                          ? 'Free'
-                          : `$${Number(opening.hourly_rate) * Number(opening.duration)}`}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-              {getOpeningsForDate(selectedDate).length === 0 && (
-                <div className="text-center text-muted-foreground py-8">
-                  No openings for this date
-                </div>
-              )}
+                  );
+                });
+              })()}
             </div>
           </CardContent>
         </Card>
