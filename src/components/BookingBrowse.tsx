@@ -160,12 +160,14 @@ export function BookingBrowse() {
     ? allOpenings.filter(o => o.user_id === providerId)
     : [];
 
-  // Filter providers by search term
+  // Filter providers by search term and exclude current user (can't book own provider)
   const filteredProviders = providers.filter(provider =>
-    searchTerm === '' ||
-    provider.provider_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    provider.services.some(s => s.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    provider.workers.some(w => w.toLowerCase().includes(searchTerm.toLowerCase()))
+    provider.user_id !== user?.id && (
+      searchTerm === '' ||
+      provider.provider_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      provider.services.some(s => s.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      provider.workers.some(w => w.toLowerCase().includes(searchTerm.toLowerCase()))
+    )
   );
 
   const handleBooking = (slot: OpeningWithProfile) => {
