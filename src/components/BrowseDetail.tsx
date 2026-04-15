@@ -284,10 +284,16 @@ export function BrowseDetail({
                 if (!selectedSlot) return;
                 setIsBooking(true);
                 try {
+                  // Get current user with proper error handling
+                  const { data: { user }, error: userError } = await supabase.auth.getUser();
+                  if (!user || userError) {
+                    throw new Error('Please log in to book an appointment');
+                  }
+                  
                   // Call the book_opening RPC function
                   const { data, error } = await supabase.rpc('book_opening', {
                     _opening_id: selectedSlot.id,
-                    _user_id: (await supabase.auth.getUser()).data.user?.id
+                    _user_id: user.id
                   });
                   
                   if (error) throw error;
@@ -316,4 +322,5 @@ export function BrowseDetail({
     </div>
   );
 }
+
 
