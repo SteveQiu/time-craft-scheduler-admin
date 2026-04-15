@@ -410,6 +410,18 @@ export function Calendar() {
     return options;
   };
 
+  const generateEndTimeOptions = () => {
+    if (!newOpening.startTime) return generateTimeOptions();
+    
+    const allTimes = generateTimeOptions();
+    const startMinutes = parseTime(newOpening.startTime);
+    
+    return allTimes.filter(time => {
+      const timeMinutes = parseTime(time);
+      return timeMinutes > startMinutes;
+    });
+  };
+
   const generateDurationOptions = () => {
     const options = [];
     for (let i = 1; i <= 24; i++) {
@@ -671,7 +683,7 @@ export function Calendar() {
                       <SelectValue placeholder="Select end time" />
                     </SelectTrigger>
                     <SelectContent>
-                      {generateTimeOptions().map((time) => (
+                      {generateEndTimeOptions().map((time) => (
                         <SelectItem key={time} value={time}>{time}</SelectItem>
                       ))}
                     </SelectContent>
