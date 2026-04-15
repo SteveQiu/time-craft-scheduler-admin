@@ -1,7 +1,14 @@
--- Allow customers to reschedule confirmed appointments
--- When modified, old appointment is cancelled and new pending appointment is created
--- Provider must re-approve the new time
+import { createClient } from "@supabase/supabase-js";
+import fs from "fs";
 
+const secretContent = fs.readFileSync(".secret", "utf-8");
+const supabaseKey = secretContent.match(/SUPABASE_KEY=(.+)/)[1].trim();
+const supabase = createClient(
+  "https://dbabjfydcllqbjpolhym.supabase.co",
+  supabaseKey
+);
+
+const updateRpcSql = `
 CREATE OR REPLACE FUNCTION public.modify_appointment(
   _appointment_id UUID,
   _new_opening_id UUID,
@@ -53,3 +60,31 @@ BEGIN
   RETURN _new_appointment_id;
 END;
 $$;
+`;
+
+async function updateRPC() {
+  console.log("Updating modify_appointment RPC to allow confirmed appointments...");
+  
+  try {
+    const { error } = await supabase.rpc("exec_sql", {
+      sql_string: updateRpcSql,
+    });
+
+    if (error) {
+      // Try direct execution with postgres
+      console.log("Exec_sql not available, trying direct RPC with raw SQL...");
+      console.log("Note: This requires Supabase admin dashboard to apply");
+      console.log("\nSQL to execute in Supabase SQL Editor:");
+      console.log(updateRpcSql);
+      return;
+    }
+
+    console.log("✓ RPC updated successfully!");
+  } catch (err) {
+    console.error("Error:", err.message);
+    console.log("\nYou need to manually execute this SQL in Supabase SQL Editor:");
+    console.log(updateRpcSql);
+  }
+}
+
+updateRPC();
