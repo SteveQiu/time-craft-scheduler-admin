@@ -1,7 +1,7 @@
 import { Search, Home, Calendar as CalendarIcon, Users, Clock, Settings, LogIn, LogOut, UserCircle, Shield } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRoles } from '@/hooks/useUserRoles';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,7 @@ export function AppSidebar() {
   const { user, signOut } = useAuth();
   const { isUser, isOrganization, isInternalDev, loading: rolesLoading } = useUserRoles();
   const location = useLocation();
+  const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<'user' | 'org'>('user');
   const [profileName, setProfileName] = useState<string | null>(null);
 
@@ -199,7 +200,10 @@ export function AppSidebar() {
           </>
         )}
         {!user && (
-          <Button className="w-full gap-2 justify-start">
+          <Button 
+            className="w-full gap-2 justify-start"
+            onClick={() => navigate('/auth')}
+          >
             <LogIn className="h-4 w-4" />
             <span>Sign In</span>
           </Button>
