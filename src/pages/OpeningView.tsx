@@ -55,17 +55,23 @@ export function OpeningView() {
 
       if (error) throw error;
 
-      // Fetch provider profile
-      const { data: profiles } = await supabase
-        .rpc('get_public_profile_by_id', { profile_id: data.user_id });
+      // Fetch provider profile and pending count in parallel
+      const [profileRes, pendingRes] = await Promise.all([
+        supabase.rpc('get_public_profile_by_id', { profile_id: data.user_id }),
+        supabase.from('appointments').select('id', { count: 'exact', head: true })
+          .eq('opening_id', id!)
+          .eq('status', 'pending'),
+      ]);
 
-      const profile = profiles?.[0];
+      const profile = profileRes.data?.[0];
+      const pendingCount = pendingRes.count || 0;
 
       return {
         ...data,
         provider_name: profile?.full_name || null,
         provider_slug: profile?.slug || null,
         provider_avatar: profile?.avatar_url || null,
+        pending_count: pendingCount,
       };
     },
     enabled: !!id,
