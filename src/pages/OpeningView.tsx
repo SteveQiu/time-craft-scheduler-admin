@@ -226,11 +226,17 @@ export function OpeningView() {
               </div>
 
               {/* Book Button */}
-              {opening.is_available && (
+              {opening.is_available && opening.pending_count === 0 && (
                 <div className="pt-4">
                   <Button className="w-full" size="lg" onClick={handleBookClick}>
                     Book This Appointment
                   </Button>
+                </div>
+              )}
+
+              {opening.is_available && opening.pending_count > 0 && (
+                <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg text-center">
+                  <p className="text-yellow-700 dark:text-yellow-400">This opening has pending booking requests and is not available for new bookings.</p>
                 </div>
               )}
 
