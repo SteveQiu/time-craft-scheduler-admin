@@ -162,8 +162,11 @@ export function OpeningView() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle className="text-2xl">Opening Details</CardTitle>
-                <Badge variant={opening.is_available ? 'default' : 'secondary'}>
-                  {opening.is_available ? 'Available' : 'Booked'}
+                <Badge variant={
+                  !opening.is_available ? 'secondary' :
+                  opening.pending_count > 0 ? 'outline' : 'default'
+                } className={opening.pending_count > 0 && opening.is_available ? 'border-yellow-500 text-yellow-700 dark:text-yellow-400' : ''}>
+                  {!opening.is_available ? 'Booked' : opening.pending_count > 0 ? `Pending (${opening.pending_count})` : 'Available'}
                 </Badge>
               </div>
             </CardHeader>
