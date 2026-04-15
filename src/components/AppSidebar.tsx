@@ -1,28 +1,17 @@
-import { Search, Home, Calendar as CalendarIcon, Users, Clock, Settings, LogIn, LogOut, User, Building2, Shield, UserCircle } from 'lucide-react';
+import { Search, Home, Calendar as CalendarIcon, Users, Clock, Settings, LogIn, LogOut, UserCircle, Shield } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRoles } from '@/hooks/useUserRoles';
 import { Link, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  useSidebar,
-} from '@/components/ui/sidebar';
+import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export function AppSidebar() {
   const { user, signOut } = useAuth();
   const { isUser, isOrganization, isInternalDev, loading: rolesLoading } = useUserRoles();
   const location = useLocation();
-  const { open } = useSidebar();
   const [viewMode, setViewMode] = useState<'user' | 'org'>('user');
   const [profileName, setProfileName] = useState<string | null>(null);
 
@@ -54,190 +43,178 @@ export function AppSidebar() {
     return location.pathname === pathname || (pathname === '/dashboard' && location.pathname === '/');
   };
 
-  // Show sections based on role and view mode
   const showOrgSection = isInternalDev || (isOrganization && viewMode === 'user');
   const showUserSection = isInternalDev || isUser || (isOrganization && viewMode === 'org');
 
   if (rolesLoading) {
     return (
-      <Sidebar className="border-r border-border">
-        <SidebarContent className="flex items-center justify-center">
-          <div className="text-sm text-muted-foreground">Loading...</div>
-        </SidebarContent>
-      </Sidebar>
+      <div className="flex items-center justify-center h-full text-sm text-muted-foreground bg-sidebar border-r border-border">
+        Loading...
+      </div>
     );
   }
 
   return (
-    <Sidebar className="border-r border-border">
-      <SidebarContent>
-        {/* Logo at the top */}
-        <SidebarGroup>
-          <SidebarGroupContent>
-            <div className="flex items-center space-x-2 px-4 py-3">
-              <CalendarIcon className="h-8 w-8 text-primary" />
-              {open && <h1 className="text-xl font-bold text-foreground">AppointmentPro</h1>}
-            </div>
-          </SidebarGroupContent>
-        </SidebarGroup>
-        <Separator className="my-2" />
+    <div className="flex flex-col h-full bg-sidebar border-r border-border overflow-hidden">
+      {/* Logo */}
+      <div className="flex items-center space-x-2 px-4 py-3 border-b border-border">
+        <CalendarIcon className="h-8 w-8 text-primary flex-shrink-0" />
+        <h1 className="text-lg font-bold text-foreground truncate">AppointmentPro</h1>
+      </div>
 
+      {/* Navigation */}
+      <div className="flex-1 overflow-y-auto py-4 space-y-6">
         {/* User Section */}
         {showUserSection && (
           <>
-            <SidebarGroup>
-              <SidebarGroupLabel className="text-xs font-semibold text-muted-foreground">
-                USER
-              </SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {userNavItems.map((item) => {
-                    const Icon = item.icon;
-                    const active = isActive(item.path);
-                    return (
-                      <SidebarMenuItem key={item.id}>
-                        <SidebarMenuButton asChild isActive={active}>
-                          <Link to={item.path} className="flex items-center">
-                            <Icon className="h-4 w-4" />
-                            <span>{item.label}</span>
-                          </Link>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    );
-                  })}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
+            <div>
+              <h3 className="text-xs font-semibold text-muted-foreground px-4 mb-2">USER</h3>
+              <div className="space-y-1 px-2">
+                {userNavItems.map((item) => {
+                  const Icon = item.icon;
+                  const active = isActive(item.path);
+                  return (
+                    <Link
+                      key={item.id}
+                      to={item.path}
+                      className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
+                        active
+                          ? 'bg-primary text-primary-foreground'
+                          : 'text-foreground hover:bg-accent'
+                      }`}
+                    >
+                      <Icon className="h-4 w-4 flex-shrink-0" />
+                      <span className="truncate">{item.label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
             <Separator className="my-2" />
           </>
         )}
 
-        {/* Organization Section */}
+        {/* Org Section */}
         {showOrgSection && (
           <>
-            <SidebarGroup>
-              <SidebarGroupLabel className="text-xs font-semibold text-muted-foreground">
-                ORGANIZATION
-              </SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {orgNavItems.map((item) => {
-                    const Icon = item.icon;
-                    const active = isActive(item.path);
-                    return (
-                      <SidebarMenuItem key={item.id}>
-                        <SidebarMenuButton asChild isActive={active}>
-                          <Link to={item.path} className="flex items-center">
-                            <Icon className="h-4 w-4" />
-                            <span>{item.label}</span>
-                          </Link>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    );
-                  })}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
+            <div>
+              <h3 className="text-xs font-semibold text-muted-foreground px-4 mb-2">ORGANIZATION</h3>
+              <div className="space-y-1 px-2">
+                {orgNavItems.map((item) => {
+                  const Icon = item.icon;
+                  const active = isActive(item.path);
+                  return (
+                    <Link
+                      key={item.id}
+                      to={item.path}
+                      className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
+                        active
+                          ? 'bg-primary text-primary-foreground'
+                          : 'text-foreground hover:bg-accent'
+                      }`}
+                    >
+                      <Icon className="h-4 w-4 flex-shrink-0" />
+                      <span className="truncate">{item.label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
           </>
         )}
 
         {/* Sign In for unauthenticated */}
         {!user && (
-          <SidebarGroup>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive={isActive('/auth')}>
-                    <Link to="/auth" className="flex items-center">
-                      <LogIn className="h-4 w-4" />
-                      <span>Sign In</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
+          <div>
+            <Link
+              to="/auth"
+              className="flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors text-foreground hover:bg-accent mx-2"
+            >
+              <LogIn className="h-4 w-4 flex-shrink-0" />
+              <span className="truncate">Sign In</span>
+            </Link>
+          </div>
         )}
-      </SidebarContent>
+      </div>
 
-      <SidebarFooter>
-        <Separator />
-        {/* Account Section */}
+      <Separator />
+
+      {/* Footer */}
+      <div className="p-4 space-y-2">
         {user && (
           <>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={isActive('/profile')}>
-                  <Link to="/profile" className="flex items-center">
-                    <UserCircle className="h-4 w-4" />
-                    <span>{profileName || user?.email || 'My Profile'}</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              {isInternalDev && (
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive={isActive('/reports')}>
-                    <Link to="/reports" className="flex items-center">
-                      <Shield className="h-4 w-4" />
-                      <span>Report Queue</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              )}
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={isActive('/settings')}>
-                  <Link to="/settings" className="flex items-center">
-                    <Settings className="h-4 w-4" />
-                    <span>Settings</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-            <Separator />
-          </>
-        )}
-        {/* View Mode Switcher for Organizations */}
-        {isOrganization && !isInternalDev && (
-          <>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  onClick={() => setViewMode(viewMode === 'user' ? 'org' : 'user')}
-                  className="flex items-center gap-2"
-                >
-                  {viewMode === 'org' ? (
-                    <>
-                      <Building2 className="h-4 w-4" />
-                      <span>I am Organization</span>
-                    </>
-                  ) : (
-                    <>
-                      <User className="h-4 w-4" />
-                      <span>I am User</span>
-                    </>
-                  )}
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-            <Separator />
-          </>
-        )}
-
-        {/* Sign Out - always last */}
-        {user && (
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                onClick={() => signOut()}
-                className="flex items-center text-destructive hover:text-destructive"
+            {/* Profile and Settings */}
+            <div className="space-y-1">
+              <Link
+                to="/profile"
+                className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
+                  isActive('/profile')
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-foreground hover:bg-accent'
+                }`}
               >
-                <LogOut className="h-4 w-4" />
-                <span>Sign Out</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
+                <UserCircle className="h-4 w-4 flex-shrink-0" />
+                <span className="truncate">{profileName || user?.email || 'My Profile'}</span>
+              </Link>
+
+              {isInternalDev && (
+                <Link
+                  to="/reports"
+                  className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
+                    isActive('/reports')
+                      ? 'bg-primary text-primary-foreground'
+                      : 'text-foreground hover:bg-accent'
+                  }`}
+                >
+                  <Shield className="h-4 w-4 flex-shrink-0" />
+                  <span className="truncate">Report Queue</span>
+                </Link>
+              )}
+
+              <Link
+                to="/settings"
+                className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
+                  isActive('/settings')
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-foreground hover:bg-accent'
+                }`}
+              >
+                <Settings className="h-4 w-4 flex-shrink-0" />
+                <span className="truncate">Settings</span>
+              </Link>
+            </div>
+
+            <Separator />
+
+            {/* View Mode Switcher for Organizations */}
+            {isOrganization && !isInternalDev && (
+              <div className="flex items-center justify-center">
+                <Tabs value={viewMode} onValueChange={(val) => setViewMode(val as 'user' | 'org')} className="w-full">
+                  <TabsList className="grid w-full grid-cols-2 h-8">
+                    <TabsTrigger value="user" className="text-xs">Org</TabsTrigger>
+                    <TabsTrigger value="org" className="text-xs">User</TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              </div>
+            )}
+
+            <Button
+              variant="outline"
+              onClick={signOut}
+              className="w-full gap-2 justify-start"
+            >
+              <LogOut className="h-4 w-4" />
+              <span>Sign Out</span>
+            </Button>
+          </>
         )}
-      </SidebarFooter>
-    </Sidebar>
+        {!user && (
+          <Button className="w-full gap-2 justify-start">
+            <LogIn className="h-4 w-4" />
+            <span>Sign In</span>
+          </Button>
+        )}
+      </div>
+    </div>
   );
 }

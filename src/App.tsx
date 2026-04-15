@@ -4,7 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
-import { SidebarProvider } from "@/components/ui/sidebar";
+import { PanelGroup, Panel, PanelResizeHandle } from "react-resizable-panels";
 
 import NotFound from "./pages/NotFound";
 import { Dashboard } from "@/components/Dashboard";
@@ -30,34 +30,34 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <SidebarProvider defaultOpen={true}>
-            <div className="min-h-screen flex w-full bg-background">
+          <PanelGroup direction="horizontal" className="w-full h-screen">
+            <Panel defaultSize={20} minSize={10} maxSize={40} className="overflow-hidden">
               <AppSidebar />
-              <div className="flex-1 flex flex-col">
-                
-                <main className="flex-1 max-w-7xl mx-auto w-full">
-                  <Routes>
-                    <Route path="/" element={<Dashboard />} />
-                    <Route path="/dashboard" element={<Dashboard />} />
-                    <Route path="/calendar" element={<Calendar />} />
-                    <Route path="/browse" element={<BookingBrowse />} />
-                    <Route path="/browse/:providerId" element={<BookingBrowse />} />
-                    <Route path="/workers" element={<Workers />} />
-                    <Route path="/appointments" element={<Appointments />} />
-                    <Route path="/appointments/:id" element={<AppointmentView />} />
-                    <Route path="/openings/:id" element={<OpeningView />} />
-                    <Route path="/auth" element={<Auth />} />
-                    <Route path="/settings" element={<Settings />} />
-                    <Route path="/profile" element={<Profile />} />
-                    <Route path="/profile/:slug" element={<Profile />} />
-                    <Route path="/reports" element={<AdminReports />} />
-                    {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </main>
-              </div>
-            </div>
-          </SidebarProvider>
+            </Panel>
+            <PanelResizeHandle className="w-1 bg-border hover:bg-primary/50 transition-colors cursor-col-resize active:bg-primary" />
+            <Panel defaultSize={80} className="flex flex-col overflow-hidden">
+              <main className="flex-1 overflow-auto max-w-7xl w-full mx-auto">
+                <Routes>
+                  <Route path="/" element={<Dashboard />} />
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/calendar" element={<Calendar />} />
+                  <Route path="/browse" element={<BookingBrowse />} />
+                  <Route path="/browse/:providerId" element={<BookingBrowse />} />
+                  <Route path="/workers" element={<Workers />} />
+                  <Route path="/appointments" element={<Appointments />} />
+                  <Route path="/appointments/:id" element={<AppointmentView />} />
+                  <Route path="/openings/:id" element={<OpeningView />} />
+                  <Route path="/auth" element={<Auth />} />
+                  <Route path="/settings" element={<Settings />} />
+                  <Route path="/profile" element={<Profile />} />
+                  <Route path="/profile/:slug" element={<Profile />} />
+                  <Route path="/reports" element={<AdminReports />} />
+                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </main>
+            </Panel>
+          </PanelGroup>
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>
