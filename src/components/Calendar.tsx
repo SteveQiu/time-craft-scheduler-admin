@@ -160,7 +160,7 @@ export function Calendar() {
       loadOpeningsForMonth();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentDate, user]);
+  }, [currentDate, user, isOrgMode]);
 
   // Only fetch once per month, store all in state
   const loadOpeningsForMonth = async () => {
@@ -172,13 +172,20 @@ export function Calendar() {
       const lastDay = new Date(year, month + 1, 0);
       const startStr = firstDay.toISOString().split('T')[0];
       const endStr = lastDay.toISOString().split('T')[0];
-      const { data, error } = await supabase
+      let query = supabase
         .from('openings')
         .select('*')
         .gte('date', startStr)
         .lte('date', endStr)
         .order('date')
         .order('start_time');
+
+      // In user mode, only fetch own openings. In org mode, fetch all.
+      if (!isOrgMode) {
+        query = query.eq('user_id', user.id);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       setOpenings(data || []);
