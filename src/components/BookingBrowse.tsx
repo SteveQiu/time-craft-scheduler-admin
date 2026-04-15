@@ -69,19 +69,19 @@ export function BookingBrowse() {
 
       if (error) throw error;
 
-      // Filter out openings that already have pending appointments
+      // Filter out openings that have confirmed appointments (not pending)
       const openingIds = (data || []).map((o: any) => o.id);
-      let pendingSet = new Set<string>();
+      let confirmedSet = new Set<string>();
       if (openingIds.length > 0) {
-        const { data: pendingAppts } = await supabase
+        const { data: confirmedAppts } = await supabase
           .from('appointments')
           .select('opening_id')
           .in('opening_id', openingIds)
-          .eq('status', 'pending');
-        pendingSet = new Set((pendingAppts || []).map((a: any) => a.opening_id));
+          .eq('status', 'confirmed');  // ← Only filter confirmed, not pending
+        confirmedSet = new Set((confirmedAppts || []).map((a: any) => a.opening_id));
       }
 
-      const availableData = (data || []).filter((o: any) => !pendingSet.has(o.id));
+      const availableData = (data || []).filter((o: any) => !confirmedSet.has(o.id));  // ← Use confirmed, not pending
 
       // Fetch provider names via RPC (safe, only returns public fields)
       const providerIds = [...new Set(availableData.map((o: any) => o.user_id))];
