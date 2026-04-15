@@ -56,7 +56,12 @@ export function BookingBrowse() {
   const today = new Date().toISOString().split('T')[0];
 
   // Fetch all openings
-  const { data: allOpenings = [], isLoading: openingsLoading } = useQuery({
+  const { 
+    data: allOpenings = [], 
+    isLoading: openingsLoading,
+    isError: openingsError,
+    error: queryError 
+  } = useQuery({
     queryKey: ['browse-openings', today],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -88,10 +93,15 @@ export function BookingBrowse() {
       let nameMap = new Map<string, string>();
       let slugMap = new Map<string, string>();
       if (providerIds.length > 0) {
-        const { data: profiles } = await supabase
+        const { data: profiles, error: rpcError } = await supabase
           .rpc('get_public_profile_names', { profile_ids: providerIds });
-        nameMap = new Map((profiles || []).map((p: any) => [p.id, p.full_name]));
-        slugMap = new Map((profiles || []).filter((p: any) => p.slug).map((p: any) => [p.id, p.slug]));
+        
+        if (rpcError) {
+          console.error('RPC error fetching profiles:', rpcError);
+        } else if (profiles) {
+          nameMap = new Map((profiles || []).map((p: any) => [p.id, p.full_name]));
+          slugMap = new Map((profiles || []).filter((p: any) => p.slug).map((p: any) => [p.id, p.slug]));
+        }
       }
 
       return availableData.map((opening: any) => ({
@@ -106,7 +116,7 @@ export function BookingBrowse() {
         is_available: opening.is_available,
         location: opening.location || null,
         hourly_rate: opening.hourly_rate || 0,
-        provider_name: nameMap.get(opening.user_id) || null,
+        provider_name: nameMap.get(opening.user_id) || 'Organization',
         provider_email: null,
         provider_slug: slugMap.get(opening.user_id) || null,
       }));
@@ -208,6 +218,23 @@ export function BookingBrowse() {
     return (
       <div className="flex justify-center py-12">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (openingsError) {
+    return (
+      <div className="p-6">
+        <Card className="shadow-soft border-card-border">
+          <CardContent className="text-center py-12">
+            <CalendarIcon className="h-12 w-12 text-red-500 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-foreground mb-2">Error loading providers</h3>
+            <p className="text-muted-foreground mb-4">
+              {queryError instanceof Error ? queryError.message : 'Something went wrong'}
+            </p>
+            <Button onClick={() => window.location.reload()}>Reload</Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
