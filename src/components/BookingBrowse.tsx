@@ -62,12 +62,13 @@ export function BookingBrowse() {
     isError: openingsError,
     error: queryError 
   } = useQuery({
-    queryKey: ['browse-openings', today],
+    queryKey: ['browse-openings', today, user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('openings')
         .select('*')
         .eq('is_available', true)
+        .eq('user_id', user?.id)
         .gte('date', today)
         .order('date', { ascending: true })
         .order('start_time', { ascending: true });
