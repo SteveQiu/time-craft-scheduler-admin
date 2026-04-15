@@ -124,17 +124,7 @@ export function AppSidebar() {
         )}
 
         {/* Sign In for unauthenticated */}
-        {!user && (
-          <div>
-            <Link
-              to="/auth"
-              className="flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors text-foreground hover:bg-accent mx-2"
-            >
-              <LogIn className="h-4 w-4 flex-shrink-0" />
-              <span className="truncate">Sign In</span>
-            </Link>
-          </div>
-        )}
+        {/* Removed - now only in footer */}
       </div>
 
       <Separator />
