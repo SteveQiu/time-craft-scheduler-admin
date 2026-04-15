@@ -39,6 +39,8 @@
 
 | File | Purpose | When to Read |
 |------|---------|--------------|
+| **DEBUGGING_COMPLETE_SUMMARY.md** | 🎉 Booking system analysis COMPLETE - root cause found! | Read first - explains everything |
+| **BOOKING_OPENING_NOT_FOUND.md** | Why booking failed: test opening doesn't exist in DB | Understanding the issue |
 | **BOOKING_DEBUG_PLAN.md** | Root cause analysis of booking failures | 🔴 "Failed to book" errors |
 | **BOOKING_FIX.md** | Step-by-step fix for booking RPC error | 🔴 Booking doesn't work |
 | **BOOKING_STATUS.md** | Booking system status, error messages, and fixes | Reference during booking issues |
