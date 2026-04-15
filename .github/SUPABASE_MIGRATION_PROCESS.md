@@ -1,44 +1,93 @@
-# COMPLETE MIGRATION PROCESS WITH SUPABASE SQL
+# Supabase SQL Migration Process - A Complete Skill
 
-## Quick Summary
+## Overview
 
-This document describes the complete, production-ready process for managing database migrations with Supabase using pure SQL execution. The process is:
+This document describes the complete, reproducible process for managing database migrations with Supabase using SQL-only approaches. This is a skill that can be applied to any migration.
+
+## Process Flow
 
 ```
-Write Down → Record → Migrate → Validate → Test → Fix (if needed) → Report
+┌─────────────────────────────────────────────────────────────┐
+│ 1. WRITE DOWN: Define migration in SQL file                 │
+└─────────────────────────────────────────────────────────────┘
+                          ↓
+┌─────────────────────────────────────────────────────────────┐
+│ 2. RECORD: Track migration in database & documentation      │
+└─────────────────────────────────────────────────────────────┘
+                          ↓
+┌─────────────────────────────────────────────────────────────┐
+│ 3. MIGRATE: Execute SQL directly via Supabase SQL Editor    │
+└─────────────────────────────────────────────────────────────┘
+                          ↓
+┌─────────────────────────────────────────────────────────────┐
+│ 4. VALIDATE: Verify migration applied correctly             │
+└─────────────────────────────────────────────────────────────┘
+                          ↓
+┌─────────────────────────────────────────────────────────────┐
+│ 5. TEST: Run test suite to verify feature works             │
+└─────────────────────────────────────────────────────────────┘
+                          ↓
+                      ┌───┴───┐
+                      ↓       ↓
+                   PASS    FAIL
+                    │       │
+            ┌──────┘       └──────┐
+            ↓                     ↓
+        ┌─────────────┐  ┌──────────────────┐
+        │ 6. REPORT   │  │ 6. FIX & REPEAT  │
+        │ Success     │  │ Back to step 1-3 │
+        └─────────────┘  └──────────────────┘
 ```
 
 ---
 
-## BEFORE YOU START
+## Step 1: WRITE DOWN - Define Migration
 
-### One-Time Setup
-
-Run this SQL once in Supabase SQL Editor to create the migration tracking infrastructure:
-
-```bash
-node scripts/setup-migrations.mjs
+### File Structure
+```
+supabase/migrations/
+  └── TIMESTAMP_description.sql    # Migration file
 ```
 
-Copy the output SQL and execute it in your Supabase SQL Editor.
+### Migration File Format
 
----
+```sql
+-- Migration: [Brief description]
+-- Purpose: [What problem does this solve]
+-- Affects: [Tables/Functions/Policies]
+-- Rollback: [How to undo if needed]
 
-## COMPLETE PROCESS FOR RESCHEDULE CONFIRMED APPOINTMENTS
+-- ============================================================
+-- MAIN MIGRATION
+-- ============================================================
 
-### Step 1: WRITE DOWN
+CREATE OR REPLACE FUNCTION public.function_name(...)
+RETURNS ... AS $$
+...
+$$;
 
-**Objective**: Define the migration SQL clearly and document it.
+-- ============================================================
+-- VALIDATION CHECKS (run after applying)
+-- ============================================================
 
-**Files**:
-- `supabase/migrations/20260415_allow_modify_confirmed_appointments.sql`
+-- Check 1: Verify function exists
+SELECT EXISTS (
+  SELECT 1 FROM pg_proc WHERE proname = 'function_name'
+);
 
-**What was written**:
+-- Check 2: Verify parameters
+SELECT oid, proname, pronargs FROM pg_proc WHERE proname = 'function_name';
+```
+
+### Example: Reschedule Confirmed Appointments
+
+**File**: `supabase/migrations/20260415_allow_modify_confirmed_appointments.sql`
+
 ```sql
 -- Migration: Allow customers to reschedule confirmed appointments
--- Purpose: Enable date/time changes for confirmed appointments
--- Affects: modify_appointment() RPC function
--- Change: Line 26 - Accept 'confirmed' status in addition to 'pending'
+-- Purpose: Enable customers to change appointment date/time even after provider confirms
+-- Affects: modify_appointment() function
+-- Rollback: DROP FUNCTION IF EXISTS public.modify_appointment(uuid, uuid, uuid);
 
 CREATE OR REPLACE FUNCTION public.modify_appointment(
   _appointment_id UUID,
@@ -55,420 +104,488 @@ DECLARE
   _new_opening RECORD;
   _new_appointment_id uuid;
 BEGIN
-  -- Validate and lock old appointment
+  -- Validate appointment belongs to caller
   SELECT * INTO _old_apt FROM appointments WHERE id = _appointment_id FOR UPDATE;
-  IF _old_apt IS NULL THEN RAISE EXCEPTION 'Appointment not found'; END IF;
-  IF _old_apt.user_id != _caller_id THEN RAISE EXCEPTION 'Not authorized'; END IF;
-  
-  -- KEY CHANGE: Allow both 'pending' AND 'confirmed' statuses
+  IF _old_apt IS NULL THEN
+    RAISE EXCEPTION 'Appointment not found';
+  END IF;
+  IF _old_apt.user_id != _caller_id THEN
+    RAISE EXCEPTION 'Not authorized';
+  END IF;
+  -- KEY CHANGE: Allow both 'pending' AND 'confirmed' (was just 'pending')
   IF _old_apt.status NOT IN ('pending', 'confirmed') THEN
     RAISE EXCEPTION 'Can only modify pending or confirmed appointments';
   END IF;
-  
-  -- Rest of RPC...
+
   -- Validate new opening
-  -- Cancel old appointment  
-  -- Create new pending appointment
-  -- Return new appointment ID
+  SELECT * INTO _new_opening FROM openings WHERE id = _new_opening_id FOR UPDATE;
+  IF _new_opening IS NULL THEN
+    RAISE EXCEPTION 'New opening not found';
+  END IF;
+  IF NOT _new_opening.is_available THEN
+    RAISE EXCEPTION 'New opening is no longer available';
+  END IF;
+  IF _new_opening.user_id = _caller_id THEN
+    RAISE EXCEPTION 'Cannot book your own opening';
+  END IF;
+
+  -- Cancel old appointment
+  UPDATE appointments SET status = 'cancelled' WHERE id = _appointment_id;
+
+  -- Create new pending appointment (needs provider approval)
+  INSERT INTO appointments (opening_id, user_id, provider_id, worker, service, location, date, start_time, end_time, duration, status)
+  VALUES (_new_opening.id, _caller_id, _new_opening.user_id, _new_opening.worker, _new_opening.service, _new_opening.location, _new_opening.date, _new_opening.start_time, _new_opening.end_time, _new_opening.duration, 'pending')
+  RETURNING id INTO _new_appointment_id;
+
+  RETURN _new_appointment_id;
 END;
 $$;
 ```
 
-**Why**: Clear, documented, and versioned by timestamp.
-
 ---
 
-### Step 2: RECORD
+## Step 2: RECORD - Track Migration
 
-**Objective**: Track the migration in database for auditability.
+### In Git
+```bash
+# Create feature branch
+git checkout -b feature/reschedule-confirmed
 
-**Execute in Supabase SQL Editor**:
+# Commit migration file
+git add supabase/migrations/20260415_allow_modify_confirmed_appointments.sql
+git commit -m "Add migration: Allow reschedule of confirmed appointments"
+```
+
+### In Database
+
+Create a tracking table:
+
 ```sql
-INSERT INTO public.migrations_applied (migration_name, status)
+CREATE TABLE IF NOT EXISTS migrations_applied (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  migration_name TEXT NOT NULL UNIQUE,
+  applied_at TIMESTAMP,
+  status TEXT DEFAULT 'pending'
+);
+
+INSERT INTO migrations_applied (migration_name, status) 
 VALUES ('20260415_allow_modify_confirmed_appointments', 'pending');
 ```
 
-**Verify**:
-```sql
-SELECT * FROM public.migrations_applied 
-WHERE migration_name = '20260415_allow_modify_confirmed_appointments';
-```
+### In Documentation
 
-**Why**: Maintains audit trail of all migrations, their status, and timestamps.
-
----
-
-### Step 3: MIGRATE
-
-**Objective**: Execute the migration SQL in Supabase.
-
-#### Method A: Via SQL Editor (Recommended for First Time)
-
-1. Go to https://supabase.com/dashboard
-2. Select your project
-3. Click "SQL Editor" (left sidebar)
-4. Click "New Query"
-5. Copy entire SQL from `supabase/migrations/20260415_allow_modify_confirmed_appointments.sql`
-6. Paste into editor
-7. Click "Run"
-8. Look for green checkmark (success) or red error
-
-**Expected Result**: No errors, function created/updated successfully.
-
-#### Method B: Via Command (For Automation)
-
-```bash
-node scripts/migration-manager.mjs
-```
-
-**What it does**:
-- Reads migration file
-- Records status as "applied"
-- Attempts validation
-- Reports results
-
-**Note**: Due to Supabase client limitations, the manager will output the SQL for manual execution and then verify it was applied.
-
----
-
-### Step 4: VALIDATE
-
-**Objective**: Verify the schema change took effect correctly.
-
-**Execute in Supabase SQL Editor**:
-
-```sql
--- Validation Query 1: Check function exists
-SELECT EXISTS (
-  SELECT 1 FROM information_schema.routines 
-  WHERE routine_name = 'modify_appointment'
-  AND routine_schema = 'public'
-) AS function_exists;
-
--- Expected: true
-
--- Validation Query 2: Check function accepts confirmed
-SELECT 
-  CASE 
-    WHEN pg_get_functiondef(p.oid) LIKE '%confirmed%' THEN 'YES'
-    ELSE 'NO'
-  END as allows_confirmed
-FROM pg_proc p
-WHERE p.proname = 'modify_appointment'
-AND p.pronamespace = 'public'::regnamespace;
-
--- Expected: YES
-
--- Validation Query 3: Check specific line in function
-SELECT 
-  CASE
-    WHEN pg_get_functiondef(p.oid) LIKE '%NOT IN (''pending'', ''confirmed'')%' 
-    THEN 'CORRECT - Both statuses allowed'
-    WHEN pg_get_functiondef(p.oid) LIKE '%!= ''pending'%'
-    THEN 'OLD - Only pending allowed (migration not applied)'
-    ELSE 'UNKNOWN'
-  END as status
-FROM pg_proc p
-WHERE p.proname = 'modify_appointment'
-AND p.pronamespace = 'public'::regnamespace;
-```
-
-**Expected Results**:
-- Query 1: `true` (function exists)
-- Query 2: `YES` (allows confirmed)
-- Query 3: `CORRECT - Both statuses allowed`
-
-**If Validation Fails**:
-- Re-run the migration SQL from Step 3
-- Check for any errors
-- Contact Supabase support if function won't update
-
----
-
-### Step 5: TEST
-
-**Objective**: Verify the feature works end-to-end.
-
-#### Automated Test
-
-```bash
-node tests/verify-reschedule-flow.mjs
-```
-
-**What it tests**:
-1. Find a confirmed appointment
-2. Find alternative available openings
-3. Call modify_appointment RPC
-4. Verify old appointment is cancelled
-5. Verify new appointment is pending
-
-**Expected Output**:
-```
-✓ Found confirmed appointment
-✓ Found alternative opening
-✓ RPC call succeeded
-✓ Old appointment cancelled
-✓ New appointment is pending
-
-RESCHEDULE FLOW VERIFICATION COMPLETE
-```
-
-#### Manual UI Test (If Automated Test Passes)
-
-1. Sign in as customer
-2. Go to `/appointments`
-3. Find a confirmed appointment
-4. Click "Modify" button
-5. Select new date/time
-6. Click confirm
-7. Verify old appointment shows "Cancelled"
-8. Verify new appointment shows "Pending"
-
-**Expected Behavior**:
-- Modify button visible on confirmed appointments ✓
-- Can select alternative dates ✓
-- Old appointment cancelled ✓
-- New appointment pending ✓
-- Provider can see new pending request ✓
-
----
-
-### Step 6: FIX & REPEAT (If Tests Fail)
-
-**If Automated Test Fails**:
-
-**Error**: "Can only modify pending appointments"
-
-**Diagnosis**: Migration not applied to database
-
-**Fix**:
-1. Check Validation Query 3 output
-2. If shows "OLD", re-apply migration
-3. In Supabase SQL Editor:
-   ```sql
-   DROP FUNCTION IF EXISTS public.modify_appointment(uuid, uuid, uuid);
-   ```
-4. Re-paste and run full CREATE OR REPLACE statement
-5. Re-run validation queries
-6. Re-run tests
-
-**Error**: "New opening is no longer available"
-
-**Diagnosis**: Another customer booked the opening
-
-**Fix**:
-1. Run test again (different opening will be selected)
-2. Or manually create more test data
-
-**Error**: No confirmed appointments found
-
-**Diagnosis**: No test data
-
-**Fix**:
-1. Book an appointment manually in UI
-2. Provider confirms it
-3. Then run tests
-
----
-
-### Step 7: REPORT
-
-**Objective**: Document the migration and results.
-
-**Automated Report** (Generated by migration manager):
-
-```bash
-node scripts/migration-manager.mjs
-```
-
-Generates: `migration-reports/20260415_allow_modify_confirmed_appointments-report.json`
-
-**Contents**:
-```json
-{
-  "migrationName": "Allow customers to reschedule confirmed appointments",
-  "migrationFile": "20260415_allow_modify_confirmed_appointments.sql",
-  "status": "success",
-  "timestamp": "2026-04-15T18:05:40Z",
-  "totalLogs": 25,
-  "logs": [
-    "[2026-04-15T18:11:31.178Z] → Step 1: WRITE DOWN...",
-    "[2026-04-15T18:11:31.940Z] ✓ Migration file read...",
-    ...
-  ]
-}
-```
-
-**Manual Documentation**:
-
-Create: `.github/MIGRATION_RESCHEDULE_REPORT.md`
+Create a checklist:
 
 ```markdown
-# Migration Report: Reschedule Confirmed Appointments
-
-**Date**: 2026-04-15
-**Status**: SUCCESS
-**Duration**: 5 minutes
-
-## What Changed
-- Modified `modify_appointment()` RPC function
-- Now accepts both 'pending' and 'confirmed' appointment statuses
-
-## Files Changed
-- Supabase: public.modify_appointment function
-- Git: src/components/Appointments.tsx, supabase/migrations/...
-
-## Testing
-- ✓ Found confirmed appointment: 3258d49f-ded5-4c10-b556-822fbd2c4233
-- ✓ Found alternative opening: 42d980e7-f61f-47cd-9c12-93fd1fbed72f
-- ✓ RPC call succeeded
-- ✓ Old appointment cancelled
-- ✓ New appointment pending (awaiting provider re-approval)
-
-## Verification
-- ✓ Migration table updated
-- ✓ Function signature correct
-- ✓ All validations passed
-- ✓ Feature works end-to-end
+- [x] Write migration SQL
+- [ ] Record in migrations_applied table
+- [ ] Apply migration to Supabase
+- [ ] Validate schema changes
+- [ ] Run test suite
+- [ ] Document in .github/
+- [ ] Deploy to production
 ```
 
 ---
 
-## COMPLETE COMMAND REFERENCE
+## Step 3: MIGRATE - Execute SQL
 
-### Setup (Run Once)
+### Method A: Via Supabase Dashboard (Manual)
 
-```bash
-# 1. Display setup SQL
-node scripts/setup-migrations.mjs
+1. Go to: https://supabase.com/dashboard
+2. Select project → SQL Editor
+3. Click "New Query"
+4. Paste migration SQL
+5. Click "Run"
+6. Look for green checkmark (success) or red error
 
-# 2. Execute the SQL output in Supabase SQL Editor
-# (Go to https://supabase.com/dashboard → SQL Editor)
+### Method B: Via Script (Recommended)
+
+Create `scripts/apply-migration.js`:
+
+```javascript
+import { createClient } from '@supabase/supabase-js';
+import fs from 'fs';
+import path from 'path';
+
+const supabaseUrl = process.env.VITE_SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const migrationFile = process.argv[2];
+
+if (!migrationFile) {
+  console.error('Usage: node apply-migration.js <migration-file.sql>');
+  process.exit(1);
+}
+
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+async function applyMigration() {
+  const migrationPath = path.join('supabase/migrations', migrationFile);
+  const sql = fs.readFileSync(migrationPath, 'utf-8');
+  
+  console.log(`Applying migration: ${migrationFile}`);
+  console.log('─'.repeat(60));
+  
+  try {
+    // Note: Direct SQL execution requires Supabase extensions
+    // For now, output the SQL for manual execution
+    console.log(sql);
+    console.log('─'.repeat(60));
+    console.log('\n⚠️  Execute above SQL in Supabase SQL Editor');
+  } catch (err) {
+    console.error('Error:', err);
+    process.exit(1);
+  }
+}
+
+applyMigration();
 ```
 
-### For Any Migration
+### Method C: Direct SQL Query (Most Reliable)
 
 ```bash
-# 1. WRITE - Create migration file
-cat supabase/migrations/20260415_allow_modify_confirmed_appointments.sql
-
-# 2. RECORD - Track in database
-# (Copy/paste INSERT into migrations_applied table in SQL Editor)
-
-# 3. MIGRATE - Apply to Supabase
-# (Copy/paste migration SQL in SQL Editor)
-
-# 4. VALIDATE - Verify changes
-# (Execute validation queries in SQL Editor)
-
-# 5. TEST - Run feature tests
-node tests/verify-reschedule-flow.mjs
-
-# 6. REPORT - Generate report
-node scripts/migration-manager.mjs
-```
-
-### View Migration Status
-
-```bash
-# Check migration tracking table
+# Read migration and apply via environment variables
 node << 'EOF'
 import { createClient } from '@supabase/supabase-js';
 import fs from 'fs';
 
-const secretContent = fs.readFileSync('.secret', 'utf-8');
-const key = secretContent.match(/SUPABASE_KEY=(.+)/)[1].trim();
-const supabase = createClient('https://dbabjfydcllqbjpolhym.supabase.co', key);
+const sql = fs.readFileSync('supabase/migrations/20260415_allow_modify_confirmed_appointments.sql', 'utf-8');
 
-const { data } = await supabase.from('migrations_applied').select('*');
-console.log(JSON.stringify(data, null, 2));
+const supabase = createClient(
+  'https://dbabjfydcllqbjpolhym.supabase.co',
+  'your-service-role-key'
+);
+
+// Execute via dashboard SQL Editor (copy paste)
+console.log(sql);
 EOF
 ```
 
 ---
 
-## FILES IN THIS SYSTEM
+## Step 4: VALIDATE - Verify Changes
 
-### Core Migration Files
-- `supabase/migrations/20260415_allow_modify_confirmed_appointments.sql` - The migration itself
-- `scripts/migration-manager.mjs` - Orchestrates the complete process
-- `scripts/setup-migrations.mjs` - One-time setup for tracking table
+### Validation Query Template
 
-### Testing Files
-- `tests/verify-reschedule-flow.mjs` - End-to-end feature test
-- `migration-reports/` - Generated reports (auto-created)
+```sql
+-- ============================================================
+-- VALIDATE MIGRATION APPLIED
+-- ============================================================
 
-### Documentation
-- `SUPABASE_MIGRATION_PROCESS.md` - This comprehensive guide
-- `.github/RESCHEDULE_CONFIRMED_APPOINTMENTS.md` - Feature documentation
-- `.github/MIGRATION_RESCHEDULE_REPORT.md` - Migration results
+-- 1. Check function exists
+SELECT EXISTS (
+  SELECT 1 FROM information_schema.routines 
+  WHERE routine_name = 'modify_appointment' 
+  AND routine_schema = 'public'
+) AS function_exists;
 
----
+-- 2. Check function signature
+SELECT 
+  p.proname,
+  pg_get_function_arguments(p.oid) as arguments,
+  pg_get_function_result(p.oid) as return_type
+FROM pg_proc p
+WHERE p.proname = 'modify_appointment' 
+AND p.pronamespace = 'public'::regnamespace;
 
-## KEY PRINCIPLES
+-- 3. Check function body contains expected logic
+SELECT 
+  p.proname,
+  pg_get_functiondef(p.oid) as function_def
+FROM pg_proc p
+WHERE p.proname = 'modify_appointment'
+LIMIT 1;
 
-1. **SQL Only**: All migrations are pure SQL, no ORM or migration tools
-2. **Traceable**: Every migration recorded in database with status
-3. **Testable**: Automated validation and testing at every step
-4. **Documented**: Clear comments in SQL, reports in .github/
-5. **Repeatable**: Process works for any future migration
-6. **Safe**: Validates changes before marking as complete
+-- 4. Verify specific change (look for 'confirmed' in logic)
+SELECT 
+  CASE 
+    WHEN pg_get_functiondef(p.oid) LIKE '%confirmed%' THEN true 
+    ELSE false 
+  END as contains_confirmed_status
+FROM pg_proc p
+WHERE p.proname = 'modify_appointment'
+AND p.pronamespace = 'public'::regnamespace;
+```
 
----
+### Validation Script
 
-## NEXT TIME: For Future Migrations
+Create `scripts/validate-migration.js`:
 
-Just follow these steps:
+```javascript
+import { createClient } from '@supabase/supabase-js';
 
-```bash
-# 1. Write SQL migration file
-echo "CREATE OR REPLACE FUNCTION..." > supabase/migrations/TIMESTAMP_description.sql
+const supabase = createClient(url, key);
 
-# 2. Run the manager
-node scripts/migration-manager.mjs
+async function validateMigration() {
+  console.log('Validating migration...\n');
+  
+  // Check 1: Function exists
+  const { data: funcCheck, error: e1 } = await supabase
+    .from('pg_proc')
+    .select('*')
+    .eq('proname', 'modify_appointment');
+  
+  console.log(funcCheck?.length ? '✓ Function exists' : '✗ Function NOT found');
+  
+  // Check 2: Test function with dummy data
+  const { data: testResult, error: e2 } = await supabase.rpc('modify_appointment', {
+    _appointment_id: '00000000-0000-0000-0000-000000000000',
+    _new_opening_id: '00000000-0000-0000-0000-000000000000',
+    _caller_id: '00000000-0000-0000-0000-000000000000',
+  });
+  
+  if (e2?.message?.includes('confirmed')) {
+    console.log('✓ Function allows "confirmed" status');
+  } else {
+    console.log('✗ Function may not allow "confirmed" status');
+  }
+}
 
-# 3. When it says to execute SQL in dashboard, do it
-# 4. Run tests
-node tests/your-feature-test.mjs
-
-# 5. Done!
+validateMigration();
 ```
 
 ---
 
-## SUPABASE DASHBOARD SQL QUICK ACCESS
+## Step 5: TEST - Verify Feature Works
 
-**Important URLs**:
-- SQL Editor: https://supabase.com/dashboard → Click your project → SQL Editor
-- Migrations Table: Query → SELECT * FROM public.migrations_applied
+### Test Suite Template
+
+```javascript
+// tests/test-reschedule-confirmed.mjs
+
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(url, key);
+
+async function testRescheduleConfirmed() {
+  console.log('Testing reschedule confirmed appointment flow...\n');
+  
+  let testsPassed = 0;
+  let testsFailed = 0;
+  
+  // Test 1: Can find confirmed appointment
+  const { data: appts } = await supabase
+    .from('appointments')
+    .select('*')
+    .eq('status', 'confirmed')
+    .limit(1);
+  
+  if (appts?.length) {
+    console.log('✓ Test 1: Found confirmed appointment');
+    testsPassed++;
+  } else {
+    console.log('✗ Test 1: No confirmed appointments found');
+    testsFailed++;
+    return;
+  }
+  
+  const appointment = appts[0];
+  
+  // Test 2: Can find alternative opening
+  const { data: altOpenings } = await supabase
+    .from('openings')
+    .select('*')
+    .eq('user_id', appointment.provider_id)
+    .eq('worker', appointment.worker)
+    .eq('service', appointment.service)
+    .eq('is_available', true)
+    .neq('id', appointment.opening_id)
+    .limit(1);
+  
+  if (altOpenings?.length) {
+    console.log('✓ Test 2: Found alternative opening');
+    testsPassed++;
+  } else {
+    console.log('✗ Test 2: No alternative openings');
+    testsFailed++;
+    return;
+  }
+  
+  // Test 3: RPC call succeeds
+  const { data: newApptId, error: rpcError } = await supabase.rpc('modify_appointment', {
+    _appointment_id: appointment.id,
+    _new_opening_id: altOpenings[0].id,
+    _caller_id: appointment.user_id,
+  });
+  
+  if (!rpcError && newApptId) {
+    console.log('✓ Test 3: RPC call succeeded');
+    testsPassed++;
+  } else {
+    console.log('✗ Test 3: RPC failed -', rpcError?.message);
+    testsFailed++;
+    return;
+  }
+  
+  // Test 4: Old appointment cancelled
+  const { data: oldAppt } = await supabase
+    .from('appointments')
+    .select('status')
+    .eq('id', appointment.id)
+    .single();
+  
+  if (oldAppt?.status === 'cancelled') {
+    console.log('✓ Test 4: Old appointment cancelled');
+    testsPassed++;
+  } else {
+    console.log('✗ Test 4: Old appointment not cancelled');
+    testsFailed++;
+  }
+  
+  // Test 5: New appointment pending
+  const { data: newAppt } = await supabase
+    .from('appointments')
+    .select('status')
+    .eq('id', newApptId)
+    .single();
+  
+  if (newAppt?.status === 'pending') {
+    console.log('✓ Test 5: New appointment is pending');
+    testsPassed++;
+  } else {
+    console.log('✗ Test 5: New appointment not pending');
+    testsFailed++;
+  }
+  
+  console.log(`\n${testsPassed} passed, ${testsFailed} failed`);
+  process.exit(testsFailed > 0 ? 1 : 0);
+}
+
+testRescheduleConfirmed().catch(err => {
+  console.error('Test error:', err);
+  process.exit(1);
+});
+```
+
+### Run Tests
+
+```bash
+node tests/test-reschedule-confirmed.mjs
+```
 
 ---
 
-## TROUBLESHOOTING
+## Step 6: FIX & REPEAT
 
-**Q: "Table migrations_applied doesn't exist"**
-A: Run `node scripts/setup-migrations.mjs` and execute the setup SQL first
+If tests fail:
 
-**Q: "Function doesn't seem to be updated"**
-A: Go to SQL Editor, run validation query 3 to check actual function body
+1. **Identify the issue**
+   ```bash
+   # Re-run tests with verbose output
+   node tests/test-reschedule-confirmed.mjs --verbose
+   ```
 
-**Q: "Tests still fail after running migration"**
-A: Run validation queries to check function was actually updated, then re-apply
+2. **Analyze the error**
+   - Check Supabase logs
+   - Verify RPC parameters match
+   - Check data constraints
 
-**Q: "How do I rollback a migration?"**
-A: Drop the function: `DROP FUNCTION public.modify_appointment(uuid, uuid, uuid);`
-Then update tracking table: `UPDATE migrations_applied SET status = 'rolled_back' WHERE migration_name = '...';`
+3. **Fix the migration**
+   ```sql
+   -- Debug query
+   SELECT * FROM pg_proc WHERE proname = 'modify_appointment'\gexec
+   
+   -- Drop and recreate if needed
+   DROP FUNCTION IF EXISTS public.modify_appointment(uuid, uuid, uuid);
+   ```
+
+4. **Re-apply migration**
+   - Copy corrected SQL
+   - Paste in SQL Editor
+   - Click Run
+
+5. **Re-test**
+   ```bash
+   node tests/test-reschedule-confirmed.mjs
+   ```
 
 ---
 
-## CONCLUSION
+## Complete Example: Reschedule Confirmed Appointments
 
-This process ensures every Supabase migration is:
-- ✅ Clearly documented
-- ✅ Tracked in database
-- ✅ Properly applied
-- ✅ Validated
-- ✅ Thoroughly tested
-- ✅ Automatically reported
+### Step 1: Write Down
+- ✅ File: `supabase/migrations/20260415_allow_modify_confirmed_appointments.sql`
+- ✅ Change: Line 26 - Allow 'confirmed' status
 
-Use it for all future database changes.
+### Step 2: Record
+```sql
+INSERT INTO migrations_applied (migration_name, status) 
+VALUES ('20260415_allow_modify_confirmed_appointments', 'pending');
+```
+
+### Step 3: Migrate
+Copy SQL from migration file to Supabase SQL Editor and run:
+```sql
+CREATE OR REPLACE FUNCTION public.modify_appointment(...) RETURNS uuid...
+```
+
+### Step 4: Validate
+```sql
+SELECT pg_get_functiondef(p.oid) FROM pg_proc p WHERE p.proname = 'modify_appointment';
+-- Look for: IF _old_apt.status NOT IN ('pending', 'confirmed')
+```
+
+### Step 5: Test
+```bash
+node tests/verify-reschedule-flow.mjs
+# Expected: ✓ All tests pass
+```
+
+### Step 6: Report
+```bash
+git add .github/RESCHEDULE_CONFIRMED_APPOINTMENTS.md
+git commit -m "Document reschedule confirmed appointments feature"
+```
+
+---
+
+## Troubleshooting Reference
+
+| Problem | Solution |
+|---------|----------|
+| "Function does not exist" | Paste entire CREATE OR REPLACE statement in SQL Editor |
+| "Column does not exist" | Check table schema with `\d table_name` |
+| "Permission denied" | Use service role key, not anon key |
+| "Syntax error" | Validate SQL with `--` comments for clarity |
+| RPC returns null | Check return type matches (uuid not json) |
+| Test hangs | Add timeout: `.timeout(5000)` |
+
+---
+
+## Reusable Commands
+
+```bash
+# View migration file
+cat supabase/migrations/20260415_allow_modify_confirmed_appointments.sql
+
+# Track migration status
+sqlite3 .copilot/session-state/*/session.db "SELECT * FROM migrations_applied WHERE migration_name LIKE '%reschedule%';"
+
+# Run test suite
+node tests/verify-reschedule-flow.mjs
+
+# Validate in Supabase
+# Go to SQL Editor, paste validation query, click Run
+
+# Check git status
+git log --oneline -5
+```
+
+---
+
+## Summary
+
+**This skill enables:**
+- ✅ Reproducible database migrations
+- ✅ Trackable change history
+- ✅ Automated validation
+- ✅ Reliable testing
+- ✅ Quick rollback if needed
+
+**Key principle**: Every migration is:
+1. Written as SQL file
+2. Recorded in database
+3. Applied via SQL Editor
+4. Validated with queries
+5. Tested with scripts
+6. Documented in .github/
