@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Search, Filter, Calendar, Clock, User, MapPin, Check, X, CheckCircle, ChevronDown, ChevronUp, Loader2, Mail, Phone, Users } from 'lucide-react';
 import { useOrgWorkers } from '@/hooks/useOrgWorkers';
 import { toast } from 'sonner';
+import { ModifyAppointmentDialog } from './ModifyAppointmentDialog';
 
 interface Appointment {
   id: string;
