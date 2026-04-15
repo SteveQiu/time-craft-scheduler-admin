@@ -35,9 +35,13 @@
 
 ## 📚 Complete File Guide
 
+## 📚 Complete File Guide
+
 | File | Purpose | When to Read |
 |------|---------|--------------|
+| **BOOKING_DEBUG_PLAN.md** | Root cause analysis of booking failures | 🔴 "Failed to book" errors |
 | **BOOKING_FIX.md** | Step-by-step fix for booking RPC error | 🔴 Booking doesn't work |
+| **BOOKING_STATUS.md** | Booking system status, error messages, and fixes | Reference during booking issues |
 | **BROWSE_VS_OPENINGS.md** | Two booking routes explained | Wrong URL / blank page |
 | **DEBUGGING_INFRASTRUCTURE.md** | Playwright-based DevTools capture (network, console, errors) | 🔍 Need detailed debugging visibility |
 | **copilot-readme.md** | Friendly entry point with links | First time here? Start here |
@@ -46,7 +50,10 @@
 | **ARCHITECTURE.md** | Design decisions, tech stack, patterns | Understanding how it works |
 | **DATABASE.md** | Schema, queries, RPC functions | Working with data |
 | **API_REFERENCE.md** | Hooks, Supabase, React Query patterns | Writing code |
-| **TROUBLESHOOTING.md** | Common issues and fixes | Something isn't working |
+| **TROUBLESHOOTING.md** | Common issues and fixes (20+) | Something isn't working |
+| **CODING_STANDARDS.md** | Code style guide and best practices | Writing new code |
+| **COPILOT_SKILLS.md** | Detailed skill documentation with examples | Learning patterns |
+| **DEBUGGING_PROCESS.md** | Debugging philosophy and methodology | Understanding the approach |
 | **INDEX.md** (this file) | Navigation guide | Finding what you need |
 
 ---
@@ -170,12 +177,27 @@ docs/ (external links from .github/)
 
 ## 📊 Knowledge Base Statistics
 
-**Total Documentation:** 8 files, ~40KB
-**Debugging Patterns Documented:** 4 major fixes
-**Common Issues Covered:** 15+
-**Code Examples:** 50+
-**SQL Queries:** 20+
-**API Patterns:** 15+
+**Total Documentation:** 16 files in `.github/`, 3 files in process docs, comprehensive debugging infrastructure
+
+**Core Guides:**
+- 5 Copilot Skills + Instructions
+- 6 Technical Architecture & API docs
+- 20+ Troubleshooting solutions
+- Booking system debugging (3 detailed guides)
+
+**Debugging Tools:**
+- Playwright-based test infrastructure
+- 8 debug test scripts
+- Organized debug folder with test artifacts
+- Network capture and console log analysis
+
+**Previous Fixes Documented:**
+- React Hooks violation fix
+- Multi-date creation bug
+- Calendar date visibility
+- Race condition prevention
+- Booking RPC function deployment
+- Authentication flow fixes
 
 ---
 
