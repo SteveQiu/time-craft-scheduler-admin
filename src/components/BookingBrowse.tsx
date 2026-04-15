@@ -188,6 +188,32 @@ export function BookingBrowse() {
 
       if (error) throw error;
 
+      // Send confirmation email
+      try {
+        await supabase.functions.invoke('reminder-smtp', {
+          body: {
+            to: user.email,
+            subject: `Your Appointment is Confirmed! 📅`,
+            html: `
+              <h2>Booking Confirmed</h2>
+              <p>Your appointment has been successfully booked!</p>
+              <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                <p><strong>Service:</strong> ${selectedSlot.service || 'N/A'}</p>
+                <p><strong>Provider:</strong> ${selectedSlot.provider_name || 'N/A'}</p>
+                <p><strong>Date:</strong> ${new Date(selectedSlot.date).toLocaleDateString()}</p>
+                <p><strong>Time:</strong> ${selectedSlot.start_time || 'N/A'}</p>
+                <p><strong>Duration:</strong> ${selectedSlot.duration || 'N/A'} hour(s)</p>
+                ${selectedSlot.location ? `<p><strong>Location:</strong> ${selectedSlot.location}</p>` : ''}
+              </div>
+              <p>Thank you for booking with us!</p>
+            `,
+            text: `Your appointment on ${selectedSlot.date} at ${selectedSlot.start_time} is confirmed.`
+          }
+        });
+      } catch (emailError) {
+        console.warn('Email notification failed but booking succeeded:', emailError);
+      }
+
       setShowBookingDialog(false);
       setSelectedSlot(null);
       queryClient.invalidateQueries({ queryKey: ['browse-openings'] });
