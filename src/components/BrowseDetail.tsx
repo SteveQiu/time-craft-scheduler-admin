@@ -1,0 +1,261 @@
+import React, { useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { Card, CardContent, CardHeader } from './ui/card';
+import { Button } from './ui/button';
+import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from './ui/alert-dialog';
+import { Calendar as CalendarIcon, Loader2, Share2, ExternalLink, ArrowLeft, Check } from 'lucide-react';
+import { toast } from 'sonner';
+
+interface OpeningWithProfile {
+  id: string;
+  user_id: string;
+  date: string;
+  start_time: string;
+  end_time: string;
+  duration: number;
+  service: string;
+  worker: string;
+  is_available: boolean;
+  location: string | null;
+  hourly_rate: number;
+  provider_name: string | null;
+  provider_email: string | null;
+  provider_slug: string | null;
+}
+
+interface ProviderAccount {
+  user_id: string;
+  provider_name: string;
+  provider_slug: string | null;
+  opening_count: number;
+  services: string[];
+  workers: string[];
+}
+
+export function BrowseDetail({ 
+  allOpenings, 
+  providers 
+}: { 
+  allOpenings: OpeningWithProfile[], 
+  providers: ProviderAccount[] 
+}) {
+  const { providerId } = useParams<{ providerId?: string }>();
+  const navigate = useNavigate();
+  const [selectedService, setSelectedService] = useState<string | null>(null);
+  const [selectedWorker, setSelectedWorker] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [copiedSlotId, setCopiedSlotId] = useState<string | null>(null);
+  const [calendarMonth, setCalendarMonth] = useState(new Date());
+  const [showBookingDialog, setShowBookingDialog] = useState(false);
+  const [selectedSlot, setSelectedSlot] = useState<OpeningWithProfile | null>(null);
+  const [isBooking, setIsBooking] = useState(false);
+
+  // Get provider
+  const currentProvider = providers.find(p => p.user_id === providerId);
+
+  // Get openings for selected provider
+  const selectedProviderOpenings = providerId 
+    ? allOpenings.filter(o => o.user_id === providerId)
+    : [];
+
+  // Group openings by service
+  const serviceMap = React.useMemo(() => {
+    const map = new Map<string, OpeningWithProfile[]>();
+    selectedProviderOpenings.forEach(opening => {
+      if (!map.has(opening.service)) {
+        map.set(opening.service, []);
+      }
+      map.get(opening.service)!.push(opening);
+    });
+    return map;
+  }, [selectedProviderOpenings]);
+
+  // Get workers for selected service
+  const workersForService = React.useMemo(() => {
+    if (!selectedService) return [];
+    const openings = serviceMap.get(selectedService) || [];
+    const workers = [...new Set(openings.map(o => o.worker))];
+    return workers;
+  }, [selectedService, serviceMap]);
+
+  // Get times for selected service, worker & date
+  const timesForSelection = React.useMemo(() => {
+    if (!selectedService || !selectedWorker || !selectedDate) return [];
+    return selectedProviderOpenings.filter(
+      o => o.service === selectedService && o.worker === selectedWorker && o.date === selectedDate
+    );
+  }, [selectedService, selectedWorker, selectedDate, selectedProviderOpenings]);
+
+  // Get all available dates
+  const allAvailableDates = React.useMemo(() => {
+    if (!selectedService) return new Set<string>();
+    const openings = serviceMap.get(selectedService) || [];
+    
+    if (selectedWorker) {
+      return new Set(openings.filter(o => o.worker === selectedWorker).map(o => o.date));
+    }
+    
+    return new Set(openings.map(o => o.date));
+  }, [selectedService, selectedWorker, serviceMap]);
+
+  // Generate calendar days
+  const calendarDays = React.useMemo(() => {
+    const days: (Date | null)[] = [];
+    const firstDayOfMonth = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth(), 1);
+    const startDate = new Date(firstDayOfMonth);
+    startDate.setDate(startDate.getDate() - startDate.getDay());
+
+    const endDate = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 0);
+    endDate.setDate(endDate.getDate() + (6 - endDate.getDay()));
+
+    for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+      days.push(new Date(d));
+    }
+
+    return days;
+  }, [calendarMonth]);
+
+  const formatDateKey = (date: Date) => {
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  };
+
+  const navigateMonth = (direction: 'prev' | 'next') => {
+    const newMonth = new Date(calendarMonth);
+    newMonth.setMonth(newMonth.getMonth() + (direction === 'next' ? 1 : -1));
+    setCalendarMonth(newMonth);
+  };
+
+  if (!currentProvider) {
+    return (
+      <div className="p-6 flex justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (selectedProviderOpenings.length === 0) {
+    return (
+      <div className="p-6 space-y-6">
+        <Button variant="ghost" size="icon" onClick={() => navigate('/browse')}>
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
+        <Card className="shadow-soft border-card-border">
+          <CardContent className="text-center py-12">
+            <CalendarIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-foreground mb-2">No appointments available</h3>
+            <p className="text-muted-foreground">Check back later for new availability.</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-6 space-y-6">
+      <div className="flex items-center gap-3">
+        <Button variant="ghost" size="icon" onClick={() => navigate('/browse')}>
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
+        <div>
+          <h2 className="text-3xl font-bold text-foreground">{currentProvider.provider_name}</h2>
+          <p className="text-sm text-muted-foreground">{selectedProviderOpenings.length} available appointments</p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Services */}
+        <div className="space-y-3">
+          <h3 className="font-semibold text-foreground">Services</h3>
+          {Array.from(serviceMap.keys()).map(service => (
+            <Card key={service} className={`cursor-pointer ${selectedService === service ? 'border-primary bg-primary/5' : ''}`} onClick={() => { setSelectedService(selectedService === service ? null : service); setSelectedWorker(null); setSelectedDate(null); }}>
+              <CardContent className="p-4">
+                <span className="font-medium text-sm">{service}</span>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Workers & Calendar */}
+        <div>
+          {selectedService && (
+            <div className="space-y-3">
+              <h3 className="font-semibold text-foreground">Workers</h3>
+              {workersForService.map(worker => (
+                <Card key={worker} className={`cursor-pointer ${selectedWorker === worker ? 'border-primary bg-primary/5' : ''}`} onClick={() => { setSelectedWorker(selectedWorker === worker ? null : worker); setSelectedDate(null); }}>
+                  <CardContent className="p-4">
+                    <span className="font-medium text-sm">{worker}</span>
+                  </CardContent>
+                </Card>
+              ))}
+
+              {selectedWorker && (
+                <Card className="p-4 space-y-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <button onClick={() => navigateMonth('prev')} className="p-1 hover:bg-accent rounded">←</button>
+                    <div className="text-sm font-medium text-center flex-1">{calendarMonth.toLocaleString('default', { month: 'long', year: 'numeric' })}</div>
+                    <button onClick={() => navigateMonth('next')} className="p-1 hover:bg-accent rounded">→</button>
+                  </div>
+                  <div className="grid grid-cols-7 gap-1">
+                    {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                      <div key={day} className="text-xs font-semibold text-center">{day}</div>
+                    ))}
+                    {calendarDays.map((day, idx) => {
+                      const isCurrentMonth = day && day.getMonth() === calendarMonth.getMonth() && day.getFullYear() === calendarMonth.getFullYear();
+                      const dateKey = day ? formatDateKey(day) : null;
+                      const isAvailable = dateKey ? allAvailableDates.has(dateKey) : false;
+                      const isSelected = dateKey === selectedDate;
+
+                      return (
+                        <button
+                          key={idx}
+                          onClick={() => isAvailable && setSelectedDate(dateKey)}
+                          disabled={!isAvailable}
+                          className={`py-2 text-xs rounded ${
+                            !isCurrentMonth ? 'text-muted-foreground/30' :
+                            !isAvailable ? 'text-muted-foreground/50 cursor-not-allowed' :
+                            isSelected ? 'bg-primary text-primary-foreground' :
+                            'bg-primary/10 text-primary cursor-pointer'
+                          }`}
+                        >
+                          {day?.getDate()}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </Card>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Times */}
+        {selectedDate && timesForSelection.length > 0 && (
+          <Card className="shadow-soft">
+            <CardHeader>
+              <h3 className="font-semibold text-foreground">Available Times</h3>
+              <p className="text-sm text-muted-foreground">{new Date(selectedDate).toLocaleDateString()}</p>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 gap-3">
+                {timesForSelection.map(slot => (
+                  <div key={slot.id} className="p-3 border rounded-lg space-y-3">
+                    <div>
+                      <div className="font-semibold text-sm">{new Date(`1970-01-01T${slot.start_time}`).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}</div>
+                      <div className="text-xs text-muted-foreground">{slot.duration}h</div>
+                    </div>
+                    <Button size="sm" onClick={() => { setSelectedSlot(slot); setShowBookingDialog(true); }} className="w-full">Book</Button>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="icon" className="flex-1 h-8" onClick={() => window.open(`/openings/${slot.id}`)}><ExternalLink className="h-4 w-4" /></Button>
+                      <Button variant="outline" size="icon" className="flex-1 h-8" onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/openings/${slot.id}`); setCopiedSlotId(slot.id); toast.success('Link copied!'); setTimeout(() => setCopiedSlotId(null), 1000); }}>{copiedSlotId === slot.id ? <Check className="h-4 w-4 text-green-600" /> : <Share2 className="h-4 w-4" />}</Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    </div>
+  );
+}

@@ -1,4 +1,32 @@
-# Copilot Instructions for Time Craft Scheduler Admin
+# Copilot Instructions for time-craft-scheduler-admin
+
+**Master instruction file for Copilot.** Contains project setup, 5 documented debugging skills, methodology, and learnings from this project's history.
+
+> **New to this project?** Start with `.github/copilot-readme.md` - it's a friendly index that points to all documentation with quick links and explanations of what each file does.
+
+---
+
+## 🚀 Quick Start
+
+**First time?** Read in this order:
+1. [Overview](#overview) - Understand the tech stack
+2. [Core Principles](#core-principles) - Know the 5 rules
+3. [Key Skills](#-key-skills) - Learn the debugging methodology
+4. [The 6-Step Debugging Cycle](#-the-6-step-debugging-cycle) - Most important skill
+
+**Debugging a bug?** Go straight to:
+- [The 6-Step Debugging Cycle](#-the-6-step-debugging-cycle) - Follow this systematically
+- [Common Issues & Fixes](#-common-issues--fixes) - Find similar issues
+- [Pro Tips](#-pro-tips) - Quick dos/don'ts
+
+**Quick reference cards** (see `.github/copilot-debugging-skill.md`):
+- All 6 steps with commands
+- Common fixes table
+- Development commands
+
+**See also** `.github/copilot-readme.md` - Index and entry point to all documentation
+
+---
 
 ## Overview
 
@@ -229,3 +257,341 @@ Project is built with Lovable and can be deployed via Lovable's publish feature 
 - Build output: `dist/` directory
 - Use `npm run build` for production
 - Supabase configuration must be set in environment
+
+---
+
+# 🎯 DEBUGGING SKILLS & METHODOLOGY
+
+This section contains the systematic debugging approach developed through this project's history. Use these skills for any bug or feature issue.
+
+## Core Principles
+
+1. **Always use Playwright for validation** - Don't guess if a fix works, test it
+2. **Keep fixes small and targeted** - One issue, one change, one test
+3. **Check console errors first** - Browser DevTools F12 → Console is your best friend
+4. **Follow React Rules of Hooks** - Never call hooks conditionally or in wrong order
+5. **Document decisions** - Note why you made changes for future reference
+
+---
+
+## 🎯 Key Skills
+
+### Skill 1: Systematic Debugging ⭐ MOST IMPORTANT
+
+**When to use**: Whenever a bug is reported or a feature isn't working
+
+**The cycle**:
+1. REPRODUCE - Use exact steps provided
+2. BROWSE - Find relevant code
+3. VALIDATE - Create/run Playwright test
+4. RESEARCH - Search internet for root cause
+5. DEBUG - Fix the issue
+6. REPEAT - Test again until it passes
+
+**Exit criteria**: ✅ Test passes ✅ Console clean ✅ Manual test works
+
+**Quick reference**: See the [6-step cycle below](#-the-6-step-debugging-cycle) for detailed instructions.
+
+**Quick reference card**: See `.github/copilot-debugging-skill.md` for a condensed version of this cycle with all commands and common fixes at a glance.
+
+---
+
+### Skill 2: React Hooks Debugging
+
+**Common violation**: Early returns before hooks
+
+```typescript
+// ❌ WRONG - returns early, hooks below won't run
+function Component({ id }) {
+  if (!id) return <div>No ID</div>;  // Early return!
+  const [data, setData] = useState(); // This doesn't always run!
+  // ...
+}
+
+// ✅ RIGHT - move condition outside component
+function Parent({ id }) {
+  return id ? <ComponentDetail id={id} /> : <div>No ID</div>;
+}
+
+function ComponentDetail({ id }) {
+  const [data, setData] = useState(); // Always runs
+  // ...
+}
+```
+
+**How to fix**: Extract into separate component so hooks always run
+
+---
+
+### Skill 3: Date & Timezone Handling
+
+**Problem**: JavaScript dates are tricky across timezones
+
+```typescript
+// ❌ WRONG - uses UTC
+const date = new Date("2026-05-01");
+
+// ✅ RIGHT - local timezone
+const date = new Date(2026, 4, 1); // Month is 0-indexed
+
+// ✅ ALSO RIGHT - parse manually
+const [year, month, day] = "2026-05-01".split('-').map(Number);
+const date = new Date(year, month - 1, day);
+```
+
+**Key**: Always use local timezone (getDate, getMonth, getFullYear) not toISOString()
+
+---
+
+### Skill 4: Component Splitting
+
+**Rule**: If a component has conditional logic that causes different hook counts, split it
+
+**Example**: Browse page has list view and detail view with different state/hooks
+
+```typescript
+// ❌ WRONG - one component with conditional detail rendering
+export function Browse({ providerId }) {
+  if (providerId) {
+    const [detail, setDetail] = useState();
+  }
+  const [list, setList] = useState();
+  // Different hooks in different renders = violation!
+}
+
+// ✅ RIGHT - split into two components
+export function Browse({ providerId }) {
+  return providerId ? <BrowseDetail id={providerId} /> : <BrowseList />;
+}
+
+function BrowseList() {
+  const [list, setList] = useState(); // Always called
+  // ...
+}
+
+function BrowseDetail({ id }) {
+  const [detail, setDetail] = useState(); // Always called
+  // ...
+}
+```
+
+---
+
+### Skill 5: Testing with Playwright
+
+**Commands**:
+```bash
+npm run test              # Run all tests
+npm run test:ui          # Interactive UI (great for debugging)
+npm run test:headed      # See the browser
+npm run test:debug       # Step through tests
+npm run test:report      # View HTML report
+```
+
+**Test template** (in `tests/` folder):
+```typescript
+import { test, expect } from '@playwright/test';
+
+test('describe what should work', async ({ page }) => {
+  // Setup
+  await page.goto('http://localhost:8080/path');
+  
+  // Action
+  await page.click('button');
+  await page.fill('input', 'value');
+  
+  // Assertion
+  const content = await page.content();
+  expect(content).toContain('expected text');
+  
+  // Alternatively check for presence of elements
+  const element = await page.locator('selector').isVisible();
+  expect(element).toBe(true);
+});
+```
+
+**Tips**:
+- Use `npm run test:ui` for interactive debugging (can see browser)
+- Playwright saves screenshots automatically to `debug/` folder
+- Tests run against `http://localhost:8080` - make sure dev server is running
+- Use `await page.waitForURL()` to wait for navigation
+- Use `await page.waitForLoadState('networkidle')` to wait for API calls
+
+---
+
+## 🎯 The 6-Step Debugging Cycle
+
+This is the core skill captured from this project's debugging history. Use this for ANY bug or issue.
+
+### Step 1: **REPRODUCE**
+- Start the dev server: `npm run dev`
+- Navigate to the specific URL or page mentioned in the bug report
+- Perform the exact steps to trigger the issue
+- Document what you observe vs. what should happen
+- **Check browser console for errors** (F12 → Console tab)
+
+### Step 2: **BROWSE**
+- Identify ALL relevant component files involved
+- Look at recent git commits to find what changed
+- Trace the data flow:
+  * Component rendering → state management → API calls → response handling
+- Check for common React/TypeScript issues:
+  * Conditional hooks or early returns (violates React rules)
+  * Missing dependency arrays in useEffect/useMemo/useCallback
+  * State closures (stale data)
+  * Type mismatches from API responses
+
+### Step 3: **VALIDATE WITH TESTS**
+- Create or update a Playwright test in `tests/` folder to reproduce the bug
+- Run test to confirm bug exists: `npm run test tests/[filename]`
+- Screenshots automatically saved to `debug/` folder
+- Test should **fail** at this point (proves bug exists)
+
+### Step 4: **RESEARCH**
+- Search for error messages: "[error message] React" on Google/StackOverflow
+- Check React documentation for rules violations
+- Check GitHub issues in related repos:
+  * facebook/react
+  * supabase/supabase-js
+  * microsoft/playwright
+- Look for similar patterns in your codebase
+
+### Step 5: **DEBUG & FIX**
+- Add console.log statements to trace execution
+- Use React DevTools browser extension to inspect component state/props
+- Check Network tab to see API responses
+- Fix based on what you found (ONE small change at a time):
+  * React hooks issue? → Split into separate components or reorder hooks
+  * Stale state? → Add missing dependency or refactor closure
+  * Type mismatch? → Check API response and add type guard
+  * Network issue? → Check error handling, add retry logic
+  * Timezone issue? → Use manual date parsing instead of toISOString()
+
+### Step 6: **REPEAT & VALIDATE**
+- After fix:
+  1. Run the Playwright test again: `npm run test tests/[filename]`
+  2. Test in browser manually to verify
+  3. Check browser console for new errors
+  4. If still broken, go back to Step 2 (dig deeper)
+  5. If fixed, verify the test **passes** ✅
+
+---
+
+## 📚 Common Issues & Fixes
+
+| Issue | Root Cause | Solution |
+|-------|-----------|----------|
+| **Blank page on navigation** | React hooks violation | Extract detail view into separate component |
+| **Multi-day opening only creates 2 days** | `for` loop with `setDate()` returns timestamp | Use `while` loop with separate increment |
+| **Future dates are disabled** | Wrong month variable in comparison | Compare against current `calendarMonth` not old `dateRange` |
+| **User can book same slot twice** | No atomic transaction for booking | Mark opening unavailable in same DB transaction |
+| **State not updating** | Missing dependency in useEffect | Add missing variables to dependency array |
+| **TypeScript error** | API response doesn't match type | Add type guard or check actual API response |
+
+For more detailed debugging history, see `docs/COPILOT_SKILLS.md`.
+
+---
+
+## 💡 Pro Tips
+
+✅ **DO:**
+- Check browser console FIRST (errors are golden)
+- Use `npm run test:ui` for interactive test debugging
+- Create minimal test - test 1 thing, not 5
+- Check screenshots in `debug/` folder
+- Search "[error message] React" when stuck
+- Take notes on what you know vs. don't know
+
+❌ **DON'T:**
+- Change multiple things without testing each
+- Ignore console errors
+- Skip Playwright validation
+- Assume cause without investigating
+- Work in production instead of localhost:8080
+
+---
+
+## 📊 Debugging History from This Project
+
+This is why the skills exist - these bugs were debugged and documented:
+
+### 1. React Hooks Violation (Browse list → detail blank)
+- **Cause**: Early returns before hooks
+- **Fix**: Extract detail view to separate component
+- **Skill**: "React Hooks Debugging"
+- **Result**: Both `/browse` and `/browse/:id` work perfectly
+
+### 2. Multi-Date Creation (4 days only creates 2)
+- **Cause**: `for (d.setDate(...))` returns timestamp, breaks loop condition
+- **Fix**: Use `while` loop with separate increment
+- **Validation**: Playwright test confirms all 4 openings created
+
+### 3. Calendar Dates Disabled (May/June not selectable)
+- **Cause**: Wrong month variable in comparison
+- **Fix**: Compare against `calendarMonth.getMonth()` not old `dateRange`
+- **Result**: May/June dates now properly selectable
+
+### 4. Booking Race Condition (Double booking possible)
+- **Cause**: No atomic transaction when creating appointment
+- **Fix**: Mark opening unavailable in same DB operation
+- **Database**: Updated `book_opening()` RPC function
+
+See `docs/COPILOT_SKILLS.md` for full details on each.
+
+---
+
+## 🔧 Development Commands
+
+```bash
+# Start
+npm run dev                    # Dev server at http://localhost:8080
+
+# Test & Debug
+npm run test                   # Run all tests
+npm run test:ui              # Interactive UI (best for debugging!)
+npm run test:headed          # See browser while tests run
+npm run test:debug           # Step through with debugger
+npm run test:report          # View HTML report
+
+# Quality
+npm run lint                 # Check linting
+npm run build                # Build for production
+npm run build:dev            # Development build
+
+# Browser DevTools
+F12                          # Open DevTools
+```
+
+---
+
+## 📝 Instructions for Next Copilot Session
+
+When working on bugs or features:
+
+1. **Start with `.github/copilot-readme.md`** - Friendly index to all documentation
+2. **Read this file** - `.github/copilot-instructions.md` - Refresh context on project setup and debugging skills
+3. **Use the 6-step debugging cycle** - Follow it systematically (see this file or `.github/copilot-debugging-skill.md`)
+4. **Create tests in Playwright** - Put them in `tests/` folder
+5. **Save artifacts in debug/** - Screenshots and results
+6. **Reference COPILOT_SKILLS.md** - `docs/COPILOT_SKILLS.md` for detailed patterns and history
+7. **Update this file** - If you discover new patterns or skills
+
+---
+
+## 📄 Related Documentation
+
+| File | Purpose |
+|------|---------|
+| `.github/copilot-readme.md` | **START HERE** - Friendly index pointing to all documentation |
+| `.github/copilot-instructions.md` | Master instructions (this file) - project overview + 5 skills |
+| `.github/copilot-debugging-skill.md` | Quick reference card for the 6-step cycle |
+| `docs/DEBUGGING_PROCESS.md` | Step-by-step debugging guide (methodology) |
+| `docs/COPILOT_SKILLS.md` | Comprehensive skills reference with detailed examples |
+| `docs/CODING_STANDARDS.md` | Code style and conventions |
+
+---
+
+**Last Updated**: 2026-04-15
+**Copilot Model**: Claude (any version)
+**Project**: time-craft-scheduler-admin
+**Status**: Ready for production debugging!
