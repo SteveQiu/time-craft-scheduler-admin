@@ -12,23 +12,25 @@ interface ModifyAppointmentDialogProps {
   appointmentId: string;
   currentOpeningId: string;
   userId: string;
-  providerName: string;
+  providerId: string;
+  workerName: string;
 }
 
-export function ModifyAppointmentDialog({ appointmentId, currentOpeningId, userId, providerName }: ModifyAppointmentDialogProps) {
+export function ModifyAppointmentDialog({ appointmentId, currentOpeningId, userId, providerId, workerName }: ModifyAppointmentDialogProps) {
   const [open, setOpen] = useState(false);
   const [modifying, setModifying] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
   const { data: availableOpenings = [], isLoading } = useQuery({
-    queryKey: ['available-openings-for-modify', currentOpeningId],
+    queryKey: ['available-openings-for-modify', currentOpeningId, providerId, workerName],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('openings')
         .select('*')
         .eq('is_available', true)
+        .eq('user_id', providerId)
+        .eq('worker', workerName)
         .neq('id', currentOpeningId)
-        .neq('user_id', userId)
         .gte('date', new Date().toISOString().split('T')[0])
         .order('date', { ascending: true })
         .order('start_time', { ascending: true });
@@ -69,7 +71,7 @@ export function ModifyAppointmentDialog({ appointmentId, currentOpeningId, userI
       </DialogTrigger>
       <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Switch to a different opening</DialogTitle>
+          <DialogTitle>换时间 — {workerName}</DialogTitle>
         </DialogHeader>
 
         {isLoading && (

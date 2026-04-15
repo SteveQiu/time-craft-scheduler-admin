@@ -365,7 +365,8 @@ export function Appointments() {
                       appointmentId={appointment.id}
                       currentOpeningId={appointment.opening_id}
                       userId={user!.id}
-                      providerName={appointment.worker}
+                      providerId={appointment.provider_id}
+                      workerName={appointment.worker}
                     />
                     <Button variant="outline" size="sm" onClick={() => handleCancel(appointment.id)}>
                       <X className="h-3 w-3 mr-1" />
