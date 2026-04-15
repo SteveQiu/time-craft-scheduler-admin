@@ -55,17 +55,23 @@ export function OpeningView() {
 
       if (error) throw error;
 
-      // Fetch provider profile
-      const { data: profiles } = await supabase
-        .rpc('get_public_profile_by_id', { profile_id: data.user_id });
+      // Fetch provider profile and pending count in parallel
+      const [profileRes, pendingRes] = await Promise.all([
+        supabase.rpc('get_public_profile_by_id', { profile_id: data.user_id }),
+        supabase.from('appointments').select('id', { count: 'exact', head: true })
+          .eq('opening_id', id!)
+          .eq('status', 'pending'),
+      ]);
 
-      const profile = profiles?.[0];
+      const profile = profileRes.data?.[0];
+      const pendingCount = pendingRes.count || 0;
 
       return {
         ...data,
         provider_name: profile?.full_name || null,
         provider_slug: profile?.slug || null,
         provider_avatar: profile?.avatar_url || null,
+        pending_count: pendingCount,
       };
     },
     enabled: !!id,
@@ -156,8 +162,11 @@ export function OpeningView() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle className="text-2xl">Opening Details</CardTitle>
-                <Badge variant={opening.is_available ? 'default' : 'secondary'}>
-                  {opening.is_available ? 'Available' : 'Booked'}
+                <Badge variant={
+                  !opening.is_available ? 'secondary' :
+                  opening.pending_count > 0 ? 'outline' : 'default'
+                } className={opening.pending_count > 0 && opening.is_available ? 'border-yellow-500 text-yellow-700 dark:text-yellow-400' : ''}>
+                  {!opening.is_available ? 'Booked' : opening.pending_count > 0 ? `Pending (${opening.pending_count})` : 'Available'}
                 </Badge>
               </div>
             </CardHeader>
@@ -217,11 +226,17 @@ export function OpeningView() {
               </div>
 
               {/* Book Button */}
-              {opening.is_available && (
+              {opening.is_available && opening.pending_count === 0 && (
                 <div className="pt-4">
                   <Button className="w-full" size="lg" onClick={handleBookClick}>
                     Book This Appointment
                   </Button>
+                </div>
+              )}
+
+              {opening.is_available && opening.pending_count > 0 && (
+                <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg text-center">
+                  <p className="text-yellow-700 dark:text-yellow-400">This opening has pending booking requests and is not available for new bookings.</p>
                 </div>
               )}
 

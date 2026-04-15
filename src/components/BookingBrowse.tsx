@@ -53,8 +53,22 @@ export function BookingBrowse() {
 
       if (error) throw error;
 
+      // Filter out openings that already have pending appointments
+      const openingIds = (data || []).map((o: any) => o.id);
+      let pendingSet = new Set<string>();
+      if (openingIds.length > 0) {
+        const { data: pendingAppts } = await supabase
+          .from('appointments')
+          .select('opening_id')
+          .in('opening_id', openingIds)
+          .eq('status', 'pending');
+        pendingSet = new Set((pendingAppts || []).map((a: any) => a.opening_id));
+      }
+
+      const availableData = (data || []).filter((o: any) => !pendingSet.has(o.id));
+
       // Fetch provider names via RPC (safe, only returns public fields)
-      const providerIds = [...new Set((data || []).map((o: any) => o.user_id))];
+      const providerIds = [...new Set(availableData.map((o: any) => o.user_id))];
       let nameMap = new Map<string, string>();
       let slugMap = new Map<string, string>();
       if (providerIds.length > 0) {
@@ -64,7 +78,7 @@ export function BookingBrowse() {
         slugMap = new Map((profiles || []).filter((p: any) => p.slug).map((p: any) => [p.id, p.slug]));
       }
 
-      return (data || []).map((opening: any) => ({
+      return availableData.map((opening: any) => ({
         id: opening.id,
         user_id: opening.user_id,
         date: opening.date,
