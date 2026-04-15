@@ -306,7 +306,7 @@ export function BrowseDetail({
                   setTimeout(() => window.location.reload(), 1000);
                 } catch (error) {
                   console.error('Booking failed:', error);
-                  toast.error('Failed to book appointment. Please try again.');
+                  const errorMessage = error instanceof Error ? error.message : 'Failed to book appointment. Please try again.'; toast.error(errorMessage);
                 } finally {
                   setIsBooking(false);
                 }
