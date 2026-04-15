@@ -359,7 +359,7 @@ export function Appointments() {
                     Complete
                   </Button>
                 )}
-                {(appointment.status === 'pending' || appointment.status === 'confirmed') && !isOrgView && (
+                {appointment.status === 'pending' && !isOrgView && (
                   <>
                     <ModifyAppointmentDialog
                       appointmentId={appointment.id}
