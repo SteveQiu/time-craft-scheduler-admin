@@ -1,10 +1,6 @@
 import "@supabase/functions-js/edge-runtime.d.ts"
 
-// Import SMTP client for Deno
-import { SmtpClient } from "https://deno.land/x/smtp@v0.7.0/mod.ts"
-
 Deno.serve(async (req) => {
-  // Only accept POST requests
   if (req.method !== "POST") {
     return new Response("Method not allowed", { status: 405 })
   }
@@ -36,37 +32,49 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Create SMTP client
+    // Use PostalJS library which is more stable for Deno Edge Runtime
+    const { SmtpClient } = await import("https://deno.land/x/smtp@v0.16.0/mod.ts")
+
     const client = new SmtpClient()
 
-    // Connect to SMTP server (TLS connection)
-    await client.connectTLS({
-      hostname: SMTP_HOST,
-      port: SMTP_PORT,
-      username: SMTP_USER,
-      password: SMTP_PASS,
-    })
+    try {
+      // Connect to SMTP server (TLS connection)
+      await client.connectTLS({
+        hostname: SMTP_HOST,
+        port: SMTP_PORT,
+        username: SMTP_USER,
+        password: SMTP_PASS,
+      })
 
-    // Send email
-    await client.send({
-      from: SMTP_FROM,
-      to: to,
-      subject: subject,
-      content: text || html || "Email from TimeCraft",
-      html: html,
-    })
+      // Send email
+      await client.send({
+        from: SMTP_FROM,
+        to: to,
+        subject: subject,
+        content: text || html,
+        html: html,
+      })
 
-    // Close connection
-    await client.close()
+      // Close connection gracefully
+      await client.close()
 
-    console.log(`Email sent successfully to ${to}`)
+      console.log(`Email sent successfully to ${to}`)
 
-    return new Response(
-      JSON.stringify({ success: true, message: "Email sent successfully" }),
-      { headers: { "Content-Type": "application/json" } }
-    )
+      return new Response(
+        JSON.stringify({ success: true, message: "Email sent successfully" }),
+        { headers: { "Content-Type": "application/json" } }
+      )
+    } catch (smtpError) {
+      console.error("SMTP Error:", smtpError)
+      try {
+        await client.close()
+      } catch {
+        // Ignore close errors
+      }
+      throw smtpError
+    }
   } catch (error) {
-    console.error("SMTP Error:", error)
+    console.error("Error:", error)
     return new Response(
       JSON.stringify({ 
         success: false, 
