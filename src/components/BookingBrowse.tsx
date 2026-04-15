@@ -50,6 +50,7 @@ export function BookingBrowse() {
   const [selectedWorker, setSelectedWorker] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [copiedSlotId, setCopiedSlotId] = useState<string | null>(null);
+  const [calendarMonth, setCalendarMonth] = useState(new Date());
 
   const today = new Date().toISOString().split('T')[0];
 
@@ -371,11 +372,10 @@ export function BookingBrowse() {
     return { start, end };
   }, [allAvailableDates]);
 
-  // Generate calendar days
+  // Generate calendar days for the selected month
   const calendarDays = React.useMemo(() => {
     const days: (Date | null)[] = [];
-    const current = new Date(calendarDateRange.start);
-    const firstDayOfMonth = new Date(current.getFullYear(), current.getMonth(), 1);
+    const firstDayOfMonth = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth(), 1);
     const startDate = new Date(firstDayOfMonth);
     startDate.setDate(startDate.getDate() - startDate.getDay());
 
@@ -384,10 +384,36 @@ export function BookingBrowse() {
       startDate.setDate(startDate.getDate() + 1);
     }
     return days;
-  }, [calendarDateRange]);
+  }, [calendarMonth]);
 
   const formatDateKey = (date: Date): string => {
     return date.toISOString().split('T')[0];
+  };
+
+  const navigateMonth = (direction: 'prev' | 'next') => {
+    setCalendarMonth(prev => {
+      const newDate = new Date(prev);
+      newDate.setMonth(prev.getMonth() + (direction === 'next' ? 1 : -1));
+      
+      // Only constrain if we have date bounds
+      if (calendarDateRange) {
+        // Get first and last day of the new month being navigated to
+        const firstDayOfNewMonth = new Date(newDate.getFullYear(), newDate.getMonth(), 1);
+        const lastDayOfNewMonth = new Date(newDate.getFullYear(), newDate.getMonth() + 1, 0);
+        
+        // If entirely after max date, clamp to max month
+        if (firstDayOfNewMonth > calendarDateRange.end) {
+          return new Date(calendarDateRange.end);
+        }
+        
+        // If entirely before min date, clamp to min month
+        if (lastDayOfNewMonth < calendarDateRange.start) {
+          return new Date(calendarDateRange.start);
+        }
+      }
+      
+      return newDate;
+    });
   };
 
   const handleResetSelection = () => {
@@ -395,6 +421,19 @@ export function BookingBrowse() {
     setSelectedWorker(null);
     setSelectedDate(null);
   };
+
+  // Initialize calendar to first available date when worker is first selected
+  React.useEffect(() => {
+    if (selectedWorker && allAvailableDates.size > 0) {
+      const dates = Array.from(allAvailableDates)
+        .map(d => new Date(d))
+        .sort((a, b) => a.getTime() - b.getTime());
+      if (dates.length > 0 && calendarMonth.getMonth() === new Date().getMonth() && calendarMonth.getFullYear() === new Date().getFullYear()) {
+        // Only set if still on current month (hasn't been changed yet)
+        setCalendarMonth(new Date(dates[0]));
+      }
+    }
+  }, [selectedWorker]);
 
   return (
     <div className="p-6 space-y-6">
@@ -488,8 +527,24 @@ export function BookingBrowse() {
               
               {/* Mini Calendar */}
               <Card className="shadow-soft border-card-border p-4 space-y-3">
-                <div className="text-sm font-medium text-foreground">
-                  {calendarDateRange.start.toLocaleString('default', { month: 'long', year: 'numeric' })}
+                <div className="flex items-center justify-between gap-2">
+                  <button
+                    onClick={() => navigateMonth('prev')}
+                    className="p-1 hover:bg-accent rounded transition-colors"
+                    title="Previous month"
+                  >
+                    ←
+                  </button>
+                  <div className="text-sm font-medium text-foreground text-center flex-1">
+                    {calendarMonth.toLocaleString('default', { month: 'long', year: 'numeric' })}
+                  </div>
+                  <button
+                    onClick={() => navigateMonth('next')}
+                    className="p-1 hover:bg-accent rounded transition-colors"
+                    title="Next month"
+                  >
+                    →
+                  </button>
                 </div>
                 
                 {/* Day headers */}
@@ -502,7 +557,7 @@ export function BookingBrowse() {
                 {/* Calendar grid */}
                 <div className="grid grid-cols-7 gap-1">
                   {calendarDays.map((day, idx) => {
-                    const isCurrentMonth = day && day.getMonth() === calendarDateRange.start.getMonth();
+                    const isCurrentMonth = day && day.getMonth() === calendarMonth.getMonth() && day.getFullYear() === calendarMonth.getFullYear();
                     const dateKey = day ? formatDateKey(day) : null;
                     const isAvailable = dateKey ? allAvailableDates.has(dateKey) : false;
                     const isSelected = dateKey === selectedDate;
