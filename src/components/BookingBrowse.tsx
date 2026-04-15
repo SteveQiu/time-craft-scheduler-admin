@@ -63,6 +63,7 @@ export function BookingBrowse() {
     error: queryError 
   } = useQuery({
     queryKey: ['browse-openings', today, user?.id],
+    enabled: !!user?.id,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('openings')
