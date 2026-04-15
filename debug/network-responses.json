@@ -1,8 +1,0 @@
-[
-  {
-    "url": "https://dbabjfydcllqbjpolhym.supabase.co/rest/v1/rpc/get_public_profile_names",
-    "status": 200,
-    "body": "[{\"id\":\"f0927dd8-9e7d-4830-a6b5-c96a3c627fe9\",\"full_name\":\"Test Org\",\"slug\":null}]",
-    "timestamp": "2026-04-15T13:42:30.072Z"
-  }
-]
