@@ -1,0 +1,55 @@
+{
+  "timestamp": "2026-04-15T19:47:11.660Z",
+  "migration": "20260415_immediate_opening_lock_on_booking",
+  "title": "Immediate Opening Lock on Booking",
+  "description": "Mark opening as unavailable immediately when booked to prevent race conditions",
+  "status": "failed",
+  "steps": {
+    "step2": {
+      "status": "failed"
+    },
+    "step4": {
+      "status": "pending_manual_validation"
+    },
+    "step5": {
+      "status": "failed",
+      "error": "You already have a pending booking for this opening"
+    },
+    "step6": {
+      "status": "remediation_needed"
+    }
+  },
+  "logs": [
+    "[2026-04-15T19:47:10.262Z] ================================================================================",
+    "[2026-04-15T19:47:10.262Z] IMMEDIATE OPENING LOCK MIGRATION - 7-STEP EXECUTION",
+    "[2026-04-15T19:47:10.262Z] ================================================================================",
+    "[2026-04-15T19:47:10.262Z] ",
+    "[2026-04-15T19:47:10.262Z] 📝 STEP 1: WRITE DOWN",
+    "[2026-04-15T19:47:10.263Z]   ❌ Error: ENOENT: no such file or directory, open 'C:\\git\\time-craft-scheduler-admin\\scripts\\supabase\\migrations\\20260415_immediate_opening_lock_on_booking.sql'",
+    "[2026-04-15T19:47:10.263Z] ",
+    "[2026-04-15T19:47:10.263Z] 📋 STEP 2: RECORD",
+    "[2026-04-15T19:47:11.063Z]   ⚠️  Could not record: undefined",
+    "[2026-04-15T19:47:11.063Z] ",
+    "[2026-04-15T19:47:11.063Z] ⚙️  STEP 3: MIGRATE",
+    "[2026-04-15T19:47:11.064Z]   ❌ Error: ENOENT: no such file or directory, open 'C:\\git\\time-craft-scheduler-admin\\scripts\\supabase\\migrations\\20260415_immediate_opening_lock_on_booking.sql'",
+    "[2026-04-15T19:47:11.064Z] ",
+    "[2026-04-15T19:47:11.064Z] ✓ STEP 4: VALIDATE",
+    "[2026-04-15T19:47:11.226Z]   🔍 Validation queries to run in Supabase SQL Editor:",
+    "[2026-04-15T19:47:11.226Z]      Query 1: SELECT EXISTS (SELECT 1 FROM information_schema.routines WHERE routine_name = 'book_opening' AND routine_schema = 'public');",
+    "[2026-04-15T19:47:11.227Z]      Expected: true",
+    "[2026-04-15T19:47:11.227Z]      Query 2: SELECT pg_get_functiondef(p.oid) LIKE '%UPDATE openings SET is_available = false%' FROM pg_proc p WHERE p.proname = 'book_opening' AND p.pronamespace = 'public'::regnamespace;",
+    "[2026-04-15T19:47:11.227Z]      Expected: true",
+    "[2026-04-15T19:47:11.227Z] ",
+    "[2026-04-15T19:47:11.227Z] 🧪 STEP 5: TEST",
+    "[2026-04-15T19:47:11.368Z]   Testing booking on opening: deb3695a-e070-41d3-ae43-b96d2373980c",
+    "[2026-04-15T19:47:11.526Z]   ❌ Booking failed: You already have a pending booking for this opening",
+    "[2026-04-15T19:47:11.527Z] ",
+    "[2026-04-15T19:47:11.527Z] 🔧 STEP 6: FIX & REPEAT",
+    "[2026-04-15T19:47:11.527Z]   ⚠️  Some tests failed - would need to re-run STEP 3",
+    "[2026-04-15T19:47:11.527Z] ",
+    "[2026-04-15T19:47:11.527Z] 📊 STEP 7: REPORT",
+    "[2026-04-15T19:47:11.660Z]   ✅ Updated migrations_applied table status = 'applied'"
+  ],
+  "totalSteps": 7,
+  "completedSteps": 3
+}

@@ -179,30 +179,14 @@ export function BookingBrowse() {
     if (!selectedSlot || !user) return;
     setIsBooking(true);
     try {
-      // Create appointment
-      const { error: appointmentError } = await supabase
-        .from('appointments')
-        .insert({
-          opening_id: selectedSlot.id,
-          user_id: user.id,
-          provider_id: selectedSlot.user_id,
-          worker: selectedSlot.worker,
-          service: selectedSlot.service,
-          location: selectedSlot.location,
-          date: selectedSlot.date,
-          start_time: selectedSlot.start_time,
-          end_time: selectedSlot.end_time,
-          duration: selectedSlot.duration,
-          status: 'pending',
+      // Use RPC function for atomic booking with immediate opening lock
+      const { data: appointmentId, error } = await supabase
+        .rpc('book_opening', {
+          _opening_id: selectedSlot.id,
+          _user_id: user.id
         });
-      if (appointmentError) throw appointmentError;
 
-      // Mark opening as unavailable
-      const { error: updateError } = await supabase
-        .from('openings')
-        .update({ is_available: false })
-        .eq('id', selectedSlot.id);
-      if (updateError) throw updateError;
+      if (error) throw error;
 
       setShowBookingDialog(false);
       setSelectedSlot(null);
@@ -210,7 +194,7 @@ export function BookingBrowse() {
       toast.success('Appointment booked!');
     } catch (error) {
       console.error('Booking failed:', error);
-      toast.error('Failed to book appointment');
+      toast.error('Failed to book appointment. Please try again.');
     } finally {
       setIsBooking(false);
     }

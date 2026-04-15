@@ -1,139 +1,112 @@
-#!/usr/bin/env node
+import { createClient } from '@supabase/supabase-js';
+import * as fs from 'fs';
 
-/**
- * Test the book_opening RPC function directly
- */
-
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-const SUPABASE_URL = 'https://dbabjfydcllqbjpolhym.supabase.co';
-const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRiYWJqZnlkY2xscWJqcG9saHltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMwMzk1OTYsImV4cCI6MjA2ODYxNTU5Nn0.SyYn3n9-sA9A2gwoIgY06oHHRg8Lfw1p3XNjV7Dadys';
-
-// Read credentials
-const secretFile = path.join(__dirname, '.secret');
-const secretContent = fs.readFileSync(secretFile, 'utf-8');
-const secrets = {};
-secretContent.split('\n').forEach(line => {
-  const [key, value] = line.split('=');
-  if (key && value) {
-    secrets[key.trim()] = value.trim();
+const envContent = fs.readFileSync('.env', 'utf-8');
+const env = {};
+envContent.split('\n').forEach(line => {
+  const trimmed = line.trim();
+  if (trimmed && !trimmed.startsWith('#')) {
+    const [key, ...rest] = trimmed.split('=');
+    if (key && rest.length > 0) {
+      let value = rest.join('=').trim();
+      value = value.replace(/^"(.*)"$/, '$1');
+      env[key] = value;
+    }
   }
 });
 
-console.log('🔧 RPC Testing - book_opening');
-console.log('==============================\n');
-
-// Get first available opening
-async function getFirstOpening() {
-  const url = `${SUPABASE_URL}/rest/v1/openings?is_available=eq.true&select=id&limit=1`;
-  const response = await fetch(url, {
-    headers: {
-      'apikey': ANON_KEY,
-      'Content-Type': 'application/json',
+const secretContent = fs.readFileSync('.secret', 'utf-8');
+const secret = {};
+secretContent.split('\n').forEach(line => {
+  const trimmed = line.trim();
+  if (trimmed && !trimmed.startsWith('=')) {
+    const [key, ...rest] = trimmed.split('=');
+    if (key && rest.length > 0) {
+      secret[key] = rest.join('=');
     }
-  });
-  const data = await response.json();
-  return data.length > 0 ? data[0].id : null;
+  }
+});
+
+const SUPABASE_URL = env.VITE_SUPABASE_URL;
+const SERVICE_KEY = secret.SUPABASE_KEY;
+const TESTER1_EMAIL = secret.TESTER1_EMAIL;
+const TESTER1_PASSWORD = secret.TESTER1_PASSWORD1;
+
+const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
+
+console.log('🧪 Testing book_opening() RPC with immediate lock...\n');
+
+// Get an available opening
+const { data: openings } = await supabase
+  .from('openings')
+  .select('*')
+  .eq('is_available', true)
+  .limit(1);
+
+if (!openings || openings.length === 0) {
+  console.log('❌ No available openings found');
+  process.exit(1);
 }
 
-// Get a test user ID (we need one that exists)
-async function getTestUserId() {
-  // Try to get any user from profiles
-  const url = `${SUPABASE_URL}/rest/v1/profiles?select=id&limit=1`;
-  const response = await fetch(url, {
-    headers: {
-      'apikey': ANON_KEY,
-      'Content-Type': 'application/json',
-    }
-  });
-  const data = await response.json();
-  if (data.length > 0) {
-    return data[0].id;
-  }
-  
-  // If no profiles, create a fake UUID for testing
-  // (will fail with auth error if RLS is checking)
-  return '00000000-0000-0000-0000-000000000000';
+const opening = openings[0];
+console.log(`Opening to test: ${opening.id}`);
+console.log(`  is_available before: ${opening.is_available}\n`);
+
+// Sign in as tester 1 to get user ID
+const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+  email: TESTER1_EMAIL,
+  password: TESTER1_PASSWORD
+});
+
+if (authError) {
+  console.log('❌ Sign in failed:', authError.message);
+  process.exit(1);
 }
 
-// Test RPC function
-async function testRPC() {
-  console.log('📞 STEP 1: Get test data');
-  console.log('---');
-  
-  const openingId = await getFirstOpening();
-  const userId = await getTestUserId();
-  
-  console.log(`Opening ID: ${openingId}`);
-  console.log(`User ID: ${userId}`);
-  
-  if (!openingId) {
-    console.log('❌ No openings found!');
-    return;
-  }
-  
-  console.log('\n📞 STEP 2: Call book_opening RPC');
-  console.log('---');
-  
-  const url = `${SUPABASE_URL}/rest/v1/rpc/book_opening`;
-  const body = {
-    _opening_id: openingId,
+const userId = authData.user.id;
+console.log(`Tester 1 user ID: ${userId}\n`);
+
+// Call book_opening RPC
+console.log('📞 Calling book_opening() RPC...');
+const { data: appointmentId, error: bookError } = await supabase
+  .rpc('book_opening', {
+    _opening_id: opening.id,
     _user_id: userId
-  };
+  });
+
+if (bookError) {
+  console.log(`❌ RPC Error: ${bookError.message}`);
+  process.exit(1);
+}
+
+console.log(`✅ Booking successful! Appointment ID: ${appointmentId}\n`);
+
+// Check opening status after booking
+const { data: updatedOpening } = await supabase
+  .from('openings')
+  .select('*')
+  .eq('id', opening.id);
+
+console.log('📊 Opening status after booking:');
+if (updatedOpening && updatedOpening.length > 0) {
+  const o = updatedOpening[0];
+  console.log(`   is_available: ${o.is_available} (should be false)`);
   
-  console.log(`Request: ${JSON.stringify(body, null, 2)}`);
-  console.log(`Headers: apikey = ${ANON_KEY.substring(0, 20)}...`);
-  
-  try {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'apikey': ANON_KEY,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body)
-    });
-    
-    console.log(`\nStatus: ${response.status} ${response.statusText}`);
-    
-    const responseText = await response.text();
-    console.log(`Response body: ${responseText}`);
-    
-    // Try to parse as JSON
-    try {
-      const data = JSON.parse(responseText);
-      console.log(`\nParsed response: ${JSON.stringify(data, null, 2)}`);
-      
-      if (response.ok) {
-        console.log('\n✅ RPC call succeeded!');
-        console.log(`Appointment ID: ${data}`);
-      } else {
-        console.log('\n❌ RPC call failed!');
-        if (data.code) console.log(`Code: ${data.code}`);
-        if (data.message) console.log(`Message: ${data.message}`);
-        if (data.hint) console.log(`Hint: ${data.hint}`);
-        if (data.details) console.log(`Details: ${data.details}`);
-      }
-    } catch {
-      if (response.ok) {
-        console.log(`\n✅ RPC call succeeded! Result: ${responseText}`);
-      } else {
-        console.log(`\n❌ Could not parse response as JSON`);
-      }
-    }
-  } catch (error) {
-    console.error('❌ Error:', error.message);
+  if (o.is_available === false) {
+    console.log('\n✅ SUCCESS! Opening is now marked as unavailable');
+  } else {
+    console.log('\n❌ PROBLEM: Opening is still available!');
   }
 }
 
-(async () => {
-  try {
-    await testRPC();
-  } catch (error) {
-    console.error('Fatal error:', error);
-  }
-})();
+// Check appointment was created
+const { data: appointments } = await supabase
+  .from('appointments')
+  .select('*')
+  .eq('opening_id', opening.id)
+  .eq('user_id', userId);
+
+console.log(`\n📌 Appointments for this opening: ${appointments?.length || 0}`);
+if (appointments && appointments.length > 0) {
+  console.log(`   Status: ${appointments[0].status}`);
+}
