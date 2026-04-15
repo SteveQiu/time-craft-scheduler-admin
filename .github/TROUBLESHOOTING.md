@@ -4,6 +4,37 @@ Quick solutions to problems you might encounter. If not here, follow the 6-step 
 
 ---
 
+## Authentication Issues
+
+### ❌ "Sign In button doesn't work / I can't sign back in after signing out"
+
+**Symptoms:** Click "Sign In" button in sidebar → Nothing happens
+
+**Root Cause:** Sign In button had no `onClick` handler, so clicking it did nothing
+
+**Why it happens:** Component was missing the navigation logic to go to `/auth` page
+
+**Fix:** Already fixed in the codebase! The Sign In button now:
+1. Detects when user is not authenticated
+2. Shows a "Sign In" button in the sidebar
+3. Clicking it navigates to `/auth` route
+4. User sees full authentication form with email/password and Google OAuth options
+
+**Verification:**
+- Sign In button is visible when not authenticated ✅
+- Clicking Sign In button navigates to `/auth` ✅
+- Auth page shows email/password form ✅
+- Can sign in with email/password ✅
+
+**If still not working:**
+- Clear browser cache: `Ctrl+Shift+Delete` or `Cmd+Shift+Delete`
+- Make sure you're signed out: Check sidebar for "Sign Out" button (should not appear)
+- Refresh the page: `F5`
+- Check console for errors: `F12` → Console tab
+- Document any errors and create an issue
+
+---
+
 ## Booking Issues
 
 ### ❌ "Failed to book appointment. Please try again."
