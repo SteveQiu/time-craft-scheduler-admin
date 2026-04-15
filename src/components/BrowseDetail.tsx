@@ -256,6 +256,64 @@ export function BrowseDetail({
           </Card>
         )}
       </div>
+
+      {/* Booking Confirmation Dialog */}
+      <AlertDialog open={showBookingDialog} onOpenChange={setShowBookingDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Booking</AlertDialogTitle>
+            <AlertDialogDescription>
+              {selectedSlot && (
+                <div className="space-y-2 mt-2">
+                  <div><strong>Service:</strong> {selectedSlot.service}</div>
+                  <div><strong>Worker:</strong> {selectedSlot.worker}</div>
+                  <div><strong>Date:</strong> {new Date(selectedSlot.date).toLocaleDateString()}</div>
+                  <div><strong>Time:</strong> {selectedSlot.start_time} - {selectedSlot.end_time}</div>
+                  <div><strong>Duration:</strong> {selectedSlot.duration}h</div>
+                  <div><strong>Rate:</strong> ${selectedSlot.hourly_rate}/h</div>
+                </div>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <Button variant="outline" onClick={() => setShowBookingDialog(false)}>
+              Cancel
+            </Button>
+            <AlertDialogAction 
+              onClick={async () => {
+                if (!selectedSlot) return;
+                setIsBooking(true);
+                try {
+                  // Call the book_opening RPC function
+                  const { data, error } = await supabase.rpc('book_opening', {
+                    _opening_id: selectedSlot.id,
+                    _user_id: (await supabase.auth.getUser()).data.user?.id
+                  });
+                  
+                  if (error) throw error;
+                  
+                  setShowBookingDialog(false);
+                  setSelectedSlot(null);
+                  toast.success('Appointment booked successfully!');
+                  
+                  // Refresh the page to show updated availability
+                  setTimeout(() => window.location.reload(), 1000);
+                } catch (error) {
+                  console.error('Booking failed:', error);
+                  toast.error('Failed to book appointment. Please try again.');
+                } finally {
+                  setIsBooking(false);
+                }
+              }}
+              disabled={isBooking}
+            >
+              {isBooking && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isBooking ? 'Booking...' : 'Confirm Booking'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
+

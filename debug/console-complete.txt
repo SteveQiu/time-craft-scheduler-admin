@@ -1,0 +1,63 @@
+[debug] [vite] connecting...
+[debug] [vite] connected.
+[info] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold
+[log] Auth state changed: INITIAL_SESSION null
+[log] Initial session check: null
+[error] Warning: validateDOMNesting(...): %s cannot appear as a descendant of <%s>.%s <div> p 
+    at div
+    at div
+    at p
+    at http://localhost:8080/node_modules/.vite/deps/chunk-S5HWJMCF.js?v=94bcb68a:41:13
+    at http://localhost:8080/node_modules/.vite/deps/chunk-U4U3NBM2.js?v=94bcb68a:282:13
+    at http://localhost:8080/node_modules/.vite/deps/@radix-ui_react-alert-dialog.js?v=94bcb68a:131:11
+    at _c7 (http://localhost:8080/src/components/ui/alert-dialog.tsx:133:72)
+    at div
+    at AlertDialogHeader (http://localhost:8080/src/components/ui/alert-dialog.tsx:81:30)
+    at Slottable (http://localhost:8080/node_modules/.vite/deps/chunk-5HD3E6E6.js?v=94bcb68a:64:20)
+    at div
+    at http://localhost:8080/node_modules/.vite/deps/chunk-S5HWJMCF.js?v=94bcb68a:41:13
+    at http://localhost:8080/node_modules/.vite/deps/chunk-IXMTDGOE.js?v=94bcb68a:61:7
+    at http://localhost:8080/node_modules/.vite/deps/chunk-5HD3E6E6.js?v=94bcb68a:52:11
+    at http://localhost:8080/node_modules/.vite/deps/chunk-5HD3E6E6.js?v=94bcb68a:33:11
+    at http://localhost:8080/node_modules/.vite/deps/chunk-S5HWJMCF.js?v=94bcb68a:41:13
+    at http://localhost:8080/node_modules/.vite/deps/chunk-KTZ5DRLF.js?v=94bcb68a:29:5
+    at http://localhost:8080/node_modules/.vite/deps/chunk-U4U3NBM2.js?v=94bcb68a:234:13
+    at http://localhost:8080/node_modules/.vite/deps/chunk-U4U3NBM2.js?v=94bcb68a:157:58
+    at Presence (http://localhost:8080/node_modules/.vite/deps/chunk-GE5IRSS4.js?v=94bcb68a:24:11)
+    at http://localhost:8080/node_modules/.vite/deps/chunk-U4U3NBM2.js?v=94bcb68a:148:64
+    at Provider (http://localhost:8080/node_modules/.vite/deps/chunk-VK7ZPAS3.js?v=94bcb68a:38:15)
+    at Provider (http://localhost:8080/node_modules/.vite/deps/chunk-VK7ZPAS3.js?v=94bcb68a:17:13)
+    at http://localhost:8080/node_modules/.vite/deps/@radix-ui_react-alert-dialog.js?v=94bcb68a:84:13
+    at http://localhost:8080/node_modules/.vite/deps/chunk-5HD3E6E6.js?v=94bcb68a:52:11
+    at http://localhost:8080/node_modules/.vite/deps/chunk-5HD3E6E6.js?v=94bcb68a:33:11
+    at http://localhost:8080/node_modules/.vite/deps/chunk-S5HWJMCF.js?v=94bcb68a:41:13
+    at http://localhost:8080/node_modules/.vite/deps/chunk-IXMTDGOE.js?v=94bcb68a:260:22
+    at Presence (http://localhost:8080/node_modules/.vite/deps/chunk-GE5IRSS4.js?v=94bcb68a:24:11)
+    at Provider (http://localhost:8080/node_modules/.vite/deps/chunk-VK7ZPAS3.js?v=94bcb68a:38:15)
+    at DialogPortal (http://localhost:8080/node_modules/.vite/deps/chunk-U4U3NBM2.js?v=94bcb68a:111:11)
+    at AlertDialogPortal (http://localhost:8080/node_modules/.vite/deps/@radix-ui_react-alert-dialog.js?v=94bcb68a:66:11)
+    at _c1 (http://localhost:8080/src/components/ui/alert-dialog.tsx:35:68)
+    at Provider (http://localhost:8080/node_modules/.vite/deps/chunk-VK7ZPAS3.js?v=94bcb68a:38:15)
+    at Dialog (http://localhost:8080/node_modules/.vite/deps/chunk-U4U3NBM2.js?v=94bcb68a:52:5)
+    at AlertDialog (http://localhost:8080/node_modules/.vite/deps/@radix-ui_react-alert-dialog.js?v=94bcb68a:50:11)
+    at div
+    at BrowseDetail (http://localhost:8080/src/components/BrowseDetail.tsx?t=1776260356328:19:32)
+    at BookingBrowse (http://localhost:8080/src/components/BookingBrowse.tsx?t=1776260356328:24:22)
+    at RenderedRoute (http://localhost:8080/node_modules/.vite/deps/react-router-dom.js?v=94bcb68a:4069:5)
+    at Routes (http://localhost:8080/node_modules/.vite/deps/react-router-dom.js?v=94bcb68a:4508:5)
+    at main
+    at div
+    at PanelWithForwardedRef (http://localhost:8080/node_modules/.vite/deps/react-resizable-panels.js?v=94bcb68a:40:3)
+    at forwardRef(Panel)
+    at div
+    at PanelGroupWithForwardedRef (http://localhost:8080/node_modules/.vite/deps/react-resizable-panels.js?v=94bcb68a:1423:3)
+    at forwardRef(PanelGroup)
+    at Router (http://localhost:8080/node_modules/.vite/deps/react-router-dom.js?v=94bcb68a:4451:15)
+    at BrowserRouter (http://localhost:8080/node_modules/.vite/deps/react-router-dom.js?v=94bcb68a:5196:5)
+    at Provider (http://localhost:8080/node_modules/.vite/deps/chunk-VK7ZPAS3.js?v=94bcb68a:38:15)
+    at TooltipProvider (http://localhost:8080/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=94bcb68a:63:5)
+    at AuthProvider (http://localhost:8080/src/hooks/useAuth.tsx:14:32)
+    at QueryClientProvider (http://localhost:8080/node_modules/.vite/deps/@tanstack_react-query.js?v=94bcb68a:2794:3)
+    at App
+[error] Failed to load resource: the server responded with a status of 404 ()
+[error] Booking failed: {code: PGRST202, details: Searched for the function public.book_opening with…r, but no matches were found in the schema cache., hint: Perhaps you meant to call the function public.book_opening(_opening_id, _user_id), message: Could not find the function public.book_opening(_opening_id) in the schema cache}

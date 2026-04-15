@@ -1,0 +1,5 @@
+[DEBUG] [vite] connecting...
+[DEBUG] [vite] connected.
+[INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold
+[LOG] Auth state changed: INITIAL_SESSION null
+[LOG] Initial session check: null
