@@ -1,0 +1,16 @@
+{
+  "migrationName": "Allow customers to reschedule confirmed appointments",
+  "migrationFile": "20260415_allow_modify_confirmed_appointments.sql",
+  "status": "failed",
+  "timestamp": "2026-04-15T18:11:31.940Z",
+  "totalLogs": 7,
+  "logs": [
+    "[2026-04-15T18:11:31.178Z] → Step 1: WRITE DOWN - Validating migration file",
+    "[2026-04-15T18:11:31.178Z] ✓ Migration file read: 20260415_allow_modify_confirmed_appointments.sql",
+    "[2026-04-15T18:11:31.178Z] ℹ SQL size: 2096 bytes",
+    "[2026-04-15T18:11:31.179Z] → Step 2: RECORD - Tracking migration in database",
+    "[2026-04-15T18:11:31.940Z] ✗ Recording failed: relation \"public.migrations_applied\" does not exist",
+    "[2026-04-15T18:11:31.940Z] ✗ Fatal error: relation \"public.migrations_applied\" does not exist",
+    "[2026-04-15T18:11:31.940Z] → Step 6: REPORT - Documenting results"
+  ]
+}
