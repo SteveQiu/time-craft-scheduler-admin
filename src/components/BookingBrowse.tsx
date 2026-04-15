@@ -64,6 +64,7 @@ export function BookingBrowse() {
   } = useQuery({
     queryKey: ['browse-openings', today],
     queryFn: async () => {
+      console.log('[Browse] Fetching openings for today:', today);
       const { data, error } = await supabase
         .from('openings')
         .select('*')
@@ -73,6 +74,8 @@ export function BookingBrowse() {
         .order('start_time', { ascending: true });
 
       if (error) throw error;
+
+      console.log('[Browse] Fetched', data?.length, 'openings');
 
       // Filter out openings that have confirmed appointments (not pending)
       const openingIds = (data || []).map((o: any) => o.id);
@@ -87,6 +90,8 @@ export function BookingBrowse() {
       }
 
       const availableData = (data || []).filter((o: any) => !confirmedSet.has(o.id));  // ← Use confirmed, not pending
+
+      console.log('[Browse] After filtering:', availableData.length, 'available openings');
 
       // Fetch provider names via RPC (safe, only returns public fields)
       const providerIds = [...new Set(availableData.map((o: any) => o.user_id))];
@@ -154,6 +159,8 @@ export function BookingBrowse() {
       b.opening_count - a.opening_count
     );
   }, [allOpenings]);
+
+  console.log('[Browse] Component render - openingsLoading:', openingsLoading, 'allOpenings:', allOpenings?.length || 0, 'providers:', providers.length);
 
   // Get openings for selected provider
   const selectedProviderOpenings = providerId 
