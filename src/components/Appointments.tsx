@@ -360,10 +360,18 @@ export function Appointments() {
                   </Button>
                 )}
                 {appointment.status === 'pending' && !isOrgView && (
-                  <Button variant="outline" size="sm" onClick={() => handleCancel(appointment.id)}>
-                    <X className="h-3 w-3 mr-1" />
-                    Cancel
-                  </Button>
+                  <>
+                    <ModifyAppointmentDialog
+                      appointmentId={appointment.id}
+                      currentOpeningId={appointment.opening_id}
+                      userId={user!.id}
+                      providerName={appointment.worker}
+                    />
+                    <Button variant="outline" size="sm" onClick={() => handleCancel(appointment.id)}>
+                      <X className="h-3 w-3 mr-1" />
+                      Cancel
+                    </Button>
+                  </>
                 )}
                 {canManage && appointment.status === 'confirmed' && (
                   <Button variant="outline" size="sm" onClick={() => handleCancel(appointment.id)}>
