@@ -308,6 +308,15 @@ export function BookingBrowse() {
   // Openings View for Selected Provider
   const currentProvider = providers.find(p => p.user_id === providerId);
 
+  // If provider ID is set but provider/openings not loaded yet, show loading
+  if (providerId && !currentProvider && selectedProviderOpenings.length === 0) {
+    return (
+      <div className="flex justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
   // Group openings by service
   const serviceMap = React.useMemo(() => {
     const map = new Map<string, OpeningWithProfile[]>();
