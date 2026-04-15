@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Search, Filter, Calendar, Clock, User, MapPin, Check, X, CheckCircle, ChevronDown, ChevronUp, Loader2, Mail, Phone, Users } from 'lucide-react';
 import { useOrgWorkers } from '@/hooks/useOrgWorkers';
 import { toast } from 'sonner';
+import { ModifyAppointmentDialog } from './ModifyAppointmentDialog';
 
 interface Appointment {
   id: string;
@@ -359,10 +360,18 @@ export function Appointments() {
                   </Button>
                 )}
                 {appointment.status === 'pending' && !isOrgView && (
-                  <Button variant="outline" size="sm" onClick={() => handleCancel(appointment.id)}>
-                    <X className="h-3 w-3 mr-1" />
-                    Cancel
-                  </Button>
+                  <>
+                    <ModifyAppointmentDialog
+                      appointmentId={appointment.id}
+                      currentOpeningId={appointment.opening_id}
+                      userId={user!.id}
+                      providerName={appointment.worker}
+                    />
+                    <Button variant="outline" size="sm" onClick={() => handleCancel(appointment.id)}>
+                      <X className="h-3 w-3 mr-1" />
+                      Cancel
+                    </Button>
+                  </>
                 )}
                 {canManage && appointment.status === 'confirmed' && (
                   <Button variant="outline" size="sm" onClick={() => handleCancel(appointment.id)}>

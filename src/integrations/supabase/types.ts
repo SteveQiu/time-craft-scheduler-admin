@@ -576,6 +576,14 @@ export type Database = {
         Args: { _org_id: string; _user_id: string }
         Returns: boolean
       }
+      modify_appointment: {
+        Args: {
+          _appointment_id: string
+          _caller_id: string
+          _new_opening_id: string
+        }
+        Returns: string
+      }
     }
     Enums: {
       app_role: "USER" | "ORGANIZATION" | "INTERNAL_DEV"
