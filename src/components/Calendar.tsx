@@ -123,7 +123,11 @@ export function Calendar() {
     location: '',
     multipleSlots: false,
     interval: 1,
-    isFree: false
+    isFree: false,
+    multipleDates: false,
+    dateRangeStart: '',
+    dateRangeEnd: '',
+    weekdays: new Set([0, 1, 2, 3, 4, 5, 6]) // Sun-Sat, all selected by default
   });
 
   // Auto-set defaults when profile/workers load
@@ -210,6 +214,26 @@ export function Calendar() {
     if (newOpening.multipleSlots && !newOpening.endTime) {
       newErrors.endTime = 'End time is required for multiple slots';
     }
+
+    if (newOpening.multipleDates && !newOpening.dateRangeStart) {
+      newErrors.dateRangeStart = 'Start date is required';
+    }
+
+    if (newOpening.multipleDates && !newOpening.dateRangeEnd) {
+      newErrors.dateRangeEnd = 'End date is required';
+    }
+
+    if (newOpening.multipleDates && newOpening.dateRangeStart && newOpening.dateRangeEnd) {
+      const startDate = new Date(newOpening.dateRangeStart);
+      const endDate = new Date(newOpening.dateRangeEnd);
+      if (startDate > endDate) {
+        newErrors.dateRangeEnd = 'End date must be after start date';
+      }
+    }
+
+    if (newOpening.multipleDates && newOpening.weekdays.size === 0) {
+      newErrors.weekdays = 'At least one day must be selected';
+    }
     
     // Validate time format
     const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
@@ -293,9 +317,83 @@ export function Calendar() {
     setLoading(true);
     const workerName = isOrgMode ? newOpening.worker : selfWorkerName;
     try {
-        const dateStr = selectedDate.toISOString().split('T')[0];
-        if (newOpening.multipleSlots && newOpening.endTime) {
-          // Create multiple slots with intervals
+        if (newOpening.multipleDates && newOpening.dateRangeStart && newOpening.dateRangeEnd) {
+          // Create multiple openings for selected dates and weekdays
+          // Can also combine with multiple time slots
+          const newOpenings = [];
+          const rateValue = newOpening.isFree ? 0 : Number(getWorkerRate(workerName));
+          
+          // Parse dates properly from YYYY-MM-DD format (avoiding timezone issues)
+          const [startYear, startMonth, startDay] = newOpening.dateRangeStart.split('-').map(Number);
+          const [endYear, endMonth, endDay] = newOpening.dateRangeEnd.split('-').map(Number);
+          const startDate = new Date(startYear, startMonth - 1, startDay);
+          const endDate = new Date(endYear, endMonth - 1, endDay);
+          
+          // Iterate through date range
+          const current = new Date(startDate);
+          while (current <= endDate) {
+            const dayOfWeek = current.getDay();
+            if (newOpening.weekdays.has(dayOfWeek)) {
+              // Format date as YYYY-MM-DD without timezone conversion
+              const dateStr = `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}-${String(current.getDate()).padStart(2, '0')}`;
+              
+              // If also using multiple time slots, create all time slots for this date
+              if (newOpening.multipleSlots && newOpening.endTime) {
+                const start = parseTime(newOpening.startTime);
+                const end = parseTime(newOpening.endTime);
+                let timeSlot = start;
+                while (timeSlot < end) {
+                  const startTimeStr = formatTime(timeSlot);
+                  const endTimeStr = calculateEndTime(startTimeStr, newOpening.interval);
+                  
+                  newOpenings.push({
+                    user_id: user.id,
+                    date: dateStr,
+                    start_time: startTimeStr,
+                    end_time: endTimeStr,
+                    duration: newOpening.interval,
+                    worker: workerName,
+                    service: newOpening.service,
+                    location: newOpening.location || null,
+                    is_available: true,
+                    hourly_rate: rateValue
+                  });
+                  timeSlot += newOpening.interval * 60; // Add interval in minutes
+                }
+              } else {
+                // Single time slot per date
+                const startTimeStr = newOpening.startTime;
+                const endTimeStr = calculateEndTime(startTimeStr, newOpening.duration);
+                
+                newOpenings.push({
+                  user_id: user.id,
+                  date: dateStr,
+                  start_time: startTimeStr,
+                  end_time: endTimeStr,
+                  duration: newOpening.duration,
+                  worker: workerName,
+                  service: newOpening.service,
+                  location: newOpening.location || null,
+                  is_available: true,
+                  hourly_rate: rateValue
+                });
+              }
+            }
+            current.setDate(current.getDate() + 1);
+          }
+          
+          if (newOpenings.length > 0) {
+            const { error } = await supabase
+              .from('openings')
+              .insert(newOpenings);
+            if (error) throw error;
+            toast.success(`${newOpenings.length} openings added successfully`);
+          } else {
+            toast.warning('No dates found matching the selected criteria');
+          }
+        } else if (newOpening.multipleSlots && newOpening.endTime) {
+          // Create multiple slots with intervals for a single date
+          const dateStr = selectedDate.toISOString().split('T')[0];
           const newOpenings = [];
           const start = parseTime(newOpening.startTime);
           const end = parseTime(newOpening.endTime);
@@ -325,6 +423,7 @@ export function Calendar() {
           toast.success(`${newOpenings.length} openings added successfully`);
         } else {
           // Create single slot
+          const dateStr = selectedDate.toISOString().split('T')[0];
           const rateValue = newOpening.isFree ? 0 : Number(getWorkerRate(workerName));
           const opening = {
             user_id: user.id,
@@ -373,7 +472,11 @@ export function Calendar() {
       location: '',
       multipleSlots: false,
       interval: 1,
-      isFree: false
+      isFree: false,
+      multipleDates: false,
+      dateRangeStart: '',
+      dateRangeEnd: '',
+      weekdays: new Set([0, 1, 2, 3, 4, 5, 6])
     });
     setErrors({});
   };
@@ -647,6 +750,16 @@ export function Calendar() {
               <Label>Create multiple time slots</Label>
             </div>
 
+            <div className="flex items-center space-x-2">
+              <Switch 
+                checked={newOpening.multipleDates} 
+                onCheckedChange={(checked) => {
+                  setNewOpening({...newOpening, multipleDates: checked});
+                }}
+              />
+              <Label>Create multiple date slots</Label>
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="startTime">Start Time</Label>
               <Select 
@@ -735,6 +848,64 @@ export function Calendar() {
                 </Select>
                 {errors.duration && <p className="text-sm text-destructive">{errors.duration}</p>}
               </div>
+            )}
+
+            {newOpening.multipleDates && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="dateRangeStart">Start Date</Label>
+                  <Input
+                    type="date"
+                    value={newOpening.dateRangeStart}
+                    onChange={(e) => {
+                      setNewOpening({...newOpening, dateRangeStart: e.target.value});
+                      setErrors(prev => ({ ...prev, dateRangeStart: '' }));
+                    }}
+                  />
+                  {errors.dateRangeStart && <p className="text-sm text-destructive">{errors.dateRangeStart}</p>}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="dateRangeEnd">End Date</Label>
+                  <Input
+                    type="date"
+                    value={newOpening.dateRangeEnd}
+                    onChange={(e) => {
+                      setNewOpening({...newOpening, dateRangeEnd: e.target.value});
+                      setErrors(prev => ({ ...prev, dateRangeEnd: '' }));
+                    }}
+                  />
+                  {errors.dateRangeEnd && <p className="text-sm text-destructive">{errors.dateRangeEnd}</p>}
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Days of Week</Label>
+                  <div className="grid grid-cols-4 gap-2">
+                    {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, index) => (
+                      <button
+                        key={index}
+                        type="button"
+                        onClick={() => {
+                          const newWeekdays = new Set(newOpening.weekdays);
+                          if (newWeekdays.has(index)) {
+                            newWeekdays.delete(index);
+                          } else {
+                            newWeekdays.add(index);
+                          }
+                          setNewOpening({...newOpening, weekdays: newWeekdays});
+                        }}
+                        className={`px-2 py-1 rounded text-sm font-medium transition-colors ${
+                          newOpening.weekdays.has(index)
+                            ? 'bg-primary text-primary-foreground'
+                            : 'bg-secondary text-secondary-foreground hover:bg-accent'
+                        }`}
+                      >
+                        {day}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </>
             )}
 
             {isOrgMode ? (
