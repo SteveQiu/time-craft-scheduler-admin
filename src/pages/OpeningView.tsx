@@ -145,9 +145,9 @@ export function OpeningView() {
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
-        <Button variant="ghost" onClick={() => navigate('/browse')}>
+        <Button variant="ghost" onClick={() => navigate(-1)}>
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Browse
+          Back
         </Button>
         <Button variant="outline" onClick={handleShare}>
           {copied ? <Check className="h-4 w-4 mr-2" /> : <Share2 className="h-4 w-4 mr-2" />}

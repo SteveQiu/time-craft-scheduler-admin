@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -8,7 +8,7 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Input } from './ui/input';
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from './ui/alert-dialog';
-import { Calendar as CalendarIcon, Clock, User, MapPin, Search, Filter, Loader2, Share2, ExternalLink } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, User, MapPin, Search, Filter, Loader2, Share2, ExternalLink, ChevronRight, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface OpeningWithProfile {
@@ -28,19 +28,29 @@ interface OpeningWithProfile {
   provider_slug: string | null;
 }
 
+interface ProviderAccount {
+  user_id: string;
+  provider_name: string;
+  provider_slug: string | null;
+  opening_count: number;
+  services: string[];
+  workers: string[];
+}
+
 export function BookingBrowse() {
   const navigate = useNavigate();
+  const { providerId } = useParams<{ providerId?: string }>();
   const queryClient = useQueryClient();
   const { user } = useAuth();
-  const [selectedService, setSelectedService] = useState<string>('');
-  const [selectedLocation, setSelectedLocation] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [showBookingDialog, setShowBookingDialog] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<OpeningWithProfile | null>(null);
+  const [isBooking, setIsBooking] = useState(false);
 
   const today = new Date().toISOString().split('T')[0];
 
-  const { data: openings = [], isLoading } = useQuery({
+  // Fetch all openings
+  const { data: allOpenings = [], isLoading: openingsLoading } = useQuery({
     queryKey: ['browse-openings', today],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -97,28 +107,55 @@ export function BookingBrowse() {
     },
   });
 
-  const uniqueServices = [...new Set(openings.map(o => o.service))];
-  const uniqueLocations = [...new Set(openings.map(o => o.location).filter(Boolean))] as string[];
+  // Group openings by provider
+  const providers: ProviderAccount[] = React.useMemo(() => {
+    const providerMap = new Map<string, ProviderAccount>();
+    
+    allOpenings.forEach(opening => {
+      if (!providerMap.has(opening.user_id)) {
+        providerMap.set(opening.user_id, {
+          user_id: opening.user_id,
+          provider_name: opening.provider_name || 'Organization',
+          provider_slug: opening.provider_slug || null,
+          opening_count: 0,
+          services: [],
+          workers: [],
+        });
+      }
+      
+      const provider = providerMap.get(opening.user_id)!;
+      provider.opening_count += 1;
+      
+      if (!provider.services.includes(opening.service)) {
+        provider.services.push(opening.service);
+      }
+      if (!provider.workers.includes(opening.worker)) {
+        provider.workers.push(opening.worker);
+      }
+    });
 
-  const filteredSlots = openings.filter(slot => {
-    const matchesSearch = searchTerm === '' ||
-      slot.worker.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      slot.service.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (slot.provider_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (slot.location || '').toLowerCase().includes(searchTerm.toLowerCase());
+    return Array.from(providerMap.values()).sort((a, b) => 
+      b.opening_count - a.opening_count
+    );
+  }, [allOpenings]);
 
-    const matchesService = selectedService === '' || slot.service === selectedService;
-    const matchesLocation = selectedLocation === '' || slot.location === selectedLocation;
+  // Get openings for selected provider
+  const selectedProviderOpenings = providerId 
+    ? allOpenings.filter(o => o.user_id === providerId)
+    : [];
 
-    return matchesSearch && matchesService && matchesLocation;
-  });
+  // Filter providers by search term
+  const filteredProviders = providers.filter(provider =>
+    searchTerm === '' ||
+    provider.provider_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    provider.services.some(s => s.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    provider.workers.some(w => w.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
 
   const handleBooking = (slot: OpeningWithProfile) => {
     setSelectedSlot(slot);
     setShowBookingDialog(true);
   };
-
-  const [isBooking, setIsBooking] = useState(false);
 
   const confirmBooking = async () => {
     if (!selectedSlot || !user) return;
@@ -152,86 +189,148 @@ export function BookingBrowse() {
       setShowBookingDialog(false);
       setSelectedSlot(null);
       queryClient.invalidateQueries({ queryKey: ['browse-openings'] });
+      toast.success('Appointment booked!');
     } catch (error) {
       console.error('Booking failed:', error);
+      toast.error('Failed to book appointment');
     } finally {
       setIsBooking(false);
     }
   };
 
+  if (openingsLoading) {
+    return (
+      <div className="flex justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  // Provider List View
+  if (!providerId) {
+    return (
+      <div className="p-6 space-y-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-3xl font-bold text-foreground">Browse & Book</h2>
+          <div className="text-sm text-muted-foreground">
+            {providers.length} providers · {allOpenings.length} available slots
+          </div>
+        </div>
+
+        {/* Search */}
+        <Card className="shadow-soft border-card-border">
+          <CardContent className="pt-6">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search providers, services, workers..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Providers Grid */}
+        {filteredProviders.length === 0 ? (
+          <Card className="shadow-soft border-card-border">
+            <CardContent className="text-center py-12">
+              <CalendarIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-foreground mb-2">No providers found</h3>
+              <p className="text-muted-foreground">Try adjusting your search or check back later.</p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredProviders.map((provider) => (
+              <Card 
+                key={provider.user_id} 
+                className="shadow-soft border-card-border hover:shadow-lg transition-all cursor-pointer"
+                onClick={() => navigate(`/browse/${provider.user_id}`)}
+              >
+                <CardHeader>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3 flex-1">
+                      <div
+                        className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium"
+                      >
+                        {provider.provider_name.substring(0, 2).toUpperCase()}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-foreground truncate hover:underline">
+                          {provider.provider_name}
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          {provider.opening_count} available slots
+                        </p>
+                      </div>
+                    </div>
+                    <ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground mb-2">Services</p>
+                    <div className="flex flex-wrap gap-1">
+                      {provider.services.slice(0, 3).map(service => (
+                        <Badge key={service} variant="secondary" className="text-xs">
+                          {service}
+                        </Badge>
+                      ))}
+                      {provider.services.length > 3 && (
+                        <Badge variant="secondary" className="text-xs">
+                          +{provider.services.length - 3}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground mb-2">Workers</p>
+                    <p className="text-sm text-foreground truncate">
+                      {provider.workers.join(', ')}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Openings View for Selected Provider
+  const currentProvider = providers.find(p => p.user_id === providerId);
+
   return (
     <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold text-foreground">Browse & Book Appointments</h2>
-        <div className="text-sm text-muted-foreground">
-          {filteredSlots.length} available slots
+      <div className="flex items-center gap-3">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => navigate('/browse')}
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
+        <div>
+          <h2 className="text-3xl font-bold text-foreground">{currentProvider?.provider_name}</h2>
+          <p className="text-sm text-muted-foreground">{selectedProviderOpenings.length} available appointments</p>
         </div>
       </div>
 
-      {/* Search and Filters */}
-      <Card className="shadow-soft border-card-border">
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Filter className="h-5 w-5" />
-            <span>Search & Filter</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Search</label>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search workers, services, locations..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Service</label>
-              <select
-                value={selectedService}
-                onChange={(e) => setSelectedService(e.target.value)}
-                className="w-full h-10 px-3 py-2 text-sm bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring"
-              >
-                <option value="">All Services</option>
-                {uniqueServices.map(service => (
-                  <option key={service} value={service}>{service}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Location</label>
-              <select
-                value={selectedLocation}
-                onChange={(e) => setSelectedLocation(e.target.value)}
-                className="w-full h-10 px-3 py-2 text-sm bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring"
-              >
-                <option value="">All Locations</option>
-                {uniqueLocations.map(location => (
-                  <option key={location} value={location}>{location}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {isLoading && (
-        <div className="flex justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        </div>
-      )}
-
       {/* Available Appointments */}
-      {!isLoading && (
+      {selectedProviderOpenings.length === 0 ? (
+        <Card className="shadow-soft border-card-border">
+          <CardContent className="text-center py-12">
+            <CalendarIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-foreground mb-2">No appointments available</h3>
+            <p className="text-muted-foreground">Check back later for new availability.</p>
+          </CardContent>
+        </Card>
+      ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {filteredSlots.map((slot) => (
+          {selectedProviderOpenings.map((slot) => (
             <Card key={slot.id} className="shadow-soft border-card-border hover:shadow-lg transition-shadow">
               <CardHeader>
                 <div className="flex items-start justify-between">
@@ -274,7 +373,7 @@ export function BookingBrowse() {
                       : <span className="text-primary">${Number(slot.hourly_rate) * Number(slot.duration)}</span>}
                   </div>
                   {slot.location && (
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-2 col-span-2">
                       <MapPin className="h-4 w-4 text-muted-foreground" />
                       <span>{slot.location}</span>
                     </div>
@@ -314,16 +413,6 @@ export function BookingBrowse() {
         </div>
       )}
 
-      {!isLoading && filteredSlots.length === 0 && (
-        <Card className="shadow-soft border-card-border">
-          <CardContent className="text-center py-12">
-            <CalendarIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-foreground mb-2">No appointments found</h3>
-            <p className="text-muted-foreground">Try adjusting your search criteria or check back later for new availability.</p>
-          </CardContent>
-        </Card>
-      )}
-
       {/* Booking Confirmation Dialog */}
       <AlertDialog open={showBookingDialog} onOpenChange={setShowBookingDialog}>
         <AlertDialogContent>
@@ -357,6 +446,12 @@ export function BookingBrowse() {
               <div className="flex justify-between">
                 <span className="text-sm font-medium">Time:</span>
                 <span className="text-sm">{selectedSlot.start_time} - {selectedSlot.end_time} ({selectedSlot.duration}min)</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm font-medium">Price:</span>
+                <span className="text-sm font-medium">
+                  {Number(selectedSlot.hourly_rate) === 0 ? 'Free' : `$${Number(selectedSlot.hourly_rate) * Number(selectedSlot.duration)}`}
+                </span>
               </div>
             </div>
           )}

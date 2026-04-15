@@ -71,7 +71,7 @@ export function ModifyAppointmentDialog({ appointmentId, currentOpeningId, userI
       </DialogTrigger>
       <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>换时间 — {workerName}</DialogTitle>
+          <DialogTitle>Modify Your Appointment — {workerName}</DialogTitle>
         </DialogHeader>
 
         {isLoading && (
