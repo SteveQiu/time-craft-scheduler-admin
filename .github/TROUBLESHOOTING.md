@@ -4,9 +4,26 @@ Quick solutions to problems you might encounter. If not here, follow the 6-step 
 
 ---
 
-## Authentication Issues
+## 📍 Wrong URL / "Blank page when visiting browse URL"
 
-### ❌ "Sign In button doesn't work / I can't sign back in after signing out"
+### ❌ "Blank page at /browse/f0927dd8-9e7d-4830-a6b5-c96a3c627fe9"
+
+**Symptoms:** Navigate to `/browse/{some-id}` → Blank page with loading spinner or no content
+
+**Root Cause:** The ID is an **opening ID**, not a **provider ID**
+
+**Why it happens:** There are two booking routes:
+- `/browse/:providerId` - Browse provider's available slots
+- `/openings/:openingId` - Book a specific time slot
+
+They use different ID types! See `.github/BROWSE_VS_OPENINGS.md` for full explanation.
+
+**Fix:** Use the correct URL
+- If you have an **opening ID** → Use `/openings/{id}` ✅
+- If you have a **provider ID** → Use `/browse/{id}` ✅
+- Not sure? → Go to `/browse` to see all providers first
+
+---
 
 **Symptoms:** Click "Sign In" button in sidebar → Nothing happens
 

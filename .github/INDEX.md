@@ -38,6 +38,7 @@
 | File | Purpose | When to Read |
 |------|---------|--------------|
 | **BOOKING_FIX.md** | Step-by-step fix for booking RPC error | 🔴 Booking doesn't work |
+| **BROWSE_VS_OPENINGS.md** | Two booking routes explained | Wrong URL / blank page |
 | **DEBUGGING_INFRASTRUCTURE.md** | Playwright-based DevTools capture (network, console, errors) | 🔍 Need detailed debugging visibility |
 | **copilot-readme.md** | Friendly entry point with links | First time here? Start here |
 | **copilot-instructions.md** | Master docs: project overview + 5 skills | Need project context |
