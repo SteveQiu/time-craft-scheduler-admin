@@ -191,8 +191,8 @@ export function AppSidebar() {
               <div className="flex items-center justify-center">
                 <Tabs value={viewMode} onValueChange={(val) => setViewMode(val as 'user' | 'org')} className="w-full">
                   <TabsList className="grid w-full grid-cols-2 h-8">
-                    <TabsTrigger value="user" className="text-xs">Org</TabsTrigger>
-                    <TabsTrigger value="org" className="text-xs">User</TabsTrigger>
+                    <TabsTrigger value="user" className="text-xs leading-none">Org</TabsTrigger>
+                    <TabsTrigger value="org" className="text-xs leading-none">User</TabsTrigger>
                   </TabsList>
                 </Tabs>
               </div>
@@ -201,7 +201,7 @@ export function AppSidebar() {
             <Button
               variant="outline"
               onClick={signOut}
-              className="w-full gap-2 justify-start"
+              className="w-full gap-2 justify-center"
             >
               <LogOut className="h-4 w-4" />
               <span>Sign Out</span>

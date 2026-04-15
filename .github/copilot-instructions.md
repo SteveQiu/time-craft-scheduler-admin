@@ -169,6 +169,15 @@ React Router is configured in App.tsx with the following main routes:
 - `.env` file should contain Supabase configuration (API URL, Anon Key)
 - Dev server runs on `::` (IPv6) on port 8080
 
+## Coding Standards
+
+See `docs/CODING_STANDARDS.md` for comprehensive best practices including:
+- File organization and when to split components
+- Component structure and naming conventions
+- Code quality patterns (time formatting, state management, etc.)
+- Performance optimization techniques
+- UI/Layout patterns and spacing conventions
+
 ## Common Tasks
 
 ### Adding a New Page

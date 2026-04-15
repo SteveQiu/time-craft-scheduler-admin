@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
@@ -7,6 +7,7 @@ import { Label } from './ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Switch } from './ui/switch';
 import { Input } from './ui/input';
+import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 import { ChevronLeft, ChevronRight, Plus, Clock, User, X, DollarSign, ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -41,6 +42,7 @@ interface Opening {
 
 export function Calendar() {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { isOrganization, isInternalDev } = useUserRoles();
   const modeParam = searchParams.get('mode');
@@ -476,7 +478,7 @@ export function Calendar() {
                   <span className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></span>
                 </div>
               )}
-              <div className="grid grid-cols-7 gap-1">
+              <div className="grid grid-cols-7 gap-2">
                 {getDaysInMonth(currentDate).map((date, index) => {
                   const openingCount = date ? getOpeningsForDate(date).length : 0;
                   return (
@@ -523,7 +525,7 @@ export function Calendar() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
+            <div className="space-y-4">
               {(() => {
                 const openingsForDate = getOpeningsForDate(selectedDate);
                 
@@ -574,36 +576,35 @@ export function Calendar() {
                       </button>
 
                       {!isCollapsed && (
-                        <div className="space-y-2 p-3 bg-card/50 border-t border-input">
+                        <div className="space-y-2 p-4 bg-card/50 border-t border-input">
                           {workerOpenings.map((opening) => (
                             <div
                               key={opening.id}
-                              className="p-3 rounded-lg border border-input bg-card hover:bg-accent transition-all flex items-center justify-between gap-3"
+                              className="p-1 rounded-lg border border-input bg-card hover:bg-accent transition-all flex items-center justify-between gap-3 cursor-pointer" onClick={() => window.open(`/openings/${opening.id}`, "_blank")}
                             >
-                              <div className="text-sm space-y-1">
-                                <div className="flex items-center space-x-2">
-                                  <Clock className="h-4 w-4" />
-                                  <span className="font-medium">{opening.start_time} - {opening.end_time}</span>
-                                  <span className="text-xs">({opening.duration}h)</span>
-                                </div>
+                              <div className="text-sm space-y-1 flex-1">
+                                <div className="font-medium whitespace-nowrap overflow-hidden">{new Date(`1970-01-01T${opening.start_time}`).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })} - {new Date(`1970-01-01T${opening.end_time}`).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })} ({opening.duration}h)</div>
                                 <div className="font-medium">{opening.service}</div>
-                                <div className="flex items-center space-x-2">
-                                  <DollarSign className="h-3 w-3" />
-                                  <span>
-                                    {Number(opening.hourly_rate) === 0
-                                      ? 'Free'
-                                      : `$${Number(opening.hourly_rate) * Number(opening.duration)}`}
-                                  </span>
+                                <div>
+                                  {Number(opening.hourly_rate) === 0
+                                    ? 'Free'
+                                    : `$${Number(opening.hourly_rate) * Number(opening.duration)}`}
                                 </div>
                               </div>
-                              <Button
-                                onClick={() => removeOpening(opening.id)}
-                                disabled={!user}
-                                className="gap-2 bg-transparent border border-destructive text-destructive hover:bg-destructive/10 flex-shrink-0"
-                              >
-                                <X className="h-4 w-4" />
-                                Remove
-                              </Button>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    onClick={(e) => { e.stopPropagation(); removeOpening(opening.id); }}
+                                    disabled={!user}
+                                    variant="ghost"
+                                    size="sm"
+                                    className="text-destructive hover:text-destructive hover:bg-destructive/10 flex-shrink-0"
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Remove opening</TooltipContent>
+                              </Tooltip>
                             </div>
                           ))}
                         </div>
@@ -857,3 +858,15 @@ export function Calendar() {
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
