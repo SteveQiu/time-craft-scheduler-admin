@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Trash2, MapPin, CreditCard, Star, Edit } from 'lucide-react';
+import { Plus, Trash2, MapPin, CreditCard, Star, Edit, Lock } from 'lucide-react';
 
 interface WorkplaceAddress {
   id: string;
@@ -59,6 +59,13 @@ export default function Settings() {
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const [editingPayment, setEditingPayment] = useState<PaymentMethod | null>(null);
   const [paymentForm, setPaymentForm] = useState({ label: '', type: 'cash', details: '' });
+
+  // Password change state
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordChangeError, setPasswordChangeError] = useState('');
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
 
   // Fetch addresses
   const { data: addresses = [], isLoading: loadingAddresses } = useQuery({
@@ -186,6 +193,71 @@ export default function Settings() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['payment-methods'] }),
   });
 
+  const handleChangePassword = async () => {
+    setPasswordChangeError('');
+
+    // Validation
+    if (!currentPassword.trim()) {
+      setPasswordChangeError('Current password is required');
+      return;
+    }
+    if (newPassword.length < 6) {
+      setPasswordChangeError('New password must be at least 6 characters');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordChangeError('New passwords do not match');
+      return;
+    }
+    if (newPassword === currentPassword) {
+      setPasswordChangeError('New password must be different from current password');
+      return;
+    }
+
+    setIsChangingPassword(true);
+
+    try {
+      // First, verify current password by attempting to sign in
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: user.email!,
+        password: currentPassword,
+      });
+
+      if (signInError) {
+        setPasswordChangeError('Current password is incorrect');
+        setIsChangingPassword(false);
+        return;
+      }
+
+      // Update to new password
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+
+      if (updateError) throw updateError;
+
+      // Clear form
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+
+      toast({
+        title: 'Success!',
+        description: 'Your password has been changed.',
+      });
+    } catch (error: any) {
+      console.error('Password change error:', error);
+      setPasswordChangeError(error.message || 'Failed to change password');
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to change password',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsChangingPassword(false);
+    }
+  };
+
   const openEditAddress = (addr: WorkplaceAddress) => {
     setEditingAddress(addr);
     setAddressForm({ label: addr.label, address: addr.address });
@@ -219,6 +291,10 @@ export default function Settings() {
           <TabsTrigger value="payments">
             <CreditCard className="h-4 w-4 mr-2" />
             Payment Methods
+          </TabsTrigger>
+          <TabsTrigger value="security">
+            <Lock className="h-4 w-4 mr-2" />
+            Security
           </TabsTrigger>
           <TabsTrigger value="roles">
             <Star className="h-4 w-4 mr-2" />
@@ -331,6 +407,86 @@ export default function Settings() {
               ))}
             </div>
           )}
+        </TabsContent>
+
+        {/* Security Tab */}
+        <TabsContent value="security" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Change Password</CardTitle>
+              <CardDescription>Update your account password</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {passwordChangeError && (
+                <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                  <p className="text-sm text-red-800 dark:text-red-200">{passwordChangeError}</p>
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <Label htmlFor="current-password">Current Password</Label>
+                <Input
+                  id="current-password"
+                  type="password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  placeholder="Enter your current password"
+                  disabled={isChangingPassword}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="new-password">New Password</Label>
+                <Input
+                  id="new-password"
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="At least 6 characters"
+                  disabled={isChangingPassword}
+                  minLength={6}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="confirm-password">Confirm New Password</Label>
+                <Input
+                  id="confirm-password"
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Confirm your new password"
+                  disabled={isChangingPassword}
+                  minLength={6}
+                />
+              </div>
+
+              <Button
+                onClick={handleChangePassword}
+                disabled={isChangingPassword || !currentPassword || !newPassword || !confirmPassword}
+                className="w-full"
+              >
+                {isChangingPassword ? 'Changing password...' : 'Change Password'}
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Account Information</CardTitle>
+              <CardDescription>Your account details</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <p className="text-sm text-muted-foreground">Email Address</p>
+                <p className="font-medium">{user.email}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Account Created</p>
+                <p className="font-medium">{user.created_at ? new Date(user.created_at).toLocaleDateString() : 'Unknown'}</p>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* Roles Tab */}
