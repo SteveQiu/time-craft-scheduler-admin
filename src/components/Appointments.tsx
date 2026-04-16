@@ -380,6 +380,19 @@ export function Appointments() {
                     Complete
                   </Button>
                 )}
+                {/* Provider can approve/reject pending appointments in user mode */}
+                {isProvider && appointment.status === 'pending' && !isOrgView && (
+                  <>
+                    <Button variant="default" size="sm" onClick={() => handleApprove(appointment.id)}>
+                      <Check className="h-3 w-3 mr-1" />
+                      Approve
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => handleCancel(appointment.id)}>
+                      <X className="h-3 w-3 mr-1" />
+                      Reject
+                    </Button>
+                  </>
+                )}
                 {(appointment.status === 'pending' || appointment.status === 'confirmed') && !isOrgView && (
                   <>
                     <ModifyAppointmentDialog
