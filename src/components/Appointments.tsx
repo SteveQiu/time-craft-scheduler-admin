@@ -245,6 +245,8 @@ export function Appointments() {
   const renderGroupedPendingCard = (openingId: string, appts: Appointment[]) => {
     const first = appts[0];
     const isProvider = first.provider_id === user?.id;
+    // In org mode, allow approval if user is the provider OR is an org admin viewing their own
+    const canApprove = isProvider;
     
     return (
       <Card key={`group-${openingId}`} className="shadow-soft border-card-border hover:shadow-lg transition-shadow border-l-4 border-l-yellow-400">
@@ -297,23 +299,26 @@ export function Appointments() {
             <p className="text-sm font-medium text-muted-foreground">
               {isProvider ? 'Choose one to approve:' : `Pending requests for ${first.worker}`}
             </p>
-            {appts.map((apt) => (
-              <div key={apt.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-lg bg-muted/50">
-                {renderBookerInfo(apt)}
-                {isProvider && (
-                  <div className="flex items-center space-x-2">
-                    <Button variant="default" size="sm" onClick={() => handleApprove(apt.id)}>
-                      <Check className="h-3 w-3 mr-1" />
-                      Approve
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={() => handleCancel(apt.id)}>
-                      <X className="h-3 w-3 mr-1" />
-                      Reject
-                    </Button>
-                  </div>
-                )}
-              </div>
-            ))}
+            {appts.map((apt) => {
+              const aptIsProvider = apt.provider_id === user?.id;
+              return (
+                <div key={apt.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-lg bg-muted/50">
+                  {renderBookerInfo(apt)}
+                  {aptIsProvider && (
+                    <div className="flex items-center space-x-2">
+                      <Button variant="default" size="sm" onClick={() => handleApprove(apt.id)}>
+                        <Check className="h-3 w-3 mr-1" />
+                        Approve
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => handleCancel(apt.id)}>
+                        <X className="h-3 w-3 mr-1" />
+                        Reject
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </CardContent>
       </Card>
