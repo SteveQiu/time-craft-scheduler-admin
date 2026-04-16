@@ -24,13 +24,13 @@ export function AppSidebar() {
 
   const userNavItems = [
     { id: 'browse', label: 'Browse', icon: Search, path: '/browse' },
-    { id: 'my-openings', label: 'My Openings', icon: CalendarIcon, path: '/calendar' },
+    { id: 'openings', label: 'Opening', icon: CalendarIcon, path: '/calendar' },
     { id: 'appointments-user', label: 'My Appointments', icon: Clock, path: '/appointments' },
   ];
 
   const orgNavItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Home, path: '/dashboard' },
-    { id: 'calendar', label: 'Opening', icon: CalendarIcon, path: '/calendar?mode=org' },
+    { id: 'openings', label: 'Opening', icon: CalendarIcon, path: '/calendar?mode=org' },
     { id: 'workers', label: 'Workers', icon: Users, path: '/workers' },
     { id: 'appointments-org', label: 'Reservations', icon: Clock, path: '/appointments?mode=org' },
   ];
