@@ -127,7 +127,11 @@ export default function Auth() {
     setIsLoading(true);
 
     try {
-      const redirectUrl = `${window.location.origin}/auth?mode=reset`;
+      // Use production domain if available, fallback to current origin
+      // This ensures email link works in production while testing locally
+      const redirectUrl = import.meta.env.VITE_APP_URL 
+        ? `${import.meta.env.VITE_APP_URL}/auth?mode=reset`
+        : `${window.location.origin}/auth?mode=reset`;
       
       const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
         redirectTo: redirectUrl,
