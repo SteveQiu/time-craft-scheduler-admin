@@ -186,7 +186,7 @@ export function Appointments() {
   // Group pending appointments by opening_id for org view
   const groupedPendingByOpening = (() => {
     if (!isOrgView) return null;
-    const pendingAppts = activeAppointments.filter(a => a.status === 'pending');
+    const pendingAppts = activeAppointments.filter(a => a.status === 'pending' && a.provider_id === user?.id);
     const groups = new Map<string, Appointment[]>();
     for (const apt of pendingAppts) {
       const existing = groups.get(apt.opening_id) || [];
