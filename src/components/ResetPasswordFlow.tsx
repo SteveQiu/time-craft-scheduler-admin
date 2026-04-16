@@ -54,6 +54,8 @@ export function ResetPasswordFlow() {
 
       if (updateError) throw updateError;
 
+      await supabase.auth.signOut();
+
       setSuccess(true);
       toast({
         title: 'Success!',
