@@ -61,10 +61,12 @@ export function Appointments() {
         .from('appointments')
         .select('*');
 
-      // User view: show only appointments booked by this user (as a customer)
+      // User view: show appointments where user is either:
+      // 1. The booker/customer (user_id = user.id), OR
+      // 2. The provider who needs to approve/manage (provider_id = user.id)
       // Org view: show all appointments for all providers in the org
       if (!isOrgView) {
-        query = query.eq('user_id', user.id);
+        query = query.or(`user_id.eq.${user.id},provider_id.eq.${user.id}`);
       }
 
       const { data, error } = await query
