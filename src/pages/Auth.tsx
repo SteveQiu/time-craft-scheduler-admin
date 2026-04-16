@@ -37,6 +37,7 @@ export default function Auth() {
   // Password reset state
   const [resetEmail, setResetEmail] = useState('');
   const [resetSent, setResetSent] = useState(false);
+  const [activeTab, setActiveTab] = useState<'signin' | 'signup' | 'reset'>('signin');
 
   useEffect(() => {
     if (user && !loading) {
@@ -186,7 +187,7 @@ export default function Auth() {
             <CardDescription>Sign in to your account or create a new one</CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="signin" className="w-full">
+            <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'signin' | 'signup' | 'reset')} className="w-full">
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="signin">Sign In</TabsTrigger>
                 <TabsTrigger value="signup">Sign Up</TabsTrigger>
@@ -224,7 +225,7 @@ export default function Auth() {
                   <div className="text-center">
                     <button
                       type="button"
-                      onClick={() => document.querySelector('[value="reset"]')?.dispatchEvent(new Event('click', { bubbles: true }))}
+                      onClick={() => setActiveTab('reset')}
                       className="text-sm text-primary hover:underline"
                     >
                       Forgot password?
