@@ -55,7 +55,7 @@ export function Appointments() {
   const isOrgView = modeParam === 'org' && (isOrganization || isInternalDev);
 
   const { data: appointments = [], isLoading } = useQuery({
-    queryKey: ['appointments', user?.id, isOrgView],
+    queryKey: ['appointments', user?.id, isOrgView, workers],
     queryFn: async () => {
       if (!user) return [];
 
@@ -63,11 +63,22 @@ export function Appointments() {
         .from('appointments')
         .select('*');
 
-      // User view: show appointments where user is either:
-      // 1. The booker/customer (user_id = user.id), OR
-      // 2. The provider who needs to approve/manage (provider_id = user.id)
-      // Org view: show all appointments for all providers in the org
-      if (!isOrgView) {
+      if (isOrgView) {
+        // Org view: show appointments where provider is an org worker
+        // Get all provider IDs from workers (org members)
+        const orgMemberIds = workers.map((w: any) => w.user_id).filter(Boolean);
+        
+        if (orgMemberIds.length === 0) {
+          // No org members yet, return empty
+          return [];
+        }
+        
+        // Show only appointments for org providers
+        query = query.in('provider_id', orgMemberIds);
+      } else {
+        // User view: show appointments where user is either:
+        // 1. The booker/customer (user_id = user.id), OR
+        // 2. The provider who needs to approve/manage (provider_id = user.id)
         query = query.or(`user_id.eq.${user.id},provider_id.eq.${user.id}`);
       }
 
