@@ -29,12 +29,14 @@ interface Appointment {
   status: string;
   notes: string | null;
   created_at: string;
+  approved_by?: string | null;
   booker_name?: string | null;
   booker_email?: string | null;
   booker_phone?: string | null;
   booker_slug?: string | null;
   provider_name?: string | null;
   provider_slug?: string | null;
+  approved_by_name?: string | null;
 }
 
 export function Appointments() {
@@ -77,7 +79,8 @@ export function Appointments() {
 
       const providerIds = [...new Set((data || []).map((a: any) => a.provider_id))];
       const bookerIds = [...new Set((data || []).map((a: any) => a.user_id))];
-      const allIds = [...new Set([...providerIds, ...bookerIds])];
+      const approverIds = [...new Set((data || []).map((a: any) => a.approved_by).filter(Boolean))];
+      const allIds = [...new Set([...providerIds, ...bookerIds, ...approverIds])];
       
       let profileMap = new Map<string, { full_name: string; slug: string | null }>();
       if (allIds.length > 0) {
@@ -102,6 +105,7 @@ export function Appointments() {
         booker_slug: profileMap.get(a.user_id)?.slug || null,
         booker_email: bookerContactMap.get(a.user_id)?.email || null,
         booker_phone: bookerContactMap.get(a.user_id)?.phone || null,
+        approved_by_name: profileMap.get(a.approved_by)?.full_name || null,
       })) as Appointment[];
     },
     enabled: !!user,
@@ -422,6 +426,15 @@ export function Appointments() {
           {canManage && appointment.booker_name && (
             <div className="border-t border-border pt-3">
               {renderBookerInfo(appointment)}
+            </div>
+          )}
+
+          {/* Approval attribution for org view - show who approved if not the provider */}
+          {isOrgView && appointment.status === 'confirmed' && appointment.approved_by && appointment.approved_by !== appointment.provider_id && appointment.approved_by_name && (
+            <div className="border-t border-border pt-3">
+              <div className="text-sm text-muted-foreground">
+                Approved by: <span className="font-medium text-foreground">{appointment.approved_by_name}</span>
+              </div>
             </div>
           )}
         </CardContent>
