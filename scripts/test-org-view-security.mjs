@@ -53,7 +53,7 @@ async function testOrgViewSecurity() {
     }
 
     const workerUserIds = (bbbWorkers || [])
-      .map((w: any) => w.user_id)
+      .map((w) => w.user_id)
       .filter(Boolean);
 
     console.log(`✓ Found ${bbbWorkers?.length || 0} workers, ${workerUserIds.length} with user_ids\n`);
@@ -75,7 +75,7 @@ async function testOrgViewSecurity() {
 
     console.log(`Total appointments in system: ${allApts?.length || 0}`);
     console.log('Sample appointments:');
-    (allApts || []).slice(0, 5).forEach((apt: any, i: number) => {
+    (allApts || []).slice(0, 5).forEach((apt, i) => {
       console.log(`  ${i + 1}. Provider: ${apt.provider_id}, Booker: ${apt.user_id}`);
     });
 
@@ -111,15 +111,15 @@ async function testOrgViewSecurity() {
 
     if (unrelatedApts && unrelatedApts.length > 0) {
       console.log('\n   ⚠️  These should NOT be visible to bbb in org mode:');
-      (unrelatedApts || []).forEach((apt: any) => {
+      (unrelatedApts || []).forEach((apt) => {
         console.log(`      - ${apt.id}: ${apt.provider_id} ← ${apt.user_id}`);
       });
     }
 
     // Check if bbb is a provider for any of these
-    const bbbIsProvider = (unrelatedApts || []).some((apt: any) => apt.provider_id === bbbUser.id);
-    const bbbIsBooker = (unrelatedApts || []).some((apt: any) => apt.user_id === bbbUser.id);
-    const bbbWorkerIsProvider = (unrelatedApts || []).some((apt: any) => workerUserIds.includes(apt.provider_id));
+    const bbbIsProvider = (unrelatedApts || []).some((apt) => apt.provider_id === bbbUser.id);
+    const bbbIsBooker = (unrelatedApts || []).some((apt) => apt.user_id === bbbUser.id);
+    const bbbWorkerIsProvider = (unrelatedApts || []).some((apt) => workerUserIds.includes(apt.provider_id));
 
     console.log(`\n✅ Authorization Check:`);
     console.log(`   bbb is provider of unrelated apts: ${bbbIsProvider ? '❌ YES (BUG!)' : '✓ NO (correct)'}`);
