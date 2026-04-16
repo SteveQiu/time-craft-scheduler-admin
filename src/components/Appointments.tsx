@@ -57,9 +57,17 @@ export function Appointments() {
     queryFn: async () => {
       if (!user) return [];
 
-      const { data, error } = await supabase
+      let query = supabase
         .from('appointments')
-        .select('*')
+        .select('*');
+
+      // User view: show only appointments booked by this user (as a customer)
+      // Org view: show all appointments for all providers in the org
+      if (!isOrgView) {
+        query = query.eq('user_id', user.id);
+      }
+
+      const { data, error } = await query
         .order('date', { ascending: false })
         .order('start_time', { ascending: false });
 
@@ -410,10 +418,10 @@ export function Appointments() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold text-foreground">
-            {isOrgView ? 'Manage Appointments' : 'My Appointments'}
+            Reservations
           </h2>
           <p className="text-muted-foreground">
-            {isOrgView ? 'Review and manage bookings' : 'Your booked appointments'}
+            {isOrgView ? 'Review and manage all bookings' : 'Your booked reservations'}
           </p>
         </div>
       </div>
