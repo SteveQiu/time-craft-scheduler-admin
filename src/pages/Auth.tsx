@@ -133,6 +133,8 @@ export default function Auth() {
         ? `${import.meta.env.VITE_APP_URL}/auth?mode=reset`
         : `${window.location.origin}/auth?mode=reset`;
       
+      console.log('Password reset redirect URL:', redirectUrl);
+      
       const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
         redirectTo: redirectUrl,
       });
