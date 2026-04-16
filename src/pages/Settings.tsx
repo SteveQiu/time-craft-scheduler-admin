@@ -61,7 +61,6 @@ export default function Settings() {
   const [paymentForm, setPaymentForm] = useState({ label: '', type: 'cash', details: '' });
 
   // Password change state
-  const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordChangeError, setPasswordChangeError] = useState('');
@@ -197,10 +196,6 @@ export default function Settings() {
     setPasswordChangeError('');
 
     // Validation
-    if (!currentPassword.trim()) {
-      setPasswordChangeError('Current password is required');
-      return;
-    }
     if (newPassword.length < 6) {
       setPasswordChangeError('New password must be at least 6 characters');
       return;
@@ -209,26 +204,10 @@ export default function Settings() {
       setPasswordChangeError('New passwords do not match');
       return;
     }
-    if (newPassword === currentPassword) {
-      setPasswordChangeError('New password must be different from current password');
-      return;
-    }
 
     setIsChangingPassword(true);
 
     try {
-      // First, verify current password by attempting to sign in
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: user.email!,
-        password: currentPassword,
-      });
-
-      if (signInError) {
-        setPasswordChangeError('Current password is incorrect');
-        setIsChangingPassword(false);
-        return;
-      }
-
       // Update to new password
       const { error: updateError } = await supabase.auth.updateUser({
         password: newPassword,
@@ -237,7 +216,6 @@ export default function Settings() {
       if (updateError) throw updateError;
 
       // Clear form
-      setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
 
@@ -424,18 +402,6 @@ export default function Settings() {
               )}
 
               <div className="space-y-2">
-                <Label htmlFor="current-password">Current Password</Label>
-                <Input
-                  id="current-password"
-                  type="password"
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  placeholder="Enter your current password"
-                  disabled={isChangingPassword}
-                />
-              </div>
-
-              <div className="space-y-2">
                 <Label htmlFor="new-password">New Password</Label>
                 <Input
                   id="new-password"
@@ -463,7 +429,7 @@ export default function Settings() {
 
               <Button
                 onClick={handleChangePassword}
-                disabled={isChangingPassword || !currentPassword || !newPassword || !confirmPassword}
+                disabled={isChangingPassword || !newPassword || !confirmPassword}
                 className="w-full"
               >
                 {isChangingPassword ? 'Changing password...' : 'Change Password'}
