@@ -20,14 +20,14 @@ export default function Auth() {
   const { user, loading } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  
-  // Check if we're in reset mode
-  const isResetMode = searchParams.get('mode') === 'reset' || window.location.hash.includes('type=recovery');
-  
+
+  const isRecoveryLink = window.location.hash.includes('type=recovery');
+  const isResetMode = searchParams.get('mode') === 'reset' || isRecoveryLink;
+
   // Sign in state
   const [signInEmail, setSignInEmail] = useState('');
   const [signInPassword, setSignInPassword] = useState('');
-  
+
   // Sign up state
   const [signUpEmail, setSignUpEmail] = useState('');
   const [signUpPassword, setSignUpPassword] = useState('');
@@ -37,13 +37,13 @@ export default function Auth() {
   // Password reset state
   const [resetEmail, setResetEmail] = useState('');
   const [resetSent, setResetSent] = useState(false);
-  const [activeTab, setActiveTab] = useState<'signin' | 'signup' | 'reset'>('signin');
+  const [activeTab, setActiveTab] = useState<'signin' | 'signup' | 'reset'>(isResetMode ? 'reset' : 'signin');
 
   useEffect(() => {
-    if (user && !loading) {
+    if (!loading && user && !isResetMode) {
       navigate('/');
     }
-  }, [user, loading, navigate]);
+  }, [user, loading, isResetMode, navigate]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,7 +79,7 @@ export default function Auth() {
 
     try {
       const redirectUrl = `${window.location.origin}/`;
-      
+
       const { data, error } = await supabase.auth.signUp({
         email: signUpEmail,
         password: signUpPassword,
@@ -127,14 +127,14 @@ export default function Auth() {
     setIsLoading(true);
 
     try {
-      // Use production domain if available, fallback to current origin
-      // This ensures email link works in production while testing locally
-      const redirectUrl = import.meta.env.VITE_APP_URL 
-        ? `${import.meta.env.VITE_APP_URL}/auth?mode=reset`
-        : `${window.location.origin}/auth?mode=reset`;
-      
+      const isLocalDevelopment = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+      const appOrigin = isLocalDevelopment && import.meta.env.VITE_APP_URL
+        ? import.meta.env.VITE_APP_URL
+        : window.location.origin;
+      const redirectUrl = `${appOrigin}/auth?mode=reset`;
+
       console.log('Password reset redirect URL:', redirectUrl);
-      
+
       const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
         redirectTo: redirectUrl,
       });
@@ -163,7 +163,7 @@ export default function Auth() {
     }
   };
 
-  if (loading) {
+  if (loading && !isResetMode) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-muted-foreground">Loading...</div>
@@ -171,7 +171,6 @@ export default function Auth() {
     );
   }
 
-  // Show reset password form if in reset mode
   if (isResetMode) {
     return <ResetPasswordFlow />;
   }
@@ -228,15 +227,6 @@ export default function Auth() {
                   <Button type="submit" className="w-full" disabled={isLoading}>
                     {isLoading ? 'Signing in...' : 'Sign In'}
                   </Button>
-                  <div className="text-center">
-                    <button
-                      type="button"
-                      onClick={() => setActiveTab('reset')}
-                      className="text-sm text-primary hover:underline"
-                    >
-                      Forgot password?
-                    </button>
-                  </div>
                 </form>
               </TabsContent>
 
