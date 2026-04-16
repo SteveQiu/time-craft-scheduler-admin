@@ -186,7 +186,7 @@ export function Appointments() {
   // Group pending appointments by opening_id for org view
   const groupedPendingByOpening = (() => {
     if (!isOrgView) return null;
-    const pendingAppts = activeAppointments.filter(a => a.status === 'pending' && a.provider_id === user?.id);
+    const pendingAppts = activeAppointments.filter(a => a.status === 'pending');
     const groups = new Map<string, Appointment[]>();
     for (const apt of pendingAppts) {
       const existing = groups.get(apt.opening_id) || [];
@@ -244,6 +244,8 @@ export function Appointments() {
 
   const renderGroupedPendingCard = (openingId: string, appts: Appointment[]) => {
     const first = appts[0];
+    const isProvider = first.provider_id === user?.id;
+    
     return (
       <Card key={`group-${openingId}`} className="shadow-soft border-card-border hover:shadow-lg transition-shadow border-l-4 border-l-yellow-400">
         <CardContent className="p-6 space-y-4">
@@ -292,20 +294,24 @@ export function Appointments() {
 
           {/* List of pending bookers */}
           <div className="border-t border-border pt-3 space-y-3">
-            <p className="text-sm font-medium text-muted-foreground">Choose one to approve:</p>
+            <p className="text-sm font-medium text-muted-foreground">
+              {isProvider ? 'Choose one to approve:' : `Pending requests for ${first.worker}`}
+            </p>
             {appts.map((apt) => (
               <div key={apt.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-lg bg-muted/50">
                 {renderBookerInfo(apt)}
-                <div className="flex items-center space-x-2">
-                  <Button variant="default" size="sm" onClick={() => handleApprove(apt.id)}>
-                    <Check className="h-3 w-3 mr-1" />
-                    Approve
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={() => handleCancel(apt.id)}>
-                    <X className="h-3 w-3 mr-1" />
-                    Reject
-                  </Button>
-                </div>
+                {isProvider && (
+                  <div className="flex items-center space-x-2">
+                    <Button variant="default" size="sm" onClick={() => handleApprove(apt.id)}>
+                      <Check className="h-3 w-3 mr-1" />
+                      Approve
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => handleCancel(apt.id)}>
+                      <X className="h-3 w-3 mr-1" />
+                      Reject
+                    </Button>
+                  </div>
+                )}
               </div>
             ))}
           </div>
