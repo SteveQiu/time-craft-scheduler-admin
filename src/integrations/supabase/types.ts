@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       appointments: {
         Row: {
+          approved_by: string | null
           created_at: string
           date: string
           duration: number
@@ -33,6 +34,7 @@ export type Database = {
           worker: string
         }
         Insert: {
+          approved_by?: string | null
           created_at?: string
           date: string
           duration: number
@@ -50,6 +52,7 @@ export type Database = {
           worker: string
         }
         Update: {
+          approved_by?: string | null
           created_at?: string
           date?: string
           duration?: number
@@ -583,6 +586,10 @@ export type Database = {
           _new_opening_id: string
         }
         Returns: string
+      }
+      reject_appointment: {
+        Args: { _appointment_id: string; _provider_id: string }
+        Returns: undefined
       }
     }
     Enums: {
