@@ -7,6 +7,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { PanelGroup, Panel, PanelResizeHandle } from "react-resizable-panels";
 
 import NotFound from "./pages/NotFound";
+import { RootRedirect } from "./pages/RootRedirect";
 import { Dashboard } from "@/components/Dashboard";
 import { Calendar } from "@/components/Calendar";
 import { BookingBrowse } from "@/components/BookingBrowse";
@@ -38,7 +39,7 @@ const App = () => (
             <Panel defaultSize={80} className="flex flex-col overflow-hidden">
               <main className="flex-1 overflow-auto max-w-7xl w-full mx-auto">
                 <Routes>
-                  <Route path="/" element={<Dashboard />} />
+                  <Route path="/" element={<RootRedirect />} />
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/calendar" element={<Calendar />} />
                   <Route path="/browse" element={<BookingBrowse />} />
