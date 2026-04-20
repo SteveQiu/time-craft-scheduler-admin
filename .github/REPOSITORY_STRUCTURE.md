@@ -37,6 +37,13 @@ The root directory should only contain:
 └── components.json               # Component library config
 ```
 
+### ❌ Root Folder MOVES TO `supabase/migrations/`
+All SQL files:
+- Database schemas → `supabase/migrations/*.sql`
+- RLS policies → `supabase/migrations/*.sql`
+- Data migrations → `supabase/migrations/*.sql`
+- Fixes and patches → `supabase/migrations/*.sql`
+
 ### ❌ Root Folder MOVES TO `.github/`
 All markdown files EXCEPT README.md:
 - Deployment guides → `.github/DEPLOYMENT_*.md`
@@ -56,9 +63,11 @@ All executable scripts (.js, .mjs, .sh, .py):
 
 ### ❌ Root Folder MOVES TO `tests/`
 All test files:
-- Verification tests → `tests/verify-*.js`
-- Integration tests → `tests/integration-*.js`
-- Unit tests → `tests/unit-*.js`
+- Playwright tests → `tests/*.spec.ts`
+- Unit tests → `tests/*.test.ts`
+- Validation scripts → `tests/validate-*.js`
+- RPC tests → `tests/test-*.js` or `tests/test-*.mjs`
+- Debug scripts → `tests/debug-*.js`
 
 ### ❌ Temporary Files NEVER in Root
 - Screenshots → `test-results/` or `.github/assets/`
@@ -100,10 +109,13 @@ scripts/
 └── show-migration-needed.js
 
 tests/
-├── integration/
-├── unit/
+├── *.spec.ts                    # Playwright E2E tests
+├── *.test.ts                    # Unit tests
+├── validate-*.js                # Validation scripts
+├── debug-*.js                   # Debug scripts
+├── test-*.js                    # RPC/DB tests
 ├── verify-opening-lock.mjs
-└── ...
+└── ... (other test files)
 
 src/
 ├── components/
@@ -113,6 +125,11 @@ src/
 
 supabase/
 ├── migrations/
+│   ├── 20260419_add_bookmarks.sql
+│   ├── BOOKMARK_RLS_FIX.sql
+│   ├── DEBUG_PROFILE_CHECK.sql
+│   ├── FIX_RPC_PROFILE_FIELDS.sql
+│   └── ... (other migrations)
 └── config.toml
 ```
 

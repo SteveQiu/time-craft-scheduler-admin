@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRoles } from '@/hooks/useUserRoles';
 import { supabase } from '@/integrations/supabase/client';
@@ -14,7 +14,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { ReviewSection } from '@/components/ReviewSection';
 import { ReportDialog } from '@/components/ReportDialog';
-import { Edit, Save, X, Mail, Phone, MapPin, Star, Flag, Share2, DollarSign, Wrench } from 'lucide-react';
+import { Edit, Save, X, Mail, Phone, MapPin, Star, Flag, Share2, DollarSign, Wrench, Plus, Trash2, Calendar, Bookmark } from 'lucide-react';
 
 interface ProfileData {
   id: string;
@@ -31,11 +31,14 @@ interface ProfileData {
 
 export default function Profile() {
   const { slug } = useParams<{ slug: string }>();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [editing, setEditing] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
+  const [skillInput, setSkillInput] = useState('');
+  const [isBookmarked, setIsBookmarked] = useState(false);
   const [form, setForm] = useState({
     full_name: '',
     email: '',
@@ -43,7 +46,7 @@ export default function Profile() {
     phone: '',
     address: '',
     slug: '',
-    skills: '' as string,
+    skills: [] as string[],
     hourly_rate: 0,
   });
 
@@ -80,6 +83,27 @@ export default function Profile() {
     enabled: isOwnProfile ? !!user : !!slug,
   });
 
+  // Check if current profile is bookmarked
+  useQuery({
+    queryKey: ['bookmark-status', profile?.id, user?.id],
+    queryFn: async () => {
+      if (!user || !profile || isOwnProfile) return null;
+      const { data, error } = await supabase
+        .from('bookmarks')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('bookmarked_user_id', profile.id)
+        .single();
+      if (!error && data) {
+        setIsBookmarked(true);
+      } else {
+        setIsBookmarked(false);
+      }
+      return data;
+    },
+    enabled: !!user && !!profile && !isOwnProfile,
+  });
+
   // Average rating for this profile
   const { data: avgRating } = useQuery({
     queryKey: ['avg-rating', profile?.id],
@@ -106,19 +130,16 @@ export default function Profile() {
         phone: profile.phone || '',
         address: profile.address || '',
         slug: profile.slug || '',
-        skills: (profile.skills || []).join(', '),
+        skills: profile.skills || [],
         hourly_rate: profile.hourly_rate || 0,
       });
+      setSkillInput('');
     }
   }, [profile]);
 
   const saveMutation = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error('Not authenticated');
-      const skillsArray = form.skills
-        .split(',')
-        .map(s => s.trim())
-        .filter(Boolean);
       const { error } = await supabase
         .from('profiles')
         .update({
@@ -128,14 +149,14 @@ export default function Profile() {
           phone: form.phone || null,
           address: form.address || null,
           slug: form.slug || null,
-          skills: skillsArray,
+          skills: form.skills,
           hourly_rate: form.hourly_rate,
         } as any)
         .eq('id', user.id);
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['profile'] });
+      queryClient.invalidateQueries({ queryKey: ['profile', slug, user?.id] });
       setEditing(false);
       toast({ title: 'Profile updated' });
     },
@@ -143,6 +164,35 @@ export default function Profile() {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });
     },
   });
+
+  const handleToggleBookmark = async () => {
+    if (!user || !profile || isOwnProfile) return;
+    try {
+      if (isBookmarked) {
+        const { error } = await supabase
+          .from('bookmarks')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('bookmarked_user_id', profile.id);
+        if (error) throw error;
+        setIsBookmarked(false);
+        toast({ title: 'Removed from bookmarks' });
+      } else {
+        const { error } = await supabase
+          .from('bookmarks')
+          .insert({
+            user_id: user.id,
+            bookmarked_user_id: profile.id,
+          });
+        if (error) throw error;
+        setIsBookmarked(true);
+        toast({ title: 'Added to bookmarks' });
+      }
+      queryClient.invalidateQueries({ queryKey: ['bookmarks', user.id] });
+    } catch (error) {
+      toast({ title: 'Error', description: (error as any).message, variant: 'destructive' });
+    }
+  };
 
   const shareUrl = profile?.slug
     ? `${window.location.origin}/profile/${profile.slug}`
@@ -189,7 +239,7 @@ export default function Profile() {
       {/* Profile Header */}
       <Card className="shadow-soft border-card-border">
         <CardContent className="pt-6">
-          <div className="flex items-start justify-between">
+          <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <Avatar className="h-20 w-20">
                 <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
@@ -227,9 +277,22 @@ export default function Profile() {
                 </Button>
               )}
               {!isOwnProfile && user && (
-                <Button variant="ghost" size="sm" onClick={() => setReportOpen(true)}>
-                  <Flag className="h-4 w-4" />
-                </Button>
+                <>
+                  <Button variant="outline" size="sm" onClick={() => navigate(`/browse/${profile.id}`)}>
+                    <Calendar className="h-4 w-4 mr-1" />
+                    Browse
+                  </Button>
+                  <Button 
+                    variant={isBookmarked ? "default" : "outline"} 
+                    size="sm" 
+                    onClick={handleToggleBookmark}
+                  >
+                    <Bookmark className={`h-4 w-4 ${isBookmarked ? 'fill-current' : ''}`} />
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={() => setReportOpen(true)}>
+                    <Flag className="h-4 w-4" />
+                  </Button>
+                </>
               )}
               {isOwnProfile && !editing && (
                 <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
@@ -296,13 +359,14 @@ export default function Profile() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Profile URL Slug</Label>
-                <div className="flex items-center space-x-2">
-                  <span className="text-sm text-muted-foreground">/profile/</span>
+                <Label>Profile Alias</Label>
+                <div className="flex items-center space-x-0">
+                  <span className="text-sm text-muted-foreground px-3 py-2 bg-muted rounded-l-md border border-r-0 border-input min-w-24 flex items-center justify-center">/profile/</span>
                   <Input
                     value={form.slug}
                     onChange={(e) => setForm({ ...form, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '') })}
                     placeholder="my-profile"
+                    className="rounded-l-none"
                   />
                 </div>
               </div>
@@ -350,13 +414,74 @@ export default function Profile() {
         <CardContent className="space-y-4">
           {editing ? (
             <>
-              <div className="space-y-2">
-                <Label>Skills (comma-separated)</Label>
-                <Input
-                  value={form.skills}
-                  onChange={(e) => setForm({ ...form, skills: e.target.value })}
-                  placeholder="e.g. Hair Cut, Massage, Consultation"
-                />
+              <div className="space-y-3">
+                <Label>Skills</Label>
+                <div className="space-y-3">
+                  {/* Input + Add Button */}
+                  <div className="flex gap-2">
+                    <Input
+                      value={skillInput}
+                      onChange={(e) => setSkillInput(e.target.value)}
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          if (skillInput.trim() && !form.skills.includes(skillInput.trim())) {
+                            setForm({
+                              ...form,
+                              skills: [...form.skills, skillInput.trim()]
+                            });
+                            setSkillInput('');
+                          }
+                        }
+                      }}
+                      placeholder="Add a skill (press Enter or click +)"
+                    />
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={() => {
+                        if (skillInput.trim() && !form.skills.includes(skillInput.trim())) {
+                          setForm({
+                            ...form,
+                            skills: [...form.skills, skillInput.trim()]
+                          });
+                          setSkillInput('');
+                        }
+                      }}
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+
+                  {/* Skills List */}
+                  <div className="space-y-2">
+                    {form.skills.map((skill) => (
+                      <div
+                        key={skill}
+                        className="flex items-center justify-between bg-secondary p-3 rounded-md"
+                      >
+                        <span className="text-sm font-medium">{skill}</span>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setForm({
+                              ...form,
+                              skills: form.skills.filter(s => s !== skill)
+                            });
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+
+                  {form.skills.length === 0 && (
+                    <p className="text-sm text-muted-foreground">No skills added yet</p>
+                  )}
+                </div>
               </div>
               <div className="space-y-2">
                 <Label>Hourly Rate ($)</Label>
