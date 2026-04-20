@@ -8,7 +8,7 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Input } from './ui/input';
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from './ui/alert-dialog';
-import { Calendar as CalendarIcon, Clock, User, MapPin, Search, Filter, Loader2, Share2, ExternalLink, ChevronRight, ArrowLeft, Check } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, User, MapPin, Search, Filter, Loader2, Share2, ExternalLink, ChevronRight, ArrowLeft, Check, Bookmark } from 'lucide-react';
 import { toast } from 'sonner';
 import { BrowseDetail } from './BrowseDetail';
 
@@ -52,6 +52,7 @@ export function BookingBrowse() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [copiedSlotId, setCopiedSlotId] = useState<string | null>(null);
   const [calendarMonth, setCalendarMonth] = useState(new Date());
+  const [viewMode, setViewMode] = useState<'all' | 'bookmarks'>('all');
 
   const today = new Date().toISOString().split('T')[0];
 
@@ -156,6 +157,72 @@ export function BookingBrowse() {
       b.opening_count - a.opening_count
     );
   }, [allOpenings]);
+
+  // Fetch bookmarks with provider details
+  const { data: bookmarkedProviders = [] } = useQuery({
+    queryKey: ['bookmarks-with-details', user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      try {
+        const { data: bookmarks, error: bookmarksError } = await supabase
+          .from('bookmarks')
+          .select('bookmarked_user_id')
+          .eq('user_id', user!.id);
+        
+        if (bookmarksError) {
+          console.error('Bookmarks fetch error:', bookmarksError);
+          throw bookmarksError;
+        }
+        
+        if (!bookmarks || bookmarks.length === 0) {
+          console.log('No bookmarks found');
+          return [];
+        }
+        
+        console.log('Bookmarks found:', bookmarks);
+        
+        const bookmarkedIds = bookmarks.map((b: any) => b.bookmarked_user_id);
+        
+        // Get provider details for bookmarked users - fetch directly from profiles
+        const { data: profiles, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, full_name, slug')
+          .in('id', bookmarkedIds);
+        
+        if (profilesError) {
+          console.error('Profiles fetch error:', profilesError);
+          throw profilesError;
+        }
+        
+        console.log('Bookmarked profiles:', profiles);
+        
+        if (!profiles) return [];
+        
+        // Map to ProviderAccount format
+        return profiles.map((profile: any) => ({
+          user_id: profile.id,
+          provider_name: profile.full_name || 'Unknown',
+          provider_slug: profile.slug || null,
+          opening_count: allOpenings.filter((o: any) => o.user_id === profile.id).length,
+          services: allOpenings
+            .filter((o: any) => o.user_id === profile.id)
+            .reduce((acc: string[], o: any) => {
+              if (!acc.includes(o.service)) acc.push(o.service);
+              return acc;
+            }, []),
+          workers: allOpenings
+            .filter((o: any) => o.user_id === profile.id)
+            .reduce((acc: string[], o: any) => {
+              if (!acc.includes(o.worker)) acc.push(o.worker);
+              return acc;
+            }, []),
+        }));
+      } catch (err) {
+        console.error('Bookmarks query error:', err);
+        return [];
+      }
+    },
+  });
 
   // Get openings for selected provider
   const selectedProviderOpenings = providerId 
@@ -264,8 +331,27 @@ export function BookingBrowse() {
         <div className="flex items-center justify-between">
           <h2 className="text-3xl font-bold text-foreground">Browse & Book</h2>
           <div className="text-sm text-muted-foreground">
-            {providers.length} providers ┬╖ {allOpenings.length} available slots
+            {providers.length} provider{providers.length !== 1 ? 's' : ''} • {allOpenings.length} available slot{allOpenings.length !== 1 ? 's' : ''}
           </div>
+        </div>
+
+        {/* Tab buttons */}
+        <div className="flex gap-2">
+          <Button
+            variant={viewMode === 'all' ? 'default' : 'outline'}
+            onClick={() => setViewMode('all')}
+            className="flex items-center gap-2"
+          >
+            All
+          </Button>
+          <Button
+            variant={viewMode === 'bookmarks' ? 'default' : 'outline'}
+            onClick={() => setViewMode('bookmarks')}
+            className="flex items-center gap-2"
+          >
+            <Bookmark className="h-4 w-4" />
+            Bookmarks ({bookmarkedProviders.length})
+          </Button>
         </div>
 
         {/* Search */}
@@ -283,69 +369,160 @@ export function BookingBrowse() {
           </CardContent>
         </Card>
 
-        {/* Providers Grid */}
-        {filteredProviders.length === 0 ? (
-          <Card className="shadow-soft border-card-border">
-            <CardContent className="text-center py-12">
-              <CalendarIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-foreground mb-2">No providers found</h3>
-              <p className="text-muted-foreground">Try adjusting your search or check back later.</p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredProviders.map((provider) => (
-              <Card 
-                key={provider.user_id} 
-                className="shadow-soft border-card-border hover:shadow-lg transition-all cursor-pointer"
-                onClick={() => navigate(`/browse/${provider.user_id}`)}
-              >
-                <CardHeader>
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-3 flex-1">
-                      <div
-                        className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium"
-                      >
-                        {provider.provider_name.substring(0, 2).toUpperCase()}
+        {/* Bookmarks View */}
+        {viewMode === 'bookmarks' && (
+          <div>
+            <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+              <Bookmark className="h-5 w-5" />
+              Bookmarks
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {bookmarkedProviders.map((provider) => (
+                <Card 
+                  key={provider.user_id} 
+                  className="shadow-soft border-card-border hover:shadow-lg transition-all cursor-pointer"
+                  onClick={() => navigate(`/browse/${provider.user_id}`)}
+                >
+                  <CardHeader>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3 flex-1">
+                        <div
+                          className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium"
+                        >
+                          {provider.provider_name.substring(0, 2).toUpperCase()}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-foreground truncate hover:underline">
+                            {provider.provider_name}
+                          </h3>
+                          <p className="text-sm text-muted-foreground">
+                            {provider.opening_count} available slots
+                          </p>
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-foreground truncate hover:underline">
-                          {provider.provider_name}
-                        </h3>
-                        <p className="text-sm text-muted-foreground">
-                          {provider.opening_count} available slots
-                        </p>
+                      <ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground mb-2">Services</p>
+                      <div className="flex flex-wrap gap-1">
+                        {provider.services.slice(0, 3).map(service => (
+                          <Badge key={service} variant="secondary" className="text-xs">
+                            {service}
+                          </Badge>
+                        ))}
+                        {provider.services.length > 3 && (
+                          <Badge variant="secondary" className="text-xs">
+                            +{provider.services.length - 3}
+                          </Badge>
+                        )}
                       </div>
                     </div>
-                    <ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div>
-                    <p className="text-xs font-medium text-muted-foreground mb-2">Services</p>
-                    <div className="flex flex-wrap gap-1">
-                      {provider.services.slice(0, 3).map(service => (
-                        <Badge key={service} variant="secondary" className="text-xs">
-                          {service}
-                        </Badge>
-                      ))}
-                      {provider.services.length > 3 && (
-                        <Badge variant="secondary" className="text-xs">
-                          +{provider.services.length - 3}
-                        </Badge>
-                      )}
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground mb-2">Workers</p>
+                      <p className="text-sm text-foreground truncate">
+                        {provider.workers.join(', ')}
+                      </p>
                     </div>
-                  </div>
-                  <div>
-                    <p className="text-xs font-medium text-muted-foreground mb-2">Workers</p>
-                    <p className="text-sm text-foreground truncate">
-                      {provider.workers.join(', ')}
-                    </p>
-                  </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* All View */}
+        {viewMode === 'all' && (
+          <>
+            {/* Empty state for bookmarks view */}
+            {bookmarkedProviders.length === 0 && (
+              <Card className="shadow-soft border-card-border bg-blue-50 border-blue-200">
+                <CardContent className="py-4 px-6">
+                  <p className="text-sm text-blue-900">
+                    💡 No bookmarks yet. Click the bookmark icon on any provider to save them here.
+                  </p>
                 </CardContent>
               </Card>
-            ))}
-          </div>
+            )}
+
+            {/* Providers Grid */}
+            {filteredProviders.length === 0 ? (
+              <Card className="shadow-soft border-card-border">
+                <CardContent className="text-center py-12">
+                  <CalendarIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-foreground mb-2">No providers found</h3>
+                  <p className="text-muted-foreground">Try adjusting your search or check back later.</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredProviders.map((provider) => (
+                  <Card 
+                    key={provider.user_id} 
+                    className="shadow-soft border-card-border hover:shadow-lg transition-all cursor-pointer"
+                    onClick={() => navigate(`/browse/${provider.user_id}`)}
+                  >
+                    <CardHeader>
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-center gap-3 flex-1">
+                          <div
+                            className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium"
+                          >
+                            {provider.provider_name.substring(0, 2).toUpperCase()}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-foreground truncate hover:underline">
+                              {provider.provider_name}
+                            </h3>
+                            <p className="text-sm text-muted-foreground">
+                              {provider.opening_count} available slots
+                            </p>
+                          </div>
+                        </div>
+                        <ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div>
+                        <p className="text-xs font-medium text-muted-foreground mb-2">Services</p>
+                        <div className="flex flex-wrap gap-1">
+                          {provider.services.slice(0, 3).map(service => (
+                            <Badge key={service} variant="secondary" className="text-xs">
+                              {service}
+                            </Badge>
+                          ))}
+                          {provider.services.length > 3 && (
+                            <Badge variant="secondary" className="text-xs">
+                              +{provider.services.length - 3}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-xs font-medium text-muted-foreground mb-2">Workers</p>
+                        <p className="text-sm text-foreground truncate">
+                          {provider.workers.join(', ')}
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Bookmarks empty state */}
+        {viewMode === 'bookmarks' && bookmarkedProviders.length === 0 && (
+          <Card className="shadow-soft border-card-border">
+            <CardContent className="text-center py-12">
+              <Bookmark className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-foreground mb-2">No bookmarks yet</h3>
+              <p className="text-muted-foreground mb-4">Click the bookmark icon on any provider to save them.</p>
+              <Button variant="outline" onClick={() => setViewMode('all')}>Browse All</Button>
+            </CardContent>
+          </Card>
         )}
       </div>
     );

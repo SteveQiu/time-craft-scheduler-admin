@@ -52,6 +52,25 @@ Keep responses SHORT:
 
 ---
 
+## Feature Validation (CRITICAL)
+
+**ALWAYS validate features before showing user results:**
+1. Make code changes
+2. Run automated tests (playwright, unit tests, etc.)
+3. Validate the feature works end-to-end
+4. ONLY THEN show user the results
+
+**Never ask user to validate.** I validate first, every time:
+- Every code change
+- Every restart or boot up
+- Every session
+- Before showing any results
+
+If validation fails, fix it or report the blocker—don't ask user to test.
+
+---
+
 ## Memory
 
 I remember this always. No asking "is it okay if I...?" - just do it.
+ALWAYS validate before showing results. Never ask user to validate.

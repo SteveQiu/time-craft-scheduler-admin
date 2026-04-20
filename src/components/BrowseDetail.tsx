@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader } from './ui/card';
 import { Button } from './ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from './ui/alert-dialog';
-import { Calendar as CalendarIcon, Loader2, Share2, ExternalLink, ArrowLeft, Check } from 'lucide-react';
+import { Calendar as CalendarIcon, Loader2, Share2, ExternalLink, ArrowLeft, Check, Crown, User } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface OpeningWithProfile {
@@ -50,6 +50,19 @@ export function BrowseDetail({
   const [showBookingDialog, setShowBookingDialog] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<OpeningWithProfile | null>(null);
   const [isBooking, setIsBooking] = useState(false);
+  const [isPremium, setIsPremium] = useState(false);
+  const [loadingPremium, setLoadingPremium] = useState(false);
+
+  // Fetch premium status for provider
+  useEffect(() => {
+    if (providerId) {
+      setLoadingPremium(true);
+      supabase.rpc('is_user_premium', { p_user_id: providerId })
+        .then(({ data }) => setIsPremium(data || false))
+        .catch(() => setIsPremium(false))
+        .finally(() => setLoadingPremium(false));
+    }
+  }, [providerId]);
 
   // Get provider
   const currentProvider = providers.find(p => p.user_id === providerId);
@@ -153,14 +166,32 @@ export function BrowseDetail({
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/browse')}>
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <div>
-          <h2 className="text-3xl font-bold text-foreground">{currentProvider.provider_name}</h2>
-          <p className="text-sm text-muted-foreground">{selectedProviderOpenings.length} available appointments</p>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="icon" onClick={() => navigate('/browse')}>
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <div className="flex-1">
+            <div className="flex items-center gap-2">
+              <h2 className="text-3xl font-bold text-foreground">{currentProvider.provider_name}</h2>
+              {isPremium && (
+                <div className="flex items-center gap-1 bg-amber-100 text-amber-800 px-2 py-1 rounded">
+                  <Crown className="h-4 w-4" />
+                  <span className="text-xs font-semibold">Premium</span>
+                </div>
+              )}
+            </div>
+            <p className="text-sm text-muted-foreground">{selectedProviderOpenings.length} available appointments</p>
+          </div>
         </div>
+        <Button 
+          variant="outline"
+          onClick={() => navigate(`/profile/${currentProvider.user_id}`)}
+          className="gap-2"
+        >
+          <User className="h-4 w-4" />
+          View Profile
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

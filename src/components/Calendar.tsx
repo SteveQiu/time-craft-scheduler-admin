@@ -210,6 +210,10 @@ export function Calendar() {
       newErrors.service = 'Service selection is required';
     }
     
+    if (!newOpening.location || !newOpening.location.trim()) {
+      newErrors.location = 'Address is required';
+    }
+    
     if (newOpening.duration <= 0) {
       newErrors.duration = 'Duration must be greater than 0';
     }
