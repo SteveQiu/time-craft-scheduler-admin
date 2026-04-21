@@ -47,7 +47,7 @@ export function Calendar() {
   const { isOrganization, isInternalDev } = useUserRoles();
   const modeParam = searchParams.get('mode');
   const isOrgMode = modeParam === 'org' && (isOrganization || isInternalDev);
-  const { workers: workerData, getWorkerRate: getOrgWorkerRate, getWorkerSkills: getOrgWorkerSkills } = useOrgWorkers();
+  const { workers: workerData, acceptedWorkers, getWorkerRate: getOrgWorkerRate, getWorkerSkills: getOrgWorkerSkills } = useOrgWorkers();
 
   // Fetch own profile for user mode (skills & rate)
   const { data: ownProfile } = useQuery({
@@ -138,8 +138,8 @@ export function Calendar() {
         worker: ownProfile.full_name || '',
         service: prev.service || (ownProfile.skills?.[0] || ''),
       }));
-    } else if (isOrgMode && workerData.length > 0 && !newOpening.worker) {
-      const firstWorker = workerData[0];
+    } else if (isOrgMode && acceptedWorkers.length > 0 && !newOpening.worker) {
+      const firstWorker = acceptedWorkers[0];
       const skills = getOrgWorkerSkills(firstWorker.worker_name);
       setNewOpening(prev => ({
         ...prev,
@@ -147,7 +147,7 @@ export function Calendar() {
         service: skills[0] || '',
       }));
     }
-  }, [isOrgMode, ownProfile, workerData]);
+  }, [isOrgMode, ownProfile, acceptedWorkers]);
 
   const monthNames = [
     'January', 'February', 'March', 'April', 'May', 'June',
@@ -160,7 +160,7 @@ export function Calendar() {
       loadOpeningsForMonth();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentDate, user, isOrgMode, workerData]);
+  }, [currentDate, user, isOrgMode, acceptedWorkers]);
 
   // Only fetch once per month, store all in state
   const loadOpeningsForMonth = async () => {
@@ -183,16 +183,16 @@ export function Calendar() {
       // In user mode, only fetch own openings
       if (!isOrgMode) {
         query = query.eq('user_id', user.id);
-      } else if (isOrgMode && workerData.length > 0) {
-        // In org mode, only fetch openings from org workers
-        const orgWorkerUserIds = workerData
+      } else if (isOrgMode && acceptedWorkers.length > 0) {
+        // In org mode, only fetch openings from accepted org workers
+        const orgWorkerUserIds = acceptedWorkers
           .filter(w => w.user_id)
           .map(w => w.user_id);
         
         if (orgWorkerUserIds.length > 0) {
           query = query.in('user_id', orgWorkerUserIds);
         } else {
-          // No accepted workers yet, show empty
+          // No accepted workers with user_id yet, show empty
           setOpenings([]);
           return;
         }
@@ -950,7 +950,7 @@ export function Calendar() {
                     <SelectValue placeholder="Select worker" />
                   </SelectTrigger>
                   <SelectContent>
-                    {workerData.map((w) => (
+                    {acceptedWorkers.map((w) => (
                       <SelectItem key={w.id} value={w.worker_name}>{w.worker_name}</SelectItem>
                     ))}
                   </SelectContent>
