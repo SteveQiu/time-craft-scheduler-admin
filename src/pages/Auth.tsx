@@ -200,7 +200,7 @@ export default function Auth() {
               </TabsList>
 
               <TabsContent value="signin">
-                <form onSubmit={handleSignIn} className="space-y-4">
+                <form id="signin-form" onSubmit={handleSignIn} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="signin-email">Email</Label>
                     <Input
@@ -224,14 +224,23 @@ export default function Auth() {
                       disabled={isLoading}
                     />
                   </div>
-                  <Button type="submit" className="w-full" disabled={isLoading}>
+                  <Button 
+                    form="signin-form"
+                    type="submit" 
+                    className="w-full" 
+                    disabled={isLoading}
+                    onClick={() => {
+                      const form = document.getElementById('signin-form') as HTMLFormElement;
+                      if (form && !isLoading) form.requestSubmit();
+                    }}
+                  >
                     {isLoading ? 'Signing in...' : 'Sign In'}
                   </Button>
                 </form>
               </TabsContent>
 
               <TabsContent value="signup">
-                <form onSubmit={handleSignUp} className="space-y-4">
+                <form id="signup-form" onSubmit={handleSignUp} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="signup-name">Full Name</Label>
                     <Input
@@ -281,14 +290,23 @@ export default function Auth() {
                       </div>
                     </RadioGroup>
                   </div>
-                  <Button type="submit" className="w-full" disabled={isLoading}>
+                  <Button 
+                    form="signup-form"
+                    type="submit" 
+                    className="w-full" 
+                    disabled={isLoading}
+                    onClick={() => {
+                      const form = document.getElementById('signup-form') as HTMLFormElement;
+                      if (form && !isLoading) form.requestSubmit();
+                    }}
+                  >
                     {isLoading ? 'Creating account...' : 'Sign Up'}
                   </Button>
                 </form>
               </TabsContent>
 
               <TabsContent value="reset">
-                <form onSubmit={handlePasswordReset} className="space-y-4">
+                <form id="reset-form" onSubmit={handlePasswordReset} className="space-y-4">
                   {resetSent ? (
                     <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
                       <p className="text-sm text-green-800 dark:text-green-200">
@@ -312,7 +330,16 @@ export default function Auth() {
                       <p className="text-sm text-muted-foreground">
                         Enter the email address associated with your account. You'll receive a link to reset your password.
                       </p>
-                      <Button type="submit" className="w-full" disabled={isLoading}>
+                      <Button 
+                        form="reset-form"
+                        type="submit" 
+                        className="w-full" 
+                        disabled={isLoading}
+                        onClick={() => {
+                          const form = document.getElementById('reset-form') as HTMLFormElement;
+                          if (form && !isLoading) form.requestSubmit();
+                        }}
+                      >
                         {isLoading ? 'Sending...' : 'Send Reset Link'}
                       </Button>
                     </>
