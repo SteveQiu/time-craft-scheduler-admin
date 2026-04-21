@@ -160,7 +160,7 @@ export function Calendar() {
       loadOpeningsForMonth();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentDate, user, isOrgMode]);
+  }, [currentDate, user, isOrgMode, workerData]);
 
   // Only fetch once per month, store all in state
   const loadOpeningsForMonth = async () => {
@@ -180,9 +180,22 @@ export function Calendar() {
         .order('date')
         .order('start_time');
 
-      // In user mode, only fetch own openings. In org mode, fetch all.
+      // In user mode, only fetch own openings
       if (!isOrgMode) {
         query = query.eq('user_id', user.id);
+      } else if (isOrgMode && workerData.length > 0) {
+        // In org mode, only fetch openings from org workers
+        const orgWorkerUserIds = workerData
+          .filter(w => w.user_id)
+          .map(w => w.user_id);
+        
+        if (orgWorkerUserIds.length > 0) {
+          query = query.in('user_id', orgWorkerUserIds);
+        } else {
+          // No accepted workers yet, show empty
+          setOpenings([]);
+          return;
+        }
       }
 
       const { data, error } = await query;
@@ -499,15 +512,18 @@ export function Calendar() {
     }
 
     try {
-      const { error } = await supabase
-        .from('openings')
-        .delete()
-        .eq('id', id)
-        .eq('user_id', user.id); // Additional security check
+      // In user mode, only delete own openings. In org mode, RLS will validate authorization
+      let query = supabase.from('openings').delete().eq('id', id);
+      
+      if (!isOrgMode) {
+        query = query.eq('user_id', user.id);
+      }
+
+      const { error } = await query;
 
       if (error) throw error;
       
-  await loadOpeningsForMonth();
+      await loadOpeningsForMonth();
       toast.success('Opening removed successfully');
     } catch (error) {
       console.error('Error removing opening:', error);
