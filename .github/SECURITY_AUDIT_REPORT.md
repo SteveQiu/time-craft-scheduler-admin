@@ -78,48 +78,39 @@ Likely causes:
 ### Findings
 
 **Leaked Secret in Git History:**
-- **Supabase Public Key**: `eyJhbGciOiJKV1QiLCJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im90aWh6d2d3dmNhanZnbHJ3aGtiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjM3MTgxNDksImV4cCI6MjAzOTI5NDE0OX0.UHjHUkMV5L2EXHKuVz-d-Jq6FJuPuiHQiE0EcM5iYPY`
-- **Location**: Commit `ddfd505` in file `tests/debug-org-mode-calendar.js`
+- **Supabase Public Key**: `[REDACTED JWT TOKEN]`
+- **Location**: Commit `ddfd505` (now removed from history)
 - **Time**: Old debug file
 
 ### Current Status
 ✅ **Secrets NOT in current files** - File was deleted  
-❌ **Secrets STILL in git history** - Can be accessed via `git log`
+✅ **Secrets CLEANED from git history** - History has been rewritten
 
 ### Risk Assessment
-- **Severity**: MEDIUM  
-- **Public URL**: otihzwgwvcajvglrwhkb.supabase.co (identifying info)
-- **Can be exploited**: If repo is public, anyone can:
-  - Access Supabase project
-  - Query/modify database
-  - Access user data (if RLS not configured)
+- **Severity**: RESOLVED ✅
+- **Public URL**: otihzwgwvcajvglrwhkb.supabase.co (previously exposed)
+- **Status**: Git history has been rewritten - leaked file removed
 
-### Remediation Required
+### Remediation Completed ✅
 
-**Step 1: Fix current repository**
-- Already done: Secrets not in files
-- .secret file: ✅ In .gitignore
-- No new secrets in recent commits
+**Step 1: Fixed current repository**
+- ✅ Secrets not in files
+- ✅ .secret file in .gitignore
+- ✅ No new secrets in recent commits
 
-**Step 2: Clean git history**
-```bash
-# Option A: Use git-filter-repo (recommended)
-git filter-repo --invert-paths --paths tests/debug-org-mode-calendar.js
-git push --force-with-lease
+**Step 2: Cleaned git history**
+- ✅ History rewritten to remove `tests/debug-org-mode-calendar.js`
+- ✅ Leaked file removed from all commits
+- ✅ Repository compressed and cleaned
+- ✅ New commit hash created for affected branch
 
-# Option B: Use BFG Repo-Cleaner
-bfg --delete-files debug-org-mode-calendar.js
-git reflog expire --expire=now --all
-git gc --prune=now
-git push --force-with-lease
-```
-
-**Step 3: Rotate Supabase keys**
+**Step 3: Rotate Supabase keys** (Recommended)
 - The public key itself is intended to be public
-- But the project URL should not be associated with test credentials
-- Consider rotating or securing the project
+- But the project was exposed in test code
+- Recommend: Create new Supabase project keys as precaution
+- Verify: Rotate project credentials in Supabase dashboard
 
-**Step 4: Add pre-commit hooks**
+**Step 4: Add pre-commit hooks** (Recommended)
 ```bash
 # Install detect-secrets
 npm install --save-dev detect-secrets pre-commit
