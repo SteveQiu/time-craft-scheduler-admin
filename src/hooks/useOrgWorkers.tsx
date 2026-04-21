@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useAuth } from './useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -69,7 +70,10 @@ export function useOrgWorkers() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['org-workers'] }),
   });
 
-  const acceptedWorkers = workers.filter(w => w.status === 'accepted');
+  const acceptedWorkers = useMemo(
+    () => workers.filter(w => w.status === 'accepted'),
+    [workers]
+  );
   const getWorkerByName = (name: string) => workers.find(w => w.worker_name === name);
   const getWorkerRate = (name: string) => getWorkerByName(name)?.hourly_rate ?? 0;
   const getWorkerSkills = (name: string) => getWorkerByName(name)?.skills ?? [];
