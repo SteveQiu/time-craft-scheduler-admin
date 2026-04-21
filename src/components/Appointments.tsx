@@ -64,18 +64,9 @@ export function Appointments() {
         .select('*');
 
       if (isOrgView) {
-        // Org view: show appointments where provider is an accepted org worker
-        const orgMemberIds = acceptedWorkers
-          .map((w: any) => w.user_id)
-          .filter(Boolean);
-        
-        if (orgMemberIds.length === 0) {
-          // No accepted org members yet, return empty
-          return [];
-        }
-        
-        // Show only appointments for accepted org providers
-        query = query.in('provider_id', orgMemberIds);
+        // Org view: show appointments where provider is the org (provider_id = org owner)
+        // All org openings/appointments have provider_id = org owner's ID
+        query = query.eq('provider_id', user.id);
       } else {
         // User view: show appointments where user is either:
         // 1. The booker/customer (user_id = user.id), OR

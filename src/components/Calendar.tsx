@@ -184,23 +184,10 @@ export function Calendar() {
       // In user mode, only fetch own openings
       if (!isOrgMode) {
         query = query.eq('user_id', user.id);
-      } else if (isOrgMode && acceptedWorkers.length > 0) {
-        // In org mode, only fetch openings from accepted org workers
-        const orgWorkerUserIds = acceptedWorkers
-          .filter(w => w.user_id)
-          .map(w => w.user_id);
-        
-        if (orgWorkerUserIds.length > 0) {
-          query = query.in('user_id', orgWorkerUserIds);
-        } else {
-          // No accepted workers with user_id yet, show empty
-          setOpenings([]);
-          return;
-        }
-      } else if (isOrgMode && acceptedWorkers.length === 0) {
-        // Org mode but no workers yet - show empty instead of all openings
-        setOpenings([]);
-        return;
+      } else if (isOrgMode) {
+        // In org mode, fetch openings created by this org (user_id = org owner)
+        // Openings are created with user_id = org owner's ID
+        query = query.eq('user_id', user.id);
       }
 
       const { data, error } = await query;
@@ -373,7 +360,9 @@ export function Calendar() {
     }
     setLoading(true);
     const workerName = isOrgMode ? newOpening.worker : selfWorkerName;
-    const workerUserId = getWorkerUserId(workerName);
+    // In org mode, openings.user_id stores the org owner's ID (for RLS policy)
+    // In user mode, it stores the individual provider's ID
+    const workerUserId = isOrgMode ? user.id : getWorkerUserId(workerName);
     
     if (isOrgMode && !workerUserId) {
       toast.error('Selected worker has no user account yet');
