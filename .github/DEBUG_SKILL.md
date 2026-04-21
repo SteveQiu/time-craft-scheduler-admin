@@ -111,6 +111,55 @@ console.log('user_ids:', acceptedWorkers.map(w => w.user_id)); // Are they null?
 
 ### Phase 7: Validate Fix
 
+#### Playwright Tests (NEW - Create for all fixes)
+**This is now part of the required validation process!**
+
+```bash
+# 1. Create Playwright test file for the fix
+# tests/validate-<bug-name>.spec.ts
+
+# Example structure:
+# - Test the fixed behavior
+# - Test that regression doesn't occur
+# - Test edge cases
+# - Verify code changes are present
+
+# 2. Run the tests
+npm test tests/validate-<bug-name>.spec.ts
+
+# 3. Update snapshots if needed
+npm test -- --update-snapshots
+```
+
+**Playwright Test Template:**
+```typescript
+test.describe('Bug Fix: <Issue Name>', () => {
+  test('Should fix the specific issue', async ({ page }) => {
+    // Reproduce the exact scenario
+    // Verify the fix works
+    // Check no console errors
+  });
+
+  test('Should not regress related features', async ({ page }) => {
+    // Test similar but slightly different scenario
+    // Ensure you didn't break anything else
+  });
+
+  test('Code changes are present', async () => {
+    // Verify the fix was actually applied
+    const file = require('fs').readFileSync('src/file.tsx', 'utf-8');
+    expect(file).toContain('expectedFix');
+  });
+});
+```
+
+**Why Playwright Tests Matter:**
+- Automated validation (no manual testing needed)
+- Catches regressions in future changes
+- Documents what "fixed" means
+- Creates visual snapshots for regression detection
+- Tests both code and runtime behavior
+
 #### Code Validation
 ```bash
 # Check syntax
@@ -118,6 +167,9 @@ npm run lint
 
 # Run existing tests
 npm test
+
+# Check build
+npm run build
 ```
 
 #### Manual Testing
@@ -261,10 +313,13 @@ const { data, error } = await supabase
 Problem is solved when:
 - ✅ Root cause is identified and documented
 - ✅ Fix is implemented and tested
+- ✅ **Playwright tests created to validate the fix**
+- ✅ **Playwright tests all pass**
 - ✅ No new errors in console
 - ✅ Related features still work
 - ✅ Edge cases handled
 - ✅ Solution is minimal and surgical
+- ✅ `.github/` updated with debugging learnings
 
 ## Remember
 
