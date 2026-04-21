@@ -254,11 +254,32 @@ export function Calendar() {
       newErrors.dateRangeEnd = 'End date is required';
     }
 
+    // Check that start date is not earlier than today
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    if (newOpening.multipleDates && newOpening.dateRangeStart) {
+      const startDate = new Date(newOpening.dateRangeStart);
+      startDate.setHours(0, 0, 0, 0);
+      if (startDate < today) {
+        newErrors.dateRangeStart = 'Start date cannot be earlier than today';
+      }
+    }
+
     if (newOpening.multipleDates && newOpening.dateRangeStart && newOpening.dateRangeEnd) {
       const startDate = new Date(newOpening.dateRangeStart);
       const endDate = new Date(newOpening.dateRangeEnd);
       if (startDate > endDate) {
         newErrors.dateRangeEnd = 'End date must be after start date';
+      }
+    }
+    
+    // Check that single selected date is not earlier than today
+    if (!newOpening.multipleDates) {
+      const selectedDateOnly = new Date(selectedDate);
+      selectedDateOnly.setHours(0, 0, 0, 0);
+      if (selectedDateOnly < today) {
+        newErrors.date = 'Cannot add openings to past dates';
       }
     }
 
@@ -777,6 +798,7 @@ export function Calendar() {
           <DialogHeader>
             <DialogTitle>Add Opening for {selectedDate.toLocaleDateString()}</DialogTitle>
           </DialogHeader>
+          {errors.date && <p className="text-sm text-destructive">{errors.date}</p>}
           <div className="space-y-4 pt-4">
             <div className="flex items-center space-x-2">
               <Switch 
