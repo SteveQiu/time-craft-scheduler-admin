@@ -109,10 +109,10 @@ After:
 5. **Document clearly** - Future you will thank you
 
 ### When Debugging
-1. **Use DEBUG SKILL** - See .github/DEBUG_SKILL.md
+1. **Use DEBUG SKILL** - See [.github/DEBUG_SKILL.md](.github/DEBUG_SKILL.md)
 2. **Follow 7-phase process** - Understand → Hypothesize → Test → Fix
 3. **Create tests** - Validate fix, prevent regressions
-4. **Document findings** - Record what you learned
+4. **Document findings** - Record what you learned in .github/
 
 ### When Organizing Code
 1. **One concern per file** - Keep components focused
@@ -128,10 +128,11 @@ After:
 ```
 time-craft-scheduler-admin/
 ├── .github/
+│   ├── INDEX.md                           (Documentation index)
 │   ├── DEBUG_SKILL.md                     (Debugging process)
-│   ├── ORG_MODE_FIXES.md                  (Complex fixes)
-│   ├── SECURITY_FIX_*.md                  (Security updates)
-│   └── ... (strategic docs)
+│   ├── ORG_MODE_OPENING_RLS_FIX.md        (RLS fix documentation)
+│   ├── ORG_MODE_OPENINGS_VISIBILITY_FIX.md (Org openings fix)
+│   └── ... (strategic docs - see INDEX.md)
 │
 ├── src/
 │   ├── components/                        (React components)
