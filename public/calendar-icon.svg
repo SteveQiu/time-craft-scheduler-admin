@@ -1,8 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="time-craft scheduler">
+  <title>time-craft scheduler calendar icon</title>
   <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"></path>
   <polyline points="16 2 16 6 8 6 8 2"></polyline>
   <line x1="3" y1="10" x2="21" y2="10"></line>
-  <circle cx="8" cy="15" r="1" fill="currentColor"></circle>
-  <circle cx="12" cy="15" r="1" fill="currentColor"></circle>
-  <circle cx="16" cy="15" r="1" fill="currentColor"></circle>
+  <circle cx="8" cy="15" r="1" fill="#9ca3af"></circle>
+  <circle cx="12" cy="15" r="1" fill="#9ca3af"></circle>
+  <circle cx="16" cy="15" r="1" fill="#9ca3af"></circle>
 </svg>

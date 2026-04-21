@@ -331,7 +331,7 @@ export function BookingBrowse() {
         <div className="flex items-center justify-between">
           <h2 className="text-3xl font-bold text-foreground">Browse & Book</h2>
           <div className="text-sm text-muted-foreground">
-            {providers.length} provider{providers.length !== 1 ? 's' : ''} • {allOpenings.length} available slot{allOpenings.length !== 1 ? 's' : ''}
+            {providers.length} provider{providers.length !== 1 ? 's' : ''}
           </div>
         </div>
 
@@ -349,7 +349,7 @@ export function BookingBrowse() {
             onClick={() => setViewMode('bookmarks')}
             className="flex items-center gap-2"
           >
-            <Bookmark className="h-4 w-4" />
+            <Bookmark className="h-4 w-4 text-muted-foreground" />
             Bookmarks ({bookmarkedProviders.length})
           </Button>
         </div>

@@ -1,27 +1,59 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Calendar, Users, Clock, DollarSign, TrendingUp, CheckCircle } from 'lucide-react';
+import { Calendar, Users, Clock, DollarSign, TrendingUp, CheckCircle, Loader2 } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 import { WorkerInvites } from './WorkerInvites';
 
 export function Dashboard() {
+  const { user } = useAuth();
+
+  // Fetch user's appointments
+  const { data: appointments = [], isLoading } = useQuery({
+    queryKey: ['dashboard-appointments', user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('appointments')
+        .select('*, profiles!appointments_freelancer_id_fkey(full_name)')
+        .eq('user_id', user!.id)
+        .order('date', { ascending: false })
+        .limit(10);
+      
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  // Calculate stats
+  const totalAppointments = appointments.length;
+  const confirmedCount = appointments.filter(a => a.status === 'confirmed').length;
+  const pendingCount = appointments.filter(a => a.status === 'pending').length;
+  
+  const today = new Date().toISOString().split('T')[0];
+  const todayAppointments = appointments.filter(a => a.date === today);
+
   const stats = [
-    { title: 'Total Appointments', value: '127', icon: Calendar, change: '+12%', trend: 'up' },
-    { title: 'Active Workers', value: '8', icon: Users, change: '+2', trend: 'up' },
-    { title: 'Today\'s Bookings', value: '24', icon: Clock, change: '+8%', trend: 'up' },
-    { title: 'Revenue', value: '$3,420', icon: DollarSign, change: '+15%', trend: 'up' },
+    { title: 'Total Appointments', value: totalAppointments.toString(), icon: Calendar, change: '—', trend: 'neutral' },
+    { title: 'Confirmed', value: confirmedCount.toString(), icon: CheckCircle, change: confirmedCount > 0 ? '+' + confirmedCount : '0', trend: 'up' },
+    { title: 'Today\'s Bookings', value: todayAppointments.length.toString(), icon: Clock, change: todayAppointments.length > 0 ? '+' + todayAppointments.length : '0', trend: 'up' },
+    { title: 'Pending', value: pendingCount.toString(), icon: Users, change: pendingCount > 0 ? '+' + pendingCount : '0', trend: 'neutral' },
   ];
 
-  const recentAppointments = [
-    { id: 1, client: 'John Doe', worker: 'Sarah Johnson', service: 'Hair Cut', time: '10:00 AM', status: 'confirmed' },
-    { id: 2, client: 'Jane Smith', worker: 'Mike Wilson', service: 'Massage', time: '2:00 PM', status: 'pending' },
-    { id: 3, client: 'Bob Johnson', worker: 'Lisa Chen', service: 'Consultation', time: '4:30 PM', status: 'confirmed' },
-  ];
+  if (isLoading) {
+    return (
+      <div className="p-6 flex justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-6">
       <div>
         <h2 className="text-3xl font-bold text-foreground mb-2">Dashboard</h2>
-        <p className="text-muted-foreground">Welcome to your appointment management system</p>
+        <p className="text-muted-foreground">Your appointment overview</p>
       </div>
 
       {/* Worker Invites */}
@@ -42,9 +74,8 @@ export function Dashboard() {
               <CardContent>
                 <div className="text-2xl font-bold text-foreground">{stat.value}</div>
                 <div className="flex items-center text-sm">
-                  <TrendingUp className="h-3 w-3 text-success mr-1" />
-                  <span className="text-success">{stat.change}</span>
-                  <span className="text-muted-foreground ml-1">from last month</span>
+                  {stat.trend === 'up' && <TrendingUp className="h-3 w-3 text-success mr-1" />}
+                  <span className={stat.trend === 'up' ? 'text-success' : 'text-muted-foreground'}>{stat.change}</span>
                 </div>
               </CardContent>
             </Card>
@@ -58,36 +89,39 @@ export function Dashboard() {
           <CardTitle className="text-xl font-semibold text-foreground">Recent Appointments</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {recentAppointments.map((appointment) => (
-              <div key={appointment.id} className="flex items-center justify-between p-4 bg-secondary rounded-lg">
-                <div className="flex items-center space-x-4">
-                  <div className="flex-shrink-0">
-                    <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
-                      <span className="text-primary-foreground font-medium">
-                        {appointment.client.split(' ').map(n => n[0]).join('')}
-                      </span>
+          {appointments.length === 0 ? (
+            <p className="text-muted-foreground text-center py-8">No appointments yet</p>
+          ) : (
+            <div className="space-y-4">
+              {appointments.map((appointment) => (
+                <div key={appointment.id} className="flex items-center justify-between p-4 bg-secondary rounded-lg">
+                  <div className="flex items-center space-x-4">
+                    <div className="flex-shrink-0">
+                      <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
+                        <span className="text-primary-foreground font-medium text-xs">
+                          {appointment.profiles?.full_name?.split(' ').map((n: string) => n[0]).join('') || '?'}
+                        </span>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="font-medium text-foreground">{appointment.profiles?.full_name || 'Unknown'}</p>
+                      <p className="text-sm text-muted-foreground">{appointment.service} • {appointment.date}</p>
                     </div>
                   </div>
-                  <div>
-                    <p className="font-medium text-foreground">{appointment.client}</p>
-                    <p className="text-sm text-muted-foreground">{appointment.service} with {appointment.worker}</p>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-4">
-                  <span className="text-sm font-medium text-foreground">{appointment.time}</span>
                   <div className={`flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium ${
                     appointment.status === 'confirmed' 
                       ? 'bg-success-light text-success' 
-                      : 'bg-warning-light text-warning'
+                      : appointment.status === 'pending'
+                      ? 'bg-warning-light text-warning'
+                      : 'bg-red-100 text-red-700'
                   }`}>
                     {appointment.status === 'confirmed' && <CheckCircle className="h-3 w-3" />}
                     <span className="capitalize">{appointment.status}</span>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
