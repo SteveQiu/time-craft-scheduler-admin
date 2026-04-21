@@ -597,14 +597,23 @@ export function Calendar() {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold text-foreground">Opening</h2>
-        <Button 
-          onClick={() => setShowAddOpening(true)} 
-          className="flex items-center space-x-2"
-          disabled={!user}
-        >
-          <Plus className="h-4 w-4" />
-          <span>Add Opening</span>
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button 
+            onClick={() => setCurrentDate(new Date())} 
+            variant="outline"
+            className="flex items-center space-x-2"
+          >
+            <span>Today</span>
+          </Button>
+          <Button 
+            onClick={() => setShowAddOpening(true)} 
+            className="flex items-center space-x-2"
+            disabled={!user}
+          >
+            <Plus className="h-4 w-4" />
+            <span>Add Opening</span>
+          </Button>
+        </div>
       </div>
 
       {!user && (
