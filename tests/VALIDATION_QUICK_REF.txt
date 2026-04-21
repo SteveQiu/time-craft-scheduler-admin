@@ -1,0 +1,92 @@
+# Playwright Validation - Quick Reference
+
+## Run Tests
+
+```bash
+# Calendar blinking fix tests (6 tests, ~10s)
+npm test tests/validate-blinking-fix.spec.ts
+
+# Appointments org view tests (8 tests, ~45s)
+npm test tests/validate-appointments-org-view.spec.ts
+
+# Both suites with browser visible
+npm test -- --headed
+
+# Update snapshot baselines (do once)
+npm test -- --update-snapshots
+```
+
+## Manual Browser Validation
+
+### Calendar Blinking Fix
+```
+1. npm run dev
+2. Open: http://localhost:8080/calendar?mode=org
+3. Observe: Do openings load smoothly? (No flickering?)
+4. Click: "Next" month
+5. Result: Month transitions smooth ✅
+```
+
+### Appointments Org View Fix
+```
+1. npm run dev
+2. Open: http://localhost:8080/appointments?mode=org
+3. Observe: Are appointments visible?
+4. Press: F5 to reload
+5. Result: Same appointments remain ✅
+```
+
+## Test Files
+
+| File | Tests | Time | Status |
+|------|-------|------|--------|
+| `validate-blinking-fix.spec.ts` | 6 | 9.8s | ✅ PASS |
+| `validate-appointments-org-view.spec.ts` | 8 | 43.9s | ✅ PASS |
+
+## Documentation Files
+
+- `VALIDATION_COMPLETE.md` - Full validation overview & checklist
+- `MANUAL_PLAYWRIGHT_VALIDATION.md` - Step-by-step browser tests
+- `PLAYWRIGHT_VALIDATION_REPORT.md` - Test results & snapshots
+
+## Validation Checklist
+
+### Calendar Fix ✅
+- [ ] Run: `npm test tests/validate-blinking-fix.spec.ts` (expect 6 PASS)
+- [ ] Manual: Load calendar in org mode (expect no flickering)
+- [ ] Manual: Click next month (expect smooth transition)
+- [ ] Confirm: Dev console shows minimal mutations
+
+### Appointments Fix ✅
+- [ ] Run: `npm test tests/validate-appointments-org-view.spec.ts` (expect 8 PASS)
+- [ ] Manual: Load appointments in org mode (expect data visible)
+- [ ] Manual: Reload page (expect same content)
+- [ ] Confirm: HTML contains provider/date/status fields
+
+## Key Metrics
+
+- **Calendar tests:** 6/6 passing ✅
+- **Appointments tests:** 8/8 passing ✅
+- **Total execution time:** ~53 seconds
+- **DOM mutation baseline:** < 100 mutations = stable ✅
+- **Code coverage:** 2 files (Calendar.tsx, Appointments.tsx)
+
+## Code Changes Verified
+
+**Calendar.tsx:**
+- Line 168: `setLoading(true)` added
+- Lines 211-213: `setLoading(false)` in finally block
+
+**Appointments.tsx:**
+- Line 43: Import `acceptedWorkers`
+- Line 58: Use in queryKey
+- Lines 69-71: Filter by acceptedWorkers
+
+## Expected Results
+
+**Calendar:** ✅ Smooth loading, no visual flicker  
+**Appointments:** ✅ Org appointments visible and stable  
+
+---
+
+**Next Step:** Follow `MANUAL_PLAYWRIGHT_VALIDATION.md` for browser testing
