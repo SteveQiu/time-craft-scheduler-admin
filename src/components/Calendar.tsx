@@ -197,6 +197,10 @@ export function Calendar() {
           setOpenings([]);
           return;
         }
+      } else if (isOrgMode && acceptedWorkers.length === 0) {
+        // Org mode but no workers yet - show empty instead of all openings
+        setOpenings([]);
+        return;
       }
 
       const { data, error } = await query;
