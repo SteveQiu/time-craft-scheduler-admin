@@ -530,11 +530,16 @@ export function Calendar() {
 
       if (error) throw error;
       
-      await loadOpeningsForMonth();
+      // Instead of reloading everything, just remove from local state
+      // This is faster and more reliable than re-fetching
+      setOpenings(prev => prev.filter(opening => opening.id !== id));
+      
       toast.success('Opening removed successfully');
     } catch (error) {
       console.error('Error removing opening:', error);
       toast.error('Failed to remove opening');
+      // On error, reload to ensure we have latest data
+      await loadOpeningsForMonth();
     }
   };
 
