@@ -354,7 +354,12 @@ export function Calendar() {
     return getOpeningsForDate(date).length > 0;
   };
 
-  // getWorkerRate is now imported from @/data/workers
+  // Get worker's user_id for org mode
+  const getWorkerUserId = (name: string): string | null => {
+    if (!isOrgMode) return user?.id || null;
+    const worker = acceptedWorkers.find(w => w.worker_name === name);
+    return worker?.user_id || null;
+  };
 
   // --- addOpening function restored below ---
   const addOpening = async () => {
@@ -368,6 +373,14 @@ export function Calendar() {
     }
     setLoading(true);
     const workerName = isOrgMode ? newOpening.worker : selfWorkerName;
+    const workerUserId = getWorkerUserId(workerName);
+    
+    if (isOrgMode && !workerUserId) {
+      toast.error('Selected worker has no user account yet');
+      setLoading(false);
+      return;
+    }
+    
     try {
         if (newOpening.multipleDates && newOpening.dateRangeStart && newOpening.dateRangeEnd) {
           // Create multiple openings for selected dates and weekdays
@@ -399,7 +412,7 @@ export function Calendar() {
                   const endTimeStr = calculateEndTime(startTimeStr, newOpening.interval);
                   
                   newOpenings.push({
-                    user_id: user.id,
+                    user_id: workerUserId,
                     date: dateStr,
                     start_time: startTimeStr,
                     end_time: endTimeStr,
@@ -418,7 +431,7 @@ export function Calendar() {
                 const endTimeStr = calculateEndTime(startTimeStr, newOpening.duration);
                 
                 newOpenings.push({
-                  user_id: user.id,
+                  user_id: workerUserId,
                   date: dateStr,
                   start_time: startTimeStr,
                   end_time: endTimeStr,
@@ -455,7 +468,7 @@ export function Calendar() {
             const endTimeStr = calculateEndTime(startTimeStr, newOpening.interval);
             const rateValue = newOpening.isFree ? 0 : Number(getWorkerRate(workerName));
             newOpenings.push({
-              user_id: user.id,
+              user_id: workerUserId,
               date: dateStr,
               start_time: startTimeStr,
               end_time: endTimeStr,
@@ -478,7 +491,7 @@ export function Calendar() {
           const dateStr = selectedDate.toISOString().split('T')[0];
           const rateValue = newOpening.isFree ? 0 : Number(getWorkerRate(workerName));
           const opening = {
-            user_id: user.id,
+            user_id: workerUserId,
             date: dateStr,
             start_time: newOpening.startTime,
             end_time: calculateEndTime(newOpening.startTime, newOpening.duration),
