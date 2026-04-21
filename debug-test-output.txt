@@ -1,0 +1,25 @@
+
+> vite_react_shadcn_ts@0.0.0 test
+> playwright test tests/debug-org-openings-sdeqiu.spec.ts --reporter=verbose
+
+Error: Cannot find module 'verbose'
+Require stack:
+- C:\git\time-craft-scheduler-admin\node_modules\playwright\lib\testActions.js
+- C:\git\time-craft-scheduler-admin\node_modules\playwright\lib\program.js
+- C:\git\time-craft-scheduler-admin\node_modules\@playwright\test\cli.js
+    at Module._resolveFilename (node:internal/modules/cjs/loader:1140:15)
+    at Function.resolve (node:internal/modules/helpers:188:19)
+    at resolveReporter (C:\git\time-craft-scheduler-admin\node_modules\playwright\lib\testActions.js:212:18)
+    at C:\git\time-craft-scheduler-admin\node_modules\playwright\lib\testActions.js:173:42
+    at Array.map (<anonymous>)
+    at resolveReporterOption (C:\git\time-craft-scheduler-admin\node_modules\playwright\lib\testActions.js:173:30)
+    at overridesFromOptions (C:\git\time-craft-scheduler-admin\node_modules\playwright\lib\testActions.js:135:15)
+    at runTests (C:\git\time-craft-scheduler-admin\node_modules\playwright\lib\testActions.js:50:24)
+    at async i.<anonymous> (C:\git\time-craft-scheduler-admin\node_modules\playwright\lib\program.js:56:7) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    'C:\\git\\time-craft-scheduler-admin\\node_modules\\playwright\\lib\\testActions.js',
+    'C:\\git\\time-craft-scheduler-admin\\node_modules\\playwright\\lib\\program.js',
+    'C:\\git\\time-craft-scheduler-admin\\node_modules\\@playwright\\test\\cli.js'
+  ]
+}
