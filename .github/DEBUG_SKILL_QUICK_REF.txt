@@ -1,0 +1,136 @@
+DEBUG SKILL - QUICK REFERENCE
+════════════════════════════════════════════════════════════════════════════
+
+WHEN YOU SAY "DEBUG SKILL", I FOLLOW THIS 8-PHASE LOOP:
+
+1. UNDERSTAND THE PROBLEM
+   ├─ What is the user experiencing?
+   ├─ Where does it happen?
+   ├─ What should happen vs what actually happens?
+   └─ Is it consistent or intermittent?
+
+2. GATHER EVIDENCE
+   ├─ Browser console (F12) - errors, logs
+   ├─ Network tab - API requests, status codes, responses
+   ├─ Application tab - storage, auth tokens
+   ├─ Code investigation - grep, git log, git diff
+   └─ Database queries - test data directly
+
+3. FORM HYPOTHESIS
+   List most likely causes:
+   ├─ Data/Query Issue (most likely)
+   ├─ Authorization/Permissions
+   ├─ Initialization Order
+   ├─ Conditional Logic
+   ├─ Type Mismatch
+   ├─ Race Condition
+   └─ Caching (least likely)
+
+4. TEST HYPOTHESIS
+   ├─ Add console logs to isolate problem
+   ├─ Print actual vs expected values
+   ├─ Check data types
+   ├─ Narrow down where it breaks
+   └─ Create minimal reproduction case
+
+5. VERIFY ROOT CAUSE
+   ├─ Can you reproduce consistently?
+   ├─ Does it only happen with certain data?
+   ├─ Can you trace the bug through the entire flow?
+   └─ Is this the actual root cause or a symptom?
+
+6. IMPLEMENT FIX
+   ├─ Make minimal, surgical changes
+   ├─ Don't fix unrelated issues
+   ├─ Update related functions if needed
+   └─ Add comments explaining the fix
+
+7. VALIDATE FIX
+   ├─ Code validation (npm run lint)
+   ├─ Manual testing (exact broken scenario)
+   ├─ Test related features (didn't break anything)
+   ├─ Test edge cases (empty, null, etc)
+   ├─ Browser testing (no new errors)
+   └─ Reload page and verify
+
+8. LOOP UNTIL SOLVED
+   ├─ Still broken? → Go back to Phase 2
+   ├─ Problem solved?
+   │  ├─ Update .github/ with findings
+   │  ├─ Document the fix
+   │  └─ Commit with detailed message
+   └─ Done!
+
+COMMON PATTERNS TO CHECK
+
+Empty Array / No Results:
+  □ Is data being fetched? (network request made?)
+  □ Is response valid? (check network tab)
+  □ Is filter too strict? (removing all items?)
+  □ Are null checks removing valid data?
+
+Null Pointer:
+  □ Is variable defined?
+  □ Is it assigned a value?
+  □ Does property exist?
+  □ Did you check for null/undefined?
+
+Wrong Data Displayed:
+  □ Is correct data being queried?
+  □ Is correct data being filtered?
+  □ Is correct data being rendered?
+  □ Is cache showing old data?
+
+Authorization Denied:
+  □ Is user authenticated? (user?.id exists?)
+  □ Is user authorized? (right permissions?)
+  □ Is RLS policy correct?
+  □ Is auth header sent?
+
+Infinite Loop / Performance:
+  □ Is useEffect dependency array correct?
+  □ Is function being called repeatedly?
+  □ Is state being updated in render?
+  □ Is query being re-fetched too often?
+
+TOOLS TO USE
+
+Browser:
+  • Console: errors, logs, commands
+  • Network: HTTP requests, responses
+  • Application: storage, cookies, cache
+  • Sources: breakpoints, step through
+
+Code Search:
+  grep -n "term" src/components/File.tsx
+  grep -r "term" src/
+
+Git:
+  git log --oneline -10
+  git diff HEAD~1 src/file.tsx
+  git blame src/file.tsx
+
+Database:
+  const { data, error } = await supabase
+    .from('table').select('*').eq('id', 'x');
+
+SUCCESS CRITERIA (PROBLEM IS SOLVED WHEN):
+  ✅ Root cause identified and documented
+  ✅ Fix implemented and tested
+  ✅ No new errors in console
+  ✅ Related features still work
+  ✅ Edge cases handled
+  ✅ Solution is minimal and surgical
+
+MOST COMMON ROOT CAUSES (IN ORDER):
+  1. Data/Query (45%) - wrong filter, empty, null values
+  2. Initialization (20%) - using before defined, deps wrong
+  3. Authorization (15%) - RLS, permissions, not authenticated
+  4. Logic (10%) - if/else not working as intended
+  5. Type Mismatch (5%) - null instead of object, etc
+  6. Other (5%) - caching, race conditions, etc
+
+════════════════════════════════════════════════════════════════════════════
+When stuck: Go back to Phase 2 - you missed something in evidence gathering
+When successful: Update .github/DEBUG_SKILL.md if new patterns discovered
+════════════════════════════════════════════════════════════════════════════
