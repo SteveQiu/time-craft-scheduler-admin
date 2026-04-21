@@ -40,7 +40,7 @@ interface Appointment {
 }
 
 export function Appointments() {
-  const { workers } = useOrgWorkers();
+  const { workers, acceptedWorkers } = useOrgWorkers();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
@@ -55,7 +55,7 @@ export function Appointments() {
   const isOrgView = modeParam === 'org' && (isOrganization || isInternalDev);
 
   const { data: appointments = [], isLoading } = useQuery({
-    queryKey: ['appointments', user?.id, isOrgView, workers],
+    queryKey: ['appointments', user?.id, isOrgView, acceptedWorkers],
     queryFn: async () => {
       if (!user) return [];
 
@@ -64,16 +64,17 @@ export function Appointments() {
         .select('*');
 
       if (isOrgView) {
-        // Org view: show appointments where provider is an org worker
-        // Get all provider IDs from workers (org members)
-        const orgMemberIds = workers.map((w: any) => w.user_id).filter(Boolean);
+        // Org view: show appointments where provider is an accepted org worker
+        const orgMemberIds = acceptedWorkers
+          .map((w: any) => w.user_id)
+          .filter(Boolean);
         
         if (orgMemberIds.length === 0) {
-          // No org members yet, return empty
+          // No accepted org members yet, return empty
           return [];
         }
         
-        // Show only appointments for org providers
+        // Show only appointments for accepted org providers
         query = query.in('provider_id', orgMemberIds);
       } else {
         // User view: show appointments where user is either:

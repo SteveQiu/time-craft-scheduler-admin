@@ -166,6 +166,7 @@ export function Calendar() {
   const loadOpeningsForMonth = async () => {
     if (!currentDate || !user) return;
     try {
+      setLoading(true);
       const year = currentDate.getFullYear();
       const month = currentDate.getMonth();
       const firstDay = new Date(year, month, 1);
@@ -205,6 +206,8 @@ export function Calendar() {
     } catch (error) {
       console.error('Error loading openings:', error);
       toast.error('Failed to load openings');
+    } finally {
+      setLoading(false);
     }
   };
 
