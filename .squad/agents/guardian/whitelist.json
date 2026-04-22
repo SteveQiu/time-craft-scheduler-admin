@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "description": "Safe patterns to allow in commits (public keys, test fixtures, demo credentials)",
+  "patterns": [
+    {
+      "pattern": "AKIA.*",
+      "category": "AWS",
+      "safe": false,
+      "reason": "AWS access key format — always block"
+    },
+    {
+      "pattern": "ghp_.*",
+      "category": "GitHub",
+      "safe": false,
+      "reason": "GitHub personal access token — always block"
+    },
+    {
+      "pattern": "-----BEGIN PRIVATE KEY-----",
+      "category": "SSH/SSL",
+      "safe": false,
+      "reason": "Private key — always block"
+    }
+  ],
+  "allowlist": [
+    {
+      "path": ".env.example",
+      "reason": "Example environment file — sanitized, no real secrets"
+    },
+    {
+      "path": "tests/fixtures/demo-api-key.json",
+      "reason": "Demo/test fixture — public documentation value"
+    }
+  ]
+}
