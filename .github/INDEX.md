@@ -39,7 +39,7 @@ This folder contains strategic documentation, debugging guides, and technical no
 
 For project overview and development guidelines, see:
 - **[README.md](../README.md)** - Project overview at root
-- **[COPILOT_INSTRUCTIONS.md](../COPILOT_INSTRUCTIONS.md)** - Project manager guidelines at root
+- **[copilot-instructions.md](../copilot-instructions.md)** - Project manager guidelines at root
 
 ---
 
