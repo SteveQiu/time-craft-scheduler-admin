@@ -9,10 +9,10 @@ export function RootRedirect() {
 
   // Still loading auth or roles
   if (authLoading || rolesLoading) {
-    return <div className="flex items-center justify-center h-screen">Loading...</div>;
+    return <div className="flex items-center justify-center h-screen bg-background text-foreground">Loading...</div>;
   }
 
-  // Not authenticated - let them stay on root (will see auth page from sidebar)
+  // Not authenticated - redirect to auth
   if (!user) {
     return <Navigate to="/auth" replace />;
   }
