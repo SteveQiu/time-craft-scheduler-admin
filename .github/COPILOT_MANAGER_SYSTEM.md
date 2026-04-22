@@ -6,7 +6,7 @@ This document describes the automatic project management system set up for this 
 
 ## System Components
 
-### 1. COPILOT_INSTRUCTIONS.md
+### 1. copilot-instructions.md
 **Location:** Repository root  
 **Purpose:** Define project management guidelines and development patterns  
 **Size:** ~7KB
