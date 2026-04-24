@@ -725,35 +725,14 @@ export default function Profile() {
                     />
                   </div>
                 </div>
-                <div className="mt-4 pt-4 border-t space-y-2">
-                  <p className="text-sm font-medium">Field Visibility</p>
-                  <div className="space-y-2">
-                    {Object.entries(addressVisibility).map(([field, isVisible]) => (
-                      <div key={field} className="flex items-center justify-between p-2 rounded-md bg-muted">
-                        <span className="text-sm capitalize">{field.replace(/_/g, ' ')}</span>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => toggleFieldVisibility(field as keyof AddressVisibility)}
-                        >
-                          {isVisible ? (
-                            <Eye className="h-4 w-4" />
-                          ) : (
-                            <EyeOff className="h-4 w-4" />
-                          )}
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full mt-2"
-                    onClick={saveAddressAndVisibility}
-                  >
-                    Save Address
-                  </Button>
-                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full mt-4"
+                  onClick={saveAddressAndVisibility}
+                >
+                  Save Address
+                </Button>
               </>
             ) : (
               <>
