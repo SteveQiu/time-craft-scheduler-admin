@@ -72,7 +72,7 @@ test.describe('Visual Verification - 10+ Openings', () => {
     
     // Count distinct dates with markers
     const dateWithCountPattern = /(\d{1,2})\s*\n\s*(\d+)/g;
-    let dateMatches: any[] = [];
+    const dateMatches: any[] = [];
     let match;
     const dateRegex = new RegExp(dateWithCountPattern);
     

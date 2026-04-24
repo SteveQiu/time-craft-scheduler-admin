@@ -12,7 +12,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Trash2, MapPin, CreditCard, Star, Edit, Lock } from 'lucide-react';
+import { Plus, Trash2, MapPin, CreditCard, Star, Edit, Lock, Shield } from 'lucide-react';
+import { PrivacySettings } from '@/components/Privacy';
 
 interface WorkplaceAddress {
   id: string;
@@ -278,6 +279,10 @@ export default function Settings() {
             <Star className="h-4 w-4 mr-2" />
             Roles
           </TabsTrigger>
+          <TabsTrigger value="privacy">
+            <Shield className="h-4 w-4 mr-2" />
+            Privacy
+          </TabsTrigger>
         </TabsList>
 
         {/* Addresses Tab */}
@@ -474,6 +479,11 @@ export default function Settings() {
               </CardContent>
             </Card>
           )}
+        </TabsContent>
+
+        {/* Privacy Tab */}
+        <TabsContent value="privacy">
+          <PrivacySettings />
         </TabsContent>
       </Tabs>
 

@@ -121,7 +121,7 @@ test.describe('Calendar Blinking Fix Validation', () => {
 
       // Quick observation of DOM stability
       return new Promise((resolve) => {
-        let mutations = 0;
+        const mutations = 0;
         observer.observe(document.body, {
           childList: true,
           subtree: true,
