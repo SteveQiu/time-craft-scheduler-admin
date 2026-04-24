@@ -479,14 +479,6 @@ export default function Profile() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Address</Label>
-                <Input
-                  value={form.address}
-                  onChange={(e) => setForm({ ...form, address: e.target.value })}
-                  placeholder="123 Main St, City"
-                />
-              </div>
-              <div className="space-y-2">
                 <Label>Profile Alias</Label>
                 <div className="flex items-center space-x-0">
                   <span className="text-sm text-muted-foreground px-3 py-2 bg-muted rounded-l-md border border-r-0 border-input min-w-24 flex items-center justify-center">/profile/</span>
