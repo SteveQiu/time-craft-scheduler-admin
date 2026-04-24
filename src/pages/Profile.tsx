@@ -83,7 +83,6 @@ export default function Profile() {
     email: '',
     introduction: '',
     phone: '',
-    address: '',
     slug: '',
     skills: [] as string[],
     hourly_rate: 0,
@@ -174,7 +173,6 @@ export default function Profile() {
         email: profile.email || '',
         introduction: profile.introduction || '',
         phone: profile.phone || '',
-        address: profile.address || '',
         slug: profile.slug || '',
         skills: profile.skills || [],
         hourly_rate: profile.hourly_rate || 0,
@@ -224,6 +222,19 @@ export default function Profile() {
   const saveMutation = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error('Not authenticated');
+      
+      // Format address from individual fields
+      const formattedAddress = [
+        address.address_line_1,
+        address.address_line_2,
+        address.city,
+        address.province_state,
+        address.country,
+        address.postal_code,
+      ]
+        .filter(Boolean)
+        .join(', ');
+
       const { error } = await supabase
         .from('profiles')
         .update({
@@ -231,7 +242,7 @@ export default function Profile() {
           email: form.email || null,
           introduction: form.introduction || null,
           phone: form.phone || null,
-          address: form.address || null,
+          address: formattedAddress || null,
           slug: form.slug || null,
           skills: form.skills,
           hourly_rate: form.hourly_rate,
