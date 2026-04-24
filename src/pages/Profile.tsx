@@ -88,7 +88,7 @@ export default function Profile() {
     queryKey: ['bookmark-status', profile?.id, user?.id],
     queryFn: async () => {
       if (!user || !profile || isOwnProfile) return null;
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('bookmarks')
         .select('id')
         .eq('user_id', user.id)
@@ -169,7 +169,7 @@ export default function Profile() {
     if (!user || !profile || isOwnProfile) return;
     try {
       if (isBookmarked) {
-        const { error } = await supabase
+        const { error } = await (supabase as any)
           .from('bookmarks')
           .delete()
           .eq('user_id', user.id)
@@ -178,7 +178,7 @@ export default function Profile() {
         setIsBookmarked(false);
         toast({ title: 'Removed from bookmarks' });
       } else {
-        const { error } = await supabase
+        const { error } = await (supabase as any)
           .from('bookmarks')
           .insert({
             user_id: user.id,
