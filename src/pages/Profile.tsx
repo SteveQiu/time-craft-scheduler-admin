@@ -200,25 +200,6 @@ export default function Profile() {
     }
   }, [profile]);
 
-  const saveAddressAndVisibility = () => {
-    if (profile?.id) {
-      localStorage.setItem(`address_${profile.id}`, JSON.stringify(address));
-      localStorage.setItem(`addressVisibility_${profile.id}`, JSON.stringify(addressVisibility));
-      toast({ title: 'Address visibility preferences saved' });
-    }
-  };
-
-  const toggleFieldVisibility = (field: keyof AddressVisibility) => {
-    const newVisibility = {
-      ...addressVisibility,
-      [field]: !addressVisibility[field],
-    };
-    setAddressVisibility(newVisibility);
-    if (profile?.id) {
-      localStorage.setItem(`addressVisibility_${profile.id}`, JSON.stringify(newVisibility));
-    }
-  };
-
   const saveMutation = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error('Not authenticated');
@@ -736,14 +717,6 @@ export default function Profile() {
                     />
                   </div>
                 </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full mt-4"
-                  onClick={saveAddressAndVisibility}
-                >
-                  Save Address
-                </Button>
               </>
             ) : (
               <>
