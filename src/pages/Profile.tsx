@@ -436,7 +436,20 @@ export default function Profile() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Email</Label>
+                <div className="flex items-center justify-between">
+                  <Label>Email</Label>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setPrivacySettings({ ...privacySettings, email_public: !privacySettings.email_public })}
+                  >
+                    {privacySettings.email_public ? (
+                      <Eye className="h-4 w-4" />
+                    ) : (
+                      <EyeOff className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
                 <Input
                   type="email"
                   value={form.email}
@@ -445,7 +458,20 @@ export default function Profile() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Phone</Label>
+                <div className="flex items-center justify-between">
+                  <Label>Phone</Label>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setPrivacySettings({ ...privacySettings, phone_public: !privacySettings.phone_public })}
+                  >
+                    {privacySettings.phone_public ? (
+                      <Eye className="h-4 w-4" />
+                    ) : (
+                      <EyeOff className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
                 <Input
                   value={form.phone}
                   onChange={(e) => setForm({ ...form, phone: e.target.value })}
@@ -473,72 +499,6 @@ export default function Profile() {
                 </div>
               </div>
 
-              {/* Privacy Settings */}
-              <div className="border-t pt-4 mt-4">
-                <Label className="text-base font-semibold mb-4 block">Privacy Settings</Label>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between p-2 bg-muted rounded">
-                    <div className="flex items-center space-x-2">
-                      <Eye className="h-4 w-4 text-muted-foreground" />
-                      <Label className="text-sm cursor-pointer">Address visible to others</Label>
-                    </div>
-                    <input
-                      type="checkbox"
-                      checked={privacySettings.address_public}
-                      onChange={(e) => setPrivacySettings({ ...privacySettings, address_public: e.target.checked })}
-                      className="h-4 w-4 rounded border-input"
-                    />
-                  </div>
-                  <div className="flex items-center justify-between p-2 bg-muted rounded">
-                    <div className="flex items-center space-x-2">
-                      <Phone className="h-4 w-4 text-muted-foreground" />
-                      <Label className="text-sm cursor-pointer">Phone visible to others</Label>
-                    </div>
-                    <input
-                      type="checkbox"
-                      checked={privacySettings.phone_public}
-                      onChange={(e) => setPrivacySettings({ ...privacySettings, phone_public: e.target.checked })}
-                      className="h-4 w-4 rounded border-input"
-                    />
-                  </div>
-                  <div className="flex items-center justify-between p-2 bg-muted rounded">
-                    <div className="flex items-center space-x-2">
-                      <Mail className="h-4 w-4 text-muted-foreground" />
-                      <Label className="text-sm cursor-pointer">Email visible to others</Label>
-                    </div>
-                    <input
-                      type="checkbox"
-                      checked={privacySettings.email_public}
-                      onChange={(e) => setPrivacySettings({ ...privacySettings, email_public: e.target.checked })}
-                      className="h-4 w-4 rounded border-input"
-                    />
-                  </div>
-                  <div className="flex items-center justify-between p-2 bg-muted rounded">
-                    <div className="flex items-center space-x-2">
-                      <DollarSign className="h-4 w-4 text-muted-foreground" />
-                      <Label className="text-sm cursor-pointer">Hourly rate visible to others</Label>
-                    </div>
-                    <input
-                      type="checkbox"
-                      checked={privacySettings.hourly_rate_public}
-                      onChange={(e) => setPrivacySettings({ ...privacySettings, hourly_rate_public: e.target.checked })}
-                      className="h-4 w-4 rounded border-input"
-                    />
-                  </div>
-                  <div className="flex items-center justify-between p-2 bg-muted rounded">
-                    <div className="flex items-center space-x-2">
-                      <Wrench className="h-4 w-4 text-muted-foreground" />
-                      <Label className="text-sm cursor-pointer">Skills visible to others</Label>
-                    </div>
-                    <input
-                      type="checkbox"
-                      checked={privacySettings.skills_public}
-                      onChange={(e) => setPrivacySettings({ ...privacySettings, skills_public: e.target.checked })}
-                      className="h-4 w-4 rounded border-input"
-                    />
-                  </div>
-                </div>
-              </div>
             </>
           ) : (
             <>
@@ -696,6 +656,29 @@ export default function Profile() {
         <Card className="shadow-soft border-card-border">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-lg">Address</CardTitle>
+            {editing && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  const allVisible = Object.values(addressVisibility).every(v => v);
+                  setAddressVisibility({
+                    address_line_1: !allVisible,
+                    address_line_2: !allVisible,
+                    city: !allVisible,
+                    province_state: !allVisible,
+                    country: !allVisible,
+                    postal_code: !allVisible,
+                  });
+                }}
+              >
+                {Object.values(addressVisibility).every(v => v) ? (
+                  <Eye className="h-4 w-4" />
+                ) : (
+                  <EyeOff className="h-4 w-4" />
+                )}
+              </Button>
+            )}
           </CardHeader>
           <CardContent className="space-y-4">
             {editing ? (
