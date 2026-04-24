@@ -79,6 +79,42 @@ export type Database = {
           },
         ]
       }
+      bookmarks: {
+        Row: {
+          bookmarked_user_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          bookmarked_user_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          bookmarked_user_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookmarks_bookmarked_user_id_fkey"
+            columns: ["bookmarked_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookmarks_bookmarked_user_id_fkey"
+            columns: ["bookmarked_user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       openings: {
         Row: {
           created_at: string
@@ -394,6 +430,54 @@ export type Database = {
           },
         ]
       }
+      subscriptions: {
+        Row: {
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          plan_type: string
+          started_at: string | null
+          status: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          plan_type: string
+          started_at?: string | null
+          status?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          plan_type?: string
+          started_at?: string | null
+          status?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -547,11 +631,16 @@ export type Database = {
       get_public_profile_by_id: {
         Args: { profile_id: string }
         Returns: {
+          address: string
           avatar_url: string
           created_at: string
+          email: string
           full_name: string
+          hourly_rate: number
           id: string
           introduction: string
+          phone: string
+          skills: string[]
           slug: string
         }[]
       }
@@ -561,6 +650,15 @@ export type Database = {
           full_name: string
           id: string
           slug: string
+        }[]
+      }
+      get_subscription_status: {
+        Args: { p_user_id: string }
+        Returns: {
+          expires_at: string
+          is_active: boolean
+          plan_type: string
+          status: string
         }[]
       }
       get_user_roles: {
@@ -575,6 +673,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_user_premium: { Args: { p_user_id: string }; Returns: boolean }
       is_worker_of: {
         Args: { _org_id: string; _user_id: string }
         Returns: boolean
