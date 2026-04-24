@@ -696,29 +696,6 @@ export default function Profile() {
         <Card className="shadow-soft border-card-border">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-lg">Address</CardTitle>
-            {!editing && (
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={() => {
-                  const allVisible = Object.values(addressVisibility).every(v => v);
-                  const newState = !allVisible;
-                  const updatedVisibility = Object.fromEntries(
-                    Object.keys(addressVisibility).map(key => [key, newState])
-                  ) as AddressVisibility;
-                  setAddressVisibility(updatedVisibility);
-                  if (profile?.id) {
-                    localStorage.setItem(`addressVisibility_${profile.id}`, JSON.stringify(updatedVisibility));
-                  }
-                }}
-              >
-                {Object.values(addressVisibility).every(v => v) ? (
-                  <Eye className="h-4 w-4" />
-                ) : (
-                  <EyeOff className="h-4 w-4" />
-                )}
-              </Button>
-            )}
           </CardHeader>
           <CardContent className="space-y-4">
             {editing ? (
