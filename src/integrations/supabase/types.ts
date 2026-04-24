@@ -300,43 +300,58 @@ export type Database = {
       profiles: {
         Row: {
           address: string | null
+          address_public: boolean
           avatar_url: string | null
           created_at: string
           email: string | null
+          email_public: boolean
           full_name: string | null
           hourly_rate: number
+          hourly_rate_public: boolean
           id: string
           introduction: string | null
           phone: string | null
+          phone_public: boolean
           skills: string[]
+          skills_public: boolean
           slug: string | null
           updated_at: string
         }
         Insert: {
           address?: string | null
+          address_public?: boolean
           avatar_url?: string | null
           created_at?: string
           email?: string | null
+          email_public?: boolean
           full_name?: string | null
           hourly_rate?: number
+          hourly_rate_public?: boolean
           id: string
           introduction?: string | null
           phone?: string | null
+          phone_public?: boolean
           skills?: string[]
+          skills_public?: boolean
           slug?: string | null
           updated_at?: string
         }
         Update: {
           address?: string | null
+          address_public?: boolean
           avatar_url?: string | null
           created_at?: string
           email?: string | null
+          email_public?: boolean
           full_name?: string | null
           hourly_rate?: number
+          hourly_rate_public?: boolean
           id?: string
           introduction?: string | null
           phone?: string | null
+          phone_public?: boolean
           skills?: string[]
+          skills_public?: boolean
           slug?: string | null
           updated_at?: string
         }

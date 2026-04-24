@@ -268,13 +268,13 @@ test.describe('RLS & Security', () => {
     
     // Go to calendar and verify opening is there
     await page1.goto(`${BASE_URL}/calendar?mode=user`)
-    let count1 = await page1.locator('text=Tutoring').count()
+    const count1 = await page1.locator('text=Tutoring').count()
     console.log(`✅ User 1 calendar shows ${count1} own opening(s)`)
     
     // User 2 logs in and checks calendar
     await login(page2, TEST_USERS.user2)
     await page2.goto(`${BASE_URL}/calendar?mode=user`)
-    let count2 = await page2.locator('text=Tutoring').count()
+    const count2 = await page2.locator('text=Tutoring').count()
     console.log(`✅ User 2 calendar shows ${count2} of User 1's openings (should be 0)`)
     expect(count2).toBe(0)
     

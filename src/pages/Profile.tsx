@@ -14,7 +14,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { ReviewSection } from '@/components/ReviewSection';
 import { ReportDialog } from '@/components/ReportDialog';
-import { Edit, Save, X, Mail, Phone, MapPin, Star, Flag, Share2, DollarSign, Wrench, Plus, Trash2, Calendar, Bookmark } from 'lucide-react';
+import { Edit, Save, X, Mail, Phone, MapPin, Star, Flag, Share2, DollarSign, Wrench, Plus, Trash2, Calendar, Bookmark, ArrowLeft, Eye, EyeOff } from 'lucide-react';
 
 interface ProfileData {
   id: string;
@@ -27,6 +27,29 @@ interface ProfileData {
   avatar_url: string | null;
   skills: string[];
   hourly_rate: number;
+  address_public?: boolean;
+  phone_public?: boolean;
+  email_public?: boolean;
+  hourly_rate_public?: boolean;
+  skills_public?: boolean;
+}
+
+interface AddressData {
+  address_line_1: string;
+  address_line_2: string;
+  city: string;
+  province_state: string;
+  country: string;
+  postal_code: string;
+}
+
+interface AddressVisibility {
+  address_line_1: boolean;
+  address_line_2: boolean;
+  city: boolean;
+  province_state: boolean;
+  country: boolean;
+  postal_code: boolean;
 }
 
 export default function Profile() {
@@ -39,6 +62,22 @@ export default function Profile() {
   const [reportOpen, setReportOpen] = useState(false);
   const [skillInput, setSkillInput] = useState('');
   const [isBookmarked, setIsBookmarked] = useState(false);
+  const [address, setAddress] = useState<AddressData>({
+    address_line_1: '',
+    address_line_2: '',
+    city: '',
+    province_state: '',
+    country: '',
+    postal_code: '',
+  });
+  const [addressVisibility, setAddressVisibility] = useState<AddressVisibility>({
+    address_line_1: true,
+    address_line_2: true,
+    city: true,
+    province_state: true,
+    country: true,
+    postal_code: true,
+  });
   const [form, setForm] = useState({
     full_name: '',
     email: '',
@@ -48,6 +87,13 @@ export default function Profile() {
     slug: '',
     skills: [] as string[],
     hourly_rate: 0,
+  });
+  const [privacySettings, setPrivacySettings] = useState({
+    address_public: false,
+    phone_public: false,
+    email_public: false,
+    hourly_rate_public: true,
+    skills_public: true,
   });
 
   // Determine if viewing own profile or someone else's
@@ -133,9 +179,47 @@ export default function Profile() {
         skills: profile.skills || [],
         hourly_rate: profile.hourly_rate || 0,
       });
+      setPrivacySettings({
+        address_public: profile.address_public ?? false,
+        phone_public: profile.phone_public ?? false,
+        email_public: profile.email_public ?? false,
+        hourly_rate_public: profile.hourly_rate_public ?? true,
+        skills_public: profile.skills_public ?? true,
+      });
       setSkillInput('');
+      
+      // Load address from localStorage
+      const savedAddress = localStorage.getItem(`address_${profile.id}`);
+      if (savedAddress) {
+        setAddress(JSON.parse(savedAddress));
+      }
+      
+      // Load visibility preferences from localStorage
+      const savedVisibility = localStorage.getItem(`addressVisibility_${profile.id}`);
+      if (savedVisibility) {
+        setAddressVisibility(JSON.parse(savedVisibility));
+      }
     }
   }, [profile]);
+
+  const saveAddressAndVisibility = () => {
+    if (profile?.id) {
+      localStorage.setItem(`address_${profile.id}`, JSON.stringify(address));
+      localStorage.setItem(`addressVisibility_${profile.id}`, JSON.stringify(addressVisibility));
+      toast({ title: 'Address visibility preferences saved' });
+    }
+  };
+
+  const toggleFieldVisibility = (field: keyof AddressVisibility) => {
+    const newVisibility = {
+      ...addressVisibility,
+      [field]: !addressVisibility[field],
+    };
+    setAddressVisibility(newVisibility);
+    if (profile?.id) {
+      localStorage.setItem(`addressVisibility_${profile.id}`, JSON.stringify(newVisibility));
+    }
+  };
 
   const saveMutation = useMutation({
     mutationFn: async () => {
@@ -151,6 +235,11 @@ export default function Profile() {
           slug: form.slug || null,
           skills: form.skills,
           hourly_rate: form.hourly_rate,
+          address_public: privacySettings.address_public,
+          phone_public: privacySettings.phone_public,
+          email_public: privacySettings.email_public,
+          hourly_rate_public: privacySettings.hourly_rate_public,
+          skills_public: privacySettings.skills_public,
         } as any)
         .eq('id', user.id);
       if (error) throw error;
@@ -236,6 +325,19 @@ export default function Profile() {
 
   return (
     <div className="p-6 space-y-6 max-w-3xl mx-auto">
+      {/* Back Button */}
+      {window.history.length > 1 && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate(-1)}
+          className="mb-2"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back
+        </Button>
+      )}
+
       {/* Profile Header */}
       <Card className="shadow-soft border-card-border">
         <CardContent className="pt-6">
@@ -368,6 +470,73 @@ export default function Profile() {
                     placeholder="my-profile"
                     className="rounded-l-none"
                   />
+                </div>
+              </div>
+
+              {/* Privacy Settings */}
+              <div className="border-t pt-4 mt-4">
+                <Label className="text-base font-semibold mb-4 block">Privacy Settings</Label>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between p-2 bg-muted rounded">
+                    <div className="flex items-center space-x-2">
+                      <Eye className="h-4 w-4 text-muted-foreground" />
+                      <Label className="text-sm cursor-pointer">Address visible to others</Label>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={privacySettings.address_public}
+                      onChange={(e) => setPrivacySettings({ ...privacySettings, address_public: e.target.checked })}
+                      className="h-4 w-4 rounded border-input"
+                    />
+                  </div>
+                  <div className="flex items-center justify-between p-2 bg-muted rounded">
+                    <div className="flex items-center space-x-2">
+                      <Phone className="h-4 w-4 text-muted-foreground" />
+                      <Label className="text-sm cursor-pointer">Phone visible to others</Label>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={privacySettings.phone_public}
+                      onChange={(e) => setPrivacySettings({ ...privacySettings, phone_public: e.target.checked })}
+                      className="h-4 w-4 rounded border-input"
+                    />
+                  </div>
+                  <div className="flex items-center justify-between p-2 bg-muted rounded">
+                    <div className="flex items-center space-x-2">
+                      <Mail className="h-4 w-4 text-muted-foreground" />
+                      <Label className="text-sm cursor-pointer">Email visible to others</Label>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={privacySettings.email_public}
+                      onChange={(e) => setPrivacySettings({ ...privacySettings, email_public: e.target.checked })}
+                      className="h-4 w-4 rounded border-input"
+                    />
+                  </div>
+                  <div className="flex items-center justify-between p-2 bg-muted rounded">
+                    <div className="flex items-center space-x-2">
+                      <DollarSign className="h-4 w-4 text-muted-foreground" />
+                      <Label className="text-sm cursor-pointer">Hourly rate visible to others</Label>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={privacySettings.hourly_rate_public}
+                      onChange={(e) => setPrivacySettings({ ...privacySettings, hourly_rate_public: e.target.checked })}
+                      className="h-4 w-4 rounded border-input"
+                    />
+                  </div>
+                  <div className="flex items-center justify-between p-2 bg-muted rounded">
+                    <div className="flex items-center space-x-2">
+                      <Wrench className="h-4 w-4 text-muted-foreground" />
+                      <Label className="text-sm cursor-pointer">Skills visible to others</Label>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={privacySettings.skills_public}
+                      onChange={(e) => setPrivacySettings({ ...privacySettings, skills_public: e.target.checked })}
+                      className="h-4 w-4 rounded border-input"
+                    />
+                  </div>
                 </div>
               </div>
             </>
@@ -521,6 +690,166 @@ export default function Profile() {
           )}
         </CardContent>
       </Card>
+
+      {/* Address Section */}
+      {isOwnProfile && (
+        <Card className="shadow-soft border-card-border">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-lg">Address</CardTitle>
+            {!editing && (
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => {
+                  const allVisible = Object.values(addressVisibility).every(v => v);
+                  const newState = !allVisible;
+                  const updatedVisibility = Object.fromEntries(
+                    Object.keys(addressVisibility).map(key => [key, newState])
+                  ) as AddressVisibility;
+                  setAddressVisibility(updatedVisibility);
+                  if (profile?.id) {
+                    localStorage.setItem(`addressVisibility_${profile.id}`, JSON.stringify(updatedVisibility));
+                  }
+                }}
+              >
+                {Object.values(addressVisibility).every(v => v) ? (
+                  <Eye className="h-4 w-4" />
+                ) : (
+                  <EyeOff className="h-4 w-4" />
+                )}
+              </Button>
+            )}
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {editing ? (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2 md:col-span-2">
+                    <Label>Address Line 1</Label>
+                    <Input
+                      value={address.address_line_1}
+                      onChange={(e) => setAddress({ ...address, address_line_1: e.target.value })}
+                      placeholder="123 Main Street"
+                    />
+                  </div>
+                  <div className="space-y-2 md:col-span-2">
+                    <Label>Address Line 2</Label>
+                    <Input
+                      value={address.address_line_2}
+                      onChange={(e) => setAddress({ ...address, address_line_2: e.target.value })}
+                      placeholder="Suite 100 (optional)"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>City</Label>
+                    <Input
+                      value={address.city}
+                      onChange={(e) => setAddress({ ...address, city: e.target.value })}
+                      placeholder="Toronto"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Province/State</Label>
+                    <Input
+                      value={address.province_state}
+                      onChange={(e) => setAddress({ ...address, province_state: e.target.value })}
+                      placeholder="Ontario"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Country</Label>
+                    <Input
+                      value={address.country}
+                      onChange={(e) => setAddress({ ...address, country: e.target.value })}
+                      placeholder="Canada"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Postal Code</Label>
+                    <Input
+                      value={address.postal_code}
+                      onChange={(e) => setAddress({ ...address, postal_code: e.target.value })}
+                      placeholder="M5V 3A8"
+                    />
+                  </div>
+                </div>
+                <div className="mt-4 pt-4 border-t space-y-2">
+                  <p className="text-sm font-medium">Field Visibility</p>
+                  <div className="space-y-2">
+                    {Object.entries(addressVisibility).map(([field, isVisible]) => (
+                      <div key={field} className="flex items-center justify-between p-2 rounded-md bg-muted">
+                        <span className="text-sm capitalize">{field.replace(/_/g, ' ')}</span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => toggleFieldVisibility(field as keyof AddressVisibility)}
+                        >
+                          {isVisible ? (
+                            <Eye className="h-4 w-4" />
+                          ) : (
+                            <EyeOff className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full mt-2"
+                    onClick={saveAddressAndVisibility}
+                  >
+                    Save Address
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <>
+                {address.address_line_1 || address.city || address.country ? (
+                  <div className="space-y-3">
+                    {address.address_line_1 && addressVisibility.address_line_1 && (
+                      <div className="flex items-start space-x-2">
+                        <MapPin className="h-4 w-4 mt-0.5 text-muted-foreground flex-shrink-0" />
+                        <span className="text-sm text-foreground">{address.address_line_1}</span>
+                      </div>
+                    )}
+                    {address.address_line_2 && addressVisibility.address_line_2 && (
+                      <div className="flex items-start space-x-2">
+                        <div className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                        <span className="text-sm text-foreground">{address.address_line_2}</span>
+                      </div>
+                    )}
+                    {(address.city || address.province_state || address.country) && (
+                      <div className="flex items-start space-x-2">
+                        <div className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                        <span className="text-sm text-foreground">
+                          {[
+                            addressVisibility.city ? address.city : null,
+                            addressVisibility.province_state ? address.province_state : null,
+                            addressVisibility.country ? address.country : null,
+                          ]
+                            .filter(Boolean)
+                            .join(', ')}
+                        </span>
+                      </div>
+                    )}
+                    {address.postal_code && addressVisibility.postal_code && (
+                      <div className="flex items-start space-x-2">
+                        <div className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                        <span className="text-sm text-foreground">{address.postal_code}</span>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    Click "Edit" to add your address information.
+                  </p>
+                )}
+              </>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Reviews Section */}
       <ReviewSection profileId={profile.id} profileName={profile.full_name || 'User'} />
