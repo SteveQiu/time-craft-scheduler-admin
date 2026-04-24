@@ -55,13 +55,21 @@ export function BrowseDetail({
 
   // Fetch premium status for provider
   useEffect(() => {
-    if (providerId) {
+    if (!providerId) return;
+
+    const fetchPremiumStatus = async () => {
       setLoadingPremium(true);
-      supabase.rpc('is_user_premium', { p_user_id: providerId })
-        .then(({ data }) => setIsPremium(data || false))
-        .catch(() => setIsPremium(false))
-        .finally(() => setLoadingPremium(false));
-    }
+      try {
+        const { data } = await (supabase as any).rpc('is_user_premium', { p_user_id: providerId });
+        setIsPremium(Boolean(data));
+      } catch {
+        setIsPremium(false);
+      } finally {
+        setLoadingPremium(false);
+      }
+    };
+
+    fetchPremiumStatus();
   }, [providerId]);
 
   // Get provider

@@ -16,13 +16,25 @@ export function Dashboard() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('appointments')
-        .select('*, profiles!appointments_freelancer_id_fkey(full_name)')
+        .select('*')
         .eq('user_id', user!.id)
         .order('date', { ascending: false })
         .limit(10);
       
       if (error) throw error;
-      return data || [];
+
+      const providerIds = [...new Set((data || []).map((appointment) => appointment.provider_id))];
+      let providerNames = new Map<string, string>();
+
+      if (providerIds.length > 0) {
+        const { data: profiles } = await supabase.rpc('get_public_profile_names', { profile_ids: providerIds });
+        providerNames = new Map((profiles || []).map((profile) => [profile.id, profile.full_name || 'Unknown']));
+      }
+
+      return (data || []).map((appointment) => ({
+        ...appointment,
+        provider_name: providerNames.get(appointment.provider_id) || 'Unknown',
+      }));
     },
   });
 
@@ -99,12 +111,12 @@ export function Dashboard() {
                     <div className="flex-shrink-0">
                       <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
                         <span className="text-primary-foreground font-medium text-xs">
-                          {appointment.profiles?.full_name?.split(' ').map((n: string) => n[0]).join('') || '?'}
+                          {appointment.provider_name.split(' ').map((n: string) => n[0]).join('') || '?'}
                         </span>
                       </div>
                     </div>
                     <div>
-                      <p className="font-medium text-foreground">{appointment.profiles?.full_name || 'Unknown'}</p>
+                      <p className="font-medium text-foreground">{appointment.provider_name}</p>
                       <p className="text-sm text-muted-foreground">{appointment.service} • {appointment.date}</p>
                     </div>
                   </div>
