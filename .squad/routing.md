@@ -7,12 +7,9 @@ How to decide who handles what.
 | Work Type | Route To | Examples |
 |-----------|----------|----------|
 | Security & secrets | Guardian | Pre-commit secret scanning, secret detection, blocking unsafe commits |
-| {domain 1} | {Name} | {example tasks} |
-| {domain 2} | {Name} | {example tasks} |
-| {domain 3} | {Name} | {example tasks} |
-| Code review | {Name} | Review PRs, check quality, suggest improvements |
-| Testing | {Name} | Write tests, find edge cases, verify fixes |
-| Scope & priorities | {Name} | What to build next, trade-offs, decisions |
+| Frontend components, React/TSX | Dallas | Build components, refactor, styling, state management |
+| Accessibility & UX | Bishop | a11y audits, mobile responsiveness, layout improvements, touch UX |
+| Mobile design | Bishop (lead), Dallas (implementation) | Phone/tablet responsive design, responsive breakpoints |
 | Session logging | Scribe | Automatic — never needs routing |
 
 ## Issue Routing
