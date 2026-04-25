@@ -181,7 +181,7 @@ export function AppSidebar() {
             {isOrganization && !isInternalDev && (
               <div className="flex items-center justify-center">
                 <Tabs value={viewMode} onValueChange={(val) => setViewMode(val as 'user' | 'org')} className="w-full">
-                  <TabsList className="grid w-full grid-cols-2 h-8">
+                  <TabsList className="grid w-full grid-cols-2 h-11">
                     <TabsTrigger value="user" className="text-xs leading-none">Org</TabsTrigger>
                     <TabsTrigger value="org" className="text-xs leading-none">User</TabsTrigger>
                   </TabsList>

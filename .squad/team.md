@@ -13,6 +13,8 @@
 | Name | Role | Charter | Status |
 |------|------|---------|--------|
 | Guardian | Security & Secrets Guardian | `.squad/agents/guardian/charter.md` | 🔒 Active |
+| Dallas | Frontend Dev | `.squad/agents/dallas/charter.md` | ⚛️ Active |
+| Bishop | Accessibility & UX Designer | `.squad/agents/bishop/charter.md` | 🎨 Active |
 
 
 ## Coding Agent

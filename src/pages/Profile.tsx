@@ -380,10 +380,16 @@ export default function Profile() {
                     variant={isBookmarked ? "default" : "outline"} 
                     size="sm" 
                     onClick={handleToggleBookmark}
+                    aria-label={isBookmarked ? "Remove bookmark from this profile" : "Bookmark this profile"}
                   >
                     <Bookmark className={`h-4 w-4 ${isBookmarked ? 'fill-current' : ''}`} />
                   </Button>
-                  <Button variant="ghost" size="sm" onClick={() => setReportOpen(true)}>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => setReportOpen(true)}
+                    aria-label="Report this profile"
+                  >
                     <Flag className="h-4 w-4" />
                   </Button>
                 </>
@@ -432,8 +438,10 @@ export default function Profile() {
                   <Label>Email</Label>
                   <Button
                     variant="ghost"
-                    size="sm"
+                    size="icon"
+                    className="h-11 w-11"
                     onClick={() => setPrivacySettings({ ...privacySettings, email_public: !privacySettings.email_public })}
+                    aria-label={privacySettings.email_public ? "Hide email from public profile" : "Show email on public profile"}
                   >
                     {privacySettings.email_public ? (
                       <Eye className="h-4 w-4" />
@@ -454,8 +462,10 @@ export default function Profile() {
                   <Label>Phone</Label>
                   <Button
                     variant="ghost"
-                    size="sm"
+                    size="icon"
+                    className="h-11 w-11"
                     onClick={() => setPrivacySettings({ ...privacySettings, phone_public: !privacySettings.phone_public })}
+                    aria-label={privacySettings.phone_public ? "Hide phone from public profile" : "Show phone on public profile"}
                   >
                     {privacySettings.phone_public ? (
                       <Eye className="h-4 w-4" />
@@ -577,13 +587,15 @@ export default function Profile() {
                         <Button
                           type="button"
                           variant="ghost"
-                          size="sm"
+                          size="icon"
+                          className="min-h-11 min-w-11"
                           onClick={() => {
                             setForm({
                               ...form,
                               skills: form.skills.filter(s => s !== skill)
                             });
                           }}
+                          aria-label={`Remove skill: ${skill}`}
                         >
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
@@ -643,20 +655,17 @@ export default function Profile() {
             {editing && (
               <Button
                 variant="ghost"
-                size="sm"
+                size="icon"
+                className="h-11 w-11"
                 onClick={() => {
-                  const allVisible = Object.values(addressVisibility).every(v => v);
-                  setAddressVisibility({
-                    address_line_1: !allVisible,
-                    address_line_2: !allVisible,
-                    city: !allVisible,
-                    province_state: !allVisible,
-                    country: !allVisible,
-                    postal_code: !allVisible,
-                  });
+                  setPrivacySettings(prev => ({
+                    ...prev,
+                    address_public: !prev.address_public,
+                  }));
                 }}
+                aria-label={privacySettings.address_public ? "Hide address from public profile" : "Show address on public profile"}
               >
-                {Object.values(addressVisibility).every(v => v) ? (
+                {privacySettings.address_public ? (
                   <Eye className="h-4 w-4" />
                 ) : (
                   <EyeOff className="h-4 w-4" />
@@ -720,15 +729,15 @@ export default function Profile() {
               </>
             ) : (
               <>
-                {address.address_line_1 || address.city || address.country ? (
+                {privacySettings.address_public && (address.address_line_1 || address.city || address.country) ? (
                   <div className="space-y-3">
-                    {address.address_line_1 && addressVisibility.address_line_1 && (
+                    {address.address_line_1 && (
                       <div className="flex items-start space-x-2">
                         <MapPin className="h-4 w-4 mt-0.5 text-muted-foreground flex-shrink-0" />
                         <span className="text-sm text-foreground">{address.address_line_1}</span>
                       </div>
                     )}
-                    {address.address_line_2 && addressVisibility.address_line_2 && (
+                    {address.address_line_2 && (
                       <div className="flex items-start space-x-2">
                         <div className="h-4 w-4 mt-0.5 flex-shrink-0" />
                         <span className="text-sm text-foreground">{address.address_line_2}</span>
@@ -739,16 +748,16 @@ export default function Profile() {
                         <div className="h-4 w-4 mt-0.5 flex-shrink-0" />
                         <span className="text-sm text-foreground">
                           {[
-                            addressVisibility.city ? address.city : null,
-                            addressVisibility.province_state ? address.province_state : null,
-                            addressVisibility.country ? address.country : null,
+                            address.city,
+                            address.province_state,
+                            address.country,
                           ]
                             .filter(Boolean)
                             .join(', ')}
                         </span>
                       </div>
                     )}
-                    {address.postal_code && addressVisibility.postal_code && (
+                    {address.postal_code && (
                       <div className="flex items-start space-x-2">
                         <div className="h-4 w-4 mt-0.5 flex-shrink-0" />
                         <span className="text-sm text-foreground">{address.postal_code}</span>
