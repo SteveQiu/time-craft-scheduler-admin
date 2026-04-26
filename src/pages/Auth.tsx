@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { Calendar } from 'lucide-react';
 import { ResetPasswordFlow } from '@/components/ResetPasswordFlow';
@@ -33,6 +34,7 @@ export default function Auth() {
   const [signUpPassword, setSignUpPassword] = useState('');
   const [signUpFullName, setSignUpFullName] = useState('');
   const [signUpRole, setSignUpRole] = useState<AppRole>('USER');
+  const [agreeToTerms, setAgreeToTerms] = useState(false);
 
   // Password reset state
   const [resetEmail, setResetEmail] = useState('');
@@ -75,6 +77,16 @@ export default function Auth() {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!agreeToTerms) {
+      toast({
+        title: 'Terms Required',
+        description: 'Please agree to the Terms of Service to continue.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
     setIsLoading(true);
 
     try {
@@ -290,11 +302,27 @@ export default function Auth() {
                       </div>
                     </RadioGroup>
                   </div>
+                  <div className="flex items-start space-x-2">
+                    <Checkbox 
+                      id="terms"
+                      checked={agreeToTerms}
+                      onCheckedChange={(checked) => setAgreeToTerms(checked as boolean)}
+                      className="mt-1"
+                      disabled={isLoading}
+                      aria-label="Agree to Terms of Service"
+                    />
+                    <Label htmlFor="terms" className="font-normal text-sm leading-relaxed cursor-pointer">
+                      I agree to the{' '}
+                      <Link to="/tos" className="text-primary hover:underline" target="_blank">
+                        Terms of Service
+                      </Link>
+                    </Label>
+                  </div>
                   <Button 
                     form="signup-form"
                     type="submit" 
                     className="w-full" 
-                    disabled={isLoading}
+                    disabled={isLoading || !agreeToTerms}
                     onClick={() => {
                       const form = document.getElementById('signup-form') as HTMLFormElement;
                       if (form && !isLoading) form.requestSubmit();
