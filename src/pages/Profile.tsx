@@ -500,19 +500,19 @@ export default function Profile() {
                 <p className="text-foreground">{profile.introduction}</p>
               )}
               <div className="space-y-2">
-                {profile.email && (
+                 {profile.email && (isOwnProfile || profile.email_public) && (
                   <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                     <Mail className="h-4 w-4" />
                     <span>{profile.email}</span>
                   </div>
                 )}
-                {profile.phone && (
+                 {profile.phone && (isOwnProfile || profile.phone_public) && (
                   <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                     <Phone className="h-4 w-4" />
                     <span>{profile.phone}</span>
                   </div>
                 )}
-                {profile.address && (
+                 {profile.address && (isOwnProfile || profile.address_public) && (
                   <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                     <MapPin className="h-4 w-4" />
                     <span>{profile.address}</span>
@@ -789,3 +789,4 @@ export default function Profile() {
     </div>
   );
 }
+
