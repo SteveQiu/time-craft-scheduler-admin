@@ -262,25 +262,25 @@ export default function Settings() {
       <h1 className="text-3xl font-bold text-foreground">Settings</h1>
 
       <Tabs defaultValue="addresses">
-        <TabsList>
-          <TabsTrigger value="addresses">
-            <MapPin className="h-4 w-4 mr-2" />
+        <TabsList className="flex-col sm:flex-row h-auto w-full sm:w-auto sm:inline-flex">
+          <TabsTrigger value="addresses" className="w-full sm:w-auto justify-start sm:justify-center text-xs sm:text-sm px-2 sm:px-3 py-2">
+            <MapPin className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
             Addresses
           </TabsTrigger>
-          <TabsTrigger value="payments">
-            <CreditCard className="h-4 w-4 mr-2" />
+          <TabsTrigger value="payments" className="w-full sm:w-auto justify-start sm:justify-center text-xs sm:text-sm px-2 sm:px-3 py-2">
+            <CreditCard className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
             Payment Methods
           </TabsTrigger>
-          <TabsTrigger value="security">
-            <Lock className="h-4 w-4 mr-2" />
+          <TabsTrigger value="security" className="w-full sm:w-auto justify-start sm:justify-center text-xs sm:text-sm px-2 sm:px-3 py-2">
+            <Lock className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
             Security
           </TabsTrigger>
-          <TabsTrigger value="roles">
-            <Star className="h-4 w-4 mr-2" />
+          <TabsTrigger value="roles" className="w-full sm:w-auto justify-start sm:justify-center text-xs sm:text-sm px-2 sm:px-3 py-2">
+            <Star className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
             Roles
           </TabsTrigger>
-          <TabsTrigger value="privacy">
-            <Shield className="h-4 w-4 mr-2" />
+          <TabsTrigger value="privacy" className="w-full sm:w-auto justify-start sm:justify-center text-xs sm:text-sm px-2 sm:px-3 py-2">
+            <Shield className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
             Privacy
           </TabsTrigger>
         </TabsList>
