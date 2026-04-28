@@ -57,9 +57,9 @@ export function PreferencesCenter() {
       
       if (error && error.code !== 'PGRST116') throw error;
       if (data) {
-        setPreferences(data as UserPreferences);
+        setPreferences(data as unknown as UserPreferences);
       }
-      return data as UserPreferences | null;
+      return (data as unknown as UserPreferences) ?? null;
     },
     enabled: !!user,
   });
