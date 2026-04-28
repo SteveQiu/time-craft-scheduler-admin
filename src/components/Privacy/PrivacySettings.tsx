@@ -38,7 +38,7 @@ export function PrivacySettings() {
         .order('granted_at', { ascending: false });
       
       if (error) throw error;
-      return data as ConsentRecord[];
+      return data as unknown as ConsentRecord[];
     },
     enabled: !!user,
   });
