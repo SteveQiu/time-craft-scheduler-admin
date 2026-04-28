@@ -61,7 +61,7 @@ export async function recordConsent(data: ConsentData): Promise<ConsentResponse>
  * Get user's consent history
  */
 export async function getConsentHistory() {
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('consent_records')
     .select('*')
     .order('created_at', { ascending: false })
@@ -127,7 +127,7 @@ export async function downloadDataExport(exportId: string): Promise<Blob> {
  * Get data export status
  */
 export async function getDataExportStatus(exportId: string) {
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('data_exports')
     .select('*')
     .eq('id', exportId)
@@ -141,7 +141,7 @@ export async function getDataExportStatus(exportId: string) {
  * Get all user's data exports
  */
 export async function listDataExports() {
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('data_exports')
     .select('*')
     .order('created_at', { ascending: false })
@@ -257,7 +257,7 @@ export async function cancelAccountDeletion(deletionId: string): Promise<{ succe
  * Get user's deletion requests
  */
 export async function getDeletionRequests() {
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('deletion_requests')
     .select('*')
     .order('requested_at', { ascending: false })
@@ -313,7 +313,7 @@ export async function getUserPersonalData(): Promise<PersonalData> {
  * Get user's audit logs
  */
 export async function getAuditLogs(limit = 100) {
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('audit_logs')
     .select('*')
     .order('created_at', { ascending: false })

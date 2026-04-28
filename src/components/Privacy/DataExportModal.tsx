@@ -82,7 +82,7 @@ export function DataExportModal({ open, onOpenChange }: DataExportModalProps) {
   const pollExportStatus = async (jobId: string) => {
     const interval = setInterval(async () => {
       try {
-        const { data, error } = await supabase
+        const { data, error } = await (supabase as any)
           .from('export_jobs')
           .select('*')
           .eq('id', jobId)
