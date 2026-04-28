@@ -300,58 +300,58 @@ export type Database = {
       profiles: {
         Row: {
           address: string | null
-          address_public: boolean
+          address_public: boolean | null
           avatar_url: string | null
           created_at: string
           email: string | null
-          email_public: boolean
+          email_public: boolean | null
           full_name: string | null
           hourly_rate: number
-          hourly_rate_public: boolean
+          hourly_rate_public: boolean | null
           id: string
           introduction: string | null
           phone: string | null
-          phone_public: boolean
+          phone_public: boolean | null
           skills: string[]
-          skills_public: boolean
+          skills_public: boolean | null
           slug: string | null
           updated_at: string
         }
         Insert: {
           address?: string | null
-          address_public?: boolean
+          address_public?: boolean | null
           avatar_url?: string | null
           created_at?: string
           email?: string | null
-          email_public?: boolean
+          email_public?: boolean | null
           full_name?: string | null
           hourly_rate?: number
-          hourly_rate_public?: boolean
+          hourly_rate_public?: boolean | null
           id: string
           introduction?: string | null
           phone?: string | null
-          phone_public?: boolean
+          phone_public?: boolean | null
           skills?: string[]
-          skills_public?: boolean
+          skills_public?: boolean | null
           slug?: string | null
           updated_at?: string
         }
         Update: {
           address?: string | null
-          address_public?: boolean
+          address_public?: boolean | null
           avatar_url?: string | null
           created_at?: string
           email?: string | null
-          email_public?: boolean
+          email_public?: boolean | null
           full_name?: string | null
           hourly_rate?: number
-          hourly_rate_public?: boolean
+          hourly_rate_public?: boolean | null
           id?: string
           introduction?: string | null
           phone?: string | null
-          phone_public?: boolean
+          phone_public?: boolean | null
           skills?: string[]
-          skills_public?: boolean
+          skills_public?: boolean | null
           slug?: string | null
           updated_at?: string
         }
