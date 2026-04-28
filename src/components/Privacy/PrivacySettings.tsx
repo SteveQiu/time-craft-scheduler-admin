@@ -31,7 +31,7 @@ export function PrivacySettings() {
   const { data: consents = [], isLoading } = useQuery({
     queryKey: ['user-consents', user?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('user_consents')
         .select('*')
         .eq('user_id', user?.id)

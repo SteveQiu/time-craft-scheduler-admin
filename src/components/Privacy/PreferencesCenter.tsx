@@ -49,7 +49,7 @@ export function PreferencesCenter() {
   const { isLoading } = useQuery({
     queryKey: ['user-preferences', user?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('user_preferences')
         .select('*')
         .eq('user_id', user?.id)
@@ -66,7 +66,7 @@ export function PreferencesCenter() {
 
   const savePreferences = useMutation({
     mutationFn: async (prefs: UserPreferences) => {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('user_preferences')
         .upsert({ ...prefs, user_id: user?.id }, { onConflict: 'user_id' });
       
