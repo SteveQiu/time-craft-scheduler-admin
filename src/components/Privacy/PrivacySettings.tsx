@@ -45,7 +45,7 @@ export function PrivacySettings() {
 
   const updateConsent = useMutation({
     mutationFn: async ({ type, granted }: { type: string; granted: boolean }) => {
-      const { error } = await supabase.from('user_consents').upsert({
+      const { error } = await (supabase as any).from('user_consents').upsert({
         user_id: user?.id,
         consent_type: type,
         granted,
