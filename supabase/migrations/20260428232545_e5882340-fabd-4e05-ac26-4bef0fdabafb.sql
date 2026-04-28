@@ -1,0 +1,23 @@
+REVOKE EXECUTE ON FUNCTION public.has_role(uuid, app_role) FROM anon, public;
+REVOKE EXECUTE ON FUNCTION public.get_user_roles(uuid) FROM anon, public;
+REVOKE EXECUTE ON FUNCTION public.get_worker_org_id(uuid) FROM anon, public;
+REVOKE EXECUTE ON FUNCTION public.is_worker_of(uuid, uuid) FROM anon, public;
+REVOKE EXECUTE ON FUNCTION public.accept_invite(uuid, uuid) FROM anon, public;
+REVOKE EXECUTE ON FUNCTION public.get_my_invites(text) FROM anon, public;
+REVOKE EXECUTE ON FUNCTION public.book_opening(uuid, uuid) FROM anon, public;
+REVOKE EXECUTE ON FUNCTION public.cancel_appointment(uuid, uuid) FROM anon, public;
+REVOKE EXECUTE ON FUNCTION public.approve_appointment(uuid, uuid) FROM anon, public;
+REVOKE EXECUTE ON FUNCTION public.reject_appointment(uuid, uuid) FROM anon, public;
+REVOKE EXECUTE ON FUNCTION public.modify_appointment(uuid, uuid, uuid) FROM anon, public;
+
+GRANT EXECUTE ON FUNCTION public.has_role(uuid, app_role) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.get_user_roles(uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.get_worker_org_id(uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.is_worker_of(uuid, uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.accept_invite(uuid, uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.get_my_invites(text) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.book_opening(uuid, uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.cancel_appointment(uuid, uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.approve_appointment(uuid, uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.reject_appointment(uuid, uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.modify_appointment(uuid, uuid, uuid) TO authenticated;
