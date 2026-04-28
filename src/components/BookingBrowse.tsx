@@ -185,11 +185,9 @@ export function BookingBrowse() {
         
         const bookmarkedIds = bookmarks.map((b: any) => b.bookmarked_user_id);
         
-        // Get provider details for bookmarked users - fetch directly from profiles
+        // Get provider details for bookmarked users via PII-safe RPC
         const { data: profiles, error: profilesError } = await supabase
-          .from('profiles')
-          .select('id, full_name, slug')
-          .in('id', bookmarkedIds);
+          .rpc('get_public_profile_names', { profile_ids: bookmarkedIds });
         
         if (profilesError) {
           console.error('Profiles fetch error:', profilesError);
