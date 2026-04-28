@@ -94,11 +94,13 @@ export function Appointments() {
 
       let bookerContactMap = new Map<string, { email: string | null; phone: string | null }>();
       if (bookerIds.length > 0) {
-        const { data: bookerProfiles } = await supabase
-          .from('profiles')
-          .select('id, email, phone')
-          .in('id', bookerIds);
-        bookerContactMap = new Map((bookerProfiles || []).map((p: any) => [p.id, { email: p.email, phone: p.phone }]));
+        const contactResults = await Promise.all(
+          bookerIds.map((id) => supabase.rpc('get_public_profile_by_id', { profile_id: id }))
+        );
+        contactResults.forEach((res, idx) => {
+          const p = (res.data && (res.data as any)[0]) || null;
+          bookerContactMap.set(bookerIds[idx], { email: p?.email ?? null, phone: p?.phone ?? null });
+        });
       }
 
       return (data || []).map((a: any) => ({
