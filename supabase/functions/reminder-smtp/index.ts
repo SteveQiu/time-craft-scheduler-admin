@@ -1,18 +1,52 @@
 import "@supabase/functions-js/edge-runtime.d.ts"
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0"
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+}
 
 Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders })
+  }
+
   if (req.method !== "POST") {
-    return new Response("Method not allowed", { status: 405 })
+    return new Response("Method not allowed", { status: 405, headers: corsHeaders })
+  }
+
+  // ✅ Require authentication — prevents open SMTP relay abuse
+  const authHeader = req.headers.get("Authorization")
+  if (!authHeader?.startsWith("Bearer ")) {
+    return new Response(
+      JSON.stringify({ error: "Unauthorized" }),
+      { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    )
   }
 
   try {
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      { global: { headers: { Authorization: authHeader } } }
+    )
+
+    const token = authHeader.replace("Bearer ", "")
+    const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token)
+    if (claimsError || !claimsData?.claims) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      )
+    }
+
     const { to, subject, html, text } = await req.json()
 
     // Validate required fields
-    if (!to || !subject) {
+    if (!to || !subject || typeof to !== "string" || typeof subject !== "string") {
       return new Response(
-        JSON.stringify({ error: "Missing required fields: to, subject" }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
+        JSON.stringify({ error: "Missing or invalid required fields: to, subject" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       )
     }
 
@@ -23,22 +57,18 @@ Deno.serve(async (req) => {
     const SMTP_PASS = Deno.env.get("SMTP_PASS")
     const SMTP_FROM = Deno.env.get("SMTP_FROM")
 
-    // Validate SMTP configuration
     if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS || !SMTP_FROM) {
       console.error("Missing SMTP configuration")
       return new Response(
         JSON.stringify({ error: "SMTP configuration incomplete" }),
-        { status: 500, headers: { "Content-Type": "application/json" } }
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       )
     }
 
-    // Use PostalJS library which is more stable for Deno Edge Runtime
     const { SmtpClient } = await import("https://deno.land/x/smtp@v0.16.0/mod.ts")
-
     const client = new SmtpClient()
 
     try {
-      // Connect to SMTP server (TLS connection)
       await client.connectTLS({
         hostname: SMTP_HOST,
         port: SMTP_PORT,
@@ -46,7 +76,6 @@ Deno.serve(async (req) => {
         password: SMTP_PASS,
       })
 
-      // Send email
       await client.send({
         from: SMTP_FROM,
         to: to,
@@ -55,56 +84,27 @@ Deno.serve(async (req) => {
         html: html,
       })
 
-      // Close connection gracefully
       await client.close()
 
-      console.log(`Email sent successfully to ${to}`)
+      console.log(`Email sent successfully to ${to} by user ${claimsData.claims.sub}`)
 
       return new Response(
         JSON.stringify({ success: true, message: "Email sent successfully" }),
-        { headers: { "Content-Type": "application/json" } }
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       )
     } catch (smtpError) {
       console.error("SMTP Error:", smtpError)
-      try {
-        await client.close()
-      } catch {
-        // Ignore close errors
-      }
+      try { await client.close() } catch { /* ignore */ }
       throw smtpError
     }
   } catch (error) {
     console.error("Error:", error)
     return new Response(
-      JSON.stringify({ 
-        success: false, 
-        error: error instanceof Error ? error.message : "Unknown error" 
+      JSON.stringify({
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error"
       }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     )
   }
 })
-
-/* To invoke locally:
-
-  1. Set environment variables in supabase/.env.local:
-     SMTP_HOST=smtp.gmail.com
-     SMTP_PORT=587
-     SMTP_USER=your-email@gmail.com
-     SMTP_PASS=your-app-password
-     SMTP_FROM="TimeCraft <your-email@gmail.com>"
-
-  2. Run `supabase start`
-
-  3. Test with curl:
-     curl -i --location --request POST 'http://127.0.0.1:54321/functions/v1/reminder-smtp' \
-       --header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0' \
-       --header 'Content-Type: application/json' \
-       --data '{
-         "to": "recipient@example.com",
-         "subject": "Test Email",
-         "html": "<h1>Hello from TimeCraft!</h1>",
-         "text": "Hello from TimeCraft!"
-       }'
-
-*/
