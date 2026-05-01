@@ -408,48 +408,6 @@ export default function Auth() {
                   )}
                 </form>
               </TabsContent>
-
-              <TabsContent value="reset">
-                <form id="reset-form" onSubmit={handlePasswordReset} className="space-y-4">
-                  {resetSent ? (
-                    <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-                      <p className="text-sm text-green-800 dark:text-green-200">
-                        ✓ Password reset email sent! Check your inbox and follow the link to set a new password.
-                      </p>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="space-y-2">
-                        <Label htmlFor="reset-email">Email Address</Label>
-                        <Input
-                          id="reset-email"
-                          type="email"
-                          placeholder="you@example.com"
-                          value={resetEmail}
-                          onChange={(e) => setResetEmail(e.target.value)}
-                          required
-                          disabled={isLoading}
-                        />
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        Enter the email address associated with your account. You'll receive a link to reset your password.
-                      </p>
-                      <Button 
-                        form="reset-form"
-                        type="submit" 
-                        className="w-full" 
-                        disabled={isLoading}
-                        onClick={() => {
-                          const form = document.getElementById('reset-form') as HTMLFormElement;
-                          if (form && !isLoading) form.requestSubmit();
-                        }}
-                      >
-                        {isLoading ? 'Sending...' : 'Send Reset Link'}
-                      </Button>
-                    </>
-                  )}
-                </form>
-              </TabsContent>
             </Tabs>
           </CardContent>
         </Card>
