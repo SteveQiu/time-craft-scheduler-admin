@@ -47,8 +47,13 @@ export default function Auth() {
     }
   }, [user, loading, isResetMode, navigate]);
 
-  const handleSignIn = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSignIn = async (e?: React.FormEvent | React.MouseEvent) => {
+    e?.preventDefault();
+    if (isLoading) return;
+    if (!signInEmail || !signInPassword) {
+      toast({ title: 'Missing info', description: 'Enter email and password.', variant: 'destructive' });
+      return;
+    }
     setIsLoading(true);
 
     try {
