@@ -80,9 +80,18 @@ export default function Auth() {
     }
   };
 
-  const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  const handleSignUp = async (e?: React.FormEvent | React.MouseEvent) => {
+    e?.preventDefault();
+    if (isLoading) return;
+
+    if (!signUpFullName || !signUpEmail || !signUpPassword) {
+      toast({ title: 'Missing info', description: 'Please fill all fields.', variant: 'destructive' });
+      return;
+    }
+    if (signUpPassword.length < 6) {
+      toast({ title: 'Password too short', description: 'Use at least 6 characters.', variant: 'destructive' });
+      return;
+    }
     if (!agreeToTerms) {
       toast({
         title: 'Terms Required',
@@ -91,7 +100,7 @@ export default function Auth() {
       });
       return;
     }
-    
+
     setIsLoading(true);
 
     try {
