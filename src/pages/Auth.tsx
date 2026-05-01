@@ -47,8 +47,13 @@ export default function Auth() {
     }
   }, [user, loading, isResetMode, navigate]);
 
-  const handleSignIn = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSignIn = async (e?: React.FormEvent | React.MouseEvent) => {
+    e?.preventDefault();
+    if (isLoading) return;
+    if (!signInEmail || !signInPassword) {
+      toast({ title: 'Missing info', description: 'Enter email and password.', variant: 'destructive' });
+      return;
+    }
     setIsLoading(true);
 
     try {
@@ -75,9 +80,18 @@ export default function Auth() {
     }
   };
 
-  const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  const handleSignUp = async (e?: React.FormEvent | React.MouseEvent) => {
+    e?.preventDefault();
+    if (isLoading) return;
+
+    if (!signUpFullName || !signUpEmail || !signUpPassword) {
+      toast({ title: 'Missing info', description: 'Please fill all fields.', variant: 'destructive' });
+      return;
+    }
+    if (signUpPassword.length < 6) {
+      toast({ title: 'Password too short', description: 'Use at least 6 characters.', variant: 'destructive' });
+      return;
+    }
     if (!agreeToTerms) {
       toast({
         title: 'Terms Required',
@@ -86,7 +100,7 @@ export default function Auth() {
       });
       return;
     }
-    
+
     setIsLoading(true);
 
     try {
@@ -134,8 +148,13 @@ export default function Auth() {
     }
   };
 
-  const handlePasswordReset = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handlePasswordReset = async (e?: React.FormEvent | React.MouseEvent) => {
+    e?.preventDefault();
+    if (isLoading) return;
+    if (!resetEmail) {
+      toast({ title: 'Missing email', description: 'Enter your email address.', variant: 'destructive' });
+      return;
+    }
     setIsLoading(true);
 
     try {
@@ -212,12 +231,19 @@ export default function Auth() {
               </TabsList>
 
               <TabsContent value="signin">
-                <form id="signin-form" onSubmit={handleSignIn} className="space-y-4">
+                <form
+                  onSubmit={handleSignIn}
+                  className="space-y-4"
+                  noValidate
+                >
                   <div className="space-y-2">
                     <Label htmlFor="signin-email">Email</Label>
                     <Input
                       id="signin-email"
+                      name="email"
                       type="email"
+                      autoComplete="email"
+                      inputMode="email"
                       placeholder="you@example.com"
                       value={signInEmail}
                       onChange={(e) => setSignInEmail(e.target.value)}
@@ -229,22 +255,20 @@ export default function Auth() {
                     <Label htmlFor="signin-password">Password</Label>
                     <Input
                       id="signin-password"
+                      name="password"
                       type="password"
+                      autoComplete="current-password"
                       value={signInPassword}
                       onChange={(e) => setSignInPassword(e.target.value)}
                       required
                       disabled={isLoading}
                     />
                   </div>
-                  <Button 
-                    form="signin-form"
-                    type="submit" 
-                    className="w-full" 
+                  <Button
+                    type="submit"
+                    className="w-full"
                     disabled={isLoading}
-                    onClick={() => {
-                      const form = document.getElementById('signin-form') as HTMLFormElement;
-                      if (form && !isLoading) form.requestSubmit();
-                    }}
+                    onClick={handleSignIn}
                   >
                     {isLoading ? 'Signing in...' : 'Sign In'}
                   </Button>
@@ -252,12 +276,18 @@ export default function Auth() {
               </TabsContent>
 
               <TabsContent value="signup">
-                <form id="signup-form" onSubmit={handleSignUp} className="space-y-4">
+                <form
+                  onSubmit={handleSignUp}
+                  className="space-y-4"
+                  noValidate
+                >
                   <div className="space-y-2">
                     <Label htmlFor="signup-name">Full Name</Label>
                     <Input
                       id="signup-name"
+                      name="name"
                       type="text"
+                      autoComplete="name"
                       placeholder="John Doe"
                       value={signUpFullName}
                       onChange={(e) => setSignUpFullName(e.target.value)}
@@ -269,7 +299,10 @@ export default function Auth() {
                     <Label htmlFor="signup-email">Email</Label>
                     <Input
                       id="signup-email"
+                      name="email"
                       type="email"
+                      autoComplete="email"
+                      inputMode="email"
                       placeholder="you@example.com"
                       value={signUpEmail}
                       onChange={(e) => setSignUpEmail(e.target.value)}
@@ -281,7 +314,9 @@ export default function Auth() {
                     <Label htmlFor="signup-password">Password</Label>
                     <Input
                       id="signup-password"
+                      name="new-password"
                       type="password"
+                      autoComplete="new-password"
                       value={signUpPassword}
                       onChange={(e) => setSignUpPassword(e.target.value)}
                       required
@@ -303,7 +338,7 @@ export default function Auth() {
                     </RadioGroup>
                   </div>
                   <div className="flex items-start space-x-2">
-                    <Checkbox 
+                    <Checkbox
                       id="terms"
                       checked={agreeToTerms}
                       onCheckedChange={(checked) => setAgreeToTerms(checked as boolean)}
@@ -318,15 +353,11 @@ export default function Auth() {
                       </Link>
                     </Label>
                   </div>
-                  <Button 
-                    form="signup-form"
-                    type="submit" 
-                    className="w-full" 
+                  <Button
+                    type="submit"
+                    className="w-full"
                     disabled={isLoading || !agreeToTerms}
-                    onClick={() => {
-                      const form = document.getElementById('signup-form') as HTMLFormElement;
-                      if (form && !isLoading) form.requestSubmit();
-                    }}
+                    onClick={handleSignUp}
                   >
                     {isLoading ? 'Creating account...' : 'Sign Up'}
                   </Button>
@@ -334,7 +365,11 @@ export default function Auth() {
               </TabsContent>
 
               <TabsContent value="reset">
-                <form id="reset-form" onSubmit={handlePasswordReset} className="space-y-4">
+                <form
+                  onSubmit={handlePasswordReset}
+                  className="space-y-4"
+                  noValidate
+                >
                   {resetSent ? (
                     <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
                       <p className="text-sm text-green-800 dark:text-green-200">
@@ -347,7 +382,10 @@ export default function Auth() {
                         <Label htmlFor="reset-email">Email Address</Label>
                         <Input
                           id="reset-email"
+                          name="email"
                           type="email"
+                          autoComplete="email"
+                          inputMode="email"
                           placeholder="you@example.com"
                           value={resetEmail}
                           onChange={(e) => setResetEmail(e.target.value)}
@@ -358,15 +396,11 @@ export default function Auth() {
                       <p className="text-sm text-muted-foreground">
                         Enter the email address associated with your account. You'll receive a link to reset your password.
                       </p>
-                      <Button 
-                        form="reset-form"
-                        type="submit" 
-                        className="w-full" 
+                      <Button
+                        type="submit"
+                        className="w-full"
                         disabled={isLoading}
-                        onClick={() => {
-                          const form = document.getElementById('reset-form') as HTMLFormElement;
-                          if (form && !isLoading) form.requestSubmit();
-                        }}
+                        onClick={handlePasswordReset}
                       >
                         {isLoading ? 'Sending...' : 'Send Reset Link'}
                       </Button>
