@@ -148,8 +148,13 @@ export default function Auth() {
     }
   };
 
-  const handlePasswordReset = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handlePasswordReset = async (e?: React.FormEvent | React.MouseEvent) => {
+    e?.preventDefault();
+    if (isLoading) return;
+    if (!resetEmail) {
+      toast({ title: 'Missing email', description: 'Enter your email address.', variant: 'destructive' });
+      return;
+    }
     setIsLoading(true);
 
     try {
