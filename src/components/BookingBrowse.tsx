@@ -58,21 +58,19 @@ export function BookingBrowse() {
 
   const today = new Date().toISOString().split('T')[0];
 
-  // Fetch all openings
+  // Fetch all openings (works for both authenticated and anonymous users)
   const { 
     data: allOpenings = [], 
     isLoading: openingsLoading,
     isError: openingsError,
     error: queryError 
   } = useQuery({
-    queryKey: ['browse-openings', today, user?.id],
-    enabled: !!user?.id,
+    queryKey: ['browse-openings', today],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('openings')
         .select('*')
         .eq('is_available', true)
-        .neq('user_id', user?.id)
         .gte('date', today)
         .order('date', { ascending: true })
         .order('start_time', { ascending: true });
