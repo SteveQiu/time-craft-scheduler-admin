@@ -12,9 +12,9 @@ export function RootRedirect() {
     return <div className="flex items-center justify-center h-screen bg-background text-foreground">Loading...</div>;
   }
 
-  // Not authenticated - redirect to auth
+  // Not authenticated - send to public browse page
   if (!user) {
-    return <Navigate to="/auth" replace />;
+    return <Navigate to="/browse" replace />;
   }
 
   // Organization user → dashboard
