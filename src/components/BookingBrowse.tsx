@@ -238,6 +238,15 @@ export function BookingBrowse() {
   );
 
   const handleBooking = (slot: OpeningWithProfile) => {
+    if (!user) {
+      // Save booking intent and redirect to auth
+      try {
+        localStorage.setItem('pendingBookingOpeningId', slot.id);
+      } catch {}
+      toast.info('Please sign in to book this appointment.');
+      navigate(`/auth?redirect=/browse/${slot.user_id}`);
+      return;
+    }
     setSelectedSlot(slot);
     setShowBookingDialog(true);
   };
