@@ -283,7 +283,17 @@ export function BrowseDetail({
                       <div className="font-semibold text-sm">{new Date(`1970-01-01T${slot.start_time}`).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}</div>
                       <div className="text-xs text-muted-foreground">{slot.duration}h</div>
                     </div>
-                    <Button size="sm" onClick={() => { setSelectedSlot(slot); setShowBookingDialog(true); }} className="w-full">Book</Button>
+                    <Button size="sm" onClick={async () => {
+                      const { data: { user } } = await supabase.auth.getUser();
+                      if (!user) {
+                        try { localStorage.setItem('pendingBookingOpeningId', slot.id); } catch {}
+                        toast.info('Please sign in to book this appointment.');
+                        navigate(`/auth?redirect=/browse/${slot.user_id}`);
+                        return;
+                      }
+                      setSelectedSlot(slot);
+                      setShowBookingDialog(true);
+                    }} className="w-full">Book</Button>
                     <div className="flex gap-2">
                       <Button variant="outline" size="icon" className="flex-1 h-8" onClick={() => window.open(`/openings/${slot.id}`)}><ExternalLink className="h-4 w-4" /></Button>
                       <Button variant="outline" size="icon" className="flex-1 h-8" onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/openings/${slot.id}`); setCopiedSlotId(slot.id); toast.success('Link copied!'); setTimeout(() => setCopiedSlotId(null), 1000); }}>{copiedSlotId === slot.id ? <Check className="h-4 w-4 text-green-600" /> : <Share2 className="h-4 w-4" />}</Button>
