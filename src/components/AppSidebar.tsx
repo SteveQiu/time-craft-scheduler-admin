@@ -124,8 +124,25 @@ export function AppSidebar() {
           </>
         )}
 
-        {/* Sign In for unauthenticated */}
-        {/* Removed - now only in footer */}
+        {/* Guest Section (unauthenticated) */}
+        {!user && (
+          <div>
+            <h3 className="text-xs font-semibold text-muted-foreground px-4 mb-2">BROWSE</h3>
+            <div className="space-y-1 px-2">
+              <Link
+                to="/browse"
+                className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
+                  isActive('/browse')
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-foreground hover:bg-accent'
+                }`}
+              >
+                <Search className="h-4 w-4 flex-shrink-0" />
+                <span className="truncate">Browse</span>
+              </Link>
+            </div>
+          </div>
+        )}
       </div>
 
       <Separator />
