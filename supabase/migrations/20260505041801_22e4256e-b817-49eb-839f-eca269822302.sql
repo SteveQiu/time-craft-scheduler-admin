@@ -1,0 +1,1 @@
+GRANT EXECUTE ON FUNCTION public.is_worker_of(uuid, uuid) TO anon;
