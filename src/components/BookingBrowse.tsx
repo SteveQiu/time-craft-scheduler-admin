@@ -342,24 +342,40 @@ export function BookingBrowse() {
           </div>
         </div>
 
-        {/* Tab buttons */}
-        <div className="flex gap-2">
-          <Button
-            variant={viewMode === 'all' ? 'default' : 'outline'}
-            onClick={() => setViewMode('all')}
-            className="flex items-center gap-2"
-          >
-            All
-          </Button>
-          <Button
-            variant={viewMode === 'bookmarks' ? 'default' : 'outline'}
-            onClick={() => setViewMode('bookmarks')}
-            className="flex items-center gap-2"
-          >
-            <Bookmark className="h-4 w-4 text-muted-foreground" />
-            Bookmarks ({bookmarkedProviders.length})
-          </Button>
-        </div>
+        {/* Sign-in CTA for anonymous users */}
+        {!user && (
+          <Card className="shadow-soft border-card-border bg-primary/5">
+            <CardContent className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 py-4">
+              <p className="text-sm text-foreground">
+                Sign in to bookmark providers and book appointments.
+              </p>
+              <Button onClick={() => navigate('/auth?redirect=/browse')}>
+                Sign in
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Tab buttons (bookmarks only available when signed in) */}
+        {user && (
+          <div className="flex gap-2">
+            <Button
+              variant={viewMode === 'all' ? 'default' : 'outline'}
+              onClick={() => setViewMode('all')}
+              className="flex items-center gap-2"
+            >
+              All
+            </Button>
+            <Button
+              variant={viewMode === 'bookmarks' ? 'default' : 'outline'}
+              onClick={() => setViewMode('bookmarks')}
+              className="flex items-center gap-2"
+            >
+              <Bookmark className="h-4 w-4 text-muted-foreground" />
+              Bookmarks ({bookmarkedProviders.length})
+            </Button>
+          </div>
+        )}
 
         {/* Search */}
         <Card className="shadow-soft border-card-border">
