@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRoles } from '@/hooks/useUserRoles';
 import { Button } from '@/components/ui/button';
@@ -12,8 +12,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Trash2, MapPin, CreditCard, Star, Edit, Lock, Shield } from 'lucide-react';
+import { Plus, MapPin, CreditCard, Star, Lock, Shield, Edit, Trash2 } from 'lucide-react';
 import { PrivacySettings } from '@/components/Privacy';
+import { COUNTRIES, PROVINCES_BY_COUNTRY } from '@/lib/address';
+import { PAYMENT_METHOD_CONFIGS, getMethodConfig } from '@/lib/payment/methods';
+import { deserializeDetailsByType } from '@/lib/payment/serialization';
+import { PaymentMethodRecord } from '@/lib/payment/types';
+import { usePaymentMethod } from '@/hooks/usePaymentMethod';
+import { PaymentMethodForm } from '@/components/payment/PaymentMethodForm';
+import { PaymentMethodCard } from '@/components/payment/PaymentMethodCard';
 
 interface WorkplaceAddress {
   id: string;
@@ -47,23 +54,8 @@ function formatAddressDisplay(raw: string): string {
   return [f.street, f.city, f.province, f.country, f.zip].filter(Boolean).join(', ');
 }
 
-interface PaymentMethod {
-  id: string;
-  user_id: string;
-  label: string;
-  type: string;
-  details: string | null;
-  is_default: boolean;
-  created_at: string;
-}
 
-const PAYMENT_TYPES = [
-  { value: 'cash', label: 'Cash' },
-  { value: 'paypal', label: 'PayPal' },
-  { value: 'venmo', label: 'Venmo' },
-  { value: 'email_transfer', label: 'Email Transfer' },
-  { value: 'wechat', label: 'WeChat' },
-];
+
 
 export default function Settings() {
   const { user, signOut } = useAuth();
@@ -78,15 +70,32 @@ export default function Settings() {
 
   // Payment dialog state
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
-  const [editingPayment, setEditingPayment] = useState<PaymentMethod | null>(null);
-  const [paymentForm, setPaymentForm] = useState({ label: '', type: 'cash', details: '' });
-  const [venmoInputType, setVenmoInputType] = useState<'username' | 'phone' | 'qr'>('username');
+  const [editingPayment, setEditingPayment] = useState<PaymentMethodRecord | null>(null);
+  const [paymentFormLabel, setPaymentFormLabel] = useState('');
+  const [paymentFormType, setPaymentFormType] = useState('cash');
+  const { details: paymentDetails, reset: resetPaymentDetails, serialize: serializePaymentDetails } = usePaymentMethod();
 
   // Password change state
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordChangeError, setPasswordChangeError] = useState('');
   const [isChangingPassword, setIsChangingPassword] = useState(false);
+
+  // Location preference state
+  const [locationPref, setLocationPref] = useState({ province: '', country: '' });
+  const [locationPrefSaving, setLocationPrefSaving] = useState(false);
+
+  // Load location preference on mount
+  React.useEffect(() => {
+    if (user?.id) {
+      const saved = localStorage.getItem(`locationPreference_${user.id}`);
+      if (saved) {
+        try {
+          setLocationPref(JSON.parse(saved));
+        } catch {}
+      }
+    }
+  }, [user?.id]);
 
   // Fetch addresses
   const { data: addresses = [], isLoading: loadingAddresses } = useQuery({
@@ -113,7 +122,7 @@ export default function Settings() {
         .order('is_default', { ascending: false })
         .order('created_at', { ascending: false });
       if (error) throw error;
-      return data as PaymentMethod[];
+      return data as PaymentMethodRecord[];
     },
     enabled: !!user,
   });
@@ -171,16 +180,17 @@ export default function Settings() {
   const savePayment = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error('Not authenticated');
+      const details = serializePaymentDetails();
       if (editingPayment) {
         const { error } = await supabase
           .from('payment_methods')
-          .update({ label: paymentForm.label, type: paymentForm.type, details: paymentForm.details || null })
+          .update({ label: paymentFormLabel, type: paymentFormType, details })
           .eq('id', editingPayment.id);
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from('payment_methods')
-          .insert({ user_id: user.id, label: paymentForm.label, type: paymentForm.type, details: paymentForm.details || null });
+          .insert({ user_id: user.id, label: paymentFormLabel, type: paymentFormType, details });
         if (error) throw error;
       }
     },
@@ -188,7 +198,9 @@ export default function Settings() {
       queryClient.invalidateQueries({ queryKey: ['payment-methods'] });
       setShowPaymentDialog(false);
       setEditingPayment(null);
-      setPaymentForm({ label: '', type: 'cash', details: '' });
+      setPaymentFormLabel('');
+      setPaymentFormType('cash');
+      resetPaymentDetails();
       toast({ title: editingPayment ? 'Payment acceptance method updated' : 'Payment acceptance method added' });
     },
     onError: (err: any) => toast({ title: 'Error', description: err.message, variant: 'destructive' }),
@@ -266,61 +278,12 @@ export default function Settings() {
     setShowAddressDialog(true);
   };
 
-  const openEditPayment = (pm: PaymentMethod) => {
+  const openEditPayment = (pm: PaymentMethodRecord) => {
     setEditingPayment(pm);
-    setPaymentForm({ label: pm.label, type: pm.type, details: pm.details || '' });
-    if (pm.type === 'venmo') {
-      const d = pm.details || '';
-      if (d.startsWith('data:image')) {
-        setVenmoInputType('qr');
-      } else if (/^[+\d\s\-().]+$/.test(d) && d.length > 0) {
-        setVenmoInputType('phone');
-      } else {
-        setVenmoInputType('username');
-      }
-    } else {
-      setVenmoInputType('username');
-    }
+    setPaymentFormLabel(pm.label);
+    setPaymentFormType(pm.type);
+    resetPaymentDetails(deserializeDetailsByType(pm.type, pm.details));
     setShowPaymentDialog(true);
-  };
-
-  const handleQRUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const MAX_SIZE = 1 * 1024 * 1024; // 1 MB
-    if (file.size > MAX_SIZE) {
-      toast({ title: 'Image too large', description: 'Please upload an image under 1 MB.', variant: 'destructive' });
-      e.target.value = '';
-      return;
-    }
-
-    const compressImage = (dataUrl: string): Promise<string> =>
-      new Promise(resolve => {
-        const img = new Image();
-        img.onload = () => {
-          const MAX_DIM = 800;
-          let { width, height } = img;
-          if (width > MAX_DIM || height > MAX_DIM) {
-            const ratio = Math.min(MAX_DIM / width, MAX_DIM / height);
-            width = Math.round(width * ratio);
-            height = Math.round(height * ratio);
-          }
-          const canvas = document.createElement('canvas');
-          canvas.width = width;
-          canvas.height = height;
-          canvas.getContext('2d')!.drawImage(img, 0, 0, width, height);
-          resolve(canvas.toDataURL('image/jpeg', 0.8));
-        };
-        img.src = dataUrl;
-      });
-
-    const reader = new FileReader();
-    reader.onload = async () => {
-      const compressed = await compressImage(reader.result as string);
-      setPaymentForm(prev => ({ ...prev, details: compressed }));
-    };
-    reader.readAsDataURL(file);
   };
 
   if (!user) {
@@ -340,6 +303,10 @@ export default function Settings() {
           <TabsTrigger value="addresses" className="w-full sm:w-auto justify-start sm:justify-center text-xs sm:text-sm px-2 sm:px-3 py-2">
             <MapPin className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
             Addresses
+          </TabsTrigger>
+          <TabsTrigger value="location" className="w-full sm:w-auto justify-start sm:justify-center text-xs sm:text-sm px-2 sm:px-3 py-2">
+            <MapPin className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+            Location
           </TabsTrigger>
           <TabsTrigger value="payments" className="w-full sm:w-auto justify-start sm:justify-center text-xs sm:text-sm px-2 sm:px-3 py-2">
             <CreditCard className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
@@ -412,10 +379,100 @@ export default function Settings() {
           )}
         </TabsContent>
 
+        {/* Location Preference Tab */}
+        <TabsContent value="location" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MapPin className="h-5 w-5" />
+                Your Location Preference
+              </CardTitle>
+              <CardDescription>Set your preferred location to pre-filter openings in Browse</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Country</Label>
+                  <Select
+                    value={locationPref.country}
+                    onValueChange={(country) => {
+                      const provinces = PROVINCES_BY_COUNTRY[country] || [];
+                      const newProvince = provinces.includes(locationPref.province) ? locationPref.province : '';
+                      setLocationPref({ country, province: newProvince });
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select country" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {COUNTRIES.map((country) => (
+                        <SelectItem key={country} value={country}>
+                          {country}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Province / State</Label>
+                  <Select
+                    value={locationPref.province}
+                    onValueChange={(province) => setLocationPref({ ...locationPref, province })}
+                    disabled={!locationPref.country || (PROVINCES_BY_COUNTRY[locationPref.country]?.length ?? 0) === 0}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={!locationPref.country ? "Select country first" : "Select province/state"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(PROVINCES_BY_COUNTRY[locationPref.country] || []).map((province) => (
+                        <SelectItem key={province} value={province}>
+                          {province}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => {
+                    if (!user?.id) return;
+                    setLocationPrefSaving(true);
+                    try {
+                      localStorage.setItem(`locationPreference_${user.id}`, JSON.stringify(locationPref));
+                      toast({ title: 'Location preference saved' });
+                    } catch (error) {
+                      toast({ title: 'Failed to save preference', variant: 'destructive' });
+                    } finally {
+                      setLocationPrefSaving(false);
+                    }
+                  }}
+                  disabled={locationPrefSaving || !locationPref.province || !locationPref.country}
+                >
+                  {locationPrefSaving ? 'Saving...' : 'Save'}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    if (!user?.id) return;
+                    setLocationPref({ province: '', country: '' });
+                    try {
+                      localStorage.removeItem(`locationPreference_${user.id}`);
+                      toast({ title: 'Location preference cleared' });
+                    } catch {}
+                  }}
+                >
+                  Clear
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         {/* Payment Methods Tab */}
         <TabsContent value="payments" className="space-y-4">
           <div className="flex justify-end">
-            <Button onClick={() => { setEditingPayment(null); setPaymentForm({ label: '', type: 'cash', details: '' }); setVenmoInputType('username'); setShowPaymentDialog(true); }}>
+            <Button onClick={() => { setEditingPayment(null); setPaymentFormLabel(''); setPaymentFormType('cash'); resetPaymentDetails(); setShowPaymentDialog(true); }}>
               <Plus className="h-4 w-4 mr-2" />
               Add Payment Acceptance Method
             </Button>
@@ -434,37 +491,13 @@ export default function Settings() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {payments.map((pm) => (
-                <Card key={pm.id}>
-                  <CardContent className="pt-6">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-semibold text-foreground">{pm.label}</h3>
-                          <Badge variant="outline">{PAYMENT_TYPES.find(t => t.value === pm.type)?.label || pm.type}</Badge>
-                          {pm.is_default && <Badge variant="secondary">Default</Badge>}
-                        </div>
-                        {pm.details && (
-                          (pm.type === 'wechat' || (pm.type === 'venmo' && pm.details.startsWith('data:image')))
-                            ? <img src={pm.details} alt="QR Code" className="w-20 h-20 object-contain mt-1 rounded" />
-                            : <p className="text-sm text-muted-foreground">{pm.details}</p>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-1">
-                        {!pm.is_default && (
-                          <Button variant="ghost" size="sm" onClick={() => setDefaultPayment.mutate(pm.id)} title="Set as default">
-                            <Star className="h-4 w-4" />
-                          </Button>
-                        )}
-                        <Button variant="ghost" size="sm" onClick={() => openEditPayment(pm)}>
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="sm" onClick={() => deletePayment.mutate(pm.id)} className="text-destructive hover:text-destructive">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                <PaymentMethodCard
+                  key={pm.id}
+                  method={pm}
+                  onEdit={() => openEditPayment(pm)}
+                  onDelete={() => deletePayment.mutate(pm.id)}
+                  onSetDefault={pm.is_default ? undefined : () => setDefaultPayment.mutate(pm.id)}
+                />
               ))}
             </div>
           )}
@@ -619,93 +652,45 @@ export default function Settings() {
           <div className="space-y-4 pt-4">
             <div className="space-y-2">
               <Label>Label</Label>
-              <Input placeholder="e.g. My PayPal, Personal Venmo" value={paymentForm.label} onChange={(e) => setPaymentForm({ ...paymentForm, label: e.target.value })} />
+              <Input
+                placeholder="e.g. My PayPal, Personal Venmo"
+                value={paymentFormLabel}
+                onChange={(e) => setPaymentFormLabel(e.target.value)}
+              />
             </div>
             <div className="space-y-2">
               <Label>Type</Label>
-              <Select value={paymentForm.type} onValueChange={(v) => { setPaymentForm({ ...paymentForm, type: v, details: '' }); setVenmoInputType('username'); }}>
+              <Select
+                value={paymentFormType}
+                onValueChange={(v) => {
+                  setPaymentFormType(v);
+                  resetPaymentDetails();
+                }}
+              >
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {PAYMENT_TYPES.map((t) => (
-                    <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                  {PAYMENT_METHOD_CONFIGS.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>{c.label}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
 
-            {paymentForm.type === 'cash' && (
-              <p className="text-sm text-muted-foreground">No additional details needed for cash payments.</p>
-            )}
-
-            {paymentForm.type === 'paypal' && (
-              <div className="space-y-2">
-                <Label>PayPal Link</Label>
-                <Input placeholder="https://paypal.me/yourname" value={paymentForm.details} onChange={(e) => setPaymentForm({ ...paymentForm, details: e.target.value })} />
-              </div>
-            )}
-
-            {paymentForm.type === 'venmo' && (
-              <div className="space-y-3">
-                <div className="space-y-2">
-                  <Label>Input Type</Label>
-                  <div className="flex gap-2">
-                    {(['username', 'phone', 'qr'] as const).map((opt) => (
-                      <Button
-                        key={opt}
-                        type="button"
-                        variant={venmoInputType === opt ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => { setVenmoInputType(opt); setPaymentForm(prev => ({ ...prev, details: '' })); }}
-                      >
-                        {opt === 'username' ? 'Username' : opt === 'phone' ? 'Phone Number' : 'QR Code'}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-                {venmoInputType === 'username' && (
-                  <div className="space-y-2">
-                    <Label>Venmo Username</Label>
-                    <Input placeholder="@username" value={paymentForm.details} onChange={(e) => setPaymentForm({ ...paymentForm, details: e.target.value })} />
-                  </div>
-                )}
-                {venmoInputType === 'phone' && (
-                  <div className="space-y-2">
-                    <Label>Phone Number</Label>
-                    <Input placeholder="+1 (555) 000-0000" value={paymentForm.details} onChange={(e) => setPaymentForm({ ...paymentForm, details: e.target.value })} />
-                  </div>
-                )}
-                {venmoInputType === 'qr' && (
-                  <div className="space-y-2">
-                    <Label>QR Code Image</Label>
-                    <Input type="file" accept="image/*" onChange={handleQRUpload} />
-                    {paymentForm.details && (
-                      <img src={paymentForm.details} alt="Venmo QR Preview" className="max-w-[120px] rounded mt-1" />
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {paymentForm.type === 'email_transfer' && (
-              <div className="space-y-2">
-                <Label>Email Address</Label>
-                <Input placeholder="payments@example.com" value={paymentForm.details} onChange={(e) => setPaymentForm({ ...paymentForm, details: e.target.value })} />
-              </div>
-            )}
-
-            {paymentForm.type === 'wechat' && (
-              <div className="space-y-2">
-                <Label>WeChat QR Code</Label>
-                <Input type="file" accept="image/*" onChange={handleQRUpload} />
-                {paymentForm.details && (
-                  <img src={paymentForm.details} alt="WeChat QR Preview" className="max-w-[120px] rounded mt-1" />
-                )}
-              </div>
-            )}
+            {(() => {
+              const config = getMethodConfig(paymentFormType);
+              if (!config) return null;
+              return (
+                <PaymentMethodForm
+                  config={config}
+                  value={paymentDetails}
+                  onChange={resetPaymentDetails}
+                />
+              );
+            })()}
 
             <div className="flex justify-end gap-2 pt-4">
               <Button variant="outline" onClick={() => setShowPaymentDialog(false)}>Cancel</Button>
-              <Button onClick={() => savePayment.mutate()} disabled={!paymentForm.label || savePayment.isPending}>
+              <Button onClick={() => savePayment.mutate()} disabled={!paymentFormLabel || savePayment.isPending}>
                 {savePayment.isPending ? 'Saving...' : 'Save'}
               </Button>
             </div>

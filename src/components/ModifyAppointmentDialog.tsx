@@ -7,6 +7,7 @@ import { Card, CardContent } from './ui/card';
 import { Badge } from './ui/badge';
 import { Calendar, Clock, MapPin, ArrowRightLeft, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { formatLocation, parseLocation } from '@/lib/address';
 
 interface ModifyAppointmentDialogProps {
   appointmentId: string;
@@ -102,7 +103,7 @@ export function ModifyAppointmentDialog({ appointmentId, currentOpeningId, userI
                     {opening.location && (
                       <span className="flex items-center gap-1">
                         <MapPin className="h-3 w-3" />
-                        {opening.location}
+                        {formatLocation(parseLocation(opening.location))}
                       </span>
                     )}
                   </div>

@@ -9,13 +9,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Switch } from './ui/switch';
 import { Input } from './ui/input';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
-import { ChevronLeft, ChevronRight, Plus, Clock, User, X, DollarSign, ChevronDown, Trash2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Clock, User, X, DollarSign, ChevronDown, Trash2, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRoles } from '@/hooks/useUserRoles';
 import { useQuery } from '@tanstack/react-query';
 import { useOrgWorkers } from '@/hooks/useOrgWorkers';
+import { parseLocation, formatLocation, serializeLocation, type LocationFields } from '@/lib/address';
+import { AddressInput } from '@/components/ui/AddressInput';
 
 interface TimeSlot {
   id: string;
@@ -39,6 +41,7 @@ interface Opening {
   hourly_rate: number;
   created_at: string;
   updated_at: string;
+  accepted_payment_method_ids?: string[] | null;
 }
 
 export function Calendar() {
@@ -120,20 +123,102 @@ export function Calendar() {
     },
     enabled: !!user,
   });
+  // Fetch provider's own payment methods for the opening payment selector
+  const { data: providerPaymentMethods = [] } = useQuery({
+    queryKey: ['provider-payment-methods-for-opening', user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('payment_methods')
+        .select('id, label, type')
+        .eq('user_id', user!.id)
+        .order('is_default', { ascending: false })
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data as { id: string; label: string; type: string }[];
+    },
+    enabled: !!user,
+  });
+
+  // Edit opening state
+  const [editingOpening, setEditingOpening] = useState<Opening | null>(null);
+  const [editForm, setEditForm] = useState({
+    service: '',
+    startTime: '',
+    endTime: '',
+    isFree: false,
+    hourlyRate: 0,
+    acceptedPaymentMethodIds: [] as string[],
+  });
+  const [isEditSaving, setIsEditSaving] = useState(false);
+
+  const openEditDialog = (opening: Opening) => {
+    setEditingOpening(opening);
+    setEditForm({
+      service: opening.service,
+      startTime: opening.start_time,
+      endTime: opening.end_time,
+      isFree: Number(opening.hourly_rate) === 0,
+      hourlyRate: Number(opening.hourly_rate),
+      acceptedPaymentMethodIds: opening.accepted_payment_method_ids ?? [],
+    });
+  };
+
+  const saveEditOpening = async () => {
+    if (!editingOpening) return;
+    setIsEditSaving(true);
+    try {
+      const { error } = await supabase
+        .from('openings')
+        .update({
+          service: editForm.service,
+          start_time: editForm.startTime,
+          end_time: editForm.endTime,
+          hourly_rate: editForm.isFree ? 0 : editForm.hourlyRate,
+          accepted_payment_method_ids: editForm.acceptedPaymentMethodIds.length > 0
+            ? editForm.acceptedPaymentMethodIds
+            : null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', editingOpening.id);
+      if (error) throw error;
+      setOpenings(prev => prev.map(o =>
+        o.id === editingOpening.id
+          ? {
+              ...o,
+              service: editForm.service,
+              start_time: editForm.startTime,
+              end_time: editForm.endTime,
+              hourly_rate: editForm.isFree ? 0 : editForm.hourlyRate,
+              accepted_payment_method_ids: editForm.acceptedPaymentMethodIds.length > 0
+                ? editForm.acceptedPaymentMethodIds
+                : null,
+            }
+          : o
+      ));
+      toast.success('Opening updated');
+      setEditingOpening(null);
+    } catch {
+      toast.error('Failed to update opening');
+    } finally {
+      setIsEditSaving(false);
+    }
+  };
+
   const [newOpening, setNewOpening] = useState({
     startTime: '09:00',
     endTime: '',
     duration: 1,
     worker: '',
     service: '',
-    location: '',
+    locationFields: { city: '', province: '', country: '', zip: '' } as LocationFields,
     multipleSlots: false,
     interval: 1,
     isFree: false,
     multipleDates: false,
     dateRangeStart: '',
     dateRangeEnd: '',
-    weekdays: new Set([0, 1, 2, 3, 4, 5, 6]) // Sun-Sat, all selected by default
+    weekdays: new Set([0, 1, 2, 3, 4, 5, 6]), // Sun-Sat, all selected by default
+    acceptedPaymentMethodIds: [] as string[],
   });
 
   // Auto-set defaults when profile/workers load
@@ -223,8 +308,8 @@ export function Calendar() {
       newErrors.service = 'Service selection is required';
     }
     
-    if (!newOpening.location || !newOpening.location.trim()) {
-      newErrors.location = 'Address is required';
+    if (!newOpening.locationFields.city || !newOpening.locationFields.city.trim()) {
+      newErrors.location = 'City is required';
     }
     
     if (newOpening.duration <= 0) {
@@ -414,9 +499,12 @@ export function Calendar() {
                     duration: newOpening.interval,
                     worker: workerName,
                     service: newOpening.service,
-                    location: newOpening.location || null,
+                    location: serializeLocation(newOpening.locationFields),
                     is_available: true,
-                    hourly_rate: rateValue
+                    hourly_rate: rateValue,
+                    accepted_payment_method_ids: newOpening.acceptedPaymentMethodIds.length > 0
+                      ? newOpening.acceptedPaymentMethodIds
+                      : null,
                   });
                   timeSlot += newOpening.interval * 60; // Add interval in minutes
                 }
@@ -433,9 +521,12 @@ export function Calendar() {
                   duration: newOpening.duration,
                   worker: workerName,
                   service: newOpening.service,
-                  location: newOpening.location || null,
+                  location: serializeLocation(newOpening.locationFields),
                   is_available: true,
-                  hourly_rate: rateValue
+                  hourly_rate: rateValue,
+                  accepted_payment_method_ids: newOpening.acceptedPaymentMethodIds.length > 0
+                    ? newOpening.acceptedPaymentMethodIds
+                    : null,
                 });
               }
             }
@@ -470,9 +561,12 @@ export function Calendar() {
               duration: newOpening.interval,
               worker: workerName,
               service: newOpening.service,
-              location: newOpening.location || null,
+              location: serializeLocation(newOpening.locationFields),
               is_available: true,
-              hourly_rate: rateValue
+              hourly_rate: rateValue,
+              accepted_payment_method_ids: newOpening.acceptedPaymentMethodIds.length > 0
+                ? newOpening.acceptedPaymentMethodIds
+                : null,
             });
             current += newOpening.interval * 60; // Add interval in minutes
           }
@@ -493,9 +587,12 @@ export function Calendar() {
             duration: newOpening.duration,
             worker: workerName,
             service: newOpening.service,
-            location: newOpening.location || null,
+            location: serializeLocation(newOpening.locationFields),
             is_available: true,
-            hourly_rate: rateValue
+            hourly_rate: rateValue,
+            accepted_payment_method_ids: newOpening.acceptedPaymentMethodIds.length > 0
+              ? newOpening.acceptedPaymentMethodIds
+              : null,
           };
           const { error } = await supabase
             .from('openings')
@@ -529,14 +626,15 @@ export function Calendar() {
       duration: 1, 
       worker: defaultWorker, 
       service: defaultSkills[0] || '',
-      location: '',
+      locationFields: { city: '', province: '', country: '', zip: '' },
       multipleSlots: false,
       interval: 1,
       isFree: false,
       multipleDates: false,
       dateRangeStart: '',
       dateRangeEnd: '',
-      weekdays: new Set([0, 1, 2, 3, 4, 5, 6])
+      weekdays: new Set([0, 1, 2, 3, 4, 5, 6]),
+      acceptedPaymentMethodIds: [],
     });
     setErrors({});
   };
@@ -872,6 +970,22 @@ export function Calendar() {
                                 </TooltipTrigger>
                                 <TooltipContent>Remove opening</TooltipContent>
                               </Tooltip>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    onClick={(e) => { e.stopPropagation(); if (opening.is_available) openEditDialog(opening); }}
+                                    disabled={!user || !opening.is_available}
+                                    variant="ghost"
+                                    size="sm"
+                                    className="flex-shrink-0"
+                                  >
+                                    <Pencil className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  {opening.is_available ? 'Edit opening' : 'Editing booked openings is not allowed'}
+                                </TooltipContent>
+                              </Tooltip>
                             </div>
                           ))}
                         </div>
@@ -1113,38 +1227,45 @@ export function Calendar() {
 
             <div className="space-y-2">
               <Label htmlFor="location">Location</Label>
-              {savedAddresses.length > 0 ? (
+              {savedAddresses.length > 0 && (
                 <Select
-                  value={newOpening.location}
-                  onValueChange={(value) => setNewOpening({...newOpening, location: value === '__custom__' ? '' : value})}
+                  value=""
+                  onValueChange={(value) => {
+                    if (value !== '__custom__') {
+                      try {
+                        const addr = JSON.parse(value);
+                        setNewOpening({
+                          ...newOpening,
+                          locationFields: {
+                            city: addr.city || '',
+                            province: addr.province || '',
+                            country: addr.country || '',
+                            zip: addr.zip || ''
+                          }
+                        });
+                      } catch {}
+                    }
+                  }}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select a saved address or type custom" />
+                    <SelectValue placeholder="Use saved address" />
                   </SelectTrigger>
                   <SelectContent>
                     {savedAddresses.map((addr: any) => (
                       <SelectItem key={addr.id} value={addr.address}>
-                        {addr.label} — {addr.address}
+                        {addr.label}
                       </SelectItem>
                     ))}
                     <SelectItem value="__custom__">Custom location...</SelectItem>
                   </SelectContent>
                 </Select>
-              ) : (
-                <Input
-                  id="location"
-                  placeholder="Enter location (optional)"
-                  value={newOpening.location}
-                  onChange={(e) => setNewOpening({...newOpening, location: e.target.value})}
-                />
               )}
-              {savedAddresses.length > 0 && newOpening.location === '' && (
-                <Input
-                  placeholder="Type custom location"
-                  value={newOpening.location}
-                  onChange={(e) => setNewOpening({...newOpening, location: e.target.value})}
-                />
-              )}
+              <AddressInput 
+                value={newOpening.locationFields}
+                onChange={(fields) => setNewOpening({ ...newOpening, locationFields: fields })}
+                required
+              />
+              {errors.location && <p className="text-sm text-destructive">{errors.location}</p>}
             </div>
 
             {/* Rate Selector */}
@@ -1179,6 +1300,37 @@ export function Calendar() {
                 )}
               </div>
             )}
+
+            {/* Accepted Payment Methods */}
+            <div className="space-y-2">
+              <Label>Accepted Payment Methods</Label>
+              <p className="text-xs text-muted-foreground">Customer will choose from these methods when paying</p>
+              {providerPaymentMethods.length === 0 ? (
+                <p className="text-xs text-muted-foreground italic">No payment methods configured. Set them up in Settings.</p>
+              ) : (
+                <div className="space-y-2">
+                  {providerPaymentMethods.map((pm) => (
+                    <div key={pm.id} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`pm-new-${pm.id}`}
+                        checked={newOpening.acceptedPaymentMethodIds.includes(pm.id)}
+                        onCheckedChange={(checked) => {
+                          setNewOpening(prev => ({
+                            ...prev,
+                            acceptedPaymentMethodIds: checked
+                              ? [...prev.acceptedPaymentMethodIds, pm.id]
+                              : prev.acceptedPaymentMethodIds.filter(id => id !== pm.id),
+                          }));
+                        }}
+                      />
+                      <label htmlFor={`pm-new-${pm.id}`} className="text-sm cursor-pointer">
+                        {pm.label} <span className="text-muted-foreground">({pm.type})</span>
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
 
             <div className="flex justify-end space-x-2 pt-4">
               <Button variant="outline" onClick={() => setShowAddOpening(false)}>
@@ -1244,6 +1396,130 @@ export function Calendar() {
               </Button>
             )}
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Opening Dialog */}
+      <Dialog open={!!editingOpening} onOpenChange={(open) => { if (!open) setEditingOpening(null); }}>
+        <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Opening</DialogTitle>
+            {editingOpening && (
+              <DialogDescription>
+                {editingOpening.date} · {editingOpening.start_time} – {editingOpening.end_time}
+              </DialogDescription>
+            )}
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            {/* Service */}
+            <div className="space-y-2">
+              <Label>Service</Label>
+              <Select
+                value={editForm.service}
+                onValueChange={(v) => setEditForm(prev => ({ ...prev, service: v }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select service" />
+                </SelectTrigger>
+                <SelectContent>
+                  {getWorkerSkills(isOrgMode ? (editingOpening?.worker ?? '') : selfWorkerName).map((skill) => (
+                    <SelectItem key={skill} value={skill}>{skill}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Start Time */}
+            <div className="space-y-2">
+              <Label>Start Time</Label>
+              <Select
+                value={editForm.startTime}
+                onValueChange={(v) => setEditForm(prev => ({ ...prev, startTime: v }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select start time" />
+                </SelectTrigger>
+                <SelectContent>
+                  {generateTimeOptions().map((time) => (
+                    <SelectItem key={time} value={time}>{time}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* End Time */}
+            <div className="space-y-2">
+              <Label>End Time</Label>
+              <Select
+                value={editForm.endTime}
+                onValueChange={(v) => setEditForm(prev => ({ ...prev, endTime: v }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select end time" />
+                </SelectTrigger>
+                <SelectContent>
+                  {generateTimeOptions().map((time) => (
+                    <SelectItem key={time} value={time}>{time}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Rate */}
+            <div className="space-y-2">
+              <Label>Rate</Label>
+              <Select
+                value={editForm.isFree ? 'free' : 'paid'}
+                onValueChange={(v) => setEditForm(prev => ({ ...prev, isFree: v === 'free' }))}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="free">Free ($0/hr)</SelectItem>
+                  <SelectItem value="paid">${Number(getWorkerRate(isOrgMode ? (editingOpening?.worker ?? '') : selfWorkerName))}/hr</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Accepted Payment Methods */}
+            <div className="space-y-2">
+              <Label>Accepted Payment Methods</Label>
+              <p className="text-xs text-muted-foreground">Customer will choose from these methods when paying</p>
+              {providerPaymentMethods.length === 0 ? (
+                <p className="text-xs text-muted-foreground italic">No payment methods configured. Set them up in Settings.</p>
+              ) : (
+                <div className="space-y-2">
+                  {providerPaymentMethods.map((pm) => (
+                    <div key={pm.id} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`pm-edit-${pm.id}`}
+                        checked={editForm.acceptedPaymentMethodIds.includes(pm.id)}
+                        onCheckedChange={(checked) => {
+                          setEditForm(prev => ({
+                            ...prev,
+                            acceptedPaymentMethodIds: checked
+                              ? [...prev.acceptedPaymentMethodIds, pm.id]
+                              : prev.acceptedPaymentMethodIds.filter(id => id !== pm.id),
+                          }));
+                        }}
+                      />
+                      <label htmlFor={`pm-edit-${pm.id}`} className="text-sm cursor-pointer">
+                        {pm.label} <span className="text-muted-foreground">({pm.type})</span>
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button variant="outline" onClick={() => setEditingOpening(null)}>Cancel</Button>
+              <Button onClick={saveEditOpening} disabled={isEditSaving}>
+                {isEditSaving ? 'Saving...' : 'Save Changes'}
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
 

@@ -6,6 +6,7 @@ import { Button } from './ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from './ui/alert-dialog';
 import { Calendar as CalendarIcon, Loader2, Share2, ExternalLink, ArrowLeft, Check, Crown, User } from 'lucide-react';
 import { toast } from 'sonner';
+import { formatLocation, parseLocation } from '@/lib/address';
 
 interface OpeningWithProfile {
   id: string;
@@ -362,7 +363,7 @@ export function BrowseDetail({
                             <p><strong>Date:</strong> ${new Date(selectedSlot.date).toLocaleDateString()}</p>
                             <p><strong>Time:</strong> ${selectedSlot.start_time || 'N/A'}</p>
                             <p><strong>Duration:</strong> ${selectedSlot.duration || 'N/A'} hour(s)</p>
-                            ${selectedSlot.location ? `<p><strong>Location:</strong> ${selectedSlot.location}</p>` : ''}
+                            ${selectedSlot.location ? `<p><strong>Location:</strong> ${formatLocation(parseLocation(selectedSlot.location))}</p>` : ''}
                           </div>
                           <p>Thank you for booking with us!</p>
                         `,

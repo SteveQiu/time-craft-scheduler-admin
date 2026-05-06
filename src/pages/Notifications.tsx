@@ -34,6 +34,7 @@ const EVENT_LABELS: Record<string, { label: string; icon: any }> = {
   'report.created': { label: 'Report submitted', icon: Flag },
   'role.granted': { label: 'Role granted', icon: Shield },
   'role.revoked': { label: 'Role revoked', icon: Shield },
+  'payment.proof_submitted': { label: 'Payment confirmed', icon: Check },
 };
 
 export default function Notifications() {
