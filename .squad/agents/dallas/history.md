@@ -25,6 +25,11 @@
 - Single source of truth: always check `privacySettings` for visibility logic
 - Address display: show fully if public=true, hide entirely if false (not partial)
 - Mobile is a pending concern — pages likely have fixed widths or poor breakpoint coverage
+- Settings.tsx Payment tab renamed to "Payment Acceptance" (UI labels only — DB columns unchanged)
+- Payment types narrowed to: cash, paypal, venmo, email_transfer, wechat
+- Venmo supports three sub-modes: username, phone, qr (base64 image); detected on edit via `data:image` prefix or phone regex
+- QR images stored as base64 in `details` field; displayed as `<img>` in card view for wechat and venmo-qr
+- Use toggle `<Button variant="outline/default">` trio for sub-selectors when RadioGroup isn't easily available
 
 ### Patterns & Preferences
 
@@ -162,6 +167,26 @@
 
 ## Learnings
 
+### Appointments Bulk Actions (January 2025)
+
+**Task:** Convert `Appointments.tsx` per-card action buttons → multi-select + bulk action toolbar
+
+**What changed:**
+- Added `selectedIds: Set<string>` and `isBulkActing: boolean` state
+- Imported `Checkbox` from `@/components/ui/checkbox`
+- Each appointment card (active + inactive) now has a leading checkbox; clicking it toggles selection without navigating
+- Per-card Complete/Approve/Reject/Cancel buttons and `ModifyAppointmentDialog` removed from `renderAppointmentCard`
+- "Select All / Deselect All" toggle added beside "Active Appointments" heading (scoped to `nonPendingActive`)
+- Sticky bulk toolbar renders above the list when `selectedIds.size > 0`; shows contextual Approve/Complete/Cancel counts
+- Bulk handlers: `handleBulkApprove`, `handleBulkCancel`, `handleBulkComplete` — loop/batch Supabase RPCs, toast on finish, invalidate queries
+- Filter changes (search, status, worker) clear selection via `setSelectedIds(new Set())`
+- `renderGroupedPendingCard` left completely untouched (org pending approval flow)
+
+**Key decisions:**
+- Inactive cards also get checkboxes (per spec) so bulk-cancel/complete works on past items
+- Select All is scoped to active (`nonPendingActive`) only — no select-all for inactive (per spec)
+- Toolbar is sticky (`top-4 z-10`) so it stays visible while scrolling a long list
+
 ### High-Priority Mobile Fixes Implementation (January 2025)
 
 **Completed fixes from Bishop's audit — top 3 priorities:**
@@ -224,3 +249,14 @@
 - Verify Sheet animation + close behavior
 - Check sidebar navigation flow on touch devices
 - Coordinate with Bishop on remaining 28 audit issues
+
+### Calendar.tsx - Bulk Delete (openings day view)
+- Added multi-select via Shadcn Checkbox per opening row
+- selectedOpeningIds: Set<string> - cleared on date change
+- Delete Selected (N) button in day panel header; destructive, disabled when 0 selected
+- handleBulkDelete queries appointments for pending/confirmed before delete
+- Blocked openings shown in Dialog with Go Back / Delete Safe Ones (N) actions
+- deleteSafeOpenings does .delete().in('id', ids) + local state update + toast
+- DialogDescription + DialogFooter added to dialog imports
+- Trash2 added to lucide-react imports
+- All new state at top of component, near collapsedWorkers

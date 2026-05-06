@@ -19,9 +19,32 @@ interface WorkplaceAddress {
   id: string;
   user_id: string;
   label: string;
-  address: string;
+  address: string; // stored as JSON: {street,city,province,country,zip}
   is_default: boolean;
   created_at: string;
+}
+
+interface AddressFields {
+  street: string;
+  city: string;
+  province: string;
+  country: string;
+  zip: string;
+}
+
+const EMPTY_ADDRESS_FIELDS: AddressFields = { street: '', city: '', province: '', country: '', zip: '' };
+
+function parseAddress(raw: string): AddressFields {
+  try {
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === 'object' && 'street' in parsed) return parsed as AddressFields;
+  } catch {}
+  return { ...EMPTY_ADDRESS_FIELDS, street: raw };
+}
+
+function formatAddressDisplay(raw: string): string {
+  const f = parseAddress(raw);
+  return [f.street, f.city, f.province, f.country, f.zip].filter(Boolean).join(', ');
 }
 
 interface PaymentMethod {
@@ -36,13 +59,10 @@ interface PaymentMethod {
 
 const PAYMENT_TYPES = [
   { value: 'cash', label: 'Cash' },
-  { value: 'credit_card', label: 'Credit Card' },
-  { value: 'debit_card', label: 'Debit Card' },
-  { value: 'bank_transfer', label: 'Bank Transfer' },
   { value: 'paypal', label: 'PayPal' },
   { value: 'venmo', label: 'Venmo' },
-  { value: 'zelle', label: 'Zelle' },
-  { value: 'other', label: 'Other' },
+  { value: 'email_transfer', label: 'Email Transfer' },
+  { value: 'wechat', label: 'WeChat' },
 ];
 
 export default function Settings() {
@@ -54,12 +74,13 @@ export default function Settings() {
   // Address dialog state
   const [showAddressDialog, setShowAddressDialog] = useState(false);
   const [editingAddress, setEditingAddress] = useState<WorkplaceAddress | null>(null);
-  const [addressForm, setAddressForm] = useState({ label: '', address: '' });
+  const [addressForm, setAddressForm] = useState<{ label: string } & AddressFields>({ label: '', ...EMPTY_ADDRESS_FIELDS });
 
   // Payment dialog state
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const [editingPayment, setEditingPayment] = useState<PaymentMethod | null>(null);
   const [paymentForm, setPaymentForm] = useState({ label: '', type: 'cash', details: '' });
+  const [venmoInputType, setVenmoInputType] = useState<'username' | 'phone' | 'qr'>('username');
 
   // Password change state
   const [newPassword, setNewPassword] = useState('');
@@ -101,16 +122,17 @@ export default function Settings() {
   const saveAddress = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error('Not authenticated');
+      const addressJson = JSON.stringify({ street: addressForm.street, city: addressForm.city, province: addressForm.province, country: addressForm.country, zip: addressForm.zip });
       if (editingAddress) {
         const { error } = await supabase
           .from('workplace_addresses')
-          .update({ label: addressForm.label, address: addressForm.address })
+          .update({ label: addressForm.label, address: addressJson })
           .eq('id', editingAddress.id);
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from('workplace_addresses')
-          .insert({ user_id: user.id, label: addressForm.label, address: addressForm.address });
+          .insert({ user_id: user.id, label: addressForm.label, address: addressJson });
         if (error) throw error;
       }
     },
@@ -118,7 +140,7 @@ export default function Settings() {
       queryClient.invalidateQueries({ queryKey: ['workplace-addresses'] });
       setShowAddressDialog(false);
       setEditingAddress(null);
-      setAddressForm({ label: '', address: '' });
+      setAddressForm({ label: '', ...EMPTY_ADDRESS_FIELDS });
       toast({ title: editingAddress ? 'Address updated' : 'Address added' });
     },
     onError: (err: any) => toast({ title: 'Error', description: err.message, variant: 'destructive' }),
@@ -167,7 +189,7 @@ export default function Settings() {
       setShowPaymentDialog(false);
       setEditingPayment(null);
       setPaymentForm({ label: '', type: 'cash', details: '' });
-      toast({ title: editingPayment ? 'Payment method updated' : 'Payment method added' });
+      toast({ title: editingPayment ? 'Payment acceptance method updated' : 'Payment acceptance method added' });
     },
     onError: (err: any) => toast({ title: 'Error', description: err.message, variant: 'destructive' }),
   });
@@ -179,7 +201,7 @@ export default function Settings() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['payment-methods'] });
-      toast({ title: 'Payment method removed' });
+      toast({ title: 'Payment acceptance method removed' });
     },
   });
 
@@ -239,14 +261,66 @@ export default function Settings() {
 
   const openEditAddress = (addr: WorkplaceAddress) => {
     setEditingAddress(addr);
-    setAddressForm({ label: addr.label, address: addr.address });
+    const parsed = parseAddress(addr.address);
+    setAddressForm({ label: addr.label, ...parsed });
     setShowAddressDialog(true);
   };
 
   const openEditPayment = (pm: PaymentMethod) => {
     setEditingPayment(pm);
     setPaymentForm({ label: pm.label, type: pm.type, details: pm.details || '' });
+    if (pm.type === 'venmo') {
+      const d = pm.details || '';
+      if (d.startsWith('data:image')) {
+        setVenmoInputType('qr');
+      } else if (/^[+\d\s\-().]+$/.test(d) && d.length > 0) {
+        setVenmoInputType('phone');
+      } else {
+        setVenmoInputType('username');
+      }
+    } else {
+      setVenmoInputType('username');
+    }
     setShowPaymentDialog(true);
+  };
+
+  const handleQRUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const MAX_SIZE = 1 * 1024 * 1024; // 1 MB
+    if (file.size > MAX_SIZE) {
+      toast({ title: 'Image too large', description: 'Please upload an image under 1 MB.', variant: 'destructive' });
+      e.target.value = '';
+      return;
+    }
+
+    const compressImage = (dataUrl: string): Promise<string> =>
+      new Promise(resolve => {
+        const img = new Image();
+        img.onload = () => {
+          const MAX_DIM = 800;
+          let { width, height } = img;
+          if (width > MAX_DIM || height > MAX_DIM) {
+            const ratio = Math.min(MAX_DIM / width, MAX_DIM / height);
+            width = Math.round(width * ratio);
+            height = Math.round(height * ratio);
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          canvas.getContext('2d')!.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', 0.8));
+        };
+        img.src = dataUrl;
+      });
+
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const compressed = await compressImage(reader.result as string);
+      setPaymentForm(prev => ({ ...prev, details: compressed }));
+    };
+    reader.readAsDataURL(file);
   };
 
   if (!user) {
@@ -269,7 +343,7 @@ export default function Settings() {
           </TabsTrigger>
           <TabsTrigger value="payments" className="w-full sm:w-auto justify-start sm:justify-center text-xs sm:text-sm px-2 sm:px-3 py-2">
             <CreditCard className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-            Payment Methods
+            Payment Acceptance
           </TabsTrigger>
           <TabsTrigger value="security" className="w-full sm:w-auto justify-start sm:justify-center text-xs sm:text-sm px-2 sm:px-3 py-2">
             <Lock className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
@@ -288,7 +362,7 @@ export default function Settings() {
         {/* Addresses Tab */}
         <TabsContent value="addresses" className="space-y-4">
           <div className="flex justify-end">
-            <Button onClick={() => { setEditingAddress(null); setAddressForm({ label: '', address: '' }); setShowAddressDialog(true); }}>
+            <Button onClick={() => { setEditingAddress(null); setAddressForm({ label: '', ...EMPTY_ADDRESS_FIELDS }); setShowAddressDialog(true); }}>
               <Plus className="h-4 w-4 mr-2" />
               Add Address
             </Button>
@@ -315,7 +389,7 @@ export default function Settings() {
                           <h3 className="font-semibold text-foreground">{addr.label}</h3>
                           {addr.is_default && <Badge variant="secondary">Default</Badge>}
                         </div>
-                        <p className="text-sm text-muted-foreground">{addr.address}</p>
+                        <p className="text-sm text-muted-foreground">{formatAddressDisplay(addr.address)}</p>
                       </div>
                       <div className="flex items-center gap-1">
                         {!addr.is_default && (
@@ -341,9 +415,9 @@ export default function Settings() {
         {/* Payment Methods Tab */}
         <TabsContent value="payments" className="space-y-4">
           <div className="flex justify-end">
-            <Button onClick={() => { setEditingPayment(null); setPaymentForm({ label: '', type: 'cash', details: '' }); setShowPaymentDialog(true); }}>
+            <Button onClick={() => { setEditingPayment(null); setPaymentForm({ label: '', type: 'cash', details: '' }); setVenmoInputType('username'); setShowPaymentDialog(true); }}>
               <Plus className="h-4 w-4 mr-2" />
-              Add Payment Method
+              Add Payment Acceptance Method
             </Button>
           </div>
 
@@ -353,8 +427,8 @@ export default function Settings() {
             <Card>
               <CardContent className="text-center py-12">
                 <CreditCard className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
-                <p className="text-lg text-muted-foreground">No payment methods saved</p>
-                <p className="text-sm text-muted-foreground">Add payment methods to use when creating openings</p>
+                <p className="text-lg text-muted-foreground">No payment acceptance methods saved</p>
+                <p className="text-sm text-muted-foreground">Add payment acceptance methods to use when creating openings</p>
               </CardContent>
             </Card>
           ) : (
@@ -369,7 +443,11 @@ export default function Settings() {
                           <Badge variant="outline">{PAYMENT_TYPES.find(t => t.value === pm.type)?.label || pm.type}</Badge>
                           {pm.is_default && <Badge variant="secondary">Default</Badge>}
                         </div>
-                        {pm.details && <p className="text-sm text-muted-foreground">{pm.details}</p>}
+                        {pm.details && (
+                          (pm.type === 'wechat' || (pm.type === 'venmo' && pm.details.startsWith('data:image')))
+                            ? <img src={pm.details} alt="QR Code" className="w-20 h-20 object-contain mt-1 rounded" />
+                            : <p className="text-sm text-muted-foreground">{pm.details}</p>
+                        )}
                       </div>
                       <div className="flex items-center gap-1">
                         {!pm.is_default && (
@@ -499,12 +577,32 @@ export default function Settings() {
               <Input placeholder="e.g. Main Office, Studio A" value={addressForm.label} onChange={(e) => setAddressForm({ ...addressForm, label: e.target.value })} />
             </div>
             <div className="space-y-2">
-              <Label>Address</Label>
-              <Input placeholder="123 Main St, City, State" value={addressForm.address} onChange={(e) => setAddressForm({ ...addressForm, address: e.target.value })} />
+              <Label>Street Address</Label>
+              <Input placeholder="123 Main St" value={addressForm.street} onChange={(e) => setAddressForm({ ...addressForm, street: e.target.value })} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label>City</Label>
+                <Input placeholder="Vancouver" value={addressForm.city} onChange={(e) => setAddressForm({ ...addressForm, city: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label>Province / State</Label>
+                <Input placeholder="BC" value={addressForm.province} onChange={(e) => setAddressForm({ ...addressForm, province: e.target.value })} />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label>Country</Label>
+                <Input placeholder="Canada" value={addressForm.country} onChange={(e) => setAddressForm({ ...addressForm, country: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label>ZIP / Postal Code</Label>
+                <Input placeholder="V6B 1A1" value={addressForm.zip} onChange={(e) => setAddressForm({ ...addressForm, zip: e.target.value })} />
+              </div>
             </div>
             <div className="flex justify-end gap-2 pt-4">
               <Button variant="outline" onClick={() => setShowAddressDialog(false)}>Cancel</Button>
-              <Button onClick={() => saveAddress.mutate()} disabled={!addressForm.label || !addressForm.address || saveAddress.isPending}>
+              <Button onClick={() => saveAddress.mutate()} disabled={!addressForm.label || !addressForm.street || !addressForm.city || saveAddress.isPending}>
                 {saveAddress.isPending ? 'Saving...' : 'Save'}
               </Button>
             </div>
@@ -516,16 +614,16 @@ export default function Settings() {
       <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>{editingPayment ? 'Edit Payment Method' : 'Add Payment Method'}</DialogTitle>
+            <DialogTitle>{editingPayment ? 'Edit Payment Acceptance Method' : 'Add Payment Acceptance Method'}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 pt-4">
             <div className="space-y-2">
               <Label>Label</Label>
-              <Input placeholder="e.g. Business Visa, Cash on site" value={paymentForm.label} onChange={(e) => setPaymentForm({ ...paymentForm, label: e.target.value })} />
+              <Input placeholder="e.g. My PayPal, Personal Venmo" value={paymentForm.label} onChange={(e) => setPaymentForm({ ...paymentForm, label: e.target.value })} />
             </div>
             <div className="space-y-2">
               <Label>Type</Label>
-              <Select value={paymentForm.type} onValueChange={(v) => setPaymentForm({ ...paymentForm, type: v })}>
+              <Select value={paymentForm.type} onValueChange={(v) => { setPaymentForm({ ...paymentForm, type: v, details: '' }); setVenmoInputType('username'); }}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {PAYMENT_TYPES.map((t) => (
@@ -534,10 +632,77 @@ export default function Settings() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
-              <Label>Details (optional)</Label>
-              <Input placeholder="e.g. ending in 4242, account info" value={paymentForm.details} onChange={(e) => setPaymentForm({ ...paymentForm, details: e.target.value })} />
-            </div>
+
+            {paymentForm.type === 'cash' && (
+              <p className="text-sm text-muted-foreground">No additional details needed for cash payments.</p>
+            )}
+
+            {paymentForm.type === 'paypal' && (
+              <div className="space-y-2">
+                <Label>PayPal Link</Label>
+                <Input placeholder="https://paypal.me/yourname" value={paymentForm.details} onChange={(e) => setPaymentForm({ ...paymentForm, details: e.target.value })} />
+              </div>
+            )}
+
+            {paymentForm.type === 'venmo' && (
+              <div className="space-y-3">
+                <div className="space-y-2">
+                  <Label>Input Type</Label>
+                  <div className="flex gap-2">
+                    {(['username', 'phone', 'qr'] as const).map((opt) => (
+                      <Button
+                        key={opt}
+                        type="button"
+                        variant={venmoInputType === opt ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => { setVenmoInputType(opt); setPaymentForm(prev => ({ ...prev, details: '' })); }}
+                      >
+                        {opt === 'username' ? 'Username' : opt === 'phone' ? 'Phone Number' : 'QR Code'}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+                {venmoInputType === 'username' && (
+                  <div className="space-y-2">
+                    <Label>Venmo Username</Label>
+                    <Input placeholder="@username" value={paymentForm.details} onChange={(e) => setPaymentForm({ ...paymentForm, details: e.target.value })} />
+                  </div>
+                )}
+                {venmoInputType === 'phone' && (
+                  <div className="space-y-2">
+                    <Label>Phone Number</Label>
+                    <Input placeholder="+1 (555) 000-0000" value={paymentForm.details} onChange={(e) => setPaymentForm({ ...paymentForm, details: e.target.value })} />
+                  </div>
+                )}
+                {venmoInputType === 'qr' && (
+                  <div className="space-y-2">
+                    <Label>QR Code Image</Label>
+                    <Input type="file" accept="image/*" onChange={handleQRUpload} />
+                    {paymentForm.details && (
+                      <img src={paymentForm.details} alt="Venmo QR Preview" className="max-w-[120px] rounded mt-1" />
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {paymentForm.type === 'email_transfer' && (
+              <div className="space-y-2">
+                <Label>Email Address</Label>
+                <Input placeholder="payments@example.com" value={paymentForm.details} onChange={(e) => setPaymentForm({ ...paymentForm, details: e.target.value })} />
+              </div>
+            )}
+
+            {paymentForm.type === 'wechat' && (
+              <div className="space-y-2">
+                <Label>WeChat QR Code</Label>
+                <Input type="file" accept="image/*" onChange={handleQRUpload} />
+                {paymentForm.details && (
+                  <img src={paymentForm.details} alt="WeChat QR Preview" className="max-w-[120px] rounded mt-1" />
+                )}
+              </div>
+            )}
+
             <div className="flex justify-end gap-2 pt-4">
               <Button variant="outline" onClick={() => setShowPaymentDialog(false)}>Cancel</Button>
               <Button onClick={() => savePayment.mutate()} disabled={!paymentForm.label || savePayment.isPending}>
