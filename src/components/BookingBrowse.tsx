@@ -13,6 +13,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescript
 import { Calendar as CalendarIcon, Clock, User, MapPin, Search, Filter, Loader2, Share2, ExternalLink, ChevronRight, ArrowLeft, Check, Bookmark } from 'lucide-react';
 import { toast } from 'sonner';
 import { BrowseDetail } from './BrowseDetail';
+import { parseLocation, formatLocation } from '@/lib/address';
 
 interface OpeningWithProfile {
   id: string;
@@ -55,8 +56,21 @@ export function BookingBrowse() {
   const [copiedSlotId, setCopiedSlotId] = useState<string | null>(null);
   const [calendarMonth, setCalendarMonth] = useState(new Date());
   const [viewMode, setViewMode] = useState<'all' | 'bookmarks'>('all');
+  const [locationFilter, setLocationFilter] = useState<{ province: string; country: string } | null>(null);
 
   const today = new Date().toISOString().split('T')[0];
+
+  // Load location preference on mount
+  React.useEffect(() => {
+    if (user?.id) {
+      const savedPref = localStorage.getItem(`locationPreference_${user.id}`);
+      if (savedPref) {
+        try {
+          setLocationFilter(JSON.parse(savedPref));
+        } catch {}
+      }
+    }
+  }, [user?.id]);
 
   // Fetch all openings (works for both authenticated and anonymous users)
   const { 
@@ -227,15 +241,30 @@ export function BookingBrowse() {
     ? allOpenings.filter(o => o.user_id === providerId)
     : [];
 
-  // Filter providers by search term and exclude current user (can't book own provider)
-  const filteredProviders = providers.filter(provider =>
-    provider.user_id !== user?.id && (
-      searchTerm === '' ||
+  // Filter providers by search term, exclude current user, and apply location filter
+  const filteredProviders = providers.filter(provider => {
+    if (provider.user_id === user?.id) return false;
+    
+    const matchesSearch = searchTerm === '' ||
       provider.provider_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       provider.services.some(s => s.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      provider.workers.some(w => w.toLowerCase().includes(searchTerm.toLowerCase()))
-    )
-  );
+      provider.workers.some(w => w.toLowerCase().includes(searchTerm.toLowerCase()));
+    
+    if (!matchesSearch) return false;
+
+    // Apply location filter
+    if (locationFilter && locationFilter.province && locationFilter.country) {
+      const providerOpenings = allOpenings.filter(o => o.user_id === provider.user_id);
+      const hasMatchingLocation = providerOpenings.some(opening => {
+        const loc = parseLocation(opening.location);
+        return loc.province.toLowerCase() === locationFilter.province.toLowerCase() &&
+               loc.country.toLowerCase() === locationFilter.country.toLowerCase();
+      });
+      return hasMatchingLocation;
+    }
+
+    return true;
+  });
 
   const handleBooking = (slot: OpeningWithProfile) => {
     if (!user) {
@@ -279,7 +308,7 @@ export function BookingBrowse() {
                 <p><strong>Date:</strong> ${new Date(selectedSlot.date).toLocaleDateString()}</p>
                 <p><strong>Time:</strong> ${selectedSlot.start_time || 'N/A'}</p>
                 <p><strong>Duration:</strong> ${selectedSlot.duration || 'N/A'} hour(s)</p>
-                ${selectedSlot.location ? `<p><strong>Location:</strong> ${selectedSlot.location}</p>` : ''}
+                ${selectedSlot.location ? `<p><strong>Location:</strong> ${formatLocation(parseLocation(selectedSlot.location))}</p>` : ''}
               </div>
               <p>Thank you for booking with us!</p>
             `,
@@ -351,6 +380,27 @@ export function BookingBrowse() {
               </p>
               <Button onClick={() => navigate('/auth?redirect=/browse')}>
                 Sign in
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Location filter badge */}
+        {locationFilter && locationFilter.province && locationFilter.country && (
+          <Card className="shadow-soft border-card-border bg-blue-50 dark:bg-blue-950/30">
+            <CardContent className="flex items-center justify-between gap-3 py-3">
+              <div className="flex items-center gap-2 text-sm">
+                <MapPin className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                <span className="font-medium">Showing results near:</span>
+                <span>{locationFilter.province}, {locationFilter.country}</span>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setLocationFilter(null)}
+                className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
+              >
+                ✕ Clear filter
               </Button>
             </CardContent>
           </Card>

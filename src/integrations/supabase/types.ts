@@ -166,6 +166,36 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_proofs: {
+        Row: {
+          id: string
+          appointment_id: string
+          customer_id: string
+          note: string | null
+          photo: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          appointment_id: string
+          customer_id: string
+          note?: string | null
+          photo?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          appointment_id?: string
+          customer_id?: string
+          note?: string | null
+          photo?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       openings: {
         Row: {
           created_at: string

@@ -36,6 +36,45 @@
 - IIFE pattern (`{(() => { ... })()}`) used to compute `providerViewAppt` inline in JSX without polluting component scope
 - Bulk payment proof fetch: single `useQuery` keyed by `['payment-proofs-bulk', appointmentIds]`, selects only `appointment_id`, enabled when list is non-empty; result memoized into a `Set<string>` for O(1) per-card lookup
 - "Paid" badge: `<Badge variant="outline" className="text-green-600 border-green-600 dark:text-green-400 dark:border-green-400 text-xs">` placed inside existing `flex items-center space-x-3` div, right after status badge
+- `modify_appointment` RPC auth check: `_old_apt.user_id != _caller_id AND _old_apt.provider_id != _caller_id` — allows EITHER customer OR provider to reschedule
+- "Cannot book own opening" check uses `_old_apt.user_id` (the customer), NOT `_caller_id` — so provider can reschedule onto their own available slots
+- INSERT always uses `_old_apt.user_id` for the customer field — booking always stays under original customer regardless of who initiated the reschedule
+- Payment proof transfer: `UPDATE payment_proofs SET appointment_id = _new_appointment_id WHERE appointment_id = _appointment_id` at end of `modify_appointment` — proof moves with reschedule, no frontend change needed
+- Bulk payment query (`['payment-proofs-bulk', appointmentIds]`) automatically includes new appointment IDs after reschedule — Paid badge appears without extra code
+- Cash payment warning: `Alert` component only has `default` and `destructive` variants — no warning/yellow variant; use raw Tailwind `bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-md p-3 text-sm` div instead
+- Cash "toggle" in Settings.tsx is the type Select in the payment dialog; `paymentForm.type === 'cash'` drives conditional renders in that dialog
+- PayPal stores BOTH username and QR as JSON in `details`: `{"username":"...","qr":"data:image/..."}` — unlike Venmo which stores only one value; parse with try/catch for legacy plain-URL fallback
+- PayPal customer display: parse JSON → show `https://paypal.me/{username}` button (bg `#0070BA`) if username set, QR image if qr set, fallback text if neither
+- Two separate state vars `paypalUsername`/`paypalQr` feed `getPaypalDetails()` which serializes to JSON on save; reset both on type-change and dialog close
+- IIFE `{(() => { ... })()}` pattern used in PayPal customer display JSX to handle multi-branch logic cleanly
+
+### Payment Module Refactor (May 2026)
+
+- Payment module lives at `src/lib/payment/` — single source of truth for types, registry, and serialization
+- Registry in `src/lib/payment/methods.ts` (`PAYMENT_METHOD_CONFIGS`) — add new payment type in ONE place
+- `deserializeDetailsByType(type, raw)` in serialization.ts handles ALL legacy plain-string formats per type: venmo detects base64/phone/username, wechat assumes base64, email_transfer assumes email
+- `compressImageFile(file)` — extracted utility in serialization.ts; returns `null` if >1MB (caller shows toast)
+- `usePaymentMethod()` hook — manages `PaymentDetails` state, exposes `setField`, `clearField`, `setImageField`, `reset`, `serialize`; `setImageField` calls `compressImageFile` and shows toast on size error
+- `PaymentMethodForm` — controlled component (`value`/`onChange`), renders fields dynamically from `PaymentMethodConfig.fields`; handles `text` and `image` field types; cash renders warning div
+- `PaymentMethodCard` — settings list item using `getSummary()` helper; shows QR preview for image-type methods, text for others
+- `PaymentDisplay` — customer-facing display; handles all 5 types + unknown fallback + all legacy formats
+- Settings.tsx: replaced `venmoInputType`, `paypalUsername`, `paypalQr`, `paymentForm.details`, `handleQRUpload`, `handlePaypalQRUpload`, `getPaypalDetails` with `usePaymentMethod` hook + `PaymentMethodForm` + `PaymentMethodCard`
+- Appointments.tsx: replaced 60-line PayPal IIFE + per-type if/else with `<PaymentDisplay type={pm.type} details={deserializeDetailsByType(...)} />`
+- Venmo phone sub-mode (3-mode selector) removed from form — new form has username + QR fields; legacy phone entries still display via `deserializeDetailsByType` mapping `{phone: raw}` for display
+- `PaymentMethodRecord` = DB shape (`details: string | null`); used in Appointments + Settings queries; display components take deserialized `PaymentDetails`
+
+### Per-Opening Payment Method Selection (May 2026)
+
+- `openings` table gained `accepted_payment_method_ids text[] DEFAULT NULL` — NULL means show all provider methods (backward compat)
+- Calendar.tsx: `Opening` interface has `accepted_payment_method_ids?: string[] | null`
+- Provider payment methods fetched via `useQuery(['provider-payment-methods-for-opening', user?.id])` — `id, label, type` only
+- `newOpening` state has `acceptedPaymentMethodIds: string[]`; `resetForm()` resets it to `[]`
+- All 3 insert paths pass `accepted_payment_method_ids: arr.length > 0 ? arr : null`
+- Edit dialog: `editingOpening` + `editForm` state; `openEditDialog(opening)` pre-fills form; `saveEditOpening()` does UPDATE + local state patch; only available when `opening.is_available === true` (not booked)
+- Appointments.tsx: `paymentInfoOpeningId` tracks which opening the customer is paying for; cleared on dialog close
+- `paymentInfoOpening` query fetches only `accepted_payment_method_ids` from that opening
+- `allAvailableMethods` memo: deduplicates (provider + org), then filters by `accepted_payment_method_ids` if set; falls back to all if NULL/empty
+- Payment dialog now maps over `allAvailableMethods` flat list instead of separate org/provider sections
 
 ### Patterns & Preferences
 
@@ -173,6 +212,31 @@
 
 ## Learnings
 
+### Address Architecture (January 2025)
+
+**Task:** Complete address architecture implementation after partial agent run
+
+**What changed:**
+- Created `src/lib/address.ts` — pure utils: `LocationFields` interface, `parseLocation()`, `formatLocation()`, `serializeLocation()`
+- Created `src/hooks/useAddress.ts` — stateful hook managing address form state with `fields`, `setField`, `setFields`, `serialized`, `formatted`, `isEmpty`, `reset`
+- Created `src/components/ui/AddressInput.tsx` — reusable component with 4 inputs (city, province, country, zip), supports `2x2` or `stacked` layout
+- Refactored `Calendar.tsx` to use `<AddressInput>` component instead of manual grid of 4 inputs
+- Fixed missing imports in `ModifyAppointmentDialog.tsx` and `BrowseDetail.tsx`
+- Added Location tab in `Settings.tsx` with province/country preference saved to `localStorage`
+- Location filter in `BookingBrowse.tsx` reads preference and filters openings by matching province + country
+
+**Pattern:**
+- Display: `formatLocation(parseLocation(raw))` — always use for read-only location rendering
+- Edit forms: `useAddress({ initialValue, onChange })` + `<AddressInput value={address.fields} onChange={address.setFields} />`
+- Hook owns state; component is controlled input; utils are pure functions
+- Workplace addresses in Settings use separate schema (includes `street` field) — different from opening location (city/province/country/zip only)
+
+**Why this approach:**
+- Separation of concerns: pure utils + stateful hook + dumb component
+- Reusability: any form needing address input uses same components
+- Consistency: all location display uses same formatLocation logic
+- Type safety: LocationFields interface enforced across stack
+
 ### Appointments Bulk Actions (January 2025)
 
 **Task:** Convert `Appointments.tsx` per-card action buttons → multi-select + bulk action toolbar
@@ -196,6 +260,39 @@
 ### High-Priority Mobile Fixes Implementation (January 2025)
 
 **Completed fixes from Bishop's audit — top 3 priorities:**
+
+### Address Dropdowns (January 2025)
+
+**Task:** Replace freetext Country/Province inputs with Select dropdowns
+
+**What changed:**
+- `src/lib/address.ts` — added `COUNTRIES` array (Canada, United States), `PROVINCES_BY_COUNTRY` record (13 CA + 51 US), `Country` type
+- `src/components/ui/AddressInput.tsx` — replaced Country and Province `<Input>` with Shadcn `<Select>` components
+  - Country select: dropdown from `COUNTRIES`
+  - Province select: reactive to country — options from `PROVINCES_BY_COUNTRY[country]`, disabled if no country selected, resets province if not in new country's list
+  - City and ZIP remain freetext inputs
+  - Both `2x2` and `stacked` layouts work correctly
+- `src/pages/Settings.tsx` — Location Preference tab now uses Select dropdowns (imported `COUNTRIES`, `PROVINCES_BY_COUNTRY`)
+  - Country select first, then Province select (disabled until country chosen)
+  - Province resets when country changes and old province not in new list
+- `src/components/BookingBrowse.tsx` — no changes needed (uses locationFilter from localStorage, no manual inputs)
+
+**Pattern:**
+- Country select triggers reactive handler: clears province if not in new country's list
+- Province select disabled state: `disabled={!country || availableProvinces.length === 0}`
+- Placeholder text adapts: "Select country first" when disabled, "Select province/state" when enabled
+
+**Why dropdowns:**
+- Prevents typos/format inconsistencies (BC vs British Columbia vs bc)
+- Standardizes province/state names across database
+- Improves filtering reliability — exact string matches now guaranteed
+- Better UX — no memorizing abbreviations or correct spelling
+
+**Build verification:**
+- `npx tsc --noEmit` ✅ passed (exit code 0)
+- `npm run build` ✅ passed (46.09s, no errors)
+
+
 
 #### 1. Mobile Sidebar Navigation (Issues #9, #13, #14)
 **Files modified:** `src/App.tsx`
@@ -305,3 +402,42 @@
 - Auto-closes after 8 seconds (configurable)
 
 **Type checking:** ✅ `npx tsc --noEmit` — no errors
+
+### Appointment Action Button Role Assignment (January 2025)
+
+**Task:** Fix backwards button roles in pending appointments section
+
+**Bug:**
+- Provider was seeing "Reject" button that called `handleCancel`
+- Customer was seeing no buttons (`: null`)
+
+**Root cause (line 736-747 in `Appointments.tsx`):**
+```typescript
+{aptIsProvider ? (
+  <>
+    <Button onClick={() => handleApprove(apt.id)}>Approve</Button>
+    <Button onClick={() => handleCancel(apt.id)}>Reject</Button>
+  </>
+) : null}
+```
+
+**Fix:**
+- Provider: kept Approve + Reject buttons (both use `handleCancel` — RPC determines action by caller_id)
+- Customer: added `else` clause with Cancel button
+- New logic:
+  ```typescript
+  {aptIsProvider ? (
+    /* Approve + Reject buttons */
+  ) : (
+    <Button onClick={() => handleCancel(apt.id)}>Cancel</Button>
+  )}
+  ```
+
+**Key insight:**
+- `cancel_appointment` RPC handles both provider rejection and customer cancellation
+- Role determined by `_caller_id` parameter (which user calls it)
+- UI just needs to show correct button label + placement for each role
+- `aptIsProvider` checks `apt.provider_id === user?.id` (line 719)
+
+**Build:** ✅ `npm run build` — no errors
+

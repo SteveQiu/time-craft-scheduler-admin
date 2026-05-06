@@ -19,6 +19,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
 import { useAppointmentNotifications } from '@/hooks/useAppointmentNotifications';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
+import { parseLocation, formatLocation } from '@/lib/address';
+import { deserializeDetailsByType } from '@/lib/payment/serialization';
+import { PaymentDisplay } from '@/components/payment/PaymentDisplay';
+import { PaymentMethodRecord } from '@/lib/payment/types';
+import { getMethodLabel } from '@/lib/payment/methods';
 
 interface Appointment {
   id: string;
@@ -45,23 +50,6 @@ interface Appointment {
   approved_by_name?: string | null;
 }
 
-interface PaymentMethod {
-  id: string;
-  user_id: string;
-  label: string;
-  type: string;
-  details: string | null;
-  is_default: boolean;
-  created_at: string;
-}
-
-const PAYMENT_TYPE_LABELS: Record<string, string> = {
-  cash: 'Cash',
-  paypal: 'PayPal',
-  venmo: 'Venmo',
-  email_transfer: 'Email Transfer',
-  wechat: 'WeChat',
-};
 
 // Calendar export helpers
 const formatDateForCalendar = (date: string, time: string): Date => {
@@ -169,6 +157,7 @@ export function Appointments() {
   const [bulkModifyModifying, setBulkModifyModifying] = useState<string | null>(null);
   const [paymentInfoProviderId, setPaymentInfoProviderId] = useState<string | null>(null);
   const [paymentInfoProviderName, setPaymentInfoProviderName] = useState<string>('');
+  const [paymentInfoOpeningId, setPaymentInfoOpeningId] = useState<string | null>(null);
   const [paymentProofNote, setPaymentProofNote] = useState('');
   const [paymentProofPhoto, setPaymentProofPhoto] = useState<string | null>(null);
   const [paymentProofPhotoName, setPaymentProofPhotoName] = useState('');
@@ -271,13 +260,61 @@ export function Appointments() {
         .order('is_default', { ascending: false })
         .order('created_at', { ascending: false });
       if (error) throw error;
-      return data as PaymentMethod[];
+      return data as PaymentMethodRecord[];
     },
     enabled: !!paymentInfoProviderId,
   });
 
-  const { data: existingPaymentProof, isFetching: loadingExistingProof } = useQuery({
-    queryKey: ['payment-proof', paymentProofAppointmentId],
+  // Fetch org payment methods if the provider belongs to an org
+  const { data: orgPayments = [], isFetching: loadingOrgPayments } = useQuery({
+    queryKey: ['org-payment-methods', paymentInfoProviderId],
+    queryFn: async () => {
+      const { data: orgId } = await supabase.rpc('get_worker_org_id', {
+        _user_id: paymentInfoProviderId!,
+      });
+      if (!orgId) return [] as PaymentMethodRecord[];
+      const { data, error } = await supabase
+        .from('payment_methods')
+        .select('*')
+        .eq('user_id', orgId)
+        .order('is_default', { ascending: false })
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data as PaymentMethodRecord[];
+    },
+    enabled: !!paymentInfoProviderId,
+  });
+
+  // Fetch the opening's accepted payment method IDs to filter what customer sees
+  const { data: paymentInfoOpening } = useQuery({
+    queryKey: ['opening-payment-methods', paymentInfoOpeningId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('openings')
+        .select('accepted_payment_method_ids')
+        .eq('id', paymentInfoOpeningId!)
+        .maybeSingle();
+      if (error) throw error;
+      return data as { accepted_payment_method_ids: string[] | null } | null;
+    },
+    enabled: !!paymentInfoOpeningId,
+  });
+
+  // Deduplicated + filtered methods based on opening's accepted IDs
+  const allAvailableMethods = useMemo(() => {
+    const all = [...(providerPayments ?? []), ...(orgPayments ?? [])];
+    const seen = new Set<string>();
+    const deduped = all.filter(m => {
+      if (seen.has(m.id)) return false;
+      seen.add(m.id);
+      return true;
+    });
+    const acceptedIds = paymentInfoOpening?.accepted_payment_method_ids;
+    if (!acceptedIds || acceptedIds.length === 0) return deduped;
+    return deduped.filter(m => acceptedIds.includes(m.id));
+  }, [providerPayments, orgPayments, paymentInfoOpening]);
+
+  const { data: existingPaymentProof, isFetching: loadingExistingProof } = useQuery({    queryKey: ['payment-proof', paymentProofAppointmentId],
     enabled: !!paymentProofAppointmentId,
     queryFn: async () => {
       if (!paymentProofAppointmentId) return null;
@@ -698,7 +735,7 @@ export function Appointments() {
               {first.location && (
                 <div className="flex items-center space-x-1 text-sm text-muted-foreground">
                   <MapPin className="h-3 w-3" />
-                  <span>{first.location}</span>
+                  <span>{formatLocation(parseLocation(first.location))}</span>
                 </div>
               )}
               <div className="flex items-center space-x-2">
@@ -744,7 +781,12 @@ export function Appointments() {
                           Reject
                         </Button>
                       </>
-                    ) : null}
+                    ) : (
+                      <Button variant="outline" size="sm" onClick={() => handleCancel(apt.id)}>
+                        <X className="h-3 w-3 mr-1" />
+                        Cancel
+                      </Button>
+                    )}
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="sm">
@@ -827,7 +869,7 @@ export function Appointments() {
               {appointment.location && (
                 <div className="flex items-center space-x-1 text-sm text-muted-foreground">
                   <MapPin className="h-3 w-3" />
-                  <span>{appointment.location}</span>
+                  <span>{formatLocation(parseLocation(appointment.location))}</span>
                 </div>
               )}
 
@@ -867,6 +909,7 @@ export function Appointments() {
                         onClick={() => {
                           setPaymentInfoProviderId(appointment.provider_id);
                           setPaymentInfoProviderName(appointment.worker);
+                          setPaymentInfoOpeningId(appointment.opening_id);
                           setPaymentProofAppointmentId(appointment.id);
                           setProofSubmitted(false);
                         }}
@@ -1191,7 +1234,7 @@ export function Appointments() {
                         {opening.location && (
                           <span className="flex items-center gap-1">
                             <MapPin className="h-3 w-3" />
-                            {opening.location}
+                            {formatLocation(parseLocation(opening.location))}
                           </span>
                         )}
                       </div>
@@ -1214,6 +1257,7 @@ export function Appointments() {
       <Dialog open={!!paymentInfoProviderId} onOpenChange={(open) => {
         if (!open) {
           setPaymentInfoProviderId(null);
+          setPaymentInfoOpeningId(null);
           setProofSubmitted(false);
           setPaymentProofNote('');
           setPaymentProofPhoto(null);
@@ -1228,56 +1272,34 @@ export function Appointments() {
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
-            {loadingProviderPayments ? (
+            {(loadingProviderPayments || loadingOrgPayments) ? (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
               </div>
-            ) : providerPayments.length === 0 ? (
+            ) : allAvailableMethods.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-6">
                 This provider hasn't configured payment methods yet.
               </p>
             ) : (
-              providerPayments.map((pm) => (
-                <div key={pm.id} className="border border-border rounded-lg p-4 space-y-2">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-semibold text-foreground">{pm.label}</span>
-                    <Badge variant="outline">{PAYMENT_TYPE_LABELS[pm.type] || pm.type}</Badge>
-                    {pm.is_default && <Badge variant="secondary">Default</Badge>}
-                  </div>
-                  {pm.details && (
-                    <div>
-                      {(pm.type === 'wechat' || (pm.type === 'venmo' && pm.details.startsWith('data:image'))) ? (
-                        <img src={pm.details} alt="Payment QR Code" className="w-40 h-40 object-contain rounded border" />
-                      ) : pm.type === 'paypal' ? (
-                        pm.details.startsWith('http') ? (
-                          <a href={pm.details} target="_blank" rel="noopener noreferrer" className="text-sm text-primary underline break-all">
-                            {pm.details}
-                          </a>
-                        ) : pm.details.includes('@') ? (
-                          <a href={`mailto:${pm.details}`} className="text-sm text-primary underline">
-                            {pm.details}
-                          </a>
-                        ) : (
-                          <p className="text-sm text-muted-foreground">{pm.details}</p>
-                        )
-                      ) : pm.type === 'email_transfer' && pm.details.includes('@') ? (
-                        <a href={`mailto:${pm.details}`} className="text-sm text-primary underline">
-                          {pm.details}
-                        </a>
-                      ) : (
-                        <p className="text-sm text-muted-foreground">{pm.details}</p>
-                      )}
+              <div className="space-y-3">
+                {allAvailableMethods.map((pm) => (
+                  <div key={pm.id} className="border border-border rounded-lg p-4 space-y-2">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-semibold text-foreground">{pm.label}</span>
+                      <Badge variant="outline">{getMethodLabel(pm.type)}</Badge>
+                      {pm.is_default && <Badge variant="secondary">Default</Badge>}
                     </div>
-                  )}
-                  {!pm.details && pm.type === 'cash' && (
-                    <p className="text-sm text-muted-foreground">Cash accepted</p>
-                  )}
-                </div>
-              ))
+                    <PaymentDisplay
+                      type={pm.type}
+                      details={deserializeDetailsByType(pm.type, pm.details)}
+                    />
+                  </div>
+                ))}
+              </div>
             )}
 
             {/* Payment Proof Section */}
-            {!loadingProviderPayments && (
+            {!loadingProviderPayments && !loadingOrgPayments && (
               <>
                 <div className="border-t border-border pt-4">
                   <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
