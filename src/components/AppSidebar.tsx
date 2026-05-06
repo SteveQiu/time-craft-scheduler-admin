@@ -168,6 +168,25 @@ export function AppSidebar() {
             {/* Profile and Settings */}
             <div className="space-y-1">
               <Link
+                to="/notifications"
+                className={`flex items-center justify-between gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
+                  isActive('/notifications')
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-foreground hover:bg-accent'
+                }`}
+              >
+                <span className="flex items-center gap-3 min-w-0">
+                  <Bell className="h-4 w-4 flex-shrink-0" />
+                  <span className="truncate">Notifications</span>
+                </span>
+                {unreadCount > 0 && (
+                  <Badge variant="destructive" className="h-5 min-w-5 px-1.5 text-xs">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </Badge>
+                )}
+              </Link>
+
+              <Link
                 to="/profile"
                 className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
                   isActive('/profile')
