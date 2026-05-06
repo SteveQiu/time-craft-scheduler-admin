@@ -970,22 +970,22 @@ export function Calendar() {
                                 </TooltipTrigger>
                                 <TooltipContent>Remove opening</TooltipContent>
                               </Tooltip>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    onClick={(e) => { e.stopPropagation(); if (opening.is_available) openEditDialog(opening); }}
-                                    disabled={!user || !opening.is_available}
-                                    variant="ghost"
-                                    size="sm"
-                                    className="flex-shrink-0"
-                                  >
-                                    <Pencil className="h-4 w-4" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  {opening.is_available ? 'Edit opening' : 'Editing booked openings is not allowed'}
-                                </TooltipContent>
-                              </Tooltip>
+                              {opening.is_available && (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      onClick={(e) => { e.stopPropagation(); openEditDialog(opening); }}
+                                      disabled={!user}
+                                      variant="ghost"
+                                      size="sm"
+                                      className="flex-shrink-0"
+                                    >
+                                      <Pencil className="h-4 w-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Edit opening</TooltipContent>
+                                </Tooltip>
+                              )}
                             </div>
                           ))}
                         </div>
