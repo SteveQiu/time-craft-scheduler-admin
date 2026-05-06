@@ -423,6 +423,7 @@ export function Appointments() {
       });
 
       queryClient.invalidateQueries({ queryKey: ['payment-proof', paymentProofAppointmentId] });
+      queryClient.invalidateQueries({ queryKey: ['payment-proofs-bulk'] });
       setProofSubmitted(true);
     } catch (err: any) {
       console.error('Failed to submit payment proof:', err);
