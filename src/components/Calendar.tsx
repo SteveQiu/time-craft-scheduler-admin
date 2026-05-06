@@ -1401,7 +1401,7 @@ export function Calendar() {
 
       {/* Edit Opening Dialog */}
       <Dialog open={!!editingOpening} onOpenChange={(open) => { if (!open) setEditingOpening(null); }}>
-        <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
+        <DialogContent key={editingOpening?.id} className="sm:max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Opening</DialogTitle>
             {editingOpening && (
