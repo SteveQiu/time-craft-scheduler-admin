@@ -1150,7 +1150,7 @@ export function Appointments() {
 
             {/* Non-pending or user-view appointments */}
             {nonPendingActive.length > 0 ? (
-              <div className="space-y-4">{nonPendingActive.map(renderAppointmentCard)}</div>
+              <div className="space-y-4">{nonPendingActive.map(apt => renderAppointmentCard(apt))}</div>
             ) : (
               !isOrgView || !groupedPendingByOpening || groupedPendingByOpening.size === 0 ? (
                 <Card className="shadow-soft border-card-border">
