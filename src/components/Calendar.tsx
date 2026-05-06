@@ -108,6 +108,7 @@ export function Calendar() {
   const [blockedOpenings, setBlockedOpenings] = useState<Opening[]>([]);
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
   const [safeIdsToDelete, setSafeIdsToDelete] = useState<string[]>([]);
+  const [confirmedOpeningIds, setConfirmedOpeningIds] = useState<Set<string>>(new Set());
 
   // Fetch saved workplace addresses
   const { data: savedAddresses = [] } = useQuery({
@@ -285,6 +286,19 @@ export function Calendar() {
 
       if (error) throw error;
       setOpenings(data || []);
+
+      // Fetch opening_ids with confirmed appointments this month
+      const openingIds = (data || []).filter(o => !o.is_available).map(o => o.id);
+      if (openingIds.length > 0) {
+        const { data: confirmedApts } = await supabase
+          .from('appointments')
+          .select('opening_id')
+          .in('opening_id', openingIds)
+          .eq('status', 'confirmed');
+        setConfirmedOpeningIds(new Set((confirmedApts || []).map(a => a.opening_id)));
+      } else {
+        setConfirmedOpeningIds(new Set());
+      }
     } catch (error) {
       console.error('Error loading openings:', error);
       toast.error('Failed to load openings');
@@ -970,7 +984,7 @@ export function Calendar() {
                                 </TooltipTrigger>
                                 <TooltipContent>Remove opening</TooltipContent>
                               </Tooltip>
-                              {opening.is_available && (
+                              {!confirmedOpeningIds.has(opening.id) && (
                                 <Tooltip>
                                   <TooltipTrigger asChild>
                                     <Button
