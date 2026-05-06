@@ -1,10 +1,12 @@
-import { Search, Home, Calendar as CalendarIcon, Users, Clock, Settings, LogIn, LogOut, UserCircle, Shield } from 'lucide-react';
+import { Search, Home, Calendar as CalendarIcon, Users, Clock, Settings, LogIn, LogOut, UserCircle, Shield, Bell } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRoles } from '@/hooks/useUserRoles';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -21,6 +23,18 @@ export function AppSidebar() {
     supabase.from('profiles').select('full_name').eq('id', user.id).single()
       .then(({ data }) => setProfileName(data?.full_name || null));
   }, [user]);
+
+  const { data: unreadCount = 0 } = useQuery({
+    queryKey: ['unread-count', user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('get_unread_notification_count');
+      if (error) return 0;
+      return (data as number) || 0;
+    },
+    enabled: !!user,
+    refetchInterval: 60000,
+    refetchOnWindowFocus: true,
+  });
 
   const userNavItems = [
     { id: 'browse', label: 'Browse', icon: Search, path: '/browse' },
