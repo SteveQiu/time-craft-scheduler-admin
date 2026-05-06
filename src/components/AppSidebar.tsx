@@ -1,10 +1,12 @@
-import { Search, Home, Calendar as CalendarIcon, Users, Clock, Settings, LogIn, LogOut, UserCircle, Shield } from 'lucide-react';
+import { Search, Home, Calendar as CalendarIcon, Users, Clock, Settings, LogIn, LogOut, UserCircle, Shield, Bell } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRoles } from '@/hooks/useUserRoles';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -21,6 +23,18 @@ export function AppSidebar() {
     supabase.from('profiles').select('full_name').eq('id', user.id).single()
       .then(({ data }) => setProfileName(data?.full_name || null));
   }, [user]);
+
+  const { data: unreadCount = 0 } = useQuery({
+    queryKey: ['unread-count', user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('get_unread_notification_count');
+      if (error) return 0;
+      return (data as number) || 0;
+    },
+    enabled: !!user,
+    refetchInterval: 60000,
+    refetchOnWindowFocus: true,
+  });
 
   const userNavItems = [
     { id: 'browse', label: 'Browse', icon: Search, path: '/browse' },
@@ -153,6 +167,25 @@ export function AppSidebar() {
           <>
             {/* Profile and Settings */}
             <div className="space-y-1">
+              <Link
+                to="/notifications"
+                className={`flex items-center justify-between gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
+                  isActive('/notifications')
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-foreground hover:bg-accent'
+                }`}
+              >
+                <span className="flex items-center gap-3 min-w-0">
+                  <Bell className="h-4 w-4 flex-shrink-0" />
+                  <span className="truncate">Notifications</span>
+                </span>
+                {unreadCount > 0 && (
+                  <Badge variant="destructive" className="h-5 min-w-5 px-1.5 text-xs">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </Badge>
+                )}
+              </Link>
+
               <Link
                 to="/profile"
                 className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${

@@ -79,6 +79,39 @@ export type Database = {
           },
         ]
       }
+      audit_events: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          entity_id: string | null
+          entity_type: string
+          event_type: string
+          id: string
+          metadata: Json
+          recipient_ids: string[]
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type: string
+          event_type: string
+          id?: string
+          metadata?: Json
+          recipient_ids?: string[]
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string
+          event_type?: string
+          id?: string
+          metadata?: Json
+          recipient_ids?: string[]
+        }
+        Relationships: []
+      }
       bookmarks: {
         Row: {
           bookmarked_user_id: string
@@ -114,6 +147,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      notification_reads: {
+        Row: {
+          last_seen_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          last_seen_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          last_seen_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       openings: {
         Row: {
@@ -632,6 +683,19 @@ export type Database = {
           worker_name: string
         }[]
       }
+      get_my_notifications: {
+        Args: { _limit?: number; _offset?: number }
+        Returns: {
+          actor_id: string
+          created_at: string
+          entity_id: string
+          entity_type: string
+          event_type: string
+          id: string
+          is_unread: boolean
+          metadata: Json
+        }[]
+      }
       get_public_profile: {
         Args: { profile_slug: string }
         Returns: {
@@ -676,6 +740,7 @@ export type Database = {
           status: string
         }[]
       }
+      get_unread_notification_count: { Args: never; Returns: number }
       get_user_roles: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"][]
@@ -693,6 +758,18 @@ export type Database = {
         Args: { _org_id: string; _user_id: string }
         Returns: boolean
       }
+      log_audit_event: {
+        Args: {
+          _actor_id: string
+          _entity_id: string
+          _entity_type: string
+          _event_type: string
+          _metadata?: Json
+          _recipient_ids: string[]
+        }
+        Returns: undefined
+      }
+      mark_notifications_read: { Args: never; Returns: undefined }
       modify_appointment: {
         Args: {
           _appointment_id: string
