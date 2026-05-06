@@ -435,6 +435,22 @@ export function Calendar() {
     return date1.toDateString() === date2.toDateString();
   };
 
+  const getDateBounds = () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const maxDate = new Date(today);
+    maxDate.setMonth(maxDate.getMonth() + 2);
+    return { minDate: today, maxDate };
+  };
+
+  const isDisabledDate = (date: Date | null): boolean => {
+    if (!date) return false;
+    const { minDate, maxDate } = getDateBounds();
+    const d = new Date(date);
+    d.setHours(0, 0, 0, 0);
+    return d < minDate || d > maxDate;
+  };
+
   // Use only stored openings for per-date display
   const getOpeningsForDate = (date: Date) => {
     const dateStr = date.toISOString().split('T')[0];
@@ -830,19 +846,22 @@ export function Calendar() {
               <div className="grid grid-cols-7 gap-2">
                 {getDaysInMonth(currentDate).map((date, index) => {
                   const openingCount = date ? getOpeningsForDate(date).length : 0;
+                  const disabled = isDisabledDate(date);
                   return (
                     <div
                       key={index}
-                      className={`p-2 h-12 flex flex-col items-center justify-center text-sm cursor-pointer rounded-lg transition-colors relative ${
+                      className={`p-2 h-12 flex flex-col items-center justify-center text-sm rounded-lg transition-colors relative ${
                         !date
                           ? ''
+                          : disabled
+                          ? 'opacity-30 cursor-not-allowed text-muted-foreground'
                           : isToday(date)
-                          ? 'bg-calendar-today text-primary-foreground font-bold'
+                          ? 'bg-calendar-today text-primary-foreground font-bold cursor-pointer'
                           : isSameDate(date, selectedDate)
-                          ? 'bg-primary-light text-primary ring-2 ring-primary ring-offset-2 ring-offset-background'
-                          : 'hover:bg-secondary'
+                          ? 'bg-primary-light text-primary ring-2 ring-primary ring-offset-2 ring-offset-background cursor-pointer'
+                          : 'hover:bg-secondary cursor-pointer'
                       }`}
-                      onClick={() => { if (date) { setSelectedDate(date); setSelectedOpeningIds(new Set()); } }}
+                      onClick={() => { if (date && !disabled) { setSelectedDate(date); setSelectedOpeningIds(new Set()); } }}
                     >
                       <span>{date?.getDate()}</span>
                       {/* Show indicator with count for dates with openings */}
@@ -1138,6 +1157,8 @@ export function Calendar() {
                   <Input
                     type="date"
                     value={newOpening.dateRangeStart}
+                    min={new Date().toISOString().split('T')[0]}
+                    max={(() => { const d = new Date(); d.setMonth(d.getMonth() + 2); return d.toISOString().split('T')[0]; })()}
                     onChange={(e) => {
                       setNewOpening({...newOpening, dateRangeStart: e.target.value});
                       setErrors(prev => ({ ...prev, dateRangeStart: '' }));
@@ -1151,6 +1172,8 @@ export function Calendar() {
                   <Input
                     type="date"
                     value={newOpening.dateRangeEnd}
+                    min={newOpening.dateRangeStart || new Date().toISOString().split('T')[0]}
+                    max={(() => { const d = new Date(); d.setMonth(d.getMonth() + 2); return d.toISOString().split('T')[0]; })()}
                     onChange={(e) => {
                       setNewOpening({...newOpening, dateRangeEnd: e.target.value});
                       setErrors(prev => ({ ...prev, dateRangeEnd: '' }));
