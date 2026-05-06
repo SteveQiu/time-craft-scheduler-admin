@@ -1,4 +1,5 @@
 import React from 'react';
+import { ExternalLink } from 'lucide-react';
 import { PaymentMethodType, PaymentDetails } from '@/lib/payment/types';
 
 interface PaymentDisplayProps {
@@ -34,10 +35,10 @@ export function PaymentDisplay({ type, details }: PaymentDisplayProps) {
               href={`https://venmo.com/${username.replace(/^@/, '')}?txn=pay`}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-block text-sm font-medium px-3 py-1.5 rounded text-white break-all"
-              style={{ backgroundColor: '#3D95CE' }}
+              className="inline-flex items-center gap-2 text-sm font-medium px-5 py-2.5 rounded-md bg-black text-white hover:bg-neutral-800 break-all"
             >
               @{username.replace(/^@/, '')}
+              <ExternalLink className="h-4 w-4" />
             </a>
           )}
           {!username && phone && (
@@ -66,10 +67,10 @@ export function PaymentDisplay({ type, details }: PaymentDisplayProps) {
               href={`https://paypal.me/${username}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-block text-sm font-medium px-3 py-1.5 rounded text-white break-all"
-              style={{ backgroundColor: '#0070BA' }}
+              className="inline-flex items-center gap-2 text-sm font-medium px-5 py-2.5 rounded-md bg-black text-white hover:bg-neutral-800 break-all"
             >
               paypal.me/{username}
+              <ExternalLink className="h-4 w-4" />
             </a>
           )}
           {qr && (
@@ -118,8 +119,12 @@ export function PaymentDisplay({ type, details }: PaymentDisplayProps) {
       return (
         <div className="space-y-1">
           {email && (
-            <a href={`mailto:${email}`} className="text-sm text-primary underline">
+            <a 
+              href={`mailto:${email}`} 
+              className="inline-flex items-center gap-2 text-sm font-medium px-5 py-2.5 rounded-md bg-black text-white hover:bg-neutral-800 break-all"
+            >
               {email}
+              <ExternalLink className="h-4 w-4" />
             </a>
           )}
           {phone && <p className="text-sm text-muted-foreground">{phone}</p>}
