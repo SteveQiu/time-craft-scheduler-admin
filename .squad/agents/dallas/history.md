@@ -76,6 +76,10 @@
 - `allAvailableMethods` memo: deduplicates (provider + org), then filters by `accepted_payment_method_ids` if set; falls back to all if NULL/empty
 - Payment dialog now maps over `allAvailableMethods` flat list instead of separate org/provider sections
 
+### ⚠️ Import Safety Rule (learned May 2026)
+
+When refactoring imports (removing, renaming, or replacing), **always grep for ALL usages of the removed symbol** across the entire file before deleting it. Removing `Edit, Trash2` from lucide-react during a payment refactor broke Settings.tsx (blank page) because those icons were still used in the settings table actions — the refactor only scanned the payment section. Rule: `grep -n 'SymbolName'` in the file before any removal.
+
 ### Patterns & Preferences
 
 - Use Tailwind responsive utilities (`sm:`, `md:`, `lg:`) for breakpoint-driven layout
