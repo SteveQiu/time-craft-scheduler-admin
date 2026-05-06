@@ -30,7 +30,15 @@ export function PaymentDisplay({ type, details }: PaymentDisplayProps) {
       return (
         <div className="space-y-2">
           {username && (
-            <p className="text-sm text-muted-foreground">@{username.replace(/^@/, '')}</p>
+            <a
+              href={`https://venmo.com/${username.replace(/^@/, '')}?txn=pay`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block text-sm font-medium px-3 py-1.5 rounded text-white break-all"
+              style={{ backgroundColor: '#3D95CE' }}
+            >
+              @{username.replace(/^@/, '')}
+            </a>
           )}
           {!username && phone && (
             <p className="text-sm text-muted-foreground">{phone}</p>
