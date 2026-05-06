@@ -30,6 +30,12 @@
 - Venmo supports three sub-modes: username, phone, qr (base64 image); detected on edit via `data:image` prefix or phone regex
 - QR images stored as base64 in `details` field; displayed as `<img>` in card view for wechat and venmo-qr
 - Use toggle `<Button variant="outline/default">` trio for sub-selectors when RadioGroup isn't easily available
+- `payment_proofs` table: `id`, `appointment_id`, `customer_id`, `note` (text), `photo` (base64 JPEG), `created_at`, `updated_at`
+- Provider proof view: on-demand fetch (single query keyed by `providerViewProofAppointmentId`) — no bulk prefetch needed since provider clicks to view
+- Provider button condition: `canManage && appointment.user_id !== user?.id` — avoids showing both customer and provider buttons to same user
+- IIFE pattern (`{(() => { ... })()}`) used to compute `providerViewAppt` inline in JSX without polluting component scope
+- Bulk payment proof fetch: single `useQuery` keyed by `['payment-proofs-bulk', appointmentIds]`, selects only `appointment_id`, enabled when list is non-empty; result memoized into a `Set<string>` for O(1) per-card lookup
+- "Paid" badge: `<Badge variant="outline" className="text-green-600 border-green-600 dark:text-green-400 dark:border-green-400 text-xs">` placed inside existing `flex items-center space-x-3` div, right after status badge
 
 ### Patterns & Preferences
 
@@ -260,3 +266,42 @@
 - DialogDescription + DialogFooter added to dialog imports
 - Trash2 added to lucide-react imports
 - All new state at top of component, near collapsedWorkers
+
+### Appointment Confirmation Notifications (January 2025)
+
+**Task:** Polling-based browser notifications when user's appointments get confirmed
+
+**Implementation:**
+- Created `src/config/notificationConfig.ts` — single config object for all tuneable values
+  - `pollIntervalMs: 60_000` (60 seconds)
+  - `maxAppointmentsToCheck: 50`
+  - `lookbackDays: 30`
+  - `enabled: true` (feature flag)
+  - `notification.title`, `.body()`, `.icon`, `.autoCloseMs: 8_000`
+- Created `src/hooks/useAppointmentNotifications.ts` — polling hook
+  - Requests `Notification.permission` on mount if default
+  - Polls Supabase for confirmed appointments via `setInterval`
+  - Tracks seen IDs in `useRef<Set<string>>`
+  - Initial load: populates set WITHOUT firing (avoids spam on page load)
+  - Subsequent polls: fires notification for NEW confirmed appointments
+  - Query: `status='confirmed' && user_id=userId && date >= lookbackCutoff`
+  - Returns: `{ permissionStatus, requestPermission, isPolling, lastChecked }`
+- Updated `src/components/Appointments.tsx`:
+  - Imported hook + Bell icons (BellRing, BellOff, Bell) + Tooltip
+  - Mounted hook after `useUserRoles()` with `userId: user?.id, enabled: !isOrgView`
+  - Added notification indicator in page header (top-right, next to title)
+  - UI states:
+    - `granted`: green BellRing icon, tooltip "Notifications enabled"
+    - `denied`: gray BellOff icon, tooltip "Notifications blocked..."
+    - `default`: Bell icon + "Enable notifications" button
+  - Only shows for user view (hidden in org mode)
+
+**Key decisions:**
+- No Supabase Realtime — pure REST polling to avoid extra cost
+- Config file is flat + easy to edit (single source of tuneable values)
+- Hook handles ALL logic — no inline logic in component
+- Initial load populates seen set to prevent notification spam
+- Only shows for regular users, not org admins
+- Auto-closes after 8 seconds (configurable)
+
+**Type checking:** ✅ `npx tsc --noEmit` — no errors

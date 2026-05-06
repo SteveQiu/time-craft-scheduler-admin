@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRoles } from '@/hooks/useUserRoles';
@@ -10,11 +10,15 @@ import { Badge } from './ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from './ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Search, Filter, Calendar, Clock, User, MapPin, Check, X, CheckCircle, ChevronDown, ChevronUp, Loader2, Mail, Phone, Users, ArrowRightLeft } from 'lucide-react';
+import { Search, Filter, Calendar, Clock, User, MapPin, Check, X, CheckCircle, ChevronDown, ChevronUp, Loader2, Mail, Phone, Users, ArrowRightLeft, CalendarPlus, BellRing, BellOff, Bell, CreditCard, Send, ImageIcon } from 'lucide-react';
+import { Textarea } from './ui/textarea';
 import { useOrgWorkers } from '@/hooks/useOrgWorkers';
 import { toast } from 'sonner';
 import { ModifyAppointmentDialog } from './ModifyAppointmentDialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
+import { useAppointmentNotifications } from '@/hooks/useAppointmentNotifications';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 
 interface Appointment {
   id: string;
@@ -41,6 +45,103 @@ interface Appointment {
   approved_by_name?: string | null;
 }
 
+interface PaymentMethod {
+  id: string;
+  user_id: string;
+  label: string;
+  type: string;
+  details: string | null;
+  is_default: boolean;
+  created_at: string;
+}
+
+const PAYMENT_TYPE_LABELS: Record<string, string> = {
+  cash: 'Cash',
+  paypal: 'PayPal',
+  venmo: 'Venmo',
+  email_transfer: 'Email Transfer',
+  wechat: 'WeChat',
+};
+
+// Calendar export helpers
+const formatDateForCalendar = (date: string, time: string): Date => {
+  const [year, month, day] = date.split('-');
+  const [hour, minute] = time.split(':');
+  return new Date(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(hour), parseInt(minute));
+};
+
+const toUTCString = (date: Date): string => {
+  return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+};
+
+const toGoogleCalendarUrl = (appointment: Appointment): string => {
+  const startDate = formatDateForCalendar(appointment.date, appointment.start_time);
+  const endDate = formatDateForCalendar(appointment.date, appointment.end_time);
+  
+  const params = new URLSearchParams({
+    action: 'TEMPLATE',
+    text: `${appointment.service} with ${appointment.worker}`,
+    dates: `${toUTCString(startDate)}/${toUTCString(endDate)}`,
+    details: appointment.notes || `Appointment for ${appointment.service}`,
+    location: appointment.location || '',
+  });
+  
+  return `https://calendar.google.com/calendar/render?${params.toString()}`;
+};
+
+const toOutlookUrl = (appointment: Appointment): string => {
+  const startDate = formatDateForCalendar(appointment.date, appointment.start_time);
+  const endDate = formatDateForCalendar(appointment.date, appointment.end_time);
+  
+  const params = new URLSearchParams({
+    subject: `${appointment.service} with ${appointment.worker}`,
+    startdt: startDate.toISOString(),
+    enddt: endDate.toISOString(),
+    body: appointment.notes || `Appointment for ${appointment.service}`,
+    location: appointment.location || '',
+    path: '/calendar/action/compose',
+    rru: 'addevent',
+  });
+  
+  return `https://outlook.live.com/calendar/0/deeplink/compose?${params.toString()}`;
+};
+
+const toICSContent = (appointments: Appointment[]): string => {
+  const events = appointments.map(appointment => {
+    const startDate = formatDateForCalendar(appointment.date, appointment.start_time);
+    const endDate = formatDateForCalendar(appointment.date, appointment.end_time);
+    
+    return `BEGIN:VEVENT
+DTSTART:${toUTCString(startDate)}
+DTEND:${toUTCString(endDate)}
+SUMMARY:${appointment.service} with ${appointment.worker}
+DESCRIPTION:${appointment.notes || `Appointment for ${appointment.service}`}
+LOCATION:${appointment.location || ''}
+END:VEVENT`;
+  }).join('\n');
+  
+  return `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//TimeCraft//EN
+${events}
+END:VCALENDAR`;
+};
+
+const downloadICS = (appointments: Appointment[]) => {
+  const content = toICSContent(appointments);
+  const blob = new Blob([content], { type: 'text/calendar;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = appointments.length === 1 
+    ? `appointment-${appointments[0].id}.ics` 
+    : `appointments-${appointments.length}.ics`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+};
+
 export function Appointments() {
   const { workers, acceptedWorkers } = useOrgWorkers();
   const navigate = useNavigate();
@@ -48,6 +149,12 @@ export function Appointments() {
   const { user } = useAuth();
   const { isOrganization, isInternalDev } = useUserRoles();
   const queryClient = useQueryClient();
+  
+  // Notification polling hook
+  const { permissionStatus, requestPermission } = useAppointmentNotifications({
+    userId: user?.id,
+    enabled: !isOrganization && !isInternalDev, // Only for regular users, not org view
+  });
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [workerFilter, setWorkerFilter] = useState('all');
@@ -60,8 +167,17 @@ export function Appointments() {
   const [bulkModifyAvailableOpenings, setBulkModifyAvailableOpenings] = useState<any[]>([]);
   const [bulkModifyLoadingOpenings, setBulkModifyLoadingOpenings] = useState(false);
   const [bulkModifyModifying, setBulkModifyModifying] = useState<string | null>(null);
+  const [paymentInfoProviderId, setPaymentInfoProviderId] = useState<string | null>(null);
+  const [paymentInfoProviderName, setPaymentInfoProviderName] = useState<string>('');
+  const [paymentProofNote, setPaymentProofNote] = useState('');
+  const [paymentProofPhoto, setPaymentProofPhoto] = useState<string | null>(null);
+  const [paymentProofPhotoName, setPaymentProofPhotoName] = useState('');
+  const [isSubmittingProof, setIsSubmittingProof] = useState(false);
+  const [proofSubmitted, setProofSubmitted] = useState(false);
+  const [paymentProofAppointmentId, setPaymentProofAppointmentId] = useState<string | null>(null);
+  const [providerViewProofAppointmentId, setProviderViewProofAppointmentId] = useState<string | null>(null);
 
-  const modeParam = searchParams.get('mode');
+  const modeParam= searchParams.get('mode');
   const isOrgView = modeParam === 'org' && (isOrganization || isInternalDev);
 
   const { data: appointments = [], isLoading } = useQuery({
@@ -126,7 +242,158 @@ export function Appointments() {
     enabled: !!user,
   });
 
-  const getStatusColor = (status: string) => {
+  const appointmentIds = useMemo(() => appointments.map(a => a.id), [appointments]);
+
+  const { data: submittedProofs } = useQuery({
+    queryKey: ['payment-proofs-bulk', appointmentIds],
+    enabled: appointmentIds.length > 0,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('payment_proofs')
+        .select('appointment_id')
+        .in('appointment_id', appointmentIds);
+      return data ?? [];
+    },
+  });
+
+  const paidAppointmentIds = useMemo(
+    () => new Set((submittedProofs ?? []).map((p: { appointment_id: string }) => p.appointment_id)),
+    [submittedProofs]
+  );
+
+  const { data: providerPayments = [], isFetching: loadingProviderPayments } = useQuery({
+    queryKey: ['provider-payment-methods', paymentInfoProviderId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('payment_methods')
+        .select('*')
+        .eq('user_id', paymentInfoProviderId!)
+        .order('is_default', { ascending: false })
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data as PaymentMethod[];
+    },
+    enabled: !!paymentInfoProviderId,
+  });
+
+  const { data: existingPaymentProof, isFetching: loadingExistingProof } = useQuery({
+    queryKey: ['payment-proof', paymentProofAppointmentId],
+    enabled: !!paymentProofAppointmentId,
+    queryFn: async () => {
+      if (!paymentProofAppointmentId) return null;
+      const { data } = await supabase
+        .from('payment_proofs')
+        .select('*')
+        .eq('appointment_id', paymentProofAppointmentId)
+        .maybeSingle();
+      return data ?? null;
+    },
+  });
+
+  const { data: providerViewProof, isFetching: loadingProviderProof } = useQuery({
+    queryKey: ['payment-proof', providerViewProofAppointmentId],
+    enabled: !!providerViewProofAppointmentId,
+    queryFn: async () => {
+      if (!providerViewProofAppointmentId) return null;
+      const { data } = await supabase
+        .from('payment_proofs')
+        .select('*')
+        .eq('appointment_id', providerViewProofAppointmentId)
+        .maybeSingle();
+      return data ?? null;
+    },
+  });
+
+  // Pre-fill form when existing proof loaded (and user hasn't just submitted)
+  useEffect(() => {
+    if (existingPaymentProof && paymentProofAppointmentId) {
+      setPaymentProofNote(existingPaymentProof.note ?? '');
+      setPaymentProofPhoto(existingPaymentProof.photo ?? null);
+      setProofSubmitted(true);
+    }
+  }, [existingPaymentProof, paymentProofAppointmentId]);
+
+  // Clear form when dialog closes
+  useEffect(() => {
+    if (!paymentProofAppointmentId) {
+      setPaymentProofNote('');
+      setPaymentProofPhoto(null);
+      setPaymentProofPhotoName('');
+      setProofSubmitted(false);
+    }
+  }, [paymentProofAppointmentId]);
+
+  const handlePaymentPhotoUpload= (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 20 * 1024 * 1024) {
+      toast.error('Photo must be under 20MB');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const img = new Image();
+      img.onload = () => {
+        const MAX = 800;
+        let { width, height } = img;
+        if (width > MAX || height > MAX) {
+          if (width > height) { height = Math.round((height * MAX) / width); width = MAX; }
+          else { width = Math.round((width * MAX) / height); height = MAX; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        canvas.getContext('2d')!.drawImage(img, 0, 0, width, height);
+        // Start at quality 0.85, reduce until under 1MB
+        let quality = 0.85;
+        let dataUrl = canvas.toDataURL('image/jpeg', quality);
+        while (dataUrl.length > 1 * 1024 * 1024 && quality > 0.1) {
+          quality -= 0.1;
+          dataUrl = canvas.toDataURL('image/jpeg', quality);
+        }
+        setPaymentProofPhoto(dataUrl);
+        setPaymentProofPhotoName(file.name);
+      };
+      img.src = ev.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleSubmitPaymentProof = async () => {
+    if (!paymentProofAppointmentId) return;
+    setIsSubmittingProof(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      const { error } = await supabase
+        .from('payment_proofs')
+        .upsert({
+          appointment_id: paymentProofAppointmentId,
+          customer_id: user.id,
+          note: paymentProofNote || null,
+          photo: paymentProofPhoto || null,
+        }, { onConflict: 'appointment_id' });
+
+      if (error) throw error;
+
+      // Also notify provider via audit event (for their notification feed)
+      await supabase.rpc('log_audit_event', {
+        _event_type: 'payment.proof_submitted',
+        _entity_id: paymentProofAppointmentId,
+        _metadata: { note: paymentProofNote, customer_name: user.email },
+      });
+
+      queryClient.invalidateQueries({ queryKey: ['payment-proof', paymentProofAppointmentId] });
+      setProofSubmitted(true);
+    } catch (err: any) {
+      console.error('Failed to submit payment proof:', err);
+    } finally {
+      setIsSubmittingProof(false);
+    }
+  };
+
+  const getStatusColor= (status: string) => {
     switch (status) {
       case 'confirmed': return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
       case 'pending': return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400';
@@ -301,7 +568,7 @@ export function Appointments() {
     const toModify = appointments.filter(a =>
       selectedIds.has(a.id) &&
       (a.status === 'pending' || a.status === 'confirmed') &&
-      (isOrgView || a.provider_id === user.id)
+      (isOrgView || a.provider_id === user.id || a.user_id === user.id)
     );
     if (toModify.length === 0) return;
     setBulkModifyQueue(toModify);
@@ -465,18 +732,38 @@ export function Appointments() {
                     />
                     {renderBookerInfo(apt)}
                   </div>
-                  {aptIsProvider && (
-                    <div className="flex items-center space-x-2">
-                      <Button variant="default" size="sm" onClick={() => handleApprove(apt.id)}>
-                        <Check className="h-3 w-3 mr-1" />
-                        Approve
-                      </Button>
-                      <Button variant="outline" size="sm" onClick={() => handleCancel(apt.id)}>
-                        <X className="h-3 w-3 mr-1" />
-                        Reject
-                      </Button>
-                    </div>
-                  )}
+                  <div className="flex items-center space-x-2">
+                    {aptIsProvider ? (
+                      <>
+                        <Button variant="default" size="sm" onClick={() => handleApprove(apt.id)}>
+                          <Check className="h-3 w-3 mr-1" />
+                          Approve
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => handleCancel(apt.id)}>
+                          <X className="h-3 w-3 mr-1" />
+                          Reject
+                        </Button>
+                      </>
+                    ) : null}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm">
+                          <CalendarPlus className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => window.open(toGoogleCalendarUrl(apt), '_blank')}>
+                          Google Calendar
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => window.open(toOutlookUrl(apt), '_blank')}>
+                          Outlook Calendar
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => downloadICS([apt])}>
+                          Download .ics
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                 </div>
               );
             })}
@@ -486,7 +773,7 @@ export function Appointments() {
     );
   };
 
-  const renderAppointmentCard = (appointment: Appointment) => {
+  const renderAppointmentCard = (appointment: Appointment, isInactive = false) => {
     const canManage = isOrgView || appointment.provider_id === user?.id;
     
     return (
@@ -494,18 +781,20 @@ export function Appointments() {
         <CardContent className="p-6 space-y-4">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between space-y-4 lg:space-y-0">
             <div className="flex items-center space-x-4">
-              <div onClick={(e) => e.stopPropagation()}>
-                <Checkbox
-                  checked={selectedIds.has(appointment.id)}
-                  onCheckedChange={(checked) => {
-                    setSelectedIds(prev => {
-                      const next = new Set(prev);
-                      checked ? next.add(appointment.id) : next.delete(appointment.id);
-                      return next;
-                    });
-                  }}
-                />
-              </div>
+              {!isInactive && (
+                <div onClick={(e) => e.stopPropagation()}>
+                  <Checkbox
+                    checked={selectedIds.has(appointment.id)}
+                    onCheckedChange={(checked) => {
+                      setSelectedIds(prev => {
+                        const next = new Set(prev);
+                        checked ? next.add(appointment.id) : next.delete(appointment.id);
+                        return next;
+                      });
+                    }}
+                  />
+                </div>
+              )}
               <div
                 className={`w-12 h-12 bg-primary rounded-full flex items-center justify-center ${appointment.provider_slug ? 'cursor-pointer hover:ring-2 hover:ring-primary transition-all' : ''}`}
                 onClick={() => appointment.provider_slug && navigate(`/profile/${appointment.provider_slug}`)}
@@ -546,6 +835,62 @@ export function Appointments() {
                 <Badge className={getStatusColor(appointment.status)}>
                   {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
                 </Badge>
+                {paidAppointmentIds.has(appointment.id) && (
+                  <Badge variant="outline" className="text-green-600 border-green-600 dark:text-green-400 dark:border-green-400 text-xs">
+                    Paid
+                  </Badge>
+                )}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm">
+                      <CalendarPlus className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => window.open(toGoogleCalendarUrl(appointment), '_blank')}>
+                      Google Calendar
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => window.open(toOutlookUrl(appointment), '_blank')}>
+                      Outlook Calendar
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => downloadICS([appointment])}>
+                      Download .ics
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                {appointment.user_id === user?.id && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setPaymentInfoProviderId(appointment.provider_id);
+                          setPaymentInfoProviderName(appointment.worker);
+                          setPaymentProofAppointmentId(appointment.id);
+                          setProofSubmitted(false);
+                        }}
+                      >
+                        <CreditCard className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>How to Pay</TooltipContent>
+                  </Tooltip>
+                )}
+                {canManage && appointment.user_id !== user?.id && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setProviderViewProofAppointmentId(appointment.id)}
+                      >
+                        <CreditCard className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>View Payment Proof</TooltipContent>
+                  </Tooltip>
+                )}
               </div>
             </div>
           </div>
@@ -591,6 +936,32 @@ export function Appointments() {
             {isOrgView ? 'Review and manage all bookings' : 'Your booked reservations'}
           </p>
         </div>
+        
+        {/* Notification status indicator */}
+        {!isOrgView && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="flex items-center gap-2">
+                  {permissionStatus === 'granted' && (
+                    <BellRing className="h-5 w-5 text-green-600 dark:text-green-400" />
+                  )}
+                  {permissionStatus === 'denied' && (
+                    <BellOff className="h-5 w-5 text-gray-400 dark:text-gray-600" />
+                  )}
+                  {permissionStatus === 'default' && (
+                    <Bell className="h-5 w-5 text-amber-500 dark:text-amber-400" />
+                  )}
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                {permissionStatus === 'granted' && 'Notifications enabled'}
+                {permissionStatus === 'denied' && 'Notifications blocked — enable in browser settings'}
+                {permissionStatus === 'default' && 'Waiting for notification permission response'}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
       </div>
 
       {/* Filters */}
@@ -677,6 +1048,7 @@ export function Appointments() {
                     const isProviderOfAny = selectedAppts.some(a => a.provider_id === user?.id);
                     const hasConfirmed = selectedAppts.some(a => a.status === 'confirmed');
                     const canManageAny = selectedAppts.some(a => isOrgView || a.provider_id === user?.id);
+                    const canModifyAny = selectedAppts.some(a => isOrgView || a.provider_id === user?.id || a.user_id === user?.id);
                     return (
                       <>
                         {hasPending && isProviderOfAny && (
@@ -689,9 +1061,9 @@ export function Appointments() {
                             <CheckCircle className="h-3 w-3 mr-1" /> Complete ({selectedAppts.filter(a => a.status === 'confirmed' && (isOrgView || a.provider_id === user?.id)).length})
                           </Button>
                         )}
-                        {canManageAny && (hasPending || hasConfirmed) && (
+                        {canModifyAny && (hasPending || hasConfirmed) && (
                           <Button size="sm" variant="outline" disabled={isBulkActing} onClick={handleStartBulkModify}>
-                            <ArrowRightLeft className="h-3 w-3 mr-1" /> Modify ({selectedAppts.filter(a => (a.status === 'pending' || a.status === 'confirmed') && (isOrgView || a.provider_id === user?.id)).length})
+                            <ArrowRightLeft className="h-3 w-3 mr-1" /> Modify ({selectedAppts.filter(a => (a.status === 'pending' || a.status === 'confirmed') && (isOrgView || a.provider_id === user?.id || a.user_id === user?.id)).length})
                           </Button>
                         )}
                         {(hasPending || hasConfirmed) && (
@@ -706,6 +1078,16 @@ export function Appointments() {
                             );
                           })()
                         )}
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          onClick={() => {
+                            const selectedAppts = appointments.filter(a => selectedIds.has(a.id));
+                            downloadICS(selectedAppts);
+                          }}
+                        >
+                          <CalendarPlus className="h-3 w-3 mr-1" /> Add to Calendar ({selectedAppts.length})
+                        </Button>
                       </>
                     );
                   })()}
@@ -748,7 +1130,7 @@ export function Appointments() {
             </Button>
             {showInactive && (
               inactiveAppointments.length > 0 ? (
-                <div className="space-y-4">{inactiveAppointments.map(renderAppointmentCard)}</div>
+                <div className="space-y-4">{inactiveAppointments.map(a => renderAppointmentCard(a, true))}</div>
               ) : (
                 <Card className="shadow-soft border-card-border">
                   <CardContent className="text-center py-12">
@@ -828,6 +1210,225 @@ export function Appointments() {
           </DialogContent>
         </Dialog>
       )}
+      {/* Payment Info Dialog */}
+      <Dialog open={!!paymentInfoProviderId} onOpenChange={(open) => {
+        if (!open) {
+          setPaymentInfoProviderId(null);
+          setProofSubmitted(false);
+          setPaymentProofNote('');
+          setPaymentProofPhoto(null);
+          setPaymentProofPhotoName('');
+        }
+      }}>
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CreditCard className="h-5 w-5" />
+              How to Pay — {paymentInfoProviderName}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            {loadingProviderPayments ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : providerPayments.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-6">
+                This provider hasn't configured payment methods yet.
+              </p>
+            ) : (
+              providerPayments.map((pm) => (
+                <div key={pm.id} className="border border-border rounded-lg p-4 space-y-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-semibold text-foreground">{pm.label}</span>
+                    <Badge variant="outline">{PAYMENT_TYPE_LABELS[pm.type] || pm.type}</Badge>
+                    {pm.is_default && <Badge variant="secondary">Default</Badge>}
+                  </div>
+                  {pm.details && (
+                    <div>
+                      {(pm.type === 'wechat' || (pm.type === 'venmo' && pm.details.startsWith('data:image'))) ? (
+                        <img src={pm.details} alt="Payment QR Code" className="w-40 h-40 object-contain rounded border" />
+                      ) : pm.type === 'paypal' ? (
+                        pm.details.startsWith('http') ? (
+                          <a href={pm.details} target="_blank" rel="noopener noreferrer" className="text-sm text-primary underline break-all">
+                            {pm.details}
+                          </a>
+                        ) : pm.details.includes('@') ? (
+                          <a href={`mailto:${pm.details}`} className="text-sm text-primary underline">
+                            {pm.details}
+                          </a>
+                        ) : (
+                          <p className="text-sm text-muted-foreground">{pm.details}</p>
+                        )
+                      ) : pm.type === 'email_transfer' && pm.details.includes('@') ? (
+                        <a href={`mailto:${pm.details}`} className="text-sm text-primary underline">
+                          {pm.details}
+                        </a>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">{pm.details}</p>
+                      )}
+                    </div>
+                  )}
+                  {!pm.details && pm.type === 'cash' && (
+                    <p className="text-sm text-muted-foreground">Cash accepted</p>
+                  )}
+                </div>
+              ))
+            )}
+
+            {/* Payment Proof Section */}
+            {!loadingProviderPayments && (
+              <>
+                <div className="border-t border-border pt-4">
+                  <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                    <Send className="h-4 w-4" />
+                    Confirm Payment to Provider
+                  </h4>
+                  {proofSubmitted ? (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 rounded-lg p-3">
+                        <CheckCircle className="h-4 w-4 flex-shrink-0" />
+                        <span className="flex-1">Provider notified!</span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 px-2 text-xs text-green-700 dark:text-green-300 hover:bg-green-100 dark:hover:bg-green-900/40"
+                          onClick={() => setProofSubmitted(false)}
+                        >
+                          Edit
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {loadingExistingProof ? (
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                          Loading previous submission…
+                        </div>
+                      ) : existingPaymentProof && (
+                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/50 rounded px-2 py-1">
+                          <CheckCircle className="h-3 w-3 text-green-500" />
+                          Previously submitted — editing will resend to provider
+                        </div>
+                      )}
+                      <div>
+                        <label className="text-xs text-muted-foreground mb-1 block">
+                          Payment note <span className="text-destructive">*</span>
+                        </label>
+                        <Textarea
+                          placeholder="e.g. Sent $50 via PayPal on May 5. Transaction ID: ..."
+                          value={paymentProofNote}
+                          onChange={(e) => setPaymentProofNote(e.target.value)}
+                          rows={3}
+                          className="resize-none text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs text-muted-foreground mb-1 block">
+                          Attach payment screenshot (optional — auto-compressed to 800×800, &lt;1MB)
+                        </label>
+                        {paymentProofPhoto ? (
+                          <div className="flex items-center gap-2">
+                            <img src={paymentProofPhoto} alt="Payment proof" className="w-16 h-16 object-cover rounded border" />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs text-foreground truncate">{paymentProofPhotoName}</p>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-destructive hover:text-destructive h-6 px-0 text-xs"
+                                onClick={() => { setPaymentProofPhoto(null); setPaymentProofPhotoName(''); }}
+                              >
+                                Remove
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <label className="flex items-center gap-2 cursor-pointer border border-dashed border-border rounded-lg p-3 hover:bg-muted/50 transition-colors">
+                            <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-sm text-muted-foreground">Click to attach screenshot</span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={handlePaymentPhotoUpload}
+                            />
+                          </label>
+                        )}
+                      </div>
+                      <Button
+                        onClick={handleSubmitPaymentProof}
+                        disabled={isSubmittingProof || !paymentProofNote.trim()}
+                        className="w-full"
+                        size="sm"
+                      >
+                        {isSubmittingProof ? (
+                          <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Sending…</>
+                        ) : existingPaymentProof ? (
+                          <><Send className="h-4 w-4 mr-2" />Update & Resend to Provider</>
+                        ) : (
+                          <><Send className="h-4 w-4 mr-2" />Submit Payment Update</>
+                        )}
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+      {/* Provider Payment Proof Dialog */}
+      {(() => {
+        const providerViewAppt = providerViewProofAppointmentId
+          ? appointments.find(a => a.id === providerViewProofAppointmentId)
+          : null;
+        return (
+          <Dialog open={!!providerViewProofAppointmentId} onOpenChange={(open) => {
+            if (!open) setProviderViewProofAppointmentId(null);
+          }}>
+            <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <CreditCard className="h-5 w-5" />
+                  Payment Proof{providerViewAppt?.booker_name ? ` — ${providerViewAppt.booker_name}` : ''}
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-2">
+                {loadingProviderProof ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                  </div>
+                ) : !providerViewProof ? (
+                  <p className="text-sm text-muted-foreground text-center py-6">
+                    No payment proof submitted yet.
+                  </p>
+                ) : (
+                  <div className="space-y-4">
+                    {providerViewProof.note && (
+                      <div>
+                        <p className="text-xs font-medium text-muted-foreground mb-1">Note from customer</p>
+                        <div className="bg-muted/40 border border-border rounded-lg px-3 py-2 text-sm text-foreground">
+                          {providerViewProof.note}
+                        </div>
+                      </div>
+                    )}
+                    {providerViewProof.photo && (
+                      <div>
+                        <p className="text-xs font-medium text-muted-foreground mb-1">Payment screenshot</p>
+                        <img src={providerViewProof.photo} alt="Payment proof" className="max-w-full rounded border" />
+                      </div>
+                    )}
+                    <p className="text-xs text-muted-foreground">
+                      Submitted {new Date(providerViewProof.created_at).toLocaleString()}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
+        );
+      })()}
     </div>
   );
 }
