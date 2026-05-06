@@ -155,8 +155,8 @@ export function Calendar() {
     setEditingOpening(opening);
     setEditForm({
       service: opening.service,
-      startTime: opening.start_time,
-      endTime: opening.end_time,
+      startTime: opening.start_time.slice(0, 5),
+      endTime: opening.end_time.slice(0, 5),
       isFree: Number(opening.hourly_rate) === 0,
       hourlyRate: Number(opening.hourly_rate),
       acceptedPaymentMethodIds: opening.accepted_payment_method_ids ?? [],
