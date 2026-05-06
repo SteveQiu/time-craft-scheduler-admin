@@ -16,6 +16,7 @@ import { useOrgWorkers } from '@/hooks/useOrgWorkers';
 import { toast } from 'sonner';
 import { ModifyAppointmentDialog } from './ModifyAppointmentDialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/tabs';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
 import { useAppointmentNotifications } from '@/hooks/useAppointmentNotifications';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
@@ -1281,21 +1282,35 @@ export function Appointments() {
                 This provider hasn't configured payment methods yet.
               </p>
             ) : (
-              <div className="space-y-3">
+              <Tabs
+                defaultValue={
+                  (allAvailableMethods.find(m => m.is_default) ?? allAvailableMethods[0])?.id
+                }
+              >
+                <TabsList className="flex flex-wrap h-auto gap-1 mb-3">
+                  {allAvailableMethods.map((pm) => (
+                    <TabsTrigger key={pm.id} value={pm.id} className="text-xs">
+                      {pm.label || getMethodLabel(pm.type)}
+                      {pm.is_default && <span className="ml-1 opacity-60">★</span>}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
                 {allAvailableMethods.map((pm) => (
-                  <div key={pm.id} className="border border-border rounded-lg p-4 space-y-2">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-semibold text-foreground">{pm.label}</span>
-                      <Badge variant="outline">{getMethodLabel(pm.type)}</Badge>
-                      {pm.is_default && <Badge variant="secondary">Default</Badge>}
+                  <TabsContent key={pm.id} value={pm.id} className="mt-0">
+                    <div className="border border-border rounded-lg p-4 space-y-2">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-semibold text-foreground">{pm.label}</span>
+                        <Badge variant="outline">{getMethodLabel(pm.type)}</Badge>
+                        {pm.is_default && <Badge variant="secondary">Default</Badge>}
+                      </div>
+                      <PaymentDisplay
+                        type={pm.type}
+                        details={deserializeDetailsByType(pm.type, pm.details)}
+                      />
                     </div>
-                    <PaymentDisplay
-                      type={pm.type}
-                      details={deserializeDetailsByType(pm.type, pm.details)}
-                    />
-                  </div>
+                  </TabsContent>
                 ))}
-              </div>
+              </Tabs>
             )}
 
             {/* Payment Proof Section */}
