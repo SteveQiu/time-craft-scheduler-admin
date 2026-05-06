@@ -14,7 +14,10 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRoles } from '@/hooks/useUserRoles';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { PAYMENT_METHOD_CONFIGS, getMethodConfig } from '@/lib/payment/methods';
+import { usePaymentMethod } from '@/hooks/usePaymentMethod';
+import { PaymentMethodForm } from '@/components/payment/PaymentMethodForm';
 import { useOrgWorkers } from '@/hooks/useOrgWorkers';
 import { parseLocation, formatLocation, serializeLocation, type LocationFields } from '@/lib/address';
 import { AddressInput } from '@/components/ui/AddressInput';
@@ -109,6 +112,34 @@ export function Calendar() {
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
   const [safeIdsToDelete, setSafeIdsToDelete] = useState<string[]>([]);
   const [confirmedOpeningIds, setConfirmedOpeningIds] = useState<Set<string>>(new Set());
+
+  const queryClient = useQueryClient();
+
+  // Payment method dialog state (for adding from within opening forms)
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [paymentFormLabel, setPaymentFormLabel] = useState('');
+  const [paymentFormType, setPaymentFormType] = useState('cash');
+  const { details: paymentDetails, reset: resetPaymentDetails, serialize: serializePaymentDetails } = usePaymentMethod();
+
+  const savePaymentFromOpening = useMutation({
+    mutationFn: async () => {
+      if (!user) throw new Error('Not authenticated');
+      const details = serializePaymentDetails();
+      const { error } = await supabase
+        .from('payment_methods')
+        .insert({ user_id: user.id, label: paymentFormLabel, type: paymentFormType, details });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['provider-payment-methods-for-opening', user?.id] });
+      setShowPaymentDialog(false);
+      setPaymentFormLabel('');
+      setPaymentFormType('cash');
+      resetPaymentDetails();
+      toast.success('Payment acceptance method added');
+    },
+    onError: (err: any) => toast.error(err.message),
+  });
 
   // Fetch saved workplace addresses
   const { data: savedAddresses = [] } = useQuery({
@@ -1342,31 +1373,35 @@ export function Calendar() {
             <div className="space-y-2">
               <Label>Accepted Payment Methods</Label>
               <p className="text-xs text-muted-foreground">Customer will choose from these methods when paying</p>
-              {providerPaymentMethods.length === 0 ? (
-                <p className="text-xs text-muted-foreground italic">No payment methods configured. Set them up in Settings.</p>
-              ) : (
-                <div className="space-y-2">
-                  {providerPaymentMethods.map((pm) => (
-                    <div key={pm.id} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`pm-new-${pm.id}`}
-                        checked={newOpening.acceptedPaymentMethodIds.includes(pm.id)}
-                        onCheckedChange={(checked) => {
-                          setNewOpening(prev => ({
-                            ...prev,
-                            acceptedPaymentMethodIds: checked
-                              ? [...prev.acceptedPaymentMethodIds, pm.id]
-                              : prev.acceptedPaymentMethodIds.filter(id => id !== pm.id),
-                          }));
-                        }}
-                      />
-                      <label htmlFor={`pm-new-${pm.id}`} className="text-sm cursor-pointer">
-                        {pm.label} <span className="text-muted-foreground">({pm.type})</span>
-                      </label>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <div className="space-y-2">
+                {providerPaymentMethods.map((pm) => (
+                  <div key={pm.id} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`pm-new-${pm.id}`}
+                      checked={newOpening.acceptedPaymentMethodIds.includes(pm.id)}
+                      onCheckedChange={(checked) => {
+                        setNewOpening(prev => ({
+                          ...prev,
+                          acceptedPaymentMethodIds: checked
+                            ? [...prev.acceptedPaymentMethodIds, pm.id]
+                            : prev.acceptedPaymentMethodIds.filter(id => id !== pm.id),
+                        }));
+                      }}
+                    />
+                    <label htmlFor={`pm-new-${pm.id}`} className="text-sm cursor-pointer">
+                      {pm.label} <span className="text-muted-foreground">({pm.type})</span>
+                    </label>
+                  </div>
+                ))}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => { setPaymentFormLabel(''); setPaymentFormType('cash'); resetPaymentDetails(); setShowPaymentDialog(true); }}
+                >
+                  <Plus className="h-3 w-3 mr-1" /> Add Payment Acceptance Method
+                </Button>
+              </div>
             </div>
 
             <div className="flex justify-end space-x-2 pt-4">
@@ -1523,37 +1558,82 @@ export function Calendar() {
             <div className="space-y-2">
               <Label>Accepted Payment Methods</Label>
               <p className="text-xs text-muted-foreground">Customer will choose from these methods when paying</p>
-              {providerPaymentMethods.length === 0 ? (
-                <p className="text-xs text-muted-foreground italic">No payment methods configured. Set them up in Settings.</p>
-              ) : (
-                <div className="space-y-2">
-                  {providerPaymentMethods.map((pm) => (
-                    <div key={pm.id} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`pm-edit-${pm.id}`}
-                        checked={editForm.acceptedPaymentMethodIds.includes(pm.id)}
-                        onCheckedChange={(checked) => {
-                          setEditForm(prev => ({
-                            ...prev,
-                            acceptedPaymentMethodIds: checked
-                              ? [...prev.acceptedPaymentMethodIds, pm.id]
-                              : prev.acceptedPaymentMethodIds.filter(id => id !== pm.id),
-                          }));
-                        }}
-                      />
-                      <label htmlFor={`pm-edit-${pm.id}`} className="text-sm cursor-pointer">
-                        {pm.label} <span className="text-muted-foreground">({pm.type})</span>
-                      </label>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <div className="space-y-2">
+                {providerPaymentMethods.map((pm) => (
+                  <div key={pm.id} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`pm-edit-${pm.id}`}
+                      checked={editForm.acceptedPaymentMethodIds.includes(pm.id)}
+                      onCheckedChange={(checked) => {
+                        setEditForm(prev => ({
+                          ...prev,
+                          acceptedPaymentMethodIds: checked
+                            ? [...prev.acceptedPaymentMethodIds, pm.id]
+                            : prev.acceptedPaymentMethodIds.filter(id => id !== pm.id),
+                        }));
+                      }}
+                    />
+                    <label htmlFor={`pm-edit-${pm.id}`} className="text-sm cursor-pointer">
+                      {pm.label} <span className="text-muted-foreground">({pm.type})</span>
+                    </label>
+                  </div>
+                ))}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => { setPaymentFormLabel(''); setPaymentFormType('cash'); resetPaymentDetails(); setShowPaymentDialog(true); }}
+                >
+                  <Plus className="h-3 w-3 mr-1" /> Add Payment Acceptance Method
+                </Button>
+              </div>
             </div>
 
             <div className="flex justify-end space-x-2 pt-4">
               <Button variant="outline" onClick={() => setEditingOpening(null)}>Cancel</Button>
               <Button onClick={saveEditOpening} disabled={isEditSaving}>
                 {isEditSaving ? 'Saving...' : 'Save Changes'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Payment Method Dialog (from within opening form) */}
+      <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add Payment Acceptance Method</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-4">
+            <div className="space-y-2">
+              <Label>Label</Label>
+              <Input
+                placeholder="e.g. My PayPal, Personal Venmo"
+                value={paymentFormLabel}
+                onChange={(e) => setPaymentFormLabel(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Type</Label>
+              <Select value={paymentFormType} onValueChange={(v) => { setPaymentFormType(v); resetPaymentDetails(); }}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {PAYMENT_METHOD_CONFIGS.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>{c.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {(() => {
+              const config = getMethodConfig(paymentFormType);
+              if (!config) return null;
+              return <PaymentMethodForm config={config} value={paymentDetails} onChange={resetPaymentDetails} />;
+            })()}
+            <div className="flex justify-end gap-2 pt-4">
+              <Button variant="outline" onClick={() => setShowPaymentDialog(false)}>Cancel</Button>
+              <Button onClick={() => savePaymentFromOpening.mutate()} disabled={!paymentFormLabel || savePaymentFromOpening.isPending}>
+                {savePaymentFromOpening.isPending ? 'Saving...' : 'Save'}
               </Button>
             </div>
           </div>
