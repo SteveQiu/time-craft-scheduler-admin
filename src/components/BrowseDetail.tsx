@@ -208,7 +208,7 @@ export function BrowseDetail({
         <div className="space-y-3">
           <h3 className="font-semibold text-foreground">Services</h3>
           {Array.from(serviceMap.keys()).map(service => (
-            <Card key={service} className={`cursor-pointer ${selectedService === service ? 'border-primary bg-primary/5' : ''}`} onClick={() => { setSelectedService(selectedService === service ? null : service); setSelectedWorker(null); setSelectedDate(null); }}>
+            <Card key={service} className={`cursor-pointer transition-colors ${selectedService === service ? 'border-primary bg-primary/10 shadow-sm' : 'hover:border-primary/60 hover:bg-accent/50'}`} onClick={() => { setSelectedService(selectedService === service ? null : service); setSelectedWorker(null); setSelectedDate(null); }}>
               <CardContent className="p-4">
                 <span className="font-medium text-sm">{service}</span>
               </CardContent>
@@ -222,7 +222,7 @@ export function BrowseDetail({
             <div className="space-y-3">
               <h3 className="font-semibold text-foreground">Workers</h3>
               {workersForService.map(worker => (
-                <Card key={worker} className={`cursor-pointer ${selectedWorker === worker ? 'border-primary bg-primary/5' : ''}`} onClick={() => { setSelectedWorker(selectedWorker === worker ? null : worker); setSelectedDate(null); }}>
+                <Card key={worker} className={`cursor-pointer transition-colors ${selectedWorker === worker ? 'border-primary bg-primary/10 shadow-sm' : 'hover:border-primary/60 hover:bg-accent/50'}`} onClick={() => { setSelectedWorker(selectedWorker === worker ? null : worker); setSelectedDate(null); }}>
                   <CardContent className="p-4">
                     <span className="font-medium text-sm">{worker}</span>
                   </CardContent>
@@ -251,11 +251,11 @@ export function BrowseDetail({
                           key={idx}
                           onClick={() => isAvailable && setSelectedDate(dateKey)}
                           disabled={!isAvailable}
-                          className={`py-2 text-xs rounded ${
+                          className={`py-2 text-xs rounded transition-colors ${
                             !isCurrentMonth ? 'text-muted-foreground/30' :
-                            !isAvailable ? 'text-muted-foreground/50 cursor-not-allowed' :
-                            isSelected ? 'bg-primary text-primary-foreground' :
-                            'bg-primary/10 text-primary cursor-pointer'
+                            !isAvailable ? 'text-muted-foreground/30 cursor-not-allowed line-through' :
+                            isSelected ? 'bg-primary text-primary-foreground font-bold' :
+                            'bg-accent text-foreground font-semibold border border-primary/30 hover:bg-primary/20 cursor-pointer'
                           }`}
                         >
                           {day?.getDate()}
