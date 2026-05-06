@@ -132,11 +132,11 @@ export default function Notifications() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <p className="font-medium text-foreground">{cfg.label}</p>
+                      <p className={`text-foreground ${n.is_unread ? 'font-bold' : 'font-medium'}`}>{cfg.label}</p>
                       {n.is_unread && <Badge variant="secondary" className="text-xs">New</Badge>}
                     </div>
                     {n.metadata && Object.keys(n.metadata).length > 0 && (
-                      <p className="text-sm text-muted-foreground mt-0.5 truncate">
+                      <p className={`text-sm mt-0.5 truncate ${n.is_unread ? 'text-foreground font-semibold' : 'text-muted-foreground'}`}>
                         {[n.metadata.worker, n.metadata.service, n.metadata.date].filter(Boolean).join(' · ')}
                       </p>
                     )}
