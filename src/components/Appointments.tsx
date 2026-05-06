@@ -7,12 +7,14 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from './ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Search, Filter, Calendar, Clock, User, MapPin, Check, X, CheckCircle, ChevronDown, ChevronUp, Loader2, Mail, Phone, Users } from 'lucide-react';
+import { Search, Filter, Calendar, Clock, User, MapPin, Check, X, CheckCircle, ChevronDown, ChevronUp, Loader2, Mail, Phone, Users, ArrowRightLeft } from 'lucide-react';
 import { useOrgWorkers } from '@/hooks/useOrgWorkers';
 import { toast } from 'sonner';
 import { ModifyAppointmentDialog } from './ModifyAppointmentDialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 
 interface Appointment {
   id: string;
@@ -50,6 +52,14 @@ export function Appointments() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [workerFilter, setWorkerFilter] = useState('all');
   const [showInactive, setShowInactive] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [isBulkActing, setIsBulkActing] = useState(false);
+  const [bulkModifyQueue, setBulkModifyQueue] = useState<Appointment[]>([]);
+  const [bulkModifyIndex, setBulkModifyIndex] = useState(0);
+  const [showBulkModifyDialog, setShowBulkModifyDialog] = useState(false);
+  const [bulkModifyAvailableOpenings, setBulkModifyAvailableOpenings] = useState<any[]>([]);
+  const [bulkModifyLoadingOpenings, setBulkModifyLoadingOpenings] = useState(false);
+  const [bulkModifyModifying, setBulkModifyModifying] = useState<string | null>(null);
 
   const modeParam = searchParams.get('mode');
   const isOrgView = modeParam === 'org' && (isOrganization || isInternalDev);
@@ -192,6 +202,136 @@ export function Appointments() {
     }
   };
 
+  const handleBulkApprove = async () => {
+    if (!user) return;
+    setIsBulkActing(true);
+    const toApprove = appointments.filter(a => selectedIds.has(a.id) && a.status === 'pending' && a.provider_id === user.id);
+    let successCount = 0;
+    for (const apt of toApprove) {
+      try {
+        const { error } = await supabase.rpc('approve_appointment', {
+          _appointment_id: apt.id,
+          _provider_id: user.id,
+        });
+        if (!error) successCount++;
+      } catch {}
+    }
+    toast.success(`${successCount} appointment(s) approved.`);
+    setSelectedIds(new Set());
+    queryClient.invalidateQueries({ queryKey: ['appointments'] });
+    queryClient.invalidateQueries({ queryKey: ['browse-openings'] });
+    setIsBulkActing(false);
+  };
+
+  const handleBulkCancel = async () => {
+    if (!user) return;
+    setIsBulkActing(true);
+    const toCancel = appointments.filter(a => selectedIds.has(a.id) && (a.status === 'pending' || a.status === 'confirmed'));
+    let successCount = 0;
+    for (const apt of toCancel) {
+      try {
+        const { error } = await supabase.rpc('cancel_appointment', {
+          _appointment_id: apt.id,
+          _caller_id: user.id,
+        });
+        if (!error) successCount++;
+      } catch {}
+    }
+    toast.success(`${successCount} appointment(s) cancelled.`);
+    setSelectedIds(new Set());
+    queryClient.invalidateQueries({ queryKey: ['appointments'] });
+    queryClient.invalidateQueries({ queryKey: ['browse-openings'] });
+    setIsBulkActing(false);
+  };
+
+  const handleBulkComplete = async () => {
+    if (!user) return;
+    setIsBulkActing(true);
+    const toComplete = appointments.filter(a =>
+      selectedIds.has(a.id) &&
+      a.status === 'confirmed' &&
+      (isOrgView || a.provider_id === user.id)
+    );
+    const ids = toComplete.map(a => a.id);
+    const { error } = await supabase
+      .from('appointments')
+      .update({ status: 'completed' })
+      .in('id', ids);
+    if (error) {
+      toast.error('Failed to complete some appointments');
+    } else {
+      toast.success(`${ids.length} appointment(s) completed.`);
+      setSelectedIds(new Set());
+      queryClient.invalidateQueries({ queryKey: ['appointments'] });
+    }
+    setIsBulkActing(false);
+  };
+
+  const loadBulkModifyOpenings = async (apt: Appointment) => {
+    setBulkModifyLoadingOpenings(true);
+    const { data } = await supabase
+      .from('openings')
+      .select('*')
+      .eq('is_available', true)
+      .eq('user_id', apt.provider_id)
+      .eq('worker', apt.worker)
+      .neq('id', apt.opening_id)
+      .gte('date', new Date().toISOString().split('T')[0])
+      .order('date', { ascending: true })
+      .order('start_time', { ascending: true });
+    setBulkModifyAvailableOpenings(data || []);
+    setBulkModifyLoadingOpenings(false);
+  };
+
+  const advanceBulkModifyQueue = async () => {
+    const nextIndex = bulkModifyIndex + 1;
+    if (nextIndex >= bulkModifyQueue.length) {
+      setShowBulkModifyDialog(false);
+      setBulkModifyQueue([]);
+      setBulkModifyIndex(0);
+      setSelectedIds(new Set());
+    } else {
+      setBulkModifyIndex(nextIndex);
+      await loadBulkModifyOpenings(bulkModifyQueue[nextIndex]);
+    }
+  };
+
+  const handleStartBulkModify = async () => {
+    if (!user) return;
+    const toModify = appointments.filter(a =>
+      selectedIds.has(a.id) &&
+      (a.status === 'pending' || a.status === 'confirmed') &&
+      (isOrgView || a.provider_id === user.id)
+    );
+    if (toModify.length === 0) return;
+    setBulkModifyQueue(toModify);
+    setBulkModifyIndex(0);
+    setShowBulkModifyDialog(true);
+    await loadBulkModifyOpenings(toModify[0]);
+  };
+
+  const handleBulkModifyOne = async (newOpeningId: string) => {
+    const apt = bulkModifyQueue[bulkModifyIndex];
+    if (!apt || !user) return;
+    setBulkModifyModifying(newOpeningId);
+    try {
+      const { error } = await supabase.rpc('modify_appointment', {
+        _appointment_id: apt.id,
+        _new_opening_id: newOpeningId,
+        _caller_id: user.id,
+      });
+      if (error) throw error;
+      toast.success(`Appointment modified (${bulkModifyIndex + 1}/${bulkModifyQueue.length})`);
+      queryClient.invalidateQueries({ queryKey: ['appointments'] });
+      queryClient.invalidateQueries({ queryKey: ['browse-openings'] });
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to modify');
+    } finally {
+      setBulkModifyModifying(null);
+      advanceBulkModifyQueue();
+    }
+  };
+
   // Group pending appointments by opening_id for org view
   const groupedPendingByOpening = (() => {
     if (!isOrgView) return null;
@@ -312,7 +452,19 @@ export function Appointments() {
               const aptIsProvider = apt.provider_id === user?.id;
               return (
                 <div key={apt.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-lg bg-muted/50">
-                  {renderBookerInfo(apt)}
+                  <div className="flex items-center gap-3">
+                    <Checkbox
+                      checked={selectedIds.has(apt.id)}
+                      onCheckedChange={(checked) => {
+                        setSelectedIds(prev => {
+                          const next = new Set(prev);
+                          checked ? next.add(apt.id) : next.delete(apt.id);
+                          return next;
+                        });
+                      }}
+                    />
+                    {renderBookerInfo(apt)}
+                  </div>
                   {aptIsProvider && (
                     <div className="flex items-center space-x-2">
                       <Button variant="default" size="sm" onClick={() => handleApprove(apt.id)}>
@@ -335,14 +487,25 @@ export function Appointments() {
   };
 
   const renderAppointmentCard = (appointment: Appointment) => {
-    const isProvider = appointment.provider_id === user?.id;
-    const canManage = isOrgView || isProvider;
+    const canManage = isOrgView || appointment.provider_id === user?.id;
     
     return (
       <Card key={appointment.id} className="shadow-soft border-card-border hover:shadow-lg transition-shadow">
         <CardContent className="p-6 space-y-4">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between space-y-4 lg:space-y-0">
             <div className="flex items-center space-x-4">
+              <div onClick={(e) => e.stopPropagation()}>
+                <Checkbox
+                  checked={selectedIds.has(appointment.id)}
+                  onCheckedChange={(checked) => {
+                    setSelectedIds(prev => {
+                      const next = new Set(prev);
+                      checked ? next.add(appointment.id) : next.delete(appointment.id);
+                      return next;
+                    });
+                  }}
+                />
+              </div>
               <div
                 className={`w-12 h-12 bg-primary rounded-full flex items-center justify-center ${appointment.provider_slug ? 'cursor-pointer hover:ring-2 hover:ring-primary transition-all' : ''}`}
                 onClick={() => appointment.provider_slug && navigate(`/profile/${appointment.provider_slug}`)}
@@ -383,46 +546,6 @@ export function Appointments() {
                 <Badge className={getStatusColor(appointment.status)}>
                   {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
                 </Badge>
-                {canManage && appointment.status === 'confirmed' && (
-                  <Button variant="default" size="sm" onClick={() => handleComplete(appointment.id)}>
-                    <CheckCircle className="h-3 w-3 mr-1" />
-                    Complete
-                  </Button>
-                )}
-                {/* Provider can approve/reject pending appointments in user mode */}
-                {isProvider && appointment.status === 'pending' && !isOrgView && (
-                  <>
-                    <Button variant="default" size="sm" onClick={() => handleApprove(appointment.id)}>
-                      <Check className="h-3 w-3 mr-1" />
-                      Approve
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={() => handleCancel(appointment.id)}>
-                      <X className="h-3 w-3 mr-1" />
-                      Reject
-                    </Button>
-                  </>
-                )}
-                {(appointment.status === 'pending' || appointment.status === 'confirmed') && !isOrgView && (
-                  <>
-                    <ModifyAppointmentDialog
-                      appointmentId={appointment.id}
-                      currentOpeningId={appointment.opening_id}
-                      userId={user!.id}
-                      providerId={appointment.provider_id}
-                      workerName={appointment.worker}
-                    />
-                    <Button variant="outline" size="sm" onClick={() => handleCancel(appointment.id)}>
-                      <X className="h-3 w-3 mr-1" />
-                      Cancel
-                    </Button>
-                  </>
-                )}
-                {canManage && appointment.status === 'confirmed' && (
-                  <Button variant="outline" size="sm" onClick={() => handleCancel(appointment.id)}>
-                    <X className="h-3 w-3 mr-1" />
-                    Cancel
-                  </Button>
-                )}
               </div>
             </div>
           </div>
@@ -479,11 +602,11 @@ export function Appointments() {
               <Input
                 placeholder="Search appointments..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => { setSearchTerm(e.target.value); setSelectedIds(new Set()); }}
                 className="pl-10"
               />
             </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setSelectedIds(new Set()); }}>
               <SelectTrigger className="w-full sm:w-48">
                 <div className="flex items-center space-x-2">
                   <Filter className="h-4 w-4" />
@@ -499,7 +622,7 @@ export function Appointments() {
               </SelectContent>
             </Select>
             {isOrgView && (
-              <Select value={workerFilter} onValueChange={setWorkerFilter}>
+              <Select value={workerFilter} onValueChange={(v) => { setWorkerFilter(v); setSelectedIds(new Set()); }}>
                 <SelectTrigger className="w-full sm:w-48">
                   <div className="flex items-center space-x-2">
                     <User className="h-4 w-4" />
@@ -530,8 +653,68 @@ export function Appointments() {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-xl font-semibold text-foreground">Active Appointments</h3>
-              <Badge variant="outline">{activeAppointments.length}</Badge>
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="sm" onClick={() => {
+                  if (selectedIds.size === activeAppointments.length) {
+                    setSelectedIds(new Set());
+                  } else {
+                    setSelectedIds(new Set(activeAppointments.map(a => a.id)));
+                  }
+                }}>
+                  {selectedIds.size === activeAppointments.length && activeAppointments.length > 0 ? 'Deselect All' : 'Select All'}
+                </Button>
+                <Badge variant="outline">{activeAppointments.length}</Badge>
+              </div>
             </div>
+
+            {selectedIds.size > 0 && (
+              <div className="sticky top-4 z-10 bg-card border border-border rounded-lg shadow-lg p-3 flex flex-wrap items-center gap-3">
+                <span className="text-sm font-medium text-foreground">{selectedIds.size} selected</span>
+                <div className="flex flex-wrap gap-2 ml-auto">
+                  {(() => {
+                    const selectedAppts = [...appointments].filter(a => selectedIds.has(a.id));
+                    const hasPending = selectedAppts.some(a => a.status === 'pending');
+                    const isProviderOfAny = selectedAppts.some(a => a.provider_id === user?.id);
+                    const hasConfirmed = selectedAppts.some(a => a.status === 'confirmed');
+                    const canManageAny = selectedAppts.some(a => isOrgView || a.provider_id === user?.id);
+                    return (
+                      <>
+                        {hasPending && isProviderOfAny && (
+                          <Button size="sm" variant="default" disabled={isBulkActing} onClick={handleBulkApprove}>
+                            <Check className="h-3 w-3 mr-1" /> Approve ({selectedAppts.filter(a => a.status === 'pending' && a.provider_id === user?.id).length})
+                          </Button>
+                        )}
+                        {hasConfirmed && canManageAny && (
+                          <Button size="sm" variant="default" disabled={isBulkActing} onClick={handleBulkComplete}>
+                            <CheckCircle className="h-3 w-3 mr-1" /> Complete ({selectedAppts.filter(a => a.status === 'confirmed' && (isOrgView || a.provider_id === user?.id)).length})
+                          </Button>
+                        )}
+                        {canManageAny && (hasPending || hasConfirmed) && (
+                          <Button size="sm" variant="outline" disabled={isBulkActing} onClick={handleStartBulkModify}>
+                            <ArrowRightLeft className="h-3 w-3 mr-1" /> Modify ({selectedAppts.filter(a => (a.status === 'pending' || a.status === 'confirmed') && (isOrgView || a.provider_id === user?.id)).length})
+                          </Button>
+                        )}
+                        {(hasPending || hasConfirmed) && (
+                          (() => {
+                            const cancelCount = selectedAppts.filter(a => a.status === 'pending' || a.status === 'confirmed').length;
+                            const allPending = selectedAppts.every(a => a.status === 'pending');
+                            const label = allPending ? 'Reject' : 'Cancel';
+                            return (
+                              <Button size="sm" variant="outline" disabled={isBulkActing} onClick={handleBulkCancel}>
+                                <X className="h-3 w-3 mr-1" /> {label} ({cancelCount})
+                              </Button>
+                            );
+                          })()
+                        )}
+                      </>
+                    );
+                  })()}
+                  <Button size="sm" variant="ghost" onClick={() => setSelectedIds(new Set())}>
+                    Clear
+                  </Button>
+                </div>
+              </div>
+            )}
 
             {/* Grouped pending requests (org view only) */}
             {isOrgView && groupedPendingByOpening && Array.from(groupedPendingByOpening.entries()).map(([openingId, appts]) =>
@@ -576,6 +759,74 @@ export function Appointments() {
             )}
           </div>
         </>
+      )}
+
+      {/* Bulk Modify Dialog */}
+      {showBulkModifyDialog && bulkModifyQueue[bulkModifyIndex] && (
+        <Dialog open={showBulkModifyDialog} onOpenChange={(open) => {
+          if (!open) {
+            setShowBulkModifyDialog(false);
+            setBulkModifyQueue([]);
+            setBulkModifyIndex(0);
+          }
+        }}>
+          <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>
+                Modify Appointment {bulkModifyIndex + 1} of {bulkModifyQueue.length} — {bulkModifyQueue[bulkModifyIndex].worker}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="text-sm text-muted-foreground mb-3">
+              <p>Current: {new Date(bulkModifyQueue[bulkModifyIndex].date).toLocaleDateString()} {bulkModifyQueue[bulkModifyIndex].start_time}–{bulkModifyQueue[bulkModifyIndex].end_time}</p>
+              {bulkModifyQueue[bulkModifyIndex].booker_name && <p>Customer: {bulkModifyQueue[bulkModifyIndex].booker_name}</p>}
+            </div>
+            <Button variant="ghost" size="sm" className="mb-3 text-muted-foreground" onClick={advanceBulkModifyQueue}>
+              Skip this one →
+            </Button>
+            {bulkModifyLoadingOpenings && (
+              <div className="flex justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            )}
+            {!bulkModifyLoadingOpenings && bulkModifyAvailableOpenings.length === 0 && (
+              <p className="text-center text-muted-foreground py-8">No available openings to switch to.</p>
+            )}
+            <div className="space-y-3">
+              {bulkModifyAvailableOpenings.map((opening) => (
+                <Card key={opening.id} className="shadow-soft border-card-border hover:shadow-md transition-shadow">
+                  <CardContent className="p-4 flex items-center justify-between gap-3">
+                    <div className="space-y-1 flex-1 min-w-0">
+                      <p className="font-medium text-foreground truncate">{opening.worker} — {opening.service}</p>
+                      <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <Calendar className="h-3 w-3" />
+                          {new Date(opening.date).toLocaleDateString()}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          {opening.start_time} - {opening.end_time}
+                        </span>
+                        {opening.location && (
+                          <span className="flex items-center gap-1">
+                            <MapPin className="h-3 w-3" />
+                            {opening.location}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <Button
+                      size="sm"
+                      disabled={!!bulkModifyModifying}
+                      onClick={() => handleBulkModifyOne(opening.id)}
+                    >
+                      {bulkModifyModifying === opening.id ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Select'}
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );

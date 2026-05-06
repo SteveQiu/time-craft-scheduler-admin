@@ -333,7 +333,7 @@ export default function Profile() {
       {/* Profile Header */}
       <Card className="shadow-soft border-card-border">
         <CardContent className="pt-6">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap gap-4 items-start sm:items-center justify-between">
             <div className="flex items-center space-x-4">
               <Avatar className="h-20 w-20">
                 <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
@@ -363,14 +363,14 @@ export default function Profile() {
                 )}
               </div>
             </div>
-            <div className="flex items-center space-x-2">
+            <div className="flex flex-wrap items-center gap-2">
               {shareUrl && (
                 <Button variant="outline" size="sm" onClick={copyShareLink}>
                   <Share2 className="h-4 w-4 mr-1" />
                   Share
                 </Button>
               )}
-              {!isOwnProfile && user && (
+              {!isOwnProfile && (
                 <>
                   <Button variant="outline" size="sm" onClick={() => navigate(`/browse/${profile.id}`)}>
                     <Calendar className="h-4 w-4 mr-1" />
@@ -379,19 +379,21 @@ export default function Profile() {
                   <Button 
                     variant={isBookmarked ? "default" : "outline"} 
                     size="sm" 
-                    onClick={handleToggleBookmark}
+                    onClick={user ? handleToggleBookmark : () => navigate(`/auth?returnTo=${encodeURIComponent(window.location.pathname)}`)}
                     aria-label={isBookmarked ? "Remove bookmark from this profile" : "Bookmark this profile"}
                   >
                     <Bookmark className={`h-4 w-4 ${isBookmarked ? 'fill-current' : ''}`} />
                   </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => setReportOpen(true)}
-                    aria-label="Report this profile"
-                  >
-                    <Flag className="h-4 w-4" />
-                  </Button>
+                  {user && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => setReportOpen(true)}
+                      aria-label="Report this profile"
+                    >
+                      <Flag className="h-4 w-4" />
+                    </Button>
+                  )}
                 </>
               )}
               {isOwnProfile && !editing && (

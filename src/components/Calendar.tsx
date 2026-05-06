@@ -2,13 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from './ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from './ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Switch } from './ui/switch';
 import { Input } from './ui/input';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
-import { ChevronLeft, ChevronRight, Plus, Clock, User, X, DollarSign, ChevronDown } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Clock, User, X, DollarSign, ChevronDown, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -99,6 +100,11 @@ export function Calendar() {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [collapsedWorkers, setCollapsedWorkers] = useState<Set<string>>(new Set());
+  const [selectedOpeningIds, setSelectedOpeningIds] = useState<Set<string>>(new Set());
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
+  const [blockedOpenings, setBlockedOpenings] = useState<Opening[]>([]);
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+  const [safeIdsToDelete, setSafeIdsToDelete] = useState<string[]>([]);
 
   // Fetch saved workplace addresses
   const { data: savedAddresses = [] } = useQuery({
@@ -566,6 +572,51 @@ export function Calendar() {
     }
   };
 
+  const deleteSafeOpenings = async (ids: string[]) => {
+    if (ids.length === 0) return;
+    let query = supabase.from('openings').delete().in('id', ids);
+    if (!isOrgMode) query = query.eq('user_id', user!.id);
+    const { error } = await query;
+    if (error) throw error;
+    setOpenings(prev => prev.filter(o => !ids.includes(o.id)));
+    setSelectedOpeningIds(prev => {
+      const next = new Set(prev);
+      ids.forEach(id => next.delete(id));
+      return next;
+    });
+    toast.success(`${ids.length} opening(s) deleted`);
+  };
+
+  const handleBulkDelete = async () => {
+    if (!user || selectedOpeningIds.size === 0) return;
+    setIsBulkDeleting(true);
+    try {
+      const { data: blocked } = await supabase
+        .from('appointments')
+        .select('opening_id')
+        .in('opening_id', Array.from(selectedOpeningIds))
+        .in('status', ['pending', 'confirmed']);
+
+      const blockedIds = new Set((blocked || []).map((a: { opening_id: string }) => a.opening_id));
+      const safeIds = Array.from(selectedOpeningIds).filter(id => !blockedIds.has(id));
+      const blockedOpeningsList = openings.filter(o => blockedIds.has(o.id));
+
+      if (blockedIds.size > 0) {
+        setBlockedOpenings(blockedOpeningsList);
+        setSafeIdsToDelete(safeIds);
+        setShowBulkDeleteConfirm(true);
+        setIsBulkDeleting(false);
+        return;
+      }
+
+      await deleteSafeOpenings(safeIds);
+    } catch (err) {
+      toast.error('Failed to check appointments');
+    } finally {
+      setIsBulkDeleting(false);
+    }
+  };
+
   const generateTimeOptions = () => {
     const options = [];
     for (let hour = 0; hour < 24; hour++) {
@@ -679,7 +730,7 @@ export function Calendar() {
                           ? 'bg-primary-light text-primary ring-2 ring-primary ring-offset-2 ring-offset-background'
                           : 'hover:bg-secondary'
                       }`}
-                      onClick={() => date && setSelectedDate(date)}
+                      onClick={() => { if (date) { setSelectedDate(date); setSelectedOpeningIds(new Set()); } }}
                     >
                       <span>{date?.getDate()}</span>
                       {/* Show indicator with count for dates with openings */}
@@ -702,13 +753,27 @@ export function Calendar() {
         {/* Time Slots */}
         <Card className="shadow-soft border-card-border">
           <CardHeader>
-            <CardTitle className="text-lg font-semibold">
-              {selectedDate.toLocaleDateString('en-US', { 
-                weekday: 'long', 
-                month: 'short', 
-                day: 'numeric' 
-              })}
-            </CardTitle>
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <CardTitle className="text-lg font-semibold">
+                {selectedDate.toLocaleDateString('en-US', { 
+                  weekday: 'long', 
+                  month: 'short', 
+                  day: 'numeric' 
+                })}
+              </CardTitle>
+              {getOpeningsForDate(selectedDate).length > 0 && user && (
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleBulkDelete}
+                  disabled={selectedOpeningIds.size === 0 || isBulkDeleting}
+                  className="flex items-center gap-1"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Delete Selected ({selectedOpeningIds.size})
+                </Button>
+              )}
+            </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -768,6 +833,22 @@ export function Calendar() {
                               key={opening.id}
                               className="p-1 rounded-lg border border-input bg-card hover:bg-accent transition-all flex items-center justify-between gap-3 cursor-pointer" onClick={() => window.open(`/openings/${opening.id}`, "_blank")}
                             >
+                              <div
+                                className="flex-shrink-0 pl-1"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <Checkbox
+                                  checked={selectedOpeningIds.has(opening.id)}
+                                  onCheckedChange={(checked) => {
+                                    setSelectedOpeningIds(prev => {
+                                      const next = new Set(prev);
+                                      if (checked) next.add(opening.id);
+                                      else next.delete(opening.id);
+                                      return next;
+                                    });
+                                  }}
+                                />
+                              </div>
                               <div className="text-sm space-y-1 flex-1">
                                 <div className="font-medium whitespace-nowrap overflow-hidden">{new Date(`1970-01-01T${opening.start_time}`).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })} - {new Date(`1970-01-01T${opening.end_time}`).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })} ({opening.duration}h)</div>
                                 <div className="font-medium">{opening.service}</div>
@@ -1110,6 +1191,62 @@ export function Calendar() {
           </div>
         </DialogContent>
       </Dialog>
+      <Dialog open={showBulkDeleteConfirm} onOpenChange={(open) => {
+        if (!open) { setShowBulkDeleteConfirm(false); setBlockedOpenings([]); setSafeIdsToDelete([]); }
+      }}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Openings with Active Appointments</DialogTitle>
+            <DialogDescription>
+              Some selected openings have pending or confirmed appointments. Please modify or reach out to customers for the following openings before deleting:
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2 max-h-60 overflow-y-auto">
+            {blockedOpenings.map(o => (
+              <div key={o.id} className="text-sm p-2 rounded bg-destructive/10 border border-destructive/20">
+                <span className="font-medium">{o.date}</span>
+                {' · '}
+                {new Date(`1970-01-01T${o.start_time}`).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}
+                {' – '}
+                {new Date(`1970-01-01T${o.end_time}`).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}
+                {' · '}
+                {o.worker}
+                {' · '}
+                {o.service}
+              </div>
+            ))}
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Please modify these openings or reach out to your customers before deleting.
+          </p>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button
+              variant="outline"
+              onClick={() => { setShowBulkDeleteConfirm(false); setBlockedOpenings([]); setSafeIdsToDelete([]); }}
+            >
+              Go Back
+            </Button>
+            {safeIdsToDelete.length > 0 && (
+              <Button
+                variant="destructive"
+                onClick={async () => {
+                  try {
+                    await deleteSafeOpenings(safeIdsToDelete);
+                  } catch {
+                    toast.error('Failed to delete openings');
+                  }
+                  setShowBulkDeleteConfirm(false);
+                  setBlockedOpenings([]);
+                  setSafeIdsToDelete([]);
+                }}
+              >
+                Delete Safe Ones ({safeIdsToDelete.length})
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
     </div>
   );
 }

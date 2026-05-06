@@ -24,6 +24,7 @@ export default function Auth() {
 
   const isRecoveryLink = window.location.hash.includes('type=recovery');
   const isResetMode = searchParams.get('mode') === 'reset' || isRecoveryLink;
+  const returnTo = searchParams.get('returnTo') || '/';
 
   // Sign in state
   const [signInEmail, setSignInEmail] = useState('');
@@ -43,7 +44,7 @@ export default function Auth() {
 
   useEffect(() => {
     if (!loading && user && !isResetMode) {
-      navigate('/');
+      navigate(returnTo);
     }
   }, [user, loading, isResetMode, navigate]);
 
@@ -68,7 +69,7 @@ export default function Auth() {
         title: 'Success!',
         description: 'You have been signed in.',
       });
-      navigate('/');
+      navigate(returnTo);
     } catch (error: any) {
       toast({
         title: 'Error',
