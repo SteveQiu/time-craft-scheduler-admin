@@ -23,6 +23,7 @@ import Auth from "@/pages/Auth";
 import Settings from "@/pages/Settings";
 import Profile from "@/pages/Profile";
 import AdminReports from "@/pages/AdminReports";
+import Notifications from "@/pages/Notifications";
 
 import { AppSidebar } from "@/components/AppSidebar";
 
@@ -86,6 +87,7 @@ const App = () => {
                         <Route path="/profile" element={<Profile />} />
                         <Route path="/profile/:slug" element={<Profile />} />
                         <Route path="/reports" element={<AdminReports />} />
+                        <Route path="/notifications" element={<Notifications />} />
                         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                         <Route path="*" element={<NotFound />} />
                       </Routes>
@@ -111,6 +113,7 @@ const App = () => {
                   <Route path="/profile" element={<Profile />} />
                   <Route path="/profile/:slug" element={<Profile />} />
                   <Route path="/reports" element={<AdminReports />} />
+                  <Route path="/notifications" element={<Notifications />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
