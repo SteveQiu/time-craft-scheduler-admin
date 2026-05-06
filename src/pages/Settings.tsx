@@ -15,6 +15,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, MapPin, CreditCard, Star, Lock, Shield, Edit, Trash2 } from 'lucide-react';
 import { PrivacySettings } from '@/components/Privacy';
 import { COUNTRIES, PROVINCES_BY_COUNTRY } from '@/lib/address';
+import { AddressInput } from '@/components/ui/AddressInput';
 import { PAYMENT_METHOD_CONFIGS, getMethodConfig } from '@/lib/payment/methods';
 import { deserializeDetailsByType } from '@/lib/payment/serialization';
 import { PaymentMethodRecord } from '@/lib/payment/types';
@@ -613,26 +614,10 @@ export default function Settings() {
               <Label>Street Address</Label>
               <Input placeholder="123 Main St" value={addressForm.street} onChange={(e) => setAddressForm({ ...addressForm, street: e.target.value })} />
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label>City</Label>
-                <Input placeholder="Vancouver" value={addressForm.city} onChange={(e) => setAddressForm({ ...addressForm, city: e.target.value })} />
-              </div>
-              <div className="space-y-2">
-                <Label>Province / State</Label>
-                <Input placeholder="BC" value={addressForm.province} onChange={(e) => setAddressForm({ ...addressForm, province: e.target.value })} />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label>Country</Label>
-                <Input placeholder="Canada" value={addressForm.country} onChange={(e) => setAddressForm({ ...addressForm, country: e.target.value })} />
-              </div>
-              <div className="space-y-2">
-                <Label>ZIP / Postal Code</Label>
-                <Input placeholder="V6B 1A1" value={addressForm.zip} onChange={(e) => setAddressForm({ ...addressForm, zip: e.target.value })} />
-              </div>
-            </div>
+            <AddressInput
+              value={{ city: addressForm.city, province: addressForm.province, country: addressForm.country, zip: addressForm.zip }}
+              onChange={(fields) => setAddressForm({ ...addressForm, ...fields })}
+            />
             <div className="flex justify-end gap-2 pt-4">
               <Button variant="outline" onClick={() => setShowAddressDialog(false)}>Cancel</Button>
               <Button onClick={() => saveAddress.mutate()} disabled={!addressForm.label || !addressForm.street || !addressForm.city || saveAddress.isPending}>
