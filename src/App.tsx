@@ -73,7 +73,7 @@ const App = () => {
                   </Panel>
                   <PanelResizeHandle className="w-1 bg-border hover:bg-primary/50 transition-colors cursor-col-resize active:bg-primary" />
                   <Panel defaultSize={80} className="flex flex-col overflow-hidden">
-                    <main className="flex-1 overflow-auto max-w-7xl w-full mx-auto">
+                    <main className="flex-1 overflow-auto w-full">
                       <Routes>
                         <Route path="/" element={<RootRedirect />} />
                         <Route path={ROUTES.dashboard} element={<Dashboard />} />
@@ -99,7 +99,7 @@ const App = () => {
               </div>
 
               {/* Mobile content */}
-              <main className="md:hidden flex-1 overflow-auto max-w-7xl w-full mx-auto">
+              <main className="md:hidden flex-1 overflow-auto w-full">
                 <Routes>
                   <Route path="/" element={<RootRedirect />} />
                   <Route path={ROUTES.dashboard} element={<Dashboard />} />
