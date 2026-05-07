@@ -166,6 +166,7 @@ export function Appointments() {
   const [proofSubmitted, setProofSubmitted] = useState(false);
   const [paymentProofAppointmentId, setPaymentProofAppointmentId] = useState<string | null>(null);
   const [providerViewProofAppointmentId, setProviderViewProofAppointmentId] = useState<string | null>(null);
+  const [proofImageError, setProofImageError] = useState(false);
 
   const modeParam= searchParams.get('mode');
   const isOrgView = modeParam === 'org' && (isOrganization || isInternalDev);
@@ -1453,7 +1454,6 @@ export function Appointments() {
         const providerViewAppt = providerViewProofAppointmentId
           ? appointments.find(a => a.id === providerViewProofAppointmentId)
           : null;
-        const [proofImageError, setProofImageError] = useState(false);
         return (
           <Dialog open={!!providerViewProofAppointmentId} onOpenChange={(open) => {
             if (!open) {
