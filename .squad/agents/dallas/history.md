@@ -445,3 +445,6 @@ When refactoring imports (removing, renaming, or replacing), **always grep for A
 
 **Build:** ✅ `npm run build` — no errors
 
+
+## 2026-05-06: App name config pattern
+Created src/config/app.ts as single source of truth for APP_NAME and contact emails (supportEmail, privacyEmail, legalEmail). Updated AppSidebar, App, ResetPasswordFlow, SignInDialog, Auth, and Privacy/ConsentModal to import from config. Changing the app name now requires editing only one file.

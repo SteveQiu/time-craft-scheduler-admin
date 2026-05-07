@@ -11,6 +11,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Chrome } from 'lucide-react';
+import { APP_NAME } from '@/config/app';
 
 type AppRole = 'USER' | 'ORGANIZATION';
 
@@ -127,7 +128,7 @@ export function SignInDialog({ open, onOpenChange }: SignInDialogProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Sign In to PikAppoint</DialogTitle>
+          <DialogTitle>{`Sign In to ${APP_NAME}`}</DialogTitle>
           <DialogDescription>
             Sign in or create an account to book this appointment.
           </DialogDescription>
