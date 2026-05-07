@@ -240,14 +240,16 @@ export function Appointments() {
     queryFn: async () => {
       const { data } = await supabase
         .from('payment_proofs')
-        .select('appointment_id')
+        .select('appointment_id, photo')
         .in('appointment_id', appointmentIds);
       return data ?? [];
     },
   });
 
   const paidAppointmentIds = useMemo(
-    () => new Set((submittedProofs ?? []).map((p: { appointment_id: string }) => p.appointment_id)),
+    () => new Map(
+      (submittedProofs ?? []).map((p: { appointment_id: string; photo: string | null }) => [p.appointment_id, p.photo ?? null])
+    ),
     [submittedProofs]
   );
 
@@ -774,9 +776,24 @@ export function Appointments() {
                   </div>
                   <div className="flex items-center space-x-2">
                     {paidAppointmentIds.has(apt.id) && (
-                      <Badge variant="outline" className="text-green-600 border-green-600 dark:text-green-400 dark:border-green-400 text-xs">
-                        Paid
-                      </Badge>
+                      <>
+                        <Badge variant="outline" className="text-green-600 border-green-600 dark:text-green-400 dark:border-green-400 text-xs">
+                          Paid
+                        </Badge>
+                        {paidAppointmentIds.get(apt.id) && (
+                          <button
+                            className="text-xs text-blue-500 hover:text-blue-700 underline"
+                            onClick={() => {
+                              const photo = paidAppointmentIds.get(apt.id);
+                              if (!photo) return;
+                              const win = window.open('', '_blank');
+                              if (win) { win.document.write(`<img src="${photo}" style="max-width:100%;height:auto;" />`); win.document.close(); }
+                            }}
+                          >
+                            📎 View Proof
+                          </button>
+                        )}
+                      </>
                     )}
                     {aptIsProvider ? (
                       <>
@@ -886,9 +903,24 @@ export function Appointments() {
                   {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
                 </Badge>
                 {paidAppointmentIds.has(appointment.id) && (
-                  <Badge variant="outline" className="text-green-600 border-green-600 dark:text-green-400 dark:border-green-400 text-xs">
-                    Paid
-                  </Badge>
+                  <>
+                    <Badge variant="outline" className="text-green-600 border-green-600 dark:text-green-400 dark:border-green-400 text-xs">
+                      Paid
+                    </Badge>
+                    {paidAppointmentIds.get(appointment.id) && (
+                      <button
+                        className="text-xs text-blue-500 hover:text-blue-700 underline"
+                        onClick={() => {
+                          const photo = paidAppointmentIds.get(appointment.id);
+                          if (!photo) return;
+                          const win = window.open('', '_blank');
+                          if (win) { win.document.write(`<img src="${photo}" style="max-width:100%;height:auto;" />`); win.document.close(); }
+                        }}
+                      >
+                        📎 View Proof
+                      </button>
+                    )}
+                  </>
                 )}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
