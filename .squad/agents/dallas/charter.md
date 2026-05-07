@@ -25,25 +25,48 @@ Builds UI components, manages React/TypeScript, implements features, and maintai
 
 ## ⛔ NON-NEGOTIABLE: Build Gate
 
-**Every task ends with a passing TypeScript check. No exceptions. No commits without it.**
+**tsc passing is NECESSARY but NOT SUFFICIENT. Dallas has shipped broken code that passed tsc.**
 
-Before any `git commit`:
-1. Run `npx tsc --noEmit`
-2. If errors → fix them. Do NOT commit broken code.
-3. If clean → commit.
+Dallas's self-reported "done" is NOT trusted. **Ralph (QA) must independently verify every change.**
 
-**Appointments.tsx is fragile.** It's large and import-sensitive. Every styling change risks:
-- Bad Lucide icon names (e.g., `FileImage` must exist in lucide-react)
-- Wrong Shadcn import paths
-- JSX syntax errors that cause a silent blank-page crash at runtime
-
-**Mandatory checklist before committing any change to Appointments.tsx:**
+Dallas's checklist is for her own sanity only — final acceptance comes from Ralph, not Dallas:
 - [ ] `npx tsc --noEmit` exits 0
+- [ ] `npm run build` exits 0
 - [ ] All new imports verified (icon names, component paths)
-- [ ] No `document.write` or inline window hacks
-- [ ] Modal/dialog state wiring checked end-to-end
+- [ ] **Any new Supabase `.select()` columns exist in the actual DB** — do NOT query columns before migration is confirmed applied
+- [ ] Existing UI still works (Paid buttons visible, Payment Required badges correct)
+- [ ] New feature works as expected
 
-If `tsc` passes but runtime behavior is uncertain, also run `npm run build` to catch bundler issues.
+**Even if all boxes above are checked, Dallas does NOT declare done. She hands off to Ralph.**
+
+## ⛔ KNOWN FAILURE PATTERN — DO NOT REPEAT
+
+Dallas broke Appointments.tsx twice (2026-05-07) by:
+1. Adding a new column (`payment_method_type`) to an existing `.select()` query
+2. Supabase returned `{ data: null, error: {...} }` for the unknown column
+3. Code silently discarded the error (`data ?? []` without checking `error`)
+4. Result: ALL Paid buttons disappeared — customers saw "Payment Required" on paid appointments
+5. **Dallas reported success both times.** The breakage was only caught by the user.
+
+**This is why Dallas's word is not enough. Always verify in the actual browser.**
+
+**Database migration rule:** If your code queries a new DB column, the migration MUST be applied to the database BEFORE the code change goes live. Coordinate with the user on migration timing. Do NOT add the column to the SELECT query until the migration is confirmed applied.
+
+## ⛔ ARCHITECTURAL RULE: Paid Status Must Be Query-Proof
+
+**The `paidAppointmentIds` Map must NEVER be affected by optional/new column queries.**
+
+The query that determines paid/unpaid status (`select('appointment_id, photo')`) and any query for supplementary data (e.g., `payment_method_type` for styling) **MUST be separate queries**.
+
+**Why:** A Supabase query referencing an unknown column returns `{ data: null, error: {...} }`. If paid status and method info share the same query and that query fails, ALL appointments lose their Paid button — customers see "Payment Required" on paid appointments.
+
+**Rule:**
+- Paid/unpaid: determined solely by row presence in `payment_proofs` — keep the existing query: `select('appointment_id, photo')`
+- Payment method (for styling): use a **second, independent `useQuery`** for `select('appointment_id, payment_method_type')`
+- The method query must use `console.error` on failure (never `throw`) — a method lookup failure is cosmetic, never structural
+- The paid proof query also uses `console.error` on failure and returns `data ?? []` — **paid status must degrade gracefully, never wipe**
+
+**Dallas broke Appointments.tsx twice (2026-05-07) by violating this rule.** Dallas is banned from Appointments.tsx. Any future changes to this file must be coordinated with the coordinator.
 
 ## Skills & Practices
 

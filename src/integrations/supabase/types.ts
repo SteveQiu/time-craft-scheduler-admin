@@ -173,6 +173,7 @@ export type Database = {
           customer_id: string
           note: string | null
           photo: string | null
+          payment_method_type: string | null
           created_at: string
           updated_at: string
         }
@@ -182,6 +183,7 @@ export type Database = {
           customer_id: string
           note?: string | null
           photo?: string | null
+          payment_method_type?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -191,6 +193,7 @@ export type Database = {
           customer_id?: string
           note?: string | null
           photo?: string | null
+          payment_method_type?: string | null
           created_at?: string
           updated_at?: string
         }

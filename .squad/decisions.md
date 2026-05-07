@@ -139,6 +139,28 @@ Always have Bishop (UX/a11y) review UI changes before they ship. Bishop must mon
 **Inactive appointments:** Descending (recent first)
 Improves UX for org booking workflows. All appointments sorted in `Appointments.tsx` render pipeline.
 
+## Session Rules
+
+### No Git Commits Except for Deployment (2026-05-07)
+**Authority:** SteveQiu (via Copilot)
+
+Squad agents and Scribe must never `git commit` unless the commit is deployment-ready code. Session logs, history updates, and decision merges are written to disk only — not committed.
+
+## Incident & Reversions
+
+### Dallas Cash Payment Button Revert (2026-05-07)
+**What:** Dallas implemented payment_method_type tracking (migration + types.ts + Appointments.tsx) in commit b1609e5.
+
+**Build Status:** Passed tsc and npm run build cleanly
+
+**Runtime:** Caused silent blank-page crash at runtime
+
+**Reversion:** Reverted in commit 1b803ad
+
+**Root Cause:** Unknown — Appointments.tsx is a known-fragile large file with history of silent runtime failures despite tsc passing
+
+**Lesson:** Build gate (tsc) is necessary but NOT sufficient. Runtime testing required before commit. If re-attempted, use smallest possible changes with runtime verification.
+
 ## Governance
 
 - All meaningful changes require team consensus

@@ -281,10 +281,11 @@ export function Appointments() {
     queryKey: ['payment-proofs-bulk', appointmentIds],
     enabled: appointmentIds.length > 0,
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('payment_proofs')
         .select('appointment_id, photo')
         .in('appointment_id', appointmentIds);
+      if (error) console.error('[payment-proofs] query error:', error);
       return data ?? [];
     },
   });
@@ -294,6 +295,29 @@ export function Appointments() {
       (submittedProofs ?? []).map((p: { appointment_id: string; photo: string | null }) => [p.appointment_id, p.photo ?? null])
     ),
     [submittedProofs]
+  );
+
+  // Separate query for payment method — failure here is cosmetic, never affects paid/unpaid status
+  const { data: paymentMethods } = useQuery({
+    queryKey: ['payment-methods-bulk', appointmentIds],
+    enabled: appointmentIds.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('payment_proofs')
+        .select('appointment_id, payment_method_type')
+        .in('appointment_id', appointmentIds);
+      if (error) console.error('[payment-methods] query error:', error);
+      return data ?? [];
+    },
+  });
+
+  const cashAppointmentIds = useMemo(
+    () => new Set(
+      (paymentMethods ?? [])
+        .filter((p: { appointment_id: string; payment_method_type: string | null }) => p.payment_method_type === 'cash')
+        .map((p: { appointment_id: string; payment_method_type: string | null }) => p.appointment_id)
+    ),
+    [paymentMethods]
   );
 
   const { data: appointmentRates = [] } = useQuery({
@@ -874,12 +898,12 @@ export function Appointments() {
                           <Button
                             variant="outline"
                             size="sm"
-                            className="min-h-[44px] min-w-[44px] px-3 text-xs border-green-500 text-green-600 hover:bg-green-50 gap-1.5"
+                            className={`min-h-[44px] min-w-[44px] px-3 text-xs gap-1.5 ${cashAppointmentIds.has(apt.id) ? 'border-orange-500 text-orange-600 hover:bg-orange-50' : 'border-green-500 text-green-600 hover:bg-green-50'}`}
                             onClick={() => setProviderViewProofAppointmentId(apt.id)}
                             aria-label={`View payment proof for ${apt.booker_name || 'this appointment'}`}
                           >
                             <FileImage className="w-4 h-4" aria-hidden="true" />
-                            Paid
+                            {cashAppointmentIds.has(apt.id) ? 'Cash' : 'Paid'}
                           </Button>
                         );
                       }
@@ -1017,12 +1041,12 @@ export function Appointments() {
                       <Button
                         variant="outline"
                         size="sm"
-                        className="min-h-[44px] min-w-[44px] px-3 text-xs border-green-500 text-green-600 hover:bg-green-50 gap-1.5"
+                        className={`min-h-[44px] min-w-[44px] px-3 text-xs gap-1.5 ${cashAppointmentIds.has(appointment.id) ? 'border-orange-500 text-orange-600 hover:bg-orange-50' : 'border-green-500 text-green-600 hover:bg-green-50'}`}
                         onClick={() => setProviderViewProofAppointmentId(appointment.id)}
                         aria-label={`View payment proof for ${appointment.booker_name || 'this appointment'}`}
                       >
                         <FileImage className="w-4 h-4" aria-hidden="true" />
-                        Paid
+                        {cashAppointmentIds.has(appointment.id) ? 'Cash' : 'Paid'}
                       </Button>
                     );
                   }
