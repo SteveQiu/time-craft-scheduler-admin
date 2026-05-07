@@ -1054,7 +1054,8 @@ export function Appointments() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6">
+      <div className="max-w-7xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold text-foreground">
@@ -1630,6 +1631,7 @@ export function Appointments() {
           </Dialog>
         );
       })()}
+      </div>
     </div>
   );
 }
