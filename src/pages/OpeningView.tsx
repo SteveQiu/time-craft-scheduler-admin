@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { SignInDialog } from '@/components/SignInDialog';
 import { ArrowLeft, Calendar, Clock, User, MapPin, Share2, Check, Loader2 } from 'lucide-react';
+import { DATE_FORMATS, LOCALE } from '@/config/formats';
 import { toast } from 'sonner';
 
 const PENDING_BOOKING_KEY = 'pending_booking_opening_id';
@@ -135,12 +136,7 @@ export function OpeningView() {
     );
   }
 
-  const formattedDate = new Date(opening.date).toLocaleDateString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
+  const formattedDate = new Date(opening.date).toLocaleDateString(LOCALE, DATE_FORMATS.long);
 
   return (
     <div className="p-6 space-y-6">
