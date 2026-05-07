@@ -15,7 +15,7 @@ let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{
     const p=JSON.parse(Buffer.from(m[0].split('.')[1],'base64url').toString());
     if(p.role==='service_role'){process.stdout.write('found');process.exit(0);}
   }catch(e){}}
-});" 2>/dev/null)
+});" 2>/dev/null) || true
   if [ "$SVCKEY" = "found" ]; then
     echo "🔒 BLOCKED: Supabase service_role key — $FILE"
     SECRETS_FOUND=1
@@ -44,7 +44,7 @@ let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{
   HICRED=$(echo "$CONTENT" | \
     grep -iE '(password|secret|token)[[:space:]]*=[[:space:]]*[A-Za-z0-9+/=_-]{32,}' | \
     grep -vE '(VITE_SUPABASE_PUBLISHABLE_KEY|VITE_SUPABASE_URL|VITE_SUPABASE_PROJECT_ID|VITE_APP_URL)' | \
-    grep -vE 'eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+')
+    grep -vE 'eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+') || true
   if [ -n "$HICRED" ]; then
     echo "🔒 BLOCKED: High-entropy credential assignment — $FILE"
     SECRETS_FOUND=1
