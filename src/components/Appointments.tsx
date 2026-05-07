@@ -172,7 +172,7 @@ function applyDateFilter(apts: Appointment[], filter: DateFilter): Appointment[]
 }
 
 export function Appointments() {
-  const { workers, acceptedWorkers } = useOrgWorkers();
+  const { workers, acceptedWorkers, getWorkerRate } = useOrgWorkers();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
@@ -507,7 +507,10 @@ export function Appointments() {
   };
 
   const getAppointmentTotal = (apt: Appointment): { isFree: boolean; total: number } => {
-    const rate = openingRateMap.get(apt.opening_id) ?? 0;
+    // Org view: use the worker's configured rate from org_workers, not the opening's rate
+    const rate = isOrgView
+      ? getWorkerRate(apt.worker)
+      : (openingRateMap.get(apt.opening_id) ?? 0);
     const isFree = rate === 0;
     // duration stored in hours (e.g. 1.5 = 90 min); guard: if > 24 assume minutes
     const durationHours = apt.duration > 24 ? apt.duration / 60 : apt.duration;
