@@ -10,12 +10,12 @@ import { Badge } from './ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from './ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Search, Filter, Calendar, Clock, User, MapPin, Check, X, CheckCircle, ChevronDown, ChevronUp, Loader2, Mail, Phone, Users, ArrowRightLeft, CalendarPlus, BellRing, BellOff, Bell, CreditCard, Send, ImageIcon } from 'lucide-react';
+import { Search, Filter, Calendar, Clock, User, MapPin, Check, X, CheckCircle, ChevronDown, ChevronUp, Loader2, Mail, Phone, Users, ArrowRightLeft, CalendarPlus, BellRing, BellOff, Bell, CreditCard, Send, ImageIcon, FileImage } from 'lucide-react';
 import { Textarea } from './ui/textarea';
 import { useOrgWorkers } from '@/hooks/useOrgWorkers';
 import { toast } from 'sonner';
 import { ModifyAppointmentDialog } from './ModifyAppointmentDialog';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/tabs';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
 import { useAppointmentNotifications } from '@/hooks/useAppointmentNotifications';
@@ -780,12 +780,15 @@ export function Appointments() {
                         <Badge variant="outline" className="text-green-600 border-green-600 dark:text-green-400 dark:border-green-400 text-xs">
                           Paid
                         </Badge>
-                        <button
-                          className="text-xs text-blue-500 hover:text-blue-700 underline"
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-6 px-2 text-xs border-green-500 text-green-600 hover:bg-green-50 gap-1"
                           onClick={() => setProviderViewProofAppointmentId(apt.id)}
                         >
-                          📎 View Proof
-                        </button>
+                          <FileImage className="w-3 h-3" />
+                          View Proof
+                        </Button>
                       </>
                     )}
                     {aptIsProvider ? (
@@ -900,12 +903,15 @@ export function Appointments() {
                     <Badge variant="outline" className="text-green-600 border-green-600 dark:text-green-400 dark:border-green-400 text-xs">
                       Paid
                     </Badge>
-                    <button
-                      className="text-xs text-blue-500 hover:text-blue-700 underline"
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-6 px-2 text-xs border-green-500 text-green-600 hover:bg-green-50 gap-1"
                       onClick={() => setProviderViewProofAppointmentId(appointment.id)}
                     >
-                      📎 View Proof
-                    </button>
+                      <FileImage className="w-3 h-3" />
+                      View Proof
+                    </Button>
                   </>
                 )}
                 <DropdownMenu>
