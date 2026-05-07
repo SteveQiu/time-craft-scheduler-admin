@@ -860,8 +860,6 @@ export function Appointments() {
                       );
                     })()}
                     {(() => {
-                      const { isFree } = getAppointmentTotal(apt);
-                      if (isFree) return null;
                       if (paidAppointmentIds.has(apt.id)) {
                         return (
                           <Button
@@ -876,6 +874,8 @@ export function Appointments() {
                           </Button>
                         );
                       }
+                      const { isFree } = getAppointmentTotal(apt);
+                      if (isFree) return null;
                       return (
                         <Badge variant="outline" className="text-red-600 border-red-600 dark:text-red-400 dark:border-red-400 text-xs">
                           Payment Required
@@ -999,8 +999,6 @@ export function Appointments() {
                   );
                 })()}
                 {(() => {
-                  const { isFree } = getAppointmentTotal(appointment);
-                  if (isFree) return null;
                   if (paidAppointmentIds.has(appointment.id)) {
                     return (
                       <Button
@@ -1015,6 +1013,8 @@ export function Appointments() {
                       </Button>
                     );
                   }
+                  const { isFree } = getAppointmentTotal(appointment);
+                  if (isFree) return null;
                   return (
                     <Badge variant="outline" className="text-red-600 border-red-600 dark:text-red-400 dark:border-red-400 text-xs">
                       Payment Required
