@@ -41,6 +41,7 @@ interface Appointment {
   status: string;
   notes: string | null;
   created_at: string;
+  hourly_rate?: number | null;  // Saved at booking time after migration; null/undefined on old records
   approved_by?: string | null;
   booker_name?: string | null;
   booker_email?: string | null;
@@ -296,6 +297,7 @@ export function Appointments() {
   );
 
   const openingIds = useMemo(() => [...new Set(appointments.map(a => a.opening_id))], [appointments]);
+  const providerIds = useMemo(() => [...new Set(appointments.map(a => a.provider_id))], [appointments]);
 
   const { data: openingRates = [] } = useQuery({
     queryKey: ['opening-rates', openingIds],
@@ -313,6 +315,25 @@ export function Appointments() {
   const openingRateMap = useMemo(
     () => new Map(openingRates.map(o => [o.id, Number(o.hourly_rate ?? 0)])),
     [openingRates]
+  );
+
+  // Fallback: when opening is deleted, use provider's profile hourly_rate
+  const { data: providerRates = [] } = useQuery({
+    queryKey: ['provider-rates', providerIds],
+    enabled: providerIds.length > 0 && !isOrgView,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, hourly_rate')
+        .in('id', providerIds);
+      if (error) throw error;
+      return (data ?? []) as { id: string; hourly_rate: number }[];
+    },
+  });
+
+  const providerRateMap = useMemo(
+    () => new Map(providerRates.map(p => [p.id, Number(p.hourly_rate ?? 0)])),
+    [providerRates]
   );
 
   const { data: providerPayments = [], isFetching: loadingProviderPayments } = useQuery({
@@ -507,10 +528,17 @@ export function Appointments() {
   };
 
   const getAppointmentTotal = (apt: Appointment): { isFree: boolean; total: number } => {
-    // Org view: use the worker's configured rate from org_workers, not the opening's rate
-    const rate = isOrgView
-      ? getWorkerRate(apt.worker)
-      : (openingRateMap.get(apt.opening_id) ?? 0);
+    let rate: number;
+    if (apt.hourly_rate != null && Number(apt.hourly_rate) > 0) {
+      // Best: rate captured at booking time (populated after migration 20260507_add_hourly_rate_to_appointments)
+      rate = Number(apt.hourly_rate);
+    } else if (isOrgView) {
+      // Org view: worker's configured rate from org_workers
+      rate = getWorkerRate(apt.worker);
+    } else {
+      // Non-org: opening rate → provider profile rate (opening may have been deleted)
+      rate = openingRateMap.get(apt.opening_id) || providerRateMap.get(apt.provider_id) || 0;
+    }
     const isFree = rate === 0;
     // duration stored in hours (e.g. 1.5 = 90 min); guard: if > 24 assume minutes
     const durationHours = apt.duration > 24 ? apt.duration / 60 : apt.duration;
@@ -864,6 +892,8 @@ export function Appointments() {
                     })()}
                     {(() => {
                       if (paidAppointmentIds.has(apt.id)) {
+                        // Provider sees "Paid" button to view proof; customer sees nothing (they submitted it)
+                        if (!aptIsProvider) return null;
                         return (
                           <Button
                             variant="outline"
@@ -877,6 +907,8 @@ export function Appointments() {
                           </Button>
                         );
                       }
+                      // "Payment Required" is for customers only — providers don't pay
+                      if (aptIsProvider) return null;
                       const { isFree } = getAppointmentTotal(apt);
                       if (isFree) return null;
                       return (
@@ -1003,6 +1035,8 @@ export function Appointments() {
                 })()}
                 {(() => {
                   if (paidAppointmentIds.has(appointment.id)) {
+                    // Provider sees "Paid" button to view submitted proof
+                    if (!canManage) return null;
                     return (
                       <Button
                         variant="outline"
@@ -1016,6 +1050,8 @@ export function Appointments() {
                       </Button>
                     );
                   }
+                  // "Payment Required" is for customers only — providers don't pay
+                  if (canManage) return null;
                   const { isFree } = getAppointmentTotal(appointment);
                   if (isFree) return null;
                   return (
