@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRoles } from '@/hooks/useUserRoles';
+import { ROUTES } from '@/config/routes';
 
 export function RootRedirect() {
   const { user, loading: authLoading } = useAuth();
@@ -14,14 +15,14 @@ export function RootRedirect() {
 
   // Not authenticated - send to public browse page
   if (!user) {
-    return <Navigate to="/browse" replace />;
+    return <Navigate to={ROUTES.browse} replace />;
   }
 
   // Organization user → dashboard
   if (isOrganization) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to={ROUTES.dashboard} replace />;
   }
 
   // Regular user → profile
-  return <Navigate to="/profile" replace />;
+  return <Navigate to={ROUTES.profile} replace />;
 }

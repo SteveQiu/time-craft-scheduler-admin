@@ -469,3 +469,22 @@ Created src/config/app.ts as single source of truth for APP_NAME and contact ema
 - All 	oLocaleDateString() no-arg calls — no options object to extract
 - 	oLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) in AppointmentView.tsx:96 — uses [] locale (browser default), one-off chat timestamp
 - 	oLocaleDateString() in ConsentModal.tsx, Settings.tsx, BrowseDetail.tsx (320, 363) — no locale/options args, locale-default behavior intentional
+
+---
+
+## 2026-05-06: Centralized Route Paths
+
+**Task:** Centralize all hardcoded route path strings into src/config/routes.ts
+**Files Changed:**
+- Created src/config/routes.ts — ROUTES const with 14 path entries + AppRoute type
+- src/App.tsx — added ROUTES import; replaced all hardcoded paths in both desktop and mobile Route blocks
+- src/components/AppSidebar.tsx — added ROUTES import; replaced paths in userNavItems, orgNavItems, isActive comparisons, all footer Links, and navigate() call
+- src/pages/AppointmentView.tsx — added ROUTES import; replaced 2x navigate('/appointments')
+- src/pages/RootRedirect.tsx — added ROUTES import; replaced 3x Navigate to= props
+
+**Left hardcoded (intentional):**
+- /auth/callback — not present in these files; Supabase OAuth redirect left untouched per policy
+- Dynamic param suffixes (:id, :slug, :providerId) — stored as full patterns in ROUTES (e.g. ROUTES.appointmentDetail = '/appointments/:id')
+- Query string variants (?mode=org) — composed at point of use via template literal against ROUTES base path
+
+**Result:** Zero bare route string literals remain in the 4 updated files (verified with grep).

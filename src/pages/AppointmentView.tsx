@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ArrowLeft, Calendar, Clock, User, Phone, Mail, Send } from 'lucide-react';
 import { DATE_FORMATS, LOCALE } from '@/config/formats';
+import { ROUTES } from '@/config/routes';
 
 // Mock data - in production this would come from Supabase
 const mockAppointments = [
@@ -106,7 +107,7 @@ export function AppointmentView() {
         <Card>
           <CardContent className="text-center py-12">
             <p className="text-muted-foreground">Appointment not found</p>
-            <Button onClick={() => navigate('/appointments')} className="mt-4">
+            <Button onClick={() => navigate(ROUTES.appointments)} className="mt-4">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Appointments
             </Button>
@@ -129,7 +130,7 @@ export function AppointmentView() {
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between max-w-7xl mx-auto">
-        <Button variant="ghost" onClick={() => navigate('/appointments')}>
+        <Button variant="ghost" onClick={() => navigate(ROUTES.appointments)}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Appointments
         </Button>
