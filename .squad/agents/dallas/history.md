@@ -130,6 +130,20 @@ Risk files: Appointments.tsx (large, many imports, easy to break)
 `useState` (or any hook) inside `{(() => { const [x] = useState(); return ... })()}` violates React's Rules of Hooks and causes a runtime crash → blank page. TSC does NOT catch this.
 Fix: move the `useState` call to the top-level of the component. The IIFE can stay for local variable scoping (e.g. `providerViewAppt`), but hooks must be at top level.
 
+### Cash payment visibility on Paid button (2026-05-07)
+
+- `payment_proofs` table gained `payment_method_type text` (nullable) via migration `20260507_add_payment_method_type_to_proofs.sql`
+- Bulk query updated: `.select('appointment_id, photo, payment_method_type')`
+- `paidAppointmentIds` changed from `Map<string, string|null>` (appointment_id→photo) to `Map<string, {photo: string|null, methodType: string|null}>` — both `.has()` checks replaced with `proofData = .get()` + truthy check
+- Two new state vars: `paymentProofMethodType` (tracks selected tab's type) + `paymentProofTabValue` (Shadcn Tabs value)
+- Payment Info Dialog Tabs changed from uncontrolled (`defaultValue`) to controlled (`value`/`onValueChange`) — `onValueChange` sets both tab value and method type
+- `useEffect` initializes `paymentProofMethodType`/`paymentProofTabValue` from default method when `allAvailableMethods` loads and dialog is open (`paymentInfoProviderId` non-null); dependency array: `[allAvailableMethods, paymentInfoProviderId]`
+- Both state vars cleared in `onOpenChange` handler AND in `paymentProofAppointmentId` clear effect
+- `handleSubmitPaymentProof` upsert now includes `payment_method_type: paymentProofMethodType || null`
+- Cash button: `border-amber-700 text-amber-800 hover:bg-amber-50`, label "Cash", no FileImage icon
+- Non-cash button: unchanged green theme, FileImage icon, label "Paid"
+- Old proof records (null method type) → green "Paid" button (correct backward-compat behavior)
+
 ### RLS-Safe Rate Lookup via SECURITY DEFINER RPC (2026-05-07)
 
 - Customers can't read `openings` or `profiles` directly — RLS blocks all rows → all rates returned 0 → "Free" shown for all appointments
