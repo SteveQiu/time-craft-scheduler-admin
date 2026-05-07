@@ -94,6 +94,27 @@
 - `allAvailableMethods` memo: deduplicates (provider + org), then filters by `accepted_payment_method_ids` if set; falls back to all if NULL/empty
 - Payment dialog now maps over `allAvailableMethods` flat list instead of separate org/provider sections
 
+### Date Range Filter for Org Active Appointments (2026)
+
+- **Date field used:** `apt.date` (format: "YYYY-MM-DD") — parsed via `new Date(y, m - 1, d)` to avoid UTC-midnight timezone skew
+- **Filter scope:** org mode only; applies to `nonPendingActive` (confirmed/upcoming), NOT the grouped pending section
+- **Filter state:** `dateFilter: DateFilter` (`'all' | 'today' | 'week' | 'month'`), default `'all'`
+- **Helper:** module-level `applyDateFilter(apts, filter)` → returns subset; `filteredNonPendingActive` derived from `nonPendingActive` in org mode
+- **UI placement:** row of Shadcn `<Button size="sm">` toggle buttons inserted between grouped-pending section and confirmed appointments; guarded by `isOrgView`
+- **Active button:** `variant="default"`; inactive: `variant="outline"`
+- **Empty state:** `dateFilter !== 'all'` → renders `<p className="text-muted-foreground text-sm">No appointments for this period.</p>` instead of the full empty Card
+
+### Weekly Sunday Dividers in Org Appointments (2026)
+
+- **Location:** `src/components/Appointments.tsx` — the `filteredNonPendingActive.map(...)` render block (~line 1233)
+- **Helper functions** (module-level, before `applyDateFilter`):
+  - `getWeekStartSunday(dateStr)` — returns YYYY-MM-DD of the Sunday that starts the appointment's week
+  - `formatWeekLabel(weekStart)` — formats as "May 4" using `toLocaleDateString('en-US', {month:'short', day:'numeric'})`
+- **Condition:** dividers only shown when `isOrgView && (dateFilter === 'all' || dateFilter === 'month')` — skipped for `'today'`/`'week'` (single-week view)
+- **Pattern:** IIFE inside JSX (`{(() => { ... })()}`) with `let lastWeekStart = ''` — plain `let`, NOT useState. Tracks last week as it iterates. Each appointment wrapped in `<React.Fragment key={apt.id}>` to include optional divider.
+- **Divider markup:** `flex items-center gap-3 my-3` row with `h-px bg-border` lines and `text-xs text-muted-foreground font-medium whitespace-nowrap` label
+- **Commit:** `7dceb05`
+
 ### ⚠️ Import Safety Rule (learned May 2026)
 
 When refactoring imports (removing, renaming, or replacing), **always grep for ALL usages of the removed symbol** across the entire file before deleting it. Removing `Edit, Trash2` from lucide-react during a payment refactor broke Settings.tsx (blank page) because those icons were still used in the settings table actions — the refactor only scanned the payment section. Rule: `grep -n 'SymbolName'` in the file before any removal.
@@ -514,6 +535,30 @@ Created src/config/app.ts as single source of truth for APP_NAME and contact ema
 - src/App.tsx — added ROUTES import; replaced all hardcoded paths in both desktop and mobile Route blocks
 - src/components/AppSidebar.tsx — added ROUTES import; replaced paths in userNavItems, orgNavItems, isActive comparisons, all footer Links, and navigate() call
 - src/pages/AppointmentView.tsx — added ROUTES import; replaced 2x navigate('/appointments')
+
+---
+
+## 2026-05-07: Appointments Layout & Sorting
+
+**Delivered 3 commits:**
+
+1. **f4d67fe** — Week dividers + inactive date filter
+   - Week dividers now group headers (full-width rule + "Week of X" label)
+   - Date filter applies to both active & inactive appointments
+   - Completes decision: week-dividers-as-headers pattern
+
+2. **e896927** — Remove max-width, move filters to top
+   - Removed `max-w-7xl` from App.tsx (container now full-width)
+   - Moved date filters to top Filters Card (compact placement)
+   - Improves layout for wider displays
+
+3. **19e2f70** — Sort appointments by date
+   - Active appointments: ascending (upcoming first)
+   - Inactive appointments: descending (recent first)
+
+**Bishop Review:** Applied 5 a11y fixes (aria-label, aria-pressed, aria-expanded, aria-hidden on icons). All shipped.
+
+**Status:** ✅ Complete. Awaiting Squad guidance on per-page max-width pattern.
 - src/pages/RootRedirect.tsx — added ROUTES import; replaced 3x Navigate to= props
 
 **Left hardcoded (intentional):**
@@ -601,3 +646,74 @@ px tsc --noEmit\ on every commit. TypeScript errors block the commit. No excepti
 
 **Gate:** Mandatory. Commits cannot bypass this check. If \	sc\ fails, fix all errors before retrying commit.
 
+---
+
+## Location Field: Structure & Fix (2026)
+
+**Requested by:** SteveQiu
+
+**Location data structure:**
+- Stored as JSON string in `openings.location` (type `string | null` in DB)
+- JSON shape: `{ city: string, province: string, country: string, zip: string }`
+- Created/serialized via `serializeLocation()` in `src/lib/address.ts`
+
+**Bug:**
+- `OpeningView.tsx` was rendering `{opening.location}` directly — outputs raw JSON string like `{"city":"Austin","province":"TX","country":"US","zip":"78701"}`
+
+**Fix applied:**
+- Added `import { parseLocation, formatLocation } from '@/lib/address'` to `OpeningView.tsx`
+- Replaced both render sites with `{formatLocation(parseLocation(opening.location))}`
+  - Line ~202: detail card (main content area)
+  - Line ~305: booking confirmation dialog summary
+
+**Pattern (canonical):** `formatLocation(parseLocation(raw))` — always use for read-only location display. Already used in `Appointments.tsx` and `ModifyAppointmentDialog.tsx`.
+
+**Other files using location field:**
+- `src/components/Appointments.tsx` — already fixed, uses `formatLocation(parseLocation(opening.location))`
+- `src/components/ModifyAppointmentDialog.tsx` — already fixed, same pattern
+- `src/components/BookingBrowse.tsx` — uses `parseLocation()` for filter logic (not display)
+- `src/components/BrowseDetail.tsx` — check if location is displayed there too (no raw render found in this pass)
+
+**tsc:** ✅ passed (exit code 0)
+
+---
+
+## 2026-05-06: Week dividers + inactive date filter fix
+
+**Task:** Two bugs in Appointments.tsx
+
+**Bug 1 — Week divider as group header:**
+- Old: centered badge with lex-1 h-px on both sides and label in middle
+- New: label as <p> header above full-width <div className="h-px bg-border" /> divider
+- No top margin on first week header (pt === filteredNonPendingActive[0])
+
+**Bug 2 — Date filter not applied to inactive:**
+- Added ilteredInactive derived from pplyDateFilter(inactiveAppointments, dateFilter) in org view
+- Replaced all inactiveAppointments references in render with ilteredInactive
+- Empty state now says "No inactive appointments for this period." when filter active
+
+**tsc:** ✅ passed (exit code 0)
+
+---
+
+## 2026-05-06 — Bug fixes: layout + filter UX
+
+**Commit:** e896927
+
+### Changes
+- **App.tsx:** Removed max-w-7xl w-full mx-auto from both <main> elements (desktop panel + mobile). Content now fills full panel width — no mid-page scrollbar artifact.
+- **Appointments.tsx:** Moved date filter buttons (All / Today / This Week / This Month) from mid-page (after pending cards, ~line 1233) up into the Filters Card, after the select row. Used lex-wrap gap-2 mt-3.
+- Verified ilteredInactive was already wired in previous commit — no change needed.
+
+### Learnings
+- max-w-7xl mx-auto inside a resizable panel causes scrollbar to appear at the container boundary, not the viewport edge.
+- Date filter placement in Filters Card makes it discoverable alongside search/status/worker filters.
+- 	sc --noEmit pre-commit hook catches issues before push — always run.
+
+### Sort Active/Inactive Appointments by Date (2026)
+
+- `activeAppointments`: chained `.sort((a, b) => a.date.localeCompare(b.date))` after `.filter()` — ascending (earliest first)
+- `inactiveAppointments`: chained `.sort((a, b) => b.date.localeCompare(a.date))` after `.filter()` — descending (most recent first)
+- `apt.date` is `YYYY-MM-DD` string — lexicographic comparison is correct for ISO date sorting; no Date parsing needed
+- Location: `src/components/Appointments.tsx` ~lines 503–508, immediately after `today` derivation
+- Commit: `19e2f70`
