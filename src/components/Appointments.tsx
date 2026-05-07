@@ -133,6 +133,19 @@ const downloadICS = (appointments: Appointment[]) => {
 
 type DateFilter = 'all' | 'today' | 'week' | 'month';
 
+function getWeekStartSunday(dateStr: string): string {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const date = new Date(y, m - 1, d);
+  const day = date.getDay(); // 0=Sun
+  date.setDate(date.getDate() - day);
+  return date.toISOString().slice(0, 10); // YYYY-MM-DD
+}
+
+function formatWeekLabel(weekStart: string): string {
+  const [wy, wm, wd] = weekStart.split('-').map(Number);
+  return new Date(wy, wm - 1, wd).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
 function applyDateFilter(apts: Appointment[], filter: DateFilter): Appointment[] {
   if (filter === 'all') return apts;
   const now = new Date();
@@ -1231,7 +1244,32 @@ export function Appointments() {
 
             {/* Non-pending or user-view appointments */}
             {filteredNonPendingActive.length > 0 ? (
-              <div className="space-y-4">{filteredNonPendingActive.map(apt => renderAppointmentCard(apt))}</div>
+              <div className="space-y-4">
+                {(() => {
+                  const showWeekDividers = isOrgView && (dateFilter === 'all' || dateFilter === 'month');
+                  let lastWeekStart = '';
+                  return filteredNonPendingActive.map((apt) => {
+                    const weekStart = getWeekStartSunday(apt.date);
+                    const showDivider = showWeekDividers && weekStart !== lastWeekStart;
+                    lastWeekStart = weekStart;
+                    const label = formatWeekLabel(weekStart);
+                    return (
+                      <React.Fragment key={apt.id}>
+                        {showDivider && (
+                          <div className="flex items-center gap-3 my-3">
+                            <div className="flex-1 h-px bg-border" />
+                            <span className="text-xs text-muted-foreground font-medium whitespace-nowrap">
+                              Week of {label}
+                            </span>
+                            <div className="flex-1 h-px bg-border" />
+                          </div>
+                        )}
+                        {renderAppointmentCard(apt)}
+                      </React.Fragment>
+                    );
+                  });
+                })()}
+              </div>
             ) : (
               isOrgView && dateFilter !== 'all' ? (
                 <p className="text-muted-foreground text-sm">No appointments for this period.</p>
