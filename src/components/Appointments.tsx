@@ -558,18 +558,19 @@ export function Appointments() {
       a.status === 'confirmed' &&
       (isOrgView || a.provider_id === user.id)
     );
-    const ids = toComplete.map(a => a.id);
-    const { error } = await supabase
-      .from('appointments')
-      .update({ status: 'completed' })
-      .in('id', ids);
-    if (error) {
-      toast.error('Failed to complete some appointments');
-    } else {
-      toast.success(`${ids.length} appointment(s) completed.`);
-      setSelectedIds(new Set());
-      queryClient.invalidateQueries({ queryKey: ['appointments'] });
+    let successCount = 0;
+    for (const apt of toComplete) {
+      try {
+        const { error } = await supabase
+          .from('appointments')
+          .update({ status: 'completed' })
+          .eq('id', apt.id);
+        if (!error) successCount++;
+      } catch {}
     }
+    toast.success(`${successCount} appointment(s) completed.`);
+    setSelectedIds(new Set());
+    queryClient.invalidateQueries({ queryKey: ['appointments'] });
     setIsBulkActing(false);
   };
 
