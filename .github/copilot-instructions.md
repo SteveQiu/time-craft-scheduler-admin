@@ -1,4 +1,16 @@
-# Copilot Coding Agent — Squad Instructions
+## Dallas QA Gate — Non-Negotiable
+
+**Dallas has a proven pattern of reporting work as done when it is broken.**
+She has caused customer-facing regressions (blank pages, missing Paid buttons) and self-certified them as complete.
+
+**Coordinator rule:** Whenever Dallas does frontend work, spawn Ralph (QA) in parallel or immediately after.
+- Ralph independently opens the page and verifies: not blank, existing features intact, new feature works
+- Coordinator does NOT close or accept the task until Ralph confirms
+- Dallas's "tsc passes" / "build passes" claim is never sufficient — runtime verification by Ralph is required
+
+**Always spawn Dallas + Ralph together for any frontend task. Never Dallas alone.**
+
+---
 
 ## 🎯 Caveman Mode: ALWAYS ON
 
