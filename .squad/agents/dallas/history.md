@@ -130,6 +130,15 @@ Risk files: Appointments.tsx (large, many imports, easy to break)
 `useState` (or any hook) inside `{(() => { const [x] = useState(); return ... })()}` violates React's Rules of Hooks and causes a runtime crash → blank page. TSC does NOT catch this.
 Fix: move the `useState` call to the top-level of the component. The IIFE can stay for local variable scoping (e.g. `providerViewAppt`), but hooks must be at top level.
 
+### RLS-Safe Rate Lookup via SECURITY DEFINER RPC (2026-05-07)
+
+- Customers can't read `openings` or `profiles` directly — RLS blocks all rows → all rates returned 0 → "Free" shown for all appointments
+- Fix: `get_appointment_rates` RPC (`SECURITY DEFINER`) bypasses RLS server-side; `WHERE` clause still enforces ownership (`user_id = auth.uid() OR provider_id = auth.uid()`)
+- `appointmentRateMap` keyed by **appointment ID** replaces `openingRateMap` (keyed by opening_id) + `providerRateMap` (keyed by provider_id)
+- Single RPC query replaces two separate `openings` + `profiles` queries
+- Works without applying the `20260507_add_hourly_rate_to_appointments` migration (no dependency on `apt.hourly_rate` column)
+- Migration file: `supabase/migrations/20260507001_get_appointment_rates_rpc.sql`
+
 ### Patterns & Preferences
 
 - Use Tailwind responsive utilities (`sm:`, `md:`, `lg:`) for breakpoint-driven layout
@@ -717,3 +726,29 @@ px tsc --noEmit\ on every commit. TypeScript errors block the commit. No excepti
 - `apt.date` is `YYYY-MM-DD` string — lexicographic comparison is correct for ISO date sorting; no Date parsing needed
 - Location: `src/components/Appointments.tsx` ~lines 503–508, immediately after `today` derivation
 - Commit: `19e2f70`
+
+## 2025 — Unify org/non-org appointments view UI
+
+**Commit:** 646e002  
+**Files:** src/components/Appointments.tsx
+
+**Changes:**
+- Removed isOrgView && guard from date filter buttons — now shown in both views
+- ilteredNonPendingActive and ilteredInactive now always use pplyDateFilter (no conditional)
+- showWeekDividers no longer gated on isOrgView
+- Empty state messages use dateFilter !== 'all' without isOrgView guard
+
+**Preserved org-only:** grouped pending cards, worker filter Select, notification bell, approval attribution
+
+**Lesson:** When removing conditional guards, check all downstream empty-state branches too — multiple places used isOrgView && dateFilter !== 'all' pattern.
+
+## Payment Filter Fix + Payment Required Tag + Totals (2026)
+
+- `loadingPaymentInfoOpening` must be destructured from the opening query and added to the payment dialog spinner guard — omitting it allows unfiltered payment methods to flash before `paymentInfoOpening` resolves
+- Bulk opening rates: `openingIds` useMemo + `useQuery(['opening-rates', openingIds])` selecting `id, hourly_rate`; `openingRateMap` useMemo(Map) for O(1) lookup per card
+- `duration` in appointments table is in HOURS (same as openings, where Calendar.tsx uses `duration * 60` to get minutes and labels it `{opening.duration}h`); Appointments.tsx label `({apt.duration}min)` is a pre-existing display bug — actual values are 0.5, 1, 1.5, 2 etc.
+- `getAppointmentTotal` is a plain function (not hook) — safe to call inside IIFE JSX expressions
+- Total display formula: `rate * durationHours` with `> 24` guard for minutes-stored edge case
+- `isFree` gating: if `rate === 0`, show "Free" and suppress Paid/Payment Required badges entirely
+- Both card locations updated: pending group rows (`apt`) and `renderAppointmentCard` (`appointment`)
+- IIFE `{(() => { ... })()}` pattern used twice per card: once for total span, once for Paid/Payment Required logic
