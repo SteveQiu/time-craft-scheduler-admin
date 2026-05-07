@@ -704,7 +704,11 @@ export function Appointments() {
     ? applyDateFilter(nonPendingActive, dateFilter)
     : nonPendingActive;
 
-  const renderBookerInfo = (appointment: Appointment) => {
+  const filteredInactive = isOrgView
+    ? applyDateFilter(inactiveAppointments, dateFilter)
+    : inactiveAppointments;
+
+  const renderBookerInfo= (appointment: Appointment) => {
     const bookerSlug = appointment.booker_slug;
     return (
       <div className="flex flex-col sm:flex-row sm:items-center gap-2">
@@ -1256,12 +1260,9 @@ export function Appointments() {
                     return (
                       <React.Fragment key={apt.id}>
                         {showDivider && (
-                          <div className="flex items-center gap-3 my-3">
-                            <div className="flex-1 h-px bg-border" />
-                            <span className="text-xs text-muted-foreground font-medium whitespace-nowrap">
-                              Week of {label}
-                            </span>
-                            <div className="flex-1 h-px bg-border" />
+                          <div className={apt === filteredNonPendingActive[0] ? '' : 'mt-6'}>
+                            <p className="text-sm font-semibold text-foreground mb-2">Week of {label}</p>
+                            <div className="h-px bg-border mb-4" />
                           </div>
                         )}
                         {renderAppointmentCard(apt)}
@@ -1295,12 +1296,14 @@ export function Appointments() {
               {showInactive ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
             </Button>
             {showInactive && (
-              inactiveAppointments.length > 0 ? (
-                <div className="space-y-4">{inactiveAppointments.map(a => renderAppointmentCard(a, true))}</div>
+              filteredInactive.length > 0 ? (
+                <div className="space-y-4">{filteredInactive.map(a => renderAppointmentCard(a, true))}</div>
               ) : (
                 <Card className="shadow-soft border-card-border">
                   <CardContent className="text-center py-12">
-                    <p className="text-lg text-muted-foreground">No inactive appointments</p>
+                    <p className="text-lg text-muted-foreground">
+                      {isOrgView && dateFilter !== 'all' ? 'No inactive appointments for this period.' : 'No inactive appointments'}
+                    </p>
                   </CardContent>
                 </Card>
               )
