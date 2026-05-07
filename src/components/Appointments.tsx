@@ -783,10 +783,11 @@ export function Appointments() {
                         <Button
                           variant="outline"
                           size="sm"
-                          className="h-6 px-2 text-xs border-green-500 text-green-600 hover:bg-green-50 gap-1"
+                          className="min-h-[44px] min-w-[44px] px-3 text-xs border-green-500 text-green-600 hover:bg-green-50 gap-1.5"
                           onClick={() => setProviderViewProofAppointmentId(apt.id)}
+                          aria-label={`View payment proof for ${apt.booker_name || 'this appointment'}`}
                         >
-                          <FileImage className="w-3 h-3" />
+                          <FileImage className="w-4 h-4" aria-hidden="true" />
                           View Proof
                         </Button>
                       </>
@@ -906,10 +907,11 @@ export function Appointments() {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="h-6 px-2 text-xs border-green-500 text-green-600 hover:bg-green-50 gap-1"
+                      className="min-h-[44px] min-w-[44px] px-3 text-xs border-green-500 text-green-600 hover:bg-green-50 gap-1.5"
                       onClick={() => setProviderViewProofAppointmentId(appointment.id)}
+                      aria-label={`View payment proof for ${appointment.booker_name || 'this appointment'}`}
                     >
-                      <FileImage className="w-3 h-3" />
+                      <FileImage className="w-4 h-4" aria-hidden="true" />
                       View Proof
                     </Button>
                   </>
@@ -1451,43 +1453,72 @@ export function Appointments() {
         const providerViewAppt = providerViewProofAppointmentId
           ? appointments.find(a => a.id === providerViewProofAppointmentId)
           : null;
+        const [proofImageError, setProofImageError] = useState(false);
         return (
           <Dialog open={!!providerViewProofAppointmentId} onOpenChange={(open) => {
-            if (!open) setProviderViewProofAppointmentId(null);
+            if (!open) {
+              setProviderViewProofAppointmentId(null);
+              setProofImageError(false);
+            }
           }}>
-            <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+            <DialogContent className="w-[calc(100%-2rem)] sm:max-w-lg max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
-                  <CreditCard className="h-5 w-5" />
+                  <CreditCard className="h-5 w-5" aria-hidden="true" />
                   Payment Proof{providerViewAppt?.booker_name ? ` — ${providerViewAppt.booker_name}` : ''}
                 </DialogTitle>
+                <DialogDescription>
+                  Review the payment confirmation submitted by the customer.
+                </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-2">
                 {loadingProviderProof ? (
-                  <div className="flex items-center justify-center py-8">
+                  <div className="flex items-center justify-center py-8" role="status" aria-label="Loading payment proof">
                     <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                   </div>
                 ) : !providerViewProof ? (
-                  <p className="text-sm text-muted-foreground text-center py-6">
-                    No payment proof submitted yet.
-                  </p>
+                  <div className="text-center py-6 bg-muted/30 rounded-lg">
+                    <FileImage className="h-10 w-10 mx-auto mb-2 text-muted-foreground/50" aria-hidden="true" />
+                    <p className="text-sm text-muted-foreground">
+                      No payment proof submitted yet.
+                    </p>
+                  </div>
+                ) : !providerViewProof.photo && !providerViewProof.note ? (
+                  <div className="text-center py-6 bg-muted/30 rounded-lg">
+                    <FileImage className="h-10 w-10 mx-auto mb-2 text-muted-foreground/50" aria-hidden="true" />
+                    <p className="text-sm text-muted-foreground">
+                      Payment proof record exists but contains no image or note.
+                    </p>
+                  </div>
                 ) : (
                   <div className="space-y-4">
                     {providerViewProof.note && (
                       <div>
-                        <p className="text-xs font-medium text-muted-foreground mb-1">Note from customer</p>
-                        <div className="bg-muted/40 border border-border rounded-lg px-3 py-2 text-sm text-foreground">
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Customer Note</p>
+                        <div className="bg-muted/50 rounded-md p-3 text-sm text-foreground leading-relaxed">
                           {providerViewProof.note}
                         </div>
                       </div>
                     )}
                     {providerViewProof.photo && (
                       <div>
-                        <p className="text-xs font-medium text-muted-foreground mb-1">Payment screenshot</p>
-                        <img src={providerViewProof.photo} alt="Payment proof" className="max-w-full rounded border" />
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Payment Screenshot</p>
+                        {proofImageError ? (
+                          <div className="bg-muted/30 rounded-md p-6 text-center border border-dashed border-muted-foreground/30">
+                            <ImageIcon className="h-8 w-8 mx-auto mb-2 text-muted-foreground/50" aria-hidden="true" />
+                            <p className="text-sm text-muted-foreground">Could not load image</p>
+                          </div>
+                        ) : (
+                          <img 
+                            src={providerViewProof.photo} 
+                            alt="Payment proof submitted by customer" 
+                            className="max-w-full rounded-md border shadow-sm" 
+                            onError={() => setProofImageError(true)}
+                          />
+                        )}
                       </div>
                     )}
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-muted-foreground pt-2 border-t">
                       Submitted {new Date(providerViewProof.created_at).toLocaleString()}
                     </p>
                   </div>
