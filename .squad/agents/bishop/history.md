@@ -332,6 +332,24 @@
     - **Tool:** Chrome DevTools > Inspect > Accessibility panel
 
 11. **Add swipe-to-dismiss for mobile dialogs** (Issue #26)
+
+---
+
+## 2026-05-07: Appointments Layout A11y Review
+
+**Work:** Reviewed Dallas layout changes (commits e896927, f4d67fe).
+
+**Applied 5 A11y Fixes:**
+- `aria-label` on filter buttons
+- `aria-pressed` state tracking
+- `aria-expanded` on collapsible sections
+- `aria-hidden="true"` on decorative icons
+- Ensured WCAG 2.1 AA compliance
+
+**Recommendation Flagged:**
+- **Max-width per-page enforcement** — suggested standardized max-width rule for individual pages (preserving full-width flexibility at layout level). Deferred for Squad decision.
+
+**Status:** ✅ Complete. QA gate passed. Awaiting Squad decision on per-page max-width guidance.
     - Replace Dialog with Drawer component on mobile
     - **Rationale:** Matches native app behavior, improves mobile UX
     - **Tailwind:** Use Shadcn `<Drawer>` instead of `<Dialog>` on mobile
@@ -401,3 +419,34 @@
 - Touch targets ≥44px via `min-h-[44px] min-w-[44px]`
 - Decorative icons: `aria-hidden="true"`
 - Responsive dialogs: `w-[calc(100%-2rem)] sm:max-w-{size}`
+
+### Dallas Layout Changes Review (Jan 2025)
+
+**Context:** Dallas removed `max-w-7xl mx-auto` from `<main>` in App.tsx to fix a mid-page scrollbar. Moved date filter buttons into Filters Card. Applied `filteredInactive` to Inactive section.
+
+**Review Findings:**
+
+#### 1. Layout — max-w-7xl removal
+🟡 **Wide screen readability** — On 2560px monitors, the main panel (~2048px wide) has no content width cap. Appointment cards stretch to full panel width, creating very long text lines (WCAG 1.4.8 recommends ≤80 chars/line). Removing from `<main>` was correct to fix the scrollbar, but components should add their own inner `max-w-7xl mx-auto` wrapper. No fix applied here — flagged for Dallas to add per-component max-width.
+
+#### 2. Filter placement
+🟢 **Good** — `flex flex-wrap gap-2 mt-3` wraps correctly on small screens. No issues.
+
+#### 3. Filter labels
+🟢 **Correct** — 'all'→'All', 'today'→'Today', 'week'→'This Week', 'month'→'This Month'. All accurate.
+
+#### 4. Both sections filtered
+✅ **Confirmed** — `filteredNonPendingActive` AND `filteredInactive` both call `applyDateFilter` when `isOrgView`. Filter buttons only render in org view, so consistent.
+
+#### 5. A11y Issues Found & Fixed
+
+**Fixed in this pass:**
+- 🟡 Search input: added `aria-label="Search appointments"` (placeholder alone fails WCAG 1.3.1)
+- 🟡 Date filter buttons: added `role="group" aria-label="Date filter"` wrapper + `aria-pressed` on each button
+- 🟡 CalendarPlus dropdown triggers (2 instances): added `aria-label="Add to calendar"` + `aria-hidden` on icon
+- 🟡 Inactive toggle button: added `aria-expanded={showInactive}` + `aria-hidden` on chevrons
+- 🟡 Notification bell div: added `tabIndex={0}`, `role="img"`, `aria-label` with full status text; icons marked `aria-hidden`
+
+**Note for Dallas (not fixed — design decision):**
+- 🟡 `<h3>` inside `<button>` (Inactive toggle) — technically invalid HTML per spec (headings are flow content; buttons accept phrasing). Browsers render it fine but consider refactoring to `<div>` acting as heading visually.
+- 🟡 Filter buttons only apply in `isOrgView` — user view has no date filter. Intentional but may confuse users expecting it.

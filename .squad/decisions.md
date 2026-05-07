@@ -97,6 +97,27 @@ Proof images stored as base64 JPEG in `payment_proofs.photo` (no Supabase Storag
 
 **Scope:** Org mode only. Per-appointment row (not group header), since different bookers in same opening group may have different payment status.
 
+### User Directive: Bishop UI Review Gate (2026-05-06)
+**Authority:** SteveQiu (via Copilot)
+
+Always have Bishop (UX/a11y) review UI changes before they ship. Bishop must monitor all frontend work. Rationale: Dallas has shipped broken/poor layouts. Bishop is the quality gate for UI.
+
+### Week Dividers & Inactive Appointment Filter (2026-05-06)
+**Authority:** Dallas
+
+**Pattern:** Week dividers are group headers (not inline separators). "Week of X" label sits above full-width `h-px` rule. First header has no top margin. Canonical pattern for grouped lists in appointments view.
+
+**Scope:** Date filter applies to both active and inactive appointments. `applyDateFilter` called on `inactiveAppointments` in org view. User view unfiltered.
+
+**Empty state copy:** "No inactive appointments for this period" (filtered) vs. "No inactive appointments" (unfiltered).
+
+### Appointment Sorting by Date (2026-05-07)
+**Authority:** Dallas
+
+**Active appointments:** Ascending (upcoming first)
+**Inactive appointments:** Descending (recent first)
+Improves UX for org booking workflows. All appointments sorted in `Appointments.tsx` render pipeline.
+
 ## Governance
 
 - All meaningful changes require team consensus
