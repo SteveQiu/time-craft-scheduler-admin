@@ -295,6 +295,26 @@ export function Appointments() {
     [submittedProofs]
   );
 
+  const openingIds = useMemo(() => [...new Set(appointments.map(a => a.opening_id))], [appointments]);
+
+  const { data: openingRates = [] } = useQuery({
+    queryKey: ['opening-rates', openingIds],
+    enabled: openingIds.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('openings')
+        .select('id, hourly_rate')
+        .in('id', openingIds);
+      if (error) throw error;
+      return (data ?? []) as { id: string; hourly_rate: number }[];
+    },
+  });
+
+  const openingRateMap = useMemo(
+    () => new Map(openingRates.map(o => [o.id, Number(o.hourly_rate ?? 0)])),
+    [openingRates]
+  );
+
   const { data: providerPayments = [], isFetching: loadingProviderPayments } = useQuery({
     queryKey: ['provider-payment-methods', paymentInfoProviderId],
     queryFn: async () => {
@@ -331,7 +351,7 @@ export function Appointments() {
   });
 
   // Fetch the opening's accepted payment method IDs to filter what customer sees
-  const { data: paymentInfoOpening } = useQuery({
+  const { data: paymentInfoOpening, isLoading: loadingPaymentInfoOpening } = useQuery({
     queryKey: ['opening-payment-methods', paymentInfoOpeningId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -484,6 +504,15 @@ export function Appointments() {
       case 'completed': return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
       default: return 'bg-secondary text-secondary-foreground';
     }
+  };
+
+  const getAppointmentTotal = (apt: Appointment): { isFree: boolean; total: number } => {
+    const rate = openingRateMap.get(apt.opening_id) ?? 0;
+    const isFree = rate === 0;
+    // duration stored in hours (e.g. 1.5 = 90 min); guard: if > 24 assume minutes
+    const durationHours = apt.duration > 24 ? apt.duration / 60 : apt.duration;
+    const total = isFree ? 0 : rate * durationHours;
+    return { isFree, total };
   };
 
   const filteredAppointments = appointments.filter(apt => {
@@ -822,23 +851,42 @@ export function Appointments() {
                     {renderBookerInfo(apt)}
                   </div>
                   <div className="flex items-center space-x-2">
-                    {paidAppointmentIds.has(apt.id) && (
-                      <>
-                        <Badge variant="outline" className="text-green-600 border-green-600 dark:text-green-400 dark:border-green-400 text-xs">
-                          Paid
+                    {(() => {
+                      const { isFree, total } = getAppointmentTotal(apt);
+                      return (
+                        <span className="text-sm font-medium text-muted-foreground">
+                          {isFree ? 'Free' : `$${total % 1 === 0 ? total : total.toFixed(2)}`}
+                        </span>
+                      );
+                    })()}
+                    {(() => {
+                      const { isFree } = getAppointmentTotal(apt);
+                      if (isFree) return null;
+                      if (paidAppointmentIds.has(apt.id)) {
+                        return (
+                          <>
+                            <Badge variant="outline" className="text-green-600 border-green-600 dark:text-green-400 dark:border-green-400 text-xs">
+                              Paid
+                            </Badge>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="min-h-[44px] min-w-[44px] px-3 text-xs border-green-500 text-green-600 hover:bg-green-50 gap-1.5"
+                              onClick={() => setProviderViewProofAppointmentId(apt.id)}
+                              aria-label={`View payment proof for ${apt.booker_name || 'this appointment'}`}
+                            >
+                              <FileImage className="w-4 h-4" aria-hidden="true" />
+                              View Proof
+                            </Button>
+                          </>
+                        );
+                      }
+                      return (
+                        <Badge variant="outline" className="text-red-600 border-red-600 dark:text-red-400 dark:border-red-400 text-xs">
+                          Payment Required
                         </Badge>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="min-h-[44px] min-w-[44px] px-3 text-xs border-green-500 text-green-600 hover:bg-green-50 gap-1.5"
-                          onClick={() => setProviderViewProofAppointmentId(apt.id)}
-                          aria-label={`View payment proof for ${apt.booker_name || 'this appointment'}`}
-                        >
-                          <FileImage className="w-4 h-4" aria-hidden="true" />
-                          View Proof
-                        </Button>
-                      </>
-                    )}
+                      );
+                    })()}
                     {aptIsProvider ? (
                       <>
                         <Button variant="default" size="sm" onClick={() => handleApprove(apt.id)}>
@@ -946,23 +994,43 @@ export function Appointments() {
                 <Badge className={getStatusColor(appointment.status)}>
                   {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
                 </Badge>
-                {paidAppointmentIds.has(appointment.id) && (
-                  <>
-                    <Badge variant="outline" className="text-green-600 border-green-600 dark:text-green-400 dark:border-green-400 text-xs">
-                      Paid
+                {/* Total display */}
+                {(() => {
+                  const { isFree, total } = getAppointmentTotal(appointment);
+                  return (
+                    <span className="text-sm font-medium text-muted-foreground">
+                      {isFree ? 'Free' : `$${total % 1 === 0 ? total : total.toFixed(2)}`}
+                    </span>
+                  );
+                })()}
+                {(() => {
+                  const { isFree } = getAppointmentTotal(appointment);
+                  if (isFree) return null;
+                  if (paidAppointmentIds.has(appointment.id)) {
+                    return (
+                      <>
+                        <Badge variant="outline" className="text-green-600 border-green-600 dark:text-green-400 dark:border-green-400 text-xs">
+                          Paid
+                        </Badge>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="min-h-[44px] min-w-[44px] px-3 text-xs border-green-500 text-green-600 hover:bg-green-50 gap-1.5"
+                          onClick={() => setProviderViewProofAppointmentId(appointment.id)}
+                          aria-label={`View payment proof for ${appointment.booker_name || 'this appointment'}`}
+                        >
+                          <FileImage className="w-4 h-4" aria-hidden="true" />
+                          View Proof
+                        </Button>
+                      </>
+                    );
+                  }
+                  return (
+                    <Badge variant="outline" className="text-red-600 border-red-600 dark:text-red-400 dark:border-red-400 text-xs">
+                      Payment Required
                     </Badge>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="min-h-[44px] min-w-[44px] px-3 text-xs border-green-500 text-green-600 hover:bg-green-50 gap-1.5"
-                      onClick={() => setProviderViewProofAppointmentId(appointment.id)}
-                      aria-label={`View payment proof for ${appointment.booker_name || 'this appointment'}`}
-                    >
-                      <FileImage className="w-4 h-4" aria-hidden="true" />
-                      View Proof
-                    </Button>
-                  </>
-                )}
+                  );
+                })()}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="sm" aria-label="Add to calendar">
@@ -1404,7 +1472,7 @@ export function Appointments() {
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
-            {(loadingProviderPayments || loadingOrgPayments) ? (
+            {(loadingProviderPayments || loadingOrgPayments || loadingPaymentInfoOpening) ? (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
               </div>
