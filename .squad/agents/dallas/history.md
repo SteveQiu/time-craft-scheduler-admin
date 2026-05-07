@@ -98,6 +98,17 @@
 
 When refactoring imports (removing, renaming, or replacing), **always grep for ALL usages of the removed symbol** across the entire file before deleting it. Removing `Edit, Trash2` from lucide-react during a payment refactor broke Settings.tsx (blank page) because those icons were still used in the settings table actions — the refactor only scanned the payment section. Rule: `grep -n 'SymbolName'` in the file before any removal.
 
+### RULE: Always verify page after edits
+After EVERY edit to Appointments.tsx (or any page component), run:
+  npx tsc --noEmit
+If errors → fix before committing. NEVER commit a broken build.
+Pattern: This page has gone blank 2+ times due to bad imports after styling edits.
+Risk files: Appointments.tsx (large, many imports, easy to break)
+
+### RULE: Never call useState inside an IIFE in JSX (learned May 2026)
+`useState` (or any hook) inside `{(() => { const [x] = useState(); return ... })()}` violates React's Rules of Hooks and causes a runtime crash → blank page. TSC does NOT catch this.
+Fix: move the `useState` call to the top-level of the component. The IIFE can stay for local variable scoping (e.g. `providerViewAppt`), but hooks must be at top level.
+
 ### Patterns & Preferences
 
 - Use Tailwind responsive utilities (`sm:`, `md:`, `lg:`) for breakpoint-driven layout
