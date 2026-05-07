@@ -448,3 +448,24 @@ When refactoring imports (removing, renaming, or replacing), **always grep for A
 
 ## 2026-05-06: App name config pattern
 Created src/config/app.ts as single source of truth for APP_NAME and contact emails (supportEmail, privacyEmail, legalEmail). Updated AppSidebar, App, ResetPasswordFlow, SignInDialog, Auth, and Privacy/ConsentModal to import from config. Changing the app name now requires editing only one file.
+
+### Centralize Date/Time Formats (May 2026)
+
+**Task:** Extract all repeated 	oLocaleDateString/	oLocaleTimeString inline options into src/config/formats.ts.
+
+**Created:** src/config/formats.ts
+- LOCALE = 'en-US'
+- DATE_FORMATS.long — { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }
+- DATE_FORMATS.weekdayShort — { weekday: 'long', month: 'short', day: 'numeric' }
+- TIME_FORMATS.time24 — { hour: '2-digit', minute: '2-digit', hour12: false }
+
+**Updated files:**
+- src/pages/AppointmentView.tsx — DATE_FORMATS.long replaces inline object (line 206)
+- src/pages/OpeningView.tsx — DATE_FORMATS.long replaces inline object (line 138)
+- src/components/Calendar.tsx — DATE_FORMATS.weekdayShort (line 920); TIME_FORMATS.time24 (lines 1015, 1433, 1435)
+- src/components/BrowseDetail.tsx — TIME_FORMATS.time24 (line 284)
+
+**Left inline (intentionally):**
+- All 	oLocaleDateString() no-arg calls — no options object to extract
+- 	oLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) in AppointmentView.tsx:96 — uses [] locale (browser default), one-off chat timestamp
+- 	oLocaleDateString() in ConsentModal.tsx, Settings.tsx, BrowseDetail.tsx (320, 363) — no locale/options args, locale-default behavior intentional

@@ -7,6 +7,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescript
 import { Calendar as CalendarIcon, Loader2, Share2, ExternalLink, ArrowLeft, Check, Crown, User } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatLocation, parseLocation } from '@/lib/address';
+import { TIME_FORMATS, LOCALE } from '@/config/formats';
 
 interface OpeningWithProfile {
   id: string;
@@ -281,7 +282,7 @@ export function BrowseDetail({
                 {timesForSelection.map(slot => (
                   <div key={slot.id} className="p-3 border rounded-lg space-y-3">
                     <div>
-                      <div className="font-semibold text-sm">{new Date(`1970-01-01T${slot.start_time}`).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}</div>
+                      <div className="font-semibold text-sm">{new Date(`1970-01-01T${slot.start_time}`).toLocaleTimeString(LOCALE, TIME_FORMATS.time24)}</div>
                       <div className="text-xs text-muted-foreground">{slot.duration}h</div>
                     </div>
                     <Button size="sm" onClick={async () => {

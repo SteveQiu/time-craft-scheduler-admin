@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ArrowLeft, Calendar, Clock, User, Phone, Mail, Send } from 'lucide-react';
+import { DATE_FORMATS, LOCALE } from '@/config/formats';
 
 // Mock data - in production this would come from Supabase
 const mockAppointments = [
@@ -203,12 +204,7 @@ export function AppointmentView() {
                   <div className="flex items-center space-x-2">
                     <Calendar className="h-4 w-4 text-muted-foreground" />
                     <p className="font-medium text-foreground">
-                      {new Date(appointment.date).toLocaleDateString('en-US', { 
-                        weekday: 'long', 
-                        year: 'numeric', 
-                        month: 'long', 
-                        day: 'numeric' 
-                      })}
+                      {new Date(appointment.date).toLocaleDateString(LOCALE, DATE_FORMATS.long)}
                     </p>
                   </div>
                   <div className="flex items-center space-x-2">

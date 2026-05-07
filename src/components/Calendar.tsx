@@ -21,6 +21,7 @@ import { PaymentMethodForm } from '@/components/payment/PaymentMethodForm';
 import { useOrgWorkers } from '@/hooks/useOrgWorkers';
 import { parseLocation, formatLocation, serializeLocation, type LocationFields } from '@/lib/address';
 import { AddressInput } from '@/components/ui/AddressInput';
+import { DATE_FORMATS, TIME_FORMATS, LOCALE } from '@/config/formats';
 
 interface TimeSlot {
   id: string;
@@ -917,11 +918,7 @@ export function Calendar() {
           <CardHeader>
             <div className="flex items-center justify-between gap-2 flex-wrap">
               <CardTitle className="text-lg font-semibold">
-                {selectedDate.toLocaleDateString('en-US', { 
-                  weekday: 'long', 
-                  month: 'short', 
-                  day: 'numeric' 
-                })}
+                {selectedDate.toLocaleDateString(LOCALE, DATE_FORMATS.weekdayShort)}
               </CardTitle>
               {getOpeningsForDate(selectedDate).length > 0 && user && (
                 <Button
@@ -1012,7 +1009,7 @@ export function Calendar() {
                                 />
                               </div>
                               <div className="text-sm space-y-1 flex-1">
-                                <div className="font-medium whitespace-nowrap overflow-hidden">{new Date(`1970-01-01T${opening.start_time}`).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })} - {new Date(`1970-01-01T${opening.end_time}`).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })} ({opening.duration}h)</div>
+                                <div className="font-medium whitespace-nowrap overflow-hidden">{new Date(`1970-01-01T${opening.start_time}`).toLocaleTimeString(LOCALE, TIME_FORMATS.time24)} - {new Date(`1970-01-01T${opening.end_time}`).toLocaleTimeString(LOCALE, TIME_FORMATS.time24)} ({opening.duration}h)</div>
                                 <div className="font-medium">{opening.service}</div>
                                 <div>
                                   {Number(opening.hourly_rate) === 0
@@ -1430,9 +1427,9 @@ export function Calendar() {
               <div key={o.id} className="text-sm p-2 rounded bg-destructive/10 border border-destructive/20">
                 <span className="font-medium">{o.date}</span>
                 {' · '}
-                {new Date(`1970-01-01T${o.start_time}`).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}
+                {new Date(`1970-01-01T${o.start_time}`).toLocaleTimeString(LOCALE, TIME_FORMATS.time24)}
                 {' – '}
-                {new Date(`1970-01-01T${o.end_time}`).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}
+                {new Date(`1970-01-01T${o.end_time}`).toLocaleTimeString(LOCALE, TIME_FORMATS.time24)}
                 {' · '}
                 {o.worker}
                 {' · '}
