@@ -26,6 +26,7 @@ import AdminReports from "@/pages/AdminReports";
 import Notifications from "@/pages/Notifications";
 
 import { AppSidebar } from "@/components/AppSidebar";
+import { APP_NAME } from "@/config/app";
 
 const queryClient = new QueryClient();
 
@@ -51,7 +52,7 @@ const App = () => {
                   >
                     <Menu className="h-6 w-6" />
                   </Button>
-                  <h1 className="font-bold">PikAppoint</h1>
+                  <h1 className="font-bold">{APP_NAME}</h1>
                   <div className="w-10" /> {/* Spacer for centering */}
                 </div>
               </header>

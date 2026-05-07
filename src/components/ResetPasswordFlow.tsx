@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Calendar, AlertCircle, CheckCircle } from 'lucide-react';
+import { APP_NAME } from '@/config/app';
 
 export function ResetPasswordFlow() {
   const navigate = useNavigate();
@@ -86,7 +87,7 @@ export function ResetPasswordFlow() {
           <div className="flex justify-center mb-4">
             <Calendar className="h-12 w-12 text-primary" />
           </div>
-          <h1 className="text-3xl font-bold text-foreground">PikAppoint</h1>
+          <h1 className="text-3xl font-bold text-foreground">{APP_NAME}</h1>
           <p className="text-muted-foreground mt-2">Reset your password</p>
         </div>
 

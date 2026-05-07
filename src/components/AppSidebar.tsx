@@ -1,4 +1,5 @@
 import { Search, Home, Calendar as CalendarIcon, Users, Clock, Settings, LogIn, LogOut, UserCircle, Shield, Bell } from 'lucide-react';
+import { APP_NAME } from '@/config/app';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRoles } from '@/hooks/useUserRoles';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
@@ -74,7 +75,7 @@ export function AppSidebar() {
       {/* Logo */}
       <div className="flex items-center space-x-2 px-4 py-3 border-b border-border">
         <CalendarIcon className="h-8 w-8 text-primary flex-shrink-0" />
-        <h1 className="text-lg font-bold text-foreground truncate">PikAppoint</h1>
+        <h1 className="text-lg font-bold text-foreground truncate">{APP_NAME}</h1>
       </div>
 
       {/* Navigation */}

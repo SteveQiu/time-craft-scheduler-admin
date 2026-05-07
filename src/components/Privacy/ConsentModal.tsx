@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { APP_CONFIG } from '@/config/app';
 import {
   Dialog,
   DialogContent,
@@ -69,7 +70,7 @@ We do not sell your personal data to third parties.
 You have the right to access, correct, or delete your personal data.
 
 ## Contact
-For privacy concerns, contact us at privacy@pikappoint.com`;
+For privacy concerns, contact us at ${APP_CONFIG.privacyEmail}`;
     } else {
       return `# Terms of Service
 
@@ -79,7 +80,7 @@ Last updated: ${new Date().toLocaleDateString()}
 By using our service, you agree to these terms.
 
 ## Service Description
-PikAppoint provides scheduling and time management services.
+${APP_CONFIG.name} provides scheduling and time management services.
 
 ## User Obligations
 You must provide accurate information and use the service lawfully.
@@ -94,7 +95,7 @@ We are not liable for indirect or consequential damages.
 We may update these terms. Continued use implies acceptance.
 
 ## Contact
-For questions, contact us at legal@pikappoint.com`;
+For questions, contact us at ${APP_CONFIG.legalEmail}`;
     }
   };
 
