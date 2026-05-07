@@ -1136,6 +1136,20 @@ export function Appointments() {
               </Select>
             )}
           </div>
+          {isOrgView && (
+            <div className="flex flex-wrap gap-2 mt-3">
+              {(['all', 'today', 'week', 'month'] as DateFilter[]).map(f => (
+                <Button
+                  key={f}
+                  variant={dateFilter === f ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setDateFilter(f)}
+                >
+                  {f === 'all' ? 'All' : f === 'today' ? 'Today' : f === 'week' ? 'This Week' : 'This Month'}
+                </Button>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -1230,23 +1244,7 @@ export function Appointments() {
               renderGroupedPendingCard(openingId, appts)
             )}
 
-            {/* Date range filter for confirmed active appointments (org view only) */}
-            {isOrgView && (
-              <div className="flex gap-2 mb-4">
-                {(['all', 'today', 'week', 'month'] as DateFilter[]).map(f => (
-                  <Button
-                    key={f}
-                    variant={dateFilter === f ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setDateFilter(f)}
-                  >
-                    {f === 'all' ? 'All' : f === 'today' ? 'Today' : f === 'week' ? 'This Week' : 'This Month'}
-                  </Button>
-                ))}
-              </div>
-            )}
-
-            {/* Non-pending or user-view appointments */}
+            {/* Non-pendingor user-view appointments */}
             {filteredNonPendingActive.length > 0 ? (
               <div className="space-y-4">
                 {(() => {
