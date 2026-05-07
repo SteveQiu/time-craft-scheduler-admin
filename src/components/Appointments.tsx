@@ -203,8 +203,6 @@ export function Appointments() {
   const [paymentProofNote, setPaymentProofNote] = useState('');
   const [paymentProofPhoto, setPaymentProofPhoto] = useState<string | null>(null);
   const [paymentProofPhotoName, setPaymentProofPhotoName] = useState('');
-  const [paymentProofMethodType, setPaymentProofMethodType] = useState<string | null>(null);
-  const [paymentProofTabValue, setPaymentProofTabValue] = useState<string | null>(null);
   const [isSubmittingProof, setIsSubmittingProof] = useState(false);
   const [proofSubmitted, setProofSubmitted] = useState(false);
   const [paymentProofAppointmentId, setPaymentProofAppointmentId] = useState<string | null>(null);
@@ -285,7 +283,7 @@ export function Appointments() {
     queryFn: async () => {
       const { data } = await supabase
         .from('payment_proofs')
-        .select('appointment_id, photo, payment_method_type')
+        .select('appointment_id, photo')
         .in('appointment_id', appointmentIds);
       return data ?? [];
     },
@@ -293,9 +291,7 @@ export function Appointments() {
 
   const paidAppointmentIds = useMemo(
     () => new Map(
-      (submittedProofs ?? []).map((p: { appointment_id: string; photo: string | null; payment_method_type: string | null }) =>
-        [p.appointment_id, { photo: p.photo ?? null, methodType: p.payment_method_type ?? null }]
-      )
+      (submittedProofs ?? []).map((p: { appointment_id: string; photo: string | null }) => [p.appointment_id, p.photo ?? null])
     ),
     [submittedProofs]
   );
@@ -423,19 +419,8 @@ export function Appointments() {
       setPaymentProofPhoto(null);
       setPaymentProofPhotoName('');
       setProofSubmitted(false);
-      setPaymentProofMethodType(null);
-      setPaymentProofTabValue(null);
     }
   }, [paymentProofAppointmentId]);
-
-  // Initialize selected payment method type when dialog opens / methods load
-  useEffect(() => {
-    if (allAvailableMethods.length > 0 && paymentProofMethodType === null && paymentInfoProviderId) {
-      const defaultMethod = allAvailableMethods.find(m => m.is_default) ?? allAvailableMethods[0];
-      setPaymentProofMethodType(defaultMethod?.type ?? null);
-      setPaymentProofTabValue(defaultMethod?.id ?? null);
-    }
-  }, [allAvailableMethods, paymentInfoProviderId]);
 
   const handlePaymentPhotoUpload= (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -487,7 +472,6 @@ export function Appointments() {
           customer_id: user.id,
           note: paymentProofNote || null,
           photo: paymentProofPhoto || null,
-          payment_method_type: paymentProofMethodType || null,
         }, { onConflict: 'appointment_id' });
 
       if (error) throw error;
@@ -883,25 +867,19 @@ export function Appointments() {
                       );
                     })()}
                     {(() => {
-                      const proofData = paidAppointmentIds.get(apt.id);
-                      if (proofData) {
-                        // Provider sees styled button to view proof; customer sees nothing
+                      if (paidAppointmentIds.has(apt.id)) {
+                        // Provider sees "Paid" button to view proof; customer sees nothing (they submitted it)
                         if (!aptIsProvider) return null;
-                        const isCash = proofData.methodType === 'cash';
                         return (
                           <Button
                             variant="outline"
                             size="sm"
-                            className={`min-h-[44px] min-w-[44px] px-3 text-xs gap-1.5 ${
-                              isCash
-                                ? 'border-amber-700 text-amber-800 hover:bg-amber-50'
-                                : 'border-green-500 text-green-600 hover:bg-green-50'
-                            }`}
+                            className="min-h-[44px] min-w-[44px] px-3 text-xs border-green-500 text-green-600 hover:bg-green-50 gap-1.5"
                             onClick={() => setProviderViewProofAppointmentId(apt.id)}
                             aria-label={`View payment proof for ${apt.booker_name || 'this appointment'}`}
                           >
-                            {!isCash && <FileImage className="w-4 h-4" aria-hidden="true" />}
-                            {isCash ? 'Cash' : 'Paid'}
+                            <FileImage className="w-4 h-4" aria-hidden="true" />
+                            Paid
                           </Button>
                         );
                       }
@@ -1032,25 +1010,19 @@ export function Appointments() {
                   );
                 })()}
                 {(() => {
-                  const proofData = paidAppointmentIds.get(appointment.id);
-                  if (proofData) {
-                    // Provider sees styled button to view submitted proof
+                  if (paidAppointmentIds.has(appointment.id)) {
+                    // Provider sees "Paid" button to view submitted proof
                     if (!canManage) return null;
-                    const isCash = proofData.methodType === 'cash';
                     return (
                       <Button
                         variant="outline"
                         size="sm"
-                        className={`min-h-[44px] min-w-[44px] px-3 text-xs gap-1.5 ${
-                          isCash
-                            ? 'border-amber-700 text-amber-800 hover:bg-amber-50'
-                            : 'border-green-500 text-green-600 hover:bg-green-50'
-                        }`}
+                        className="min-h-[44px] min-w-[44px] px-3 text-xs border-green-500 text-green-600 hover:bg-green-50 gap-1.5"
                         onClick={() => setProviderViewProofAppointmentId(appointment.id)}
                         aria-label={`View payment proof for ${appointment.booker_name || 'this appointment'}`}
                       >
-                        {!isCash && <FileImage className="w-4 h-4" aria-hidden="true" />}
-                        {isCash ? 'Cash' : 'Paid'}
+                        <FileImage className="w-4 h-4" aria-hidden="true" />
+                        Paid
                       </Button>
                     );
                   }
@@ -1495,8 +1467,6 @@ export function Appointments() {
           setPaymentProofNote('');
           setPaymentProofPhoto(null);
           setPaymentProofPhotoName('');
-          setPaymentProofMethodType(null);
-          setPaymentProofTabValue(null);
         }
       }}>
         <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
@@ -1517,12 +1487,9 @@ export function Appointments() {
               </p>
             ) : (
               <Tabs
-                value={paymentProofTabValue ?? (allAvailableMethods.find(m => m.is_default) ?? allAvailableMethods[0])?.id ?? ''}
-                onValueChange={(val) => {
-                  setPaymentProofTabValue(val);
-                  const m = allAvailableMethods.find(pm => pm.id === val);
-                  setPaymentProofMethodType(m?.type ?? null);
-                }}
+                defaultValue={
+                  (allAvailableMethods.find(m => m.is_default) ?? allAvailableMethods[0])?.id
+                }
               >
                 <TabsList className="flex flex-wrap h-auto gap-1 mb-3">
                   {allAvailableMethods.map((pm) => (
