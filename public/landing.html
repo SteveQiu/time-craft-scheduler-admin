@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="PikAppoint — Smart appointment scheduling that connects service providers with customers. Easy booking, payments, and provider management in one place." />
+  <meta name="keywords" content="appointment scheduling, booking software, service providers, online booking, PikAppoint" />
+  <meta property="og:title" content="PikAppoint — Smart Appointment Scheduling" />
+  <meta property="og:description" content="Connect your services with customers through effortless online booking." />
+  <meta property="og:type" content="website" />
+  <title>PikAppoint — Smart Appointment Scheduling</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50:  '#eef2ff',
+              100: '#e0e7ff',
+              200: '#c7d2fe',
+              300: '#a5b4fc',
+              400: '#818cf8',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+              800: '#3730a3',
+              900: '#312e81',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+</head>
+<body class="font-sans bg-white text-gray-900 antialiased">
+
+  <!-- NAV -->
+  <nav class="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-gray-100">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
+      <span class="text-xl font-bold text-brand-700 tracking-tight">PikAppoint</span>
+      <a href="/"
+         class="inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors">
+        Sign In
+      </a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="relative overflow-hidden bg-gradient-to-br from-brand-900 via-brand-800 to-brand-600 text-white">
+    <!-- subtle grid overlay -->
+    <div class="absolute inset-0 opacity-10"
+         style="background-image: url(&quot;data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M0 40L40 0H20L0 20M40 40V20L20 40'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E&quot;)">
+    </div>
+    <div class="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-24 sm:py-32 text-center">
+      <!-- badge -->
+      <span class="inline-block mb-6 bg-brand-500/30 border border-brand-400/40 text-brand-200 text-xs font-semibold uppercase tracking-widest px-4 py-1.5 rounded-full">
+        Appointment Scheduling Platform
+      </span>
+      <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight mb-6">
+        Book smarter with<br class="hidden sm:block" />
+        <span class="text-brand-300">PikAppoint</span>
+      </h1>
+      <p class="max-w-2xl mx-auto text-lg sm:text-xl text-brand-100 mb-10">
+        The all-in-one scheduling platform that connects service providers with their customers — seamless booking, payments, and management in one place.
+      </p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <a href="/"
+           class="inline-flex items-center justify-center gap-2 bg-white text-brand-700 hover:bg-brand-50 font-bold text-base px-8 py-4 rounded-xl shadow-lg transition-colors">
+          <!-- arrow icon -->
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          Get Started Free
+        </a>
+        <a href="/"
+           class="inline-flex items-center justify-center gap-2 border border-brand-300/50 text-white hover:bg-brand-700/40 font-semibold text-base px-8 py-4 rounded-xl transition-colors">
+          Sign In
+        </a>
+      </div>
+      <!-- social proof -->
+      <p class="mt-10 text-brand-300 text-sm">Trusted by service providers across industries &nbsp;·&nbsp; No credit card required</p>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="py-20 sm:py-28 bg-white">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-4">Everything you need to run your bookings</h2>
+        <p class="text-gray-500 text-lg max-w-xl mx-auto">Powerful tools built for providers who want to spend less time on admin and more time on what they do best.</p>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+
+        <!-- Feature 1 -->
+        <div class="group p-7 bg-brand-50 rounded-2xl border border-brand-100 hover:shadow-md transition-shadow">
+          <div class="w-12 h-12 bg-brand-600 rounded-xl flex items-center justify-center mb-5 shadow">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/><path d="m9 16 2 2 4-4"/></svg>
+          </div>
+          <h3 class="font-bold text-lg text-gray-900 mb-2">Easy Booking</h3>
+          <p class="text-gray-500 text-sm leading-relaxed">Customers book directly from your profile in seconds. No back-and-forth, no friction.</p>
+        </div>
+
+        <!-- Feature 2 -->
+        <div class="group p-7 bg-brand-50 rounded-2xl border border-brand-100 hover:shadow-md transition-shadow">
+          <div class="w-12 h-12 bg-brand-600 rounded-xl flex items-center justify-center mb-5 shadow">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+          </div>
+          <h3 class="font-bold text-lg text-gray-900 mb-2">Payment Handling</h3>
+          <p class="text-gray-500 text-sm leading-relaxed">Collect payment proofs, track paid appointments, and keep your financials organized automatically.</p>
+        </div>
+
+        <!-- Feature 3 -->
+        <div class="group p-7 bg-brand-50 rounded-2xl border border-brand-100 hover:shadow-md transition-shadow">
+          <div class="w-12 h-12 bg-brand-600 rounded-xl flex items-center justify-center mb-5 shadow">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+          <h3 class="font-bold text-lg text-gray-900 mb-2">Provider Management</h3>
+          <p class="text-gray-500 text-sm leading-relaxed">Manage your team of workers, set their schedules, and coordinate appointments with ease.</p>
+        </div>
+
+        <!-- Feature 4 -->
+        <div class="group p-7 bg-brand-50 rounded-2xl border border-brand-100 hover:shadow-md transition-shadow">
+          <div class="w-12 h-12 bg-brand-600 rounded-xl flex items-center justify-center mb-5 shadow">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+          <h3 class="font-bold text-lg text-gray-900 mb-2">Real-Time Scheduling</h3>
+          <p class="text-gray-500 text-sm leading-relaxed">Live calendar updates prevent double-bookings and show customers accurate availability instantly.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="py-20 sm:py-28 bg-gray-50">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-4">Up and running in minutes</h2>
+        <p class="text-gray-500 text-lg max-w-xl mx-auto">Three simple steps to start accepting appointments.</p>
+      </div>
+      <div class="relative grid grid-cols-1 md:grid-cols-3 gap-10">
+
+        <!-- connector line (desktop only) -->
+        <div class="hidden md:block absolute top-10 left-1/4 right-1/4 h-0.5 bg-brand-200" aria-hidden="true"></div>
+
+        <!-- Step 1 -->
+        <div class="flex flex-col items-center text-center">
+          <div class="relative w-20 h-20 bg-brand-600 rounded-full flex items-center justify-center mb-6 shadow-lg z-10">
+            <span class="text-white text-2xl font-extrabold">1</span>
+          </div>
+          <h3 class="font-bold text-xl text-gray-900 mb-3">Provider Sets Up</h3>
+          <p class="text-gray-500 leading-relaxed">Create your provider profile, add your services, set your availability windows, and invite your workers.</p>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="flex flex-col items-center text-center">
+          <div class="relative w-20 h-20 bg-brand-600 rounded-full flex items-center justify-center mb-6 shadow-lg z-10">
+            <span class="text-white text-2xl font-extrabold">2</span>
+          </div>
+          <h3 class="font-bold text-xl text-gray-900 mb-3">Customers Book</h3>
+          <p class="text-gray-500 leading-relaxed">Share your booking link. Customers browse available slots and confirm appointments in a few taps — no account required.</p>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="flex flex-col items-center text-center">
+          <div class="relative w-20 h-20 bg-brand-700 rounded-full flex items-center justify-center mb-6 shadow-lg z-10">
+            <!-- checkmark -->
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-9 h-9 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+          </div>
+          <h3 class="font-bold text-xl text-gray-900 mb-3">You're Done</h3>
+          <p class="text-gray-500 leading-relaxed">Sit back. PikAppoint sends reminders, tracks payments, and keeps your dashboard organized automatically.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA BANNER -->
+  <section class="py-20 bg-gradient-to-r from-brand-700 to-brand-500 text-white">
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <h2 class="text-3xl sm:text-4xl font-extrabold mb-4">Ready to fill your calendar?</h2>
+      <p class="text-brand-100 text-lg mb-8">Join service providers already using PikAppoint to streamline their bookings.</p>
+      <a href="/"
+         class="inline-flex items-center justify-center gap-2 bg-white text-brand-700 hover:bg-brand-50 font-bold text-base px-10 py-4 rounded-xl shadow-lg transition-colors">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        Get Started Free
+      </a>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="bg-gray-900 text-gray-400 py-10">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <span class="text-white font-bold text-lg tracking-tight">PikAppoint</span>
+      <p class="text-sm text-center sm:text-right">
+        &copy; <span id="year"></span> PikAppoint. All rights reserved.
+        &nbsp;·&nbsp;
+        <a href="mailto:support@pikappoint.com" class="hover:text-white transition-colors">support@pikappoint.com</a>
+      </p>
+    </div>
+  </footer>
+
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>

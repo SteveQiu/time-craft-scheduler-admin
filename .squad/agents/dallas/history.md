@@ -752,3 +752,13 @@ px tsc --noEmit\ on every commit. TypeScript errors block the commit. No excepti
 - `isFree` gating: if `rate === 0`, show "Free" and suppress Paid/Payment Required badges entirely
 - Both card locations updated: pending group rows (`apt`) and `renderAppointmentCard` (`appointment`)
 - IIFE `{(() => { ... })()}` pattern used twice per card: once for total span, once for Paid/Payment Required logic
+
+
+### Marketing Landing Page (2026-05-06)
+
+Built public/landing.html — standalone marketing page for PikAppoint.
+
+**Stack:** HTML + Tailwind CDN (no build tools)
+**Sections:** Nav, Hero, Features (4), How It Works (3 steps), CTA banner, Footer
+**Design:** Deep indigo/purple (rand-600–rand-900), white bg, Inter font, mobile-first responsive
+**Tech:** Inline SVG icons, SEO meta tags (og:title, description, viewport), support@pikappoint.com in footer
