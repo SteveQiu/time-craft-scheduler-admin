@@ -14,6 +14,20 @@ Dallas must run `npx tsc --noEmit` and get clean exit before every commit. No ex
 
 Run `npx tsc --noEmit` after every page component edit. Fix all errors before committing. Protects Appointments.tsx.
 
+### Pre-commit Secrets Scan (2026-05-06)
+**Authority:** Guardian
+
+Added grep/Node.js secrets detection to `.husky/pre-commit`. Scans staged files for:
+- Supabase `service_role` JWT (JWT decode, role claim check)
+- PEM private keys (`-----BEGIN [RSA ]PRIVATE KEY-----`)
+- AWS secret access key (`aws_secret_access_key=<30+chars>`)
+- GitHub PATs (`ghp_`, `ghs_`, `gho_`, `github_pat_` prefixes)
+- High-entropy credentials (`password=`, `secret=`, `token=` + 32+ chars)
+
+**Whitelisted (safe):** VITE_SUPABASE_PUBLISHABLE_KEY (anon JWT), VITE_* public config, JWT values (handled by role check).
+
+**Rationale:** No external deps (Node.js + git only). Scans only staged files (fast). Fail-fast before TypeScript check. Reports pattern type, never actual secret.
+
 ## Configuration & Architecture
 
 ### App Name Centralization (2026-05-06)
@@ -96,6 +110,13 @@ Proof images stored as base64 JPEG in `payment_proofs.photo` (no Supabase Storag
 **Placement:** `src/components/Appointments.tsx` → `renderGroupedPendingCard` (line ~774), prepended to action buttons
 
 **Scope:** Org mode only. Per-appointment row (not group header), since different bookers in same opening group may have different payment status.
+
+### RPC Rate Lookup via SECURITY DEFINER (2026-05-06)
+**Authority:** SteveQiu (via Dallas)
+
+Replace direct `openings`/`profiles` queries with `get_appointment_rates` RPC. Customers see 0 rows due to RLS; SECURITY DEFINER function bypasses RLS server-side while enforcing ownership in WHERE clause.
+
+**Why:** Customers were seeing "Free" for all appointments because RLS blocked rate lookups.
 
 ### User Directive: Bishop UI Review Gate (2026-05-06)
 **Authority:** SteveQiu (via Copilot)
