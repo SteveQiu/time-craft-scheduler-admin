@@ -1,3 +1,65 @@
+# --- Secrets Scan (Guardian) ---
+echo "🔍 Scanning staged files for secrets..."
+
+SECRETS_FOUND=0
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM 2>/dev/null)
+
+for FILE in $STAGED_FILES; do
+  CONTENT=$(git show ":$FILE" 2>/dev/null) || continue
+
+  # 1. Supabase service_role key: decode JWT payloads and check role claim
+  SVCKEY=$(printf '%s' "$CONTENT" | node -e "
+let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{
+  const re=/eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/g;
+  let m;while((m=re.exec(d))!==null){try{
+    const p=JSON.parse(Buffer.from(m[0].split('.')[1],'base64url').toString());
+    if(p.role==='service_role'){process.stdout.write('found');process.exit(0);}
+  }catch(e){}}
+});" 2>/dev/null)
+  if [ "$SVCKEY" = "found" ]; then
+    echo "🔒 BLOCKED: Supabase service_role key — $FILE"
+    SECRETS_FOUND=1
+  fi
+
+  # 2. Private keys (PEM headers)
+  if echo "$CONTENT" | grep -qE -- '-----BEGIN (RSA )?PRIVATE KEY-----'; then
+    echo "🔒 BLOCKED: Private key — $FILE"
+    SECRETS_FOUND=1
+  fi
+
+  # 3. AWS secret access key assignment
+  if echo "$CONTENT" | grep -iE 'aws_secret_access_key[[:space:]]*[=:][[:space:]]*[A-Za-z0-9/+]{30,}' | grep -q .; then
+    echo "🔒 BLOCKED: AWS secret access key — $FILE"
+    SECRETS_FOUND=1
+  fi
+
+  # 4. GitHub personal access tokens
+  if echo "$CONTENT" | grep -qE '(ghp_|ghs_|gho_|github_pat_)[A-Za-z0-9_]{10,}'; then
+    echo "🔒 BLOCKED: GitHub personal access token — $FILE"
+    SECRETS_FOUND=1
+  fi
+
+  # 5. High-entropy credential assignments — exclude safe VITE_ vars and JWT values
+  #    (JWT values are anon-or-service_role; service_role already caught above)
+  HICRED=$(echo "$CONTENT" | \
+    grep -iE '(password|secret|token)[[:space:]]*=[[:space:]]*[A-Za-z0-9+/=_-]{32,}' | \
+    grep -vE '(VITE_SUPABASE_PUBLISHABLE_KEY|VITE_SUPABASE_URL|VITE_SUPABASE_PROJECT_ID|VITE_APP_URL)' | \
+    grep -vE 'eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+')
+  if [ -n "$HICRED" ]; then
+    echo "🔒 BLOCKED: High-entropy credential assignment — $FILE"
+    SECRETS_FOUND=1
+  fi
+
+done
+
+if [ "$SECRETS_FOUND" -eq 1 ]; then
+  echo "❌ Secrets scan failed. Remove secrets before committing."
+  exit 1
+fi
+echo "✅ No secrets detected."
+# --- End Secrets Scan ---
+
+# --- TypeScript Check ---
 echo "Running TypeScript check..."
 npx tsc --noEmit
 if [ $? -ne 0 ]; then
