@@ -23,8 +23,7 @@
 - Bulk proof query: change from .select('appointment_id') to .select('appointment_id, photo') to fetch photo alongside ID
 - paidAppointmentIds changed from Set<string> to Map<string, string | null> — key=appointment_id, value=photo (base64 data URL) or null
 - Map.has() still works for badge gating; Map.get() retrieves photo for proof link
-- Opening proof in new window: window.open('', '_blank') then win.document.write('<img src=...>') — reliable across browsers, avoids data: URL navigation blocks
-- Proof link shown only when Map.get(id) is truthy — graceful fallback to badge-only when proof exists but has no photo
+- Provider proof modal (commit 5b797c7): providerViewProofAppointmentId state + providerViewProof query with select('*') already existed; document.write buttons wired to call setProviderViewProofAppointmentId(id). Modal shows note + photo + timestamp. Button shows for all proof records (has(id)), not just when photo exists.
 
 
 - Privacy state has two systems: `privacySettings` (database-backed) and `addressVisibility` (deprecated localStorage)
@@ -73,8 +72,7 @@
 - Bulk proof query: change from .select('appointment_id') to .select('appointment_id, photo') to fetch photo alongside ID
 - paidAppointmentIds changed from Set<string> to Map<string, string | null> — key=appointment_id, value=photo (base64 data URL) or null
 - Map.has() still works for badge gating; Map.get() retrieves photo for proof link
-- Opening proof in new window: window.open('', '_blank') then win.document.write('<img src=...>') — reliable across browsers, avoids data: URL navigation blocks
-- Proof link shown only when Map.get(id) is truthy — graceful fallback to badge-only when proof exists but has no photo
+- Provider proof modal (commit 5b797c7): providerViewProofAppointmentId state + providerViewProof query with select('*') already existed; document.write buttons wired to call setProviderViewProofAppointmentId(id). Modal shows note + photo + timestamp. Button shows for all proof records (has(id)), not just when photo exists.
 
 
 - `handleBulkComplete` bug: single `.update().in('id', ids)` only completed the first row — Supabase RLS evaluates per-row and the batch call fails silently for subsequent rows. Fix: sequential `for...of` loop with individual `.eq('id', apt.id)` updates, matching `handleBulkApprove`/`handleBulkCancel` pattern.
@@ -237,8 +235,7 @@ When refactoring imports (removing, renaming, or replacing), **always grep for A
 - Bulk proof query: change from .select('appointment_id') to .select('appointment_id, photo') to fetch photo alongside ID
 - paidAppointmentIds changed from Set<string> to Map<string, string | null> — key=appointment_id, value=photo (base64 data URL) or null
 - Map.has() still works for badge gating; Map.get() retrieves photo for proof link
-- Opening proof in new window: window.open('', '_blank') then win.document.write('<img src=...>') — reliable across browsers, avoids data: URL navigation blocks
-- Proof link shown only when Map.get(id) is truthy — graceful fallback to badge-only when proof exists but has no photo
+- Provider proof modal (commit 5b797c7): providerViewProofAppointmentId state + providerViewProof query with select('*') already existed; document.write buttons wired to call setProviderViewProofAppointmentId(id). Modal shows note + photo + timestamp. Button shows for all proof records (has(id)), not just when photo exists.
 
 
 ### Address Architecture (January 2025)
@@ -563,3 +560,4 @@ Matched existing Paid badge from `renderAppointmentCard`:
 - `renderAppointmentCard` already had a Paid badge (non-pending org + user views)
 - No data fetching changes — reused existing `paidAppointmentIds` Set
 - Build: passed
+
