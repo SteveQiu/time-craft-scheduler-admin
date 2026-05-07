@@ -74,7 +74,7 @@ export function AppSidebar() {
       {/* Logo */}
       <div className="flex items-center space-x-2 px-4 py-3 border-b border-border">
         <CalendarIcon className="h-8 w-8 text-primary flex-shrink-0" />
-        <h1 className="text-lg font-bold text-foreground truncate">AppointmentPro</h1>
+        <h1 className="text-lg font-bold text-foreground truncate">PikAppoint</h1>
       </div>
 
       {/* Navigation */}

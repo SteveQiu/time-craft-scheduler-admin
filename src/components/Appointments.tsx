@@ -111,7 +111,7 @@ END:VEVENT`;
   
   return `BEGIN:VCALENDAR
 VERSION:2.0
-PRODID:-//TimeCraft//EN
+PRODID:-//PikAppoint//EN
 ${events}
 END:VCALENDAR`;
 };

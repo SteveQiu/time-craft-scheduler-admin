@@ -69,7 +69,7 @@ We do not sell your personal data to third parties.
 You have the right to access, correct, or delete your personal data.
 
 ## Contact
-For privacy concerns, contact us at privacy@timecraft.com`;
+For privacy concerns, contact us at privacy@pikappoint.com`;
     } else {
       return `# Terms of Service
 
@@ -79,7 +79,7 @@ Last updated: ${new Date().toLocaleDateString()}
 By using our service, you agree to these terms.
 
 ## Service Description
-TimeCraft provides scheduling and time management services.
+PikAppoint provides scheduling and time management services.
 
 ## User Obligations
 You must provide accurate information and use the service lawfully.
@@ -94,7 +94,7 @@ We are not liable for indirect or consequential damages.
 We may update these terms. Continued use implies acceptance.
 
 ## Contact
-For questions, contact us at legal@timecraft.com`;
+For questions, contact us at legal@pikappoint.com`;
     }
   };
 

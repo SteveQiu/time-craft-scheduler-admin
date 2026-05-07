@@ -51,7 +51,7 @@ const App = () => {
                   >
                     <Menu className="h-6 w-6" />
                   </Button>
-                  <h1 className="font-bold">AppointmentPro</h1>
+                  <h1 className="font-bold">PikAppoint</h1>
                   <div className="w-10" /> {/* Spacer for centering */}
                 </div>
               </header>

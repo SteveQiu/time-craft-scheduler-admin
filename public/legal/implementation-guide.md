@@ -2,7 +2,7 @@
 
 **Document Version:** 1.0  
 **For:** Frontend & Backend Teams  
-**Project:** time-craft-scheduler-admin  
+**Project:** PikAppoint  
 **Last Updated:** [LAST_UPDATED_DATE]
 
 ---
@@ -28,7 +28,7 @@
 
 ### 1.1 Purpose
 
-This guide provides technical specifications for implementing legal compliance features in the time-craft-scheduler-admin application, including:
+This guide provides technical specifications for implementing legal compliance features in the PikAppoint application, including:
 - GDPR (EU/EEA/UK) compliance
 - CCPA/CPRA (California) compliance
 - 2025 state privacy laws (TX, OR, MT, UT, IL, CO, CT, HI)
