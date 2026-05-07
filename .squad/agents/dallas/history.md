@@ -20,6 +20,12 @@
 - Identified mobile UI pain points: sidebar, browse layout, profile layout on phones
 
 ### Learnings
+- Bulk proof query: change from .select('appointment_id') to .select('appointment_id, photo') to fetch photo alongside ID
+- paidAppointmentIds changed from Set<string> to Map<string, string | null> — key=appointment_id, value=photo (base64 data URL) or null
+- Map.has() still works for badge gating; Map.get() retrieves photo for proof link
+- Opening proof in new window: window.open('', '_blank') then win.document.write('<img src=...>') — reliable across browsers, avoids data: URL navigation blocks
+- Proof link shown only when Map.get(id) is truthy — graceful fallback to badge-only when proof exists but has no photo
+
 
 - Privacy state has two systems: `privacySettings` (database-backed) and `addressVisibility` (deprecated localStorage)
 - Single source of truth: always check `privacySettings` for visibility logic
@@ -62,6 +68,19 @@
 - Appointments.tsx: replaced 60-line PayPal IIFE + per-type if/else with `<PaymentDisplay type={pm.type} details={deserializeDetailsByType(...)} />`
 - Venmo phone sub-mode (3-mode selector) removed from form — new form has username + QR fields; legacy phone entries still display via `deserializeDetailsByType` mapping `{phone: raw}` for display
 - `PaymentMethodRecord` = DB shape (`details: string | null`); used in Appointments + Settings queries; display components take deserialized `PaymentDetails`
+
+## Learnings
+- Bulk proof query: change from .select('appointment_id') to .select('appointment_id, photo') to fetch photo alongside ID
+- paidAppointmentIds changed from Set<string> to Map<string, string | null> — key=appointment_id, value=photo (base64 data URL) or null
+- Map.has() still works for badge gating; Map.get() retrieves photo for proof link
+- Opening proof in new window: window.open('', '_blank') then win.document.write('<img src=...>') — reliable across browsers, avoids data: URL navigation blocks
+- Proof link shown only when Map.get(id) is truthy — graceful fallback to badge-only when proof exists but has no photo
+
+
+- `handleBulkComplete` bug: single `.update().in('id', ids)` only completed the first row — Supabase RLS evaluates per-row and the batch call fails silently for subsequent rows. Fix: sequential `for...of` loop with individual `.eq('id', apt.id)` updates, matching `handleBulkApprove`/`handleBulkCancel` pattern.
+- Bulk action pattern: always use `for...of` loop + individual RPC/update calls, NOT batch `.in()` — consistent, RLS-safe, and partial-failure tolerant.
+- Notification system (`src/pages/Notifications.tsx`): powered by `get_my_notifications` RPC; returns `id`, `event_type`, `entity_type`, `entity_id`, `actor_id`, `metadata`, `created_at`, `is_unread`. Bell count driven by `get_unread_notification_count` RPC in AppSidebar. No realtime subscription — manual mark-read on mount.
+- `appointment.created` event = new booking request to provider; `entity_id` = appointment ID. To show Paid badge: bulk-fetch `payment_proofs` for those appointment IDs (same pattern as Appointments.tsx), memoize into Set, render green Badge inline next to label. No notification system restructuring needed.
 
 ### Per-Opening Payment Method Selection (May 2026)
 
@@ -215,6 +234,12 @@ When refactoring imports (removing, renaming, or replacing), **always grep for A
 **Estimated effort:** 3-4 hours implementation + 1 hour testing
 
 ## Learnings
+- Bulk proof query: change from .select('appointment_id') to .select('appointment_id, photo') to fetch photo alongside ID
+- paidAppointmentIds changed from Set<string> to Map<string, string | null> — key=appointment_id, value=photo (base64 data URL) or null
+- Map.has() still works for badge gating; Map.get() retrieves photo for proof link
+- Opening proof in new window: window.open('', '_blank') then win.document.write('<img src=...>') — reliable across browsers, avoids data: URL navigation blocks
+- Proof link shown only when Map.get(id) is truthy — graceful fallback to badge-only when proof exists but has no photo
+
 
 ### Address Architecture (January 2025)
 
