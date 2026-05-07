@@ -488,3 +488,53 @@ Created src/config/app.ts as single source of truth for APP_NAME and contact ema
 - Query string variants (?mode=org) — composed at point of use via template literal against ROUTES base path
 
 **Result:** Zero bare route string literals remain in the 4 updated files (verified with grep).
+
+## URL Audit — 2026-05-06
+
+**Task:** Find and centralize hardcoded external URLs in src/ and public/.
+
+### Found
+
+| File | URL | Dynamic? | Appears |
+|------|-----|----------|---------|
+| src/components/payment/PaymentDisplay.tsx:35 | https://venmo.com/?txn=pay | Yes (template literal) | 1x |
+| src/components/payment/PaymentDisplay.tsx:67 | https://paypal.me/ | Yes (template literal) | 1x |
+| src/components/Appointments.tsx:78 | https://calendar.google.com/calendar/render?... | Yes (template literal) | 1x |
+| src/components/Appointments.tsx:95 | https://outlook.live.com/calendar/0/deeplink/compose?... | Yes (template literal) | 1x |
+| src/config/app.ts | pikappoint.com emails | Already centralized | — |
+| src/data/workers.ts | pikappoint.com emails | Mock/fixture data | — |
+| public/**/*.md | Various third-party links | Markdown only | — |
+
+### Decision
+
+**No src/config/urls.ts created.** All external URLs found appear only once and are third-party service domains (Venmo, PayPal, Google, Microsoft) that are unlikely to change. Per task rules: single-occurrence, third-party, unlikely-to-change URLs stay inline. pikappoint.com emails already handled in src/config/app.ts.
+
+---
+
+## Task: Paid Badge on Org Pending Appointments
+
+**Date:** 2025-07-19
+**Requested by:** SteveQiu
+
+### What Was Done
+
+Added a "Paid" badge to each individual appointment row inside `renderGroupedPendingCard` in `src/components/Appointments.tsx`. This function renders grouped pending requests in org mode (`?mode=org`).
+
+The badge appears inline with the action buttons (Approve/Reject/Cancel) for each booker row when that appointment has a payment proof submitted.
+
+### Field Used
+
+**`paidAppointmentIds.has(apt.id)`** — no new field needed. The component already queries `payment_proofs` table and builds a `Set<string>` of appointment IDs with submitted proofs. Reused this existing set.
+
+### Badge Style
+
+Matched existing Paid badge from `renderAppointmentCard`:
+- variant="outline", green text/border, text-xs
+- Dark mode aware via dark: variants
+
+### Scope
+
+- Only in `renderGroupedPendingCard` (org mode pending appointments)
+- `renderAppointmentCard` already had a Paid badge (non-pending org + user views)
+- No data fetching changes — reused existing `paidAppointmentIds` Set
+- Build: passed

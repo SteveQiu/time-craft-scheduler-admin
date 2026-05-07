@@ -772,6 +772,11 @@ export function Appointments() {
                     {renderBookerInfo(apt)}
                   </div>
                   <div className="flex items-center space-x-2">
+                    {paidAppointmentIds.has(apt.id) && (
+                      <Badge variant="outline" className="text-green-600 border-green-600 dark:text-green-400 dark:border-green-400 text-xs">
+                        Paid
+                      </Badge>
+                    )}
                     {aptIsProvider ? (
                       <>
                         <Button variant="default" size="sm" onClick={() => handleApprove(apt.id)}>
