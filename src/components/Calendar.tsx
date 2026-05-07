@@ -1017,20 +1017,6 @@ export function Calendar() {
                                     : `$${Number(opening.hourly_rate) * Number(opening.duration)}`}
                                 </div>
                               </div>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    onClick={(e) => { e.stopPropagation(); removeOpening(opening.id); }}
-                                    disabled={!user}
-                                    variant="ghost"
-                                    size="sm"
-                                    className="text-destructive hover:text-destructive hover:bg-destructive/10 flex-shrink-0"
-                                  >
-                                    <X className="h-4 w-4" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>Remove opening</TooltipContent>
-                              </Tooltip>
                               {!confirmedOpeningIds.has(opening.id) && (
                                 <Tooltip>
                                   <TooltipTrigger asChild>
@@ -1047,6 +1033,20 @@ export function Calendar() {
                                   <TooltipContent>Edit opening</TooltipContent>
                                 </Tooltip>
                               )}
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    onClick={(e) => { e.stopPropagation(); removeOpening(opening.id); }}
+                                    disabled={!user}
+                                    variant="ghost"
+                                    size="sm"
+                                    className="text-destructive hover:text-destructive hover:bg-destructive/10 flex-shrink-0"
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Remove opening</TooltipContent>
+                              </Tooltip>
                             </div>
                           ))}
                         </div>
