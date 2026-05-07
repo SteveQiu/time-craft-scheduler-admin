@@ -864,21 +864,16 @@ export function Appointments() {
                       if (isFree) return null;
                       if (paidAppointmentIds.has(apt.id)) {
                         return (
-                          <>
-                            <Badge variant="outline" className="text-green-600 border-green-600 dark:text-green-400 dark:border-green-400 text-xs">
-                              Paid
-                            </Badge>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="min-h-[44px] min-w-[44px] px-3 text-xs border-green-500 text-green-600 hover:bg-green-50 gap-1.5"
-                              onClick={() => setProviderViewProofAppointmentId(apt.id)}
-                              aria-label={`View payment proof for ${apt.booker_name || 'this appointment'}`}
-                            >
-                              <FileImage className="w-4 h-4" aria-hidden="true" />
-                              View Proof
-                            </Button>
-                          </>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="min-h-[44px] min-w-[44px] px-3 text-xs border-green-500 text-green-600 hover:bg-green-50 gap-1.5"
+                            onClick={() => setProviderViewProofAppointmentId(apt.id)}
+                            aria-label={`View payment proof for ${apt.booker_name || 'this appointment'}`}
+                          >
+                            <FileImage className="w-4 h-4" aria-hidden="true" />
+                            Paid
+                          </Button>
                         );
                       }
                       return (
@@ -1008,21 +1003,16 @@ export function Appointments() {
                   if (isFree) return null;
                   if (paidAppointmentIds.has(appointment.id)) {
                     return (
-                      <>
-                        <Badge variant="outline" className="text-green-600 border-green-600 dark:text-green-400 dark:border-green-400 text-xs">
-                          Paid
-                        </Badge>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="min-h-[44px] min-w-[44px] px-3 text-xs border-green-500 text-green-600 hover:bg-green-50 gap-1.5"
-                          onClick={() => setProviderViewProofAppointmentId(appointment.id)}
-                          aria-label={`View payment proof for ${appointment.booker_name || 'this appointment'}`}
-                        >
-                          <FileImage className="w-4 h-4" aria-hidden="true" />
-                          View Proof
-                        </Button>
-                      </>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="min-h-[44px] min-w-[44px] px-3 text-xs border-green-500 text-green-600 hover:bg-green-50 gap-1.5"
+                        onClick={() => setProviderViewProofAppointmentId(appointment.id)}
+                        aria-label={`View payment proof for ${appointment.booker_name || 'this appointment'}`}
+                      >
+                        <FileImage className="w-4 h-4" aria-hidden="true" />
+                        Paid
+                      </Button>
                     );
                   }
                   return (
