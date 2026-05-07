@@ -131,6 +131,33 @@ const downloadICS = (appointments: Appointment[]) => {
   URL.revokeObjectURL(url);
 };
 
+type DateFilter = 'all' | 'today' | 'week' | 'month';
+
+function applyDateFilter(apts: Appointment[], filter: DateFilter): Appointment[] {
+  if (filter === 'all') return apts;
+  const now = new Date();
+  return apts.filter(apt => {
+    const [y, m, d] = apt.date.split('-').map(Number);
+    const aptDate = new Date(y, m - 1, d);
+    if (filter === 'today') {
+      return aptDate.toDateString() === now.toDateString();
+    }
+    if (filter === 'week') {
+      const startOfWeek = new Date(now);
+      startOfWeek.setDate(now.getDate() - now.getDay());
+      startOfWeek.setHours(0, 0, 0, 0);
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(startOfWeek.getDate() + 6);
+      endOfWeek.setHours(23, 59, 59, 999);
+      return aptDate >= startOfWeek && aptDate <= endOfWeek;
+    }
+    if (filter === 'month') {
+      return aptDate.getMonth() === now.getMonth() && aptDate.getFullYear() === now.getFullYear();
+    }
+    return true;
+  });
+}
+
 export function Appointments() {
   const { workers, acceptedWorkers } = useOrgWorkers();
   const navigate = useNavigate();
@@ -167,6 +194,7 @@ export function Appointments() {
   const [paymentProofAppointmentId, setPaymentProofAppointmentId] = useState<string | null>(null);
   const [providerViewProofAppointmentId, setProviderViewProofAppointmentId] = useState<string | null>(null);
   const [proofImageError, setProofImageError] = useState(false);
+  const [dateFilter, setDateFilter] = useState<DateFilter>('all');
 
   const modeParam= searchParams.get('mode');
   const isOrgView = modeParam === 'org' && (isOrganization || isInternalDev);
@@ -658,6 +686,10 @@ export function Appointments() {
   const nonPendingActive = isOrgView
     ? activeAppointments.filter(a => a.status !== 'pending')
     : activeAppointments;
+
+  const filteredNonPendingActive = isOrgView
+    ? applyDateFilter(nonPendingActive, dateFilter)
+    : nonPendingActive;
 
   const renderBookerInfo = (appointment: Appointment) => {
     const bookerSlug = appointment.booker_slug;
@@ -1181,11 +1213,29 @@ export function Appointments() {
               renderGroupedPendingCard(openingId, appts)
             )}
 
+            {/* Date range filter for confirmed active appointments (org view only) */}
+            {isOrgView && (
+              <div className="flex gap-2 mb-4">
+                {(['all', 'today', 'week', 'month'] as DateFilter[]).map(f => (
+                  <Button
+                    key={f}
+                    variant={dateFilter === f ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setDateFilter(f)}
+                  >
+                    {f === 'all' ? 'All' : f === 'today' ? 'Today' : f === 'week' ? 'This Week' : 'This Month'}
+                  </Button>
+                ))}
+              </div>
+            )}
+
             {/* Non-pending or user-view appointments */}
-            {nonPendingActive.length > 0 ? (
-              <div className="space-y-4">{nonPendingActive.map(apt => renderAppointmentCard(apt))}</div>
+            {filteredNonPendingActive.length > 0 ? (
+              <div className="space-y-4">{filteredNonPendingActive.map(apt => renderAppointmentCard(apt))}</div>
             ) : (
-              !isOrgView || !groupedPendingByOpening || groupedPendingByOpening.size === 0 ? (
+              isOrgView && dateFilter !== 'all' ? (
+                <p className="text-muted-foreground text-sm">No appointments for this period.</p>
+              ) : !isOrgView || !groupedPendingByOpening || groupedPendingByOpening.size === 0 ? (
                 <Card className="shadow-soft border-card-border">
                   <CardContent className="text-center py-12">
                     <Calendar className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
