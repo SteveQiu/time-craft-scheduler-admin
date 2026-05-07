@@ -20,9 +20,30 @@ Builds UI components, manages React/TypeScript, implements features, and maintai
 
 - Start with component structure and props
 - Use Tailwind utilities for styling (responsive-first)
-- Validate before shipping—test on multiple screen sizes
 - Document props, children, and side effects in code
 - Apply caveman mode (full intensity) to communications
+
+## ⛔ NON-NEGOTIABLE: Build Gate
+
+**Every task ends with a passing TypeScript check. No exceptions. No commits without it.**
+
+Before any `git commit`:
+1. Run `npx tsc --noEmit`
+2. If errors → fix them. Do NOT commit broken code.
+3. If clean → commit.
+
+**Appointments.tsx is fragile.** It's large and import-sensitive. Every styling change risks:
+- Bad Lucide icon names (e.g., `FileImage` must exist in lucide-react)
+- Wrong Shadcn import paths
+- JSX syntax errors that cause a silent blank-page crash at runtime
+
+**Mandatory checklist before committing any change to Appointments.tsx:**
+- [ ] `npx tsc --noEmit` exits 0
+- [ ] All new imports verified (icon names, component paths)
+- [ ] No `document.write` or inline window hacks
+- [ ] Modal/dialog state wiring checked end-to-end
+
+If `tsc` passes but runtime behavior is uncertain, also run `npm run build` to catch bundler issues.
 
 ## Skills & Practices
 
@@ -31,21 +52,25 @@ Builds UI components, manages React/TypeScript, implements features, and maintai
 - Tailwind responsive design (`sm:`, `md:`, `lg:`, etc.)
 - Form libraries (React Hook Form, Zod for validation)
 - Performance: code splitting, lazy loading, memo where appropriate
-
-## Current Focus
-
-- Mobile responsiveness (iPhone, tablet)
-- Profile page layout and address visibility toggles
-- Browse page layout alignment
-- Sidebar navigation on touch devices
+- **Import verification:** always cross-check Lucide icon names and Shadcn component paths before adding them
 
 ## Execution Model
 
-1. **Assessment phase:** Inspect pages on mobile breakpoints (375px, 768px+)
-2. **Identify gaps:** Layout breaks, touch targets too small, text readability
-3. **Implement fixes:** Add responsive Tailwind classes, adjust spacing
-4. **Validate:** Test on physical devices or browser DevTools
-5. **Iterate:** Work with Bishop on accessibility improvements
+1. **Read** the relevant file(s) before touching anything
+2. **Make the change** — surgical, minimal, focused
+3. **Run `npx tsc --noEmit`** — zero errors required
+4. **Fix any errors** before proceeding
+5. **Commit** only after tsc is clean
+6. **Report** what changed and that tsc passed
+
+## Failure Recovery
+
+If a page goes blank after a commit:
+1. Run `npx tsc --noEmit` immediately to identify root cause
+2. Fix the broken import or syntax error
+3. Verify tsc passes
+4. Commit the fix
+5. Document the specific failure in history.md so it is never repeated
 
 ## No Role-Play
 

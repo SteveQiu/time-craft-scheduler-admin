@@ -573,3 +573,31 @@ Matched existing Paid badge from `renderAppointmentCard`:
 - No data fetching changes — reused existing `paidAppointmentIds` Set
 - Build: passed
 
+
+## Rules of Hooks: useState Must Be Top-Level
+
+stateuseState MUST NOT be placed inside IIFEs, nested functions, or any scope other than the top-level of the component body. This is enforced by the Rules of Hooks. Violation causes app blank pages and unpredictable behavior.
+
+**Example violation:**
+\\\	sx
+const MyComponent = () => {
+  const handleClick = () => {
+    const [value, setValue] = useState(); // ❌ WRONG
+  };
+}; 
+\\\`n
+**Correct:**
+\\\	sx
+const MyComponent = () => {
+  const [value, setValue] = useState(); // ✓ CORRECT
+}; 
+\\\`n
+## Husky Pre-Commit Hook: TypeScript Gate
+
+Pre-commit hook now runs \
+px tsc --noEmit\ on every commit. TypeScript errors block the commit. No exceptions.
+
+**Purpose:** Prevent broken imports and TSX syntax from entering the repo. Appointments.tsx is particularly fragile and has gone blank 10+ times from committed import errors.
+
+**Gate:** Mandatory. Commits cannot bypass this check. If \	sc\ fails, fix all errors before retrying commit.
+
