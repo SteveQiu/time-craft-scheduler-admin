@@ -20,6 +20,7 @@
 - Identified mobile UI pain points: sidebar, browse layout, profile layout on phones
 
 ### Learnings
+- View Proof button restyled: replaced plain `<button>` with Shadcn `<Button variant="outline" size="sm">` + green border/text (`border-green-500 text-green-600 hover:bg-green-50`) + `FileImage` lucide icon. Compact sizing `h-6 px-2 text-xs` keeps it inline next to Paid badge. Two instances updated: `renderGroupedPendingCard` (~line 783) and `renderAppointmentCard` (~line 903). Added `FileImage` to lucide import line.
 - Bulk proof query: change from .select('appointment_id') to .select('appointment_id, photo') to fetch photo alongside ID
 - paidAppointmentIds changed from Set<string> to Map<string, string | null> — key=appointment_id, value=photo (base64 data URL) or null
 - Map.has() still works for badge gating; Map.get() retrieves photo for proof link

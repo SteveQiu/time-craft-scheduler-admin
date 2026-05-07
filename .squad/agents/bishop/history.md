@@ -369,3 +369,35 @@
 - [ ] Test Sheet sidebar open/close on mobile
 
 ## Learnings
+
+### Payment Proof Modal A11y (Dec 2024)
+
+**Context:** Provider-side dialog showing customer payment proof (Appointments.tsx).
+
+**Issues Found:**
+- Missing `DialogDescription` — screen readers announce nothing useful
+- Image alt too generic ("Payment proof")
+- No error handling if image fails to load
+- No empty state for proof with no content
+- Touch targets ~24px (h-6), below 44px minimum
+- Decorative icons missing `aria-hidden`
+- Modal not responsive (fixed `max-w-md`)
+- Loading state lacks `role="status"`
+
+**Fixes Applied:**
+1. Added `DialogDescription` explaining modal purpose
+2. Improved alt: "Payment proof submitted by customer"
+3. Added `onError` handler → fallback "Could not load image" UI
+4. Added empty state for proof with no photo AND no note
+5. View Proof buttons: `min-h-[44px] min-w-[44px]` + `aria-label`
+6. Added `aria-hidden="true"` to decorative icons (CreditCard, FileImage)
+7. Modal: `w-[calc(100%-2rem)] sm:max-w-lg` for mobile edge spacing
+8. Loading spinner: `role="status" aria-label="Loading payment proof"`
+9. Visual polish: uppercase labels, `bg-muted/50 rounded-md p-3` for notes
+
+**Pattern Established:**
+- Dialogs always need `DialogTitle` + `DialogDescription`
+- Images need meaningful alt + `onError` fallback
+- Touch targets ≥44px via `min-h-[44px] min-w-[44px]`
+- Decorative icons: `aria-hidden="true"`
+- Responsive dialogs: `w-[calc(100%-2rem)] sm:max-w-{size}`
