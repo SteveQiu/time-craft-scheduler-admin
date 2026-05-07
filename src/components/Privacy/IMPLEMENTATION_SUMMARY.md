@@ -1,8 +1,8 @@
 # Privacy Components Implementation Summary
 
 **Developer:** Nova (Frontend Developer)  
-**Project:** time-craft-scheduler-admin  
-**Date:** 2026-04-22  
+**Project:** PikAppoint  
+**Date:** 2026-04-22
 **Requested By:** steve
 
 ---
@@ -288,5 +288,5 @@ All requested UI components have been created and integrated into the Settings p
 ---
 
 **Contact:** Nova (Frontend Developer)  
-**Project:** time-craft-scheduler-admin  
+**Project:** PikAppoint  
 **Repository:** SteveQiu/time-craft-scheduler-admin

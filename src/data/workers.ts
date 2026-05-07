@@ -13,7 +13,7 @@ export const workers: WorkerData[] = [
   {
     id: '1',
     name: 'Sarah Johnson',
-    email: 'sarah@appointmentpro.com',
+    email: 'sarah@pikappoint.com',
     phone: '+1 (555) 123-4567',
     skills: ['Hair Cut', 'Hair Color', 'Styling'],
     rating: 4.9,
@@ -23,7 +23,7 @@ export const workers: WorkerData[] = [
   {
     id: '2',
     name: 'Mike Wilson',
-    email: 'mike@appointmentpro.com',
+    email: 'mike@pikappoint.com',
     phone: '+1 (555) 234-5678',
     skills: ['Deep Tissue Massage', 'Swedish Massage', 'Sports Massage'],
     rating: 4.8,
@@ -33,7 +33,7 @@ export const workers: WorkerData[] = [
   {
     id: '3',
     name: 'Lisa Chen',
-    email: 'lisa@appointmentpro.com',
+    email: 'lisa@pikappoint.com',
     phone: '+1 (555) 345-6789',
     skills: ['Business Consultation', 'Strategy Planning', 'Market Analysis'],
     rating: 4.9,
@@ -43,7 +43,7 @@ export const workers: WorkerData[] = [
   {
     id: '4',
     name: 'David Rodriguez',
-    email: 'david@appointmentpro.com',
+    email: 'david@pikappoint.com',
     phone: '+1 (555) 456-7890',
     skills: ['Personal Training', 'Nutrition Coaching', 'Weight Loss'],
     rating: 4.7,

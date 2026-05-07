@@ -214,7 +214,7 @@ export default function Auth() {
           <div className="flex justify-center mb-4">
             <Calendar className="h-12 w-12 text-primary" />
           </div>
-          <h1 className="text-3xl font-bold text-foreground">AppointmentPro</h1>
+          <h1 className="text-3xl font-bold text-foreground">PikAppoint</h1>
           <p className="text-muted-foreground mt-2">Manage your appointments with ease</p>
         </div>
 

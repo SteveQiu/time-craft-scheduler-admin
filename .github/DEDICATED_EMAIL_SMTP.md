@@ -21,7 +21,7 @@
 ### Step 1: Create New Gmail (2 minutes)
 
 1. Go to https://accounts.google.com/signup
-2. First name: "TimeCraft"
+2. First name: "PikAppoint"
 3. Last name: "Noreply" (or whatever you want)
 4. Choose email: **noreply@gmail.com** (will be noreply+random@gmail.com)
 5. Password: Make strong (save in .secret file)
@@ -45,10 +45,7 @@
 ```
 GMAIL_USER=noreply@gmail.com
 GMAIL_PASSWORD=xxxx xxxx xxxx xxxx
-GMAIL_DISPLAY_NAME=TimeCraft Bookings
-```
-
-### Step 4: Use in Code
+GMAIL_DISPLAY_NAME=PikAppoint Bookings
 
 ```typescript
 // src/api/send-email.ts
@@ -157,9 +154,7 @@ SUPABASE_URL=https://xxxxx.supabase.co
 # Dedicated Email (Gmail)
 GMAIL_USER=noreply@gmail.com
 GMAIL_PASSWORD=xxxx xxxx xxxx xxxx
-GMAIL_DISPLAY_NAME=TimeCraft Bookings
-
-# Or Outlook
+GMAIL_DISPLAY_NAME=PikAppoint Bookings
 # OUTLOOK_USER=noreply@outlook.com
 # OUTLOOK_PASSWORD=xxxx xxxx xxxx xxxx
 ```
@@ -169,7 +164,7 @@ GMAIL_DISPLAY_NAME=TimeCraft Bookings
 ## Benefits of Dedicated Account
 
 ### Professional
-- Emails show "From: TimeCraft Noreply" (not personal name)
+- Emails show "From: PikAppoint Noreply" (not personal name)
 - Customers see it as a service email
 - Looks legitimate
 
@@ -207,7 +202,7 @@ GMAIL_DISPLAY_NAME=TimeCraft Bookings
 ## Emails You'll Send
 
 ```
-From: TimeCraft Bookings <noreply@gmail.com>
+From: PikAppoint Bookings <noreply@gmail.com>
 To: customer@example.com
 Subject: ✅ Booking Confirmed!
 ```
@@ -238,7 +233,7 @@ try {
 
 **Best approach for you:**
 
-1. **Create dedicated Gmail** ("TimeCraft Noreply" or similar)
+1. **Create dedicated Gmail** ("PikAppoint Noreply" or similar)
    - Takes 2 minutes
    - Looks professional
    - Never worry about personal privacy

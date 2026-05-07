@@ -26,7 +26,7 @@ SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=timecraft.bookings@gmail.com
 SMTP_PASS=xxxx xxxx xxxx xxxx
-SMTP_FROM="TimeCraft <timecraft.bookings@gmail.com>"
+SMTP_FROM="PikAppoint <timecraft.bookings@gmail.com>"
 ```
 
 ---
@@ -69,7 +69,7 @@ npx supabase secrets set SMTP_HOST=smtp.gmail.com
 npx supabase secrets set SMTP_PORT=587
 npx supabase secrets set SMTP_USER=timecraft.bookings@gmail.com
 npx supabase secrets set SMTP_PASS="xxxx xxxx xxxx xxxx"
-npx supabase secrets set SMTP_FROM="TimeCraft <timecraft.bookings@gmail.com>"
+npx supabase secrets set SMTP_FROM="PikAppoint <timecraft.bookings@gmail.com>"
 ```
 
 Deploy:

@@ -312,7 +312,7 @@ Body: Your account deletion request has been cancelled. Your account remains act
 ### Deletion Completed
 ```
 Subject: Account Deleted
-Body: Your TimeCraft account has been permanently deleted. All data has been removed.
+Body: Your PikAppoint account has been permanently deleted. All data has been removed.
 ```
 
 ---

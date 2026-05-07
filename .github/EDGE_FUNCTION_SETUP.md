@@ -34,7 +34,7 @@ SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=timecraft.bookings@gmail.com
 SMTP_PASS=xxxx xxxx xxxx xxxx
-SMTP_FROM="TimeCraft <timecraft.bookings@gmail.com>"
+SMTP_FROM="PikAppoint <timecraft.bookings@gmail.com>"
 ```
 
 **CRITICAL:** Keep spaces in `SMTP_PASS` exactly as provided by Gmail.
@@ -48,7 +48,7 @@ SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=timecraft.bookings@gmail.com
 SMTP_PASS=xxxx xxxx xxxx xxxx
-SMTP_FROM="TimeCraft <timecraft.bookings@gmail.com>"
+SMTP_FROM="PikAppoint <timecraft.bookings@gmail.com>"
 ```
 
 ### 5. Deploy Secrets to Production
@@ -67,7 +67,7 @@ npx supabase secrets set SMTP_HOST=smtp.gmail.com
 npx supabase secrets set SMTP_PORT=587
 npx supabase secrets set SMTP_USER=timecraft.bookings@gmail.com
 npx supabase secrets set SMTP_PASS="xxxx xxxx xxxx xxxx"
-npx supabase secrets set SMTP_FROM="TimeCraft <timecraft.bookings@gmail.com>"
+npx supabase secrets set SMTP_FROM="PikAppoint <timecraft.bookings@gmail.com>"
 
 # Verify secrets are set
 npx supabase secrets list
@@ -97,9 +97,9 @@ curl -i --location --request POST 'http://127.0.0.1:54321/functions/v1/reminder-
   --header 'Content-Type: application/json' \
   --data '{
     "to": "your-test-email@gmail.com",
-    "subject": "TimeCraft Test Email",
-    "html": "<h1>Hello!</h1><p>This is a test from TimeCraft.</p>",
-    "text": "Hello! This is a test from TimeCraft."
+    "subject": "PikAppoint Test Email",
+    "html": "<h1>Hello!</h1><p>This is a test from PikAppoint.</p>",
+    "text": "Hello! This is a test from PikAppoint."
   }'
 ```
 

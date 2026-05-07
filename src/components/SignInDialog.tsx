@@ -127,7 +127,7 @@ export function SignInDialog({ open, onOpenChange }: SignInDialogProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Sign In to AppointmentPro</DialogTitle>
+          <DialogTitle>Sign In to PikAppoint</DialogTitle>
           <DialogDescription>
             Sign in or create an account to book this appointment.
           </DialogDescription>

@@ -112,7 +112,7 @@ supabase secrets set SMTP_HOST=smtp.gmail.com
 supabase secrets set SMTP_PORT=587
 supabase secrets set SMTP_USER=timecraft.bookings@gmail.com
 supabase secrets set SMTP_PASS="xxxx xxxx xxxx xxxx"
-supabase secrets set SMTP_FROM="TimeCraft <timecraft.bookings@gmail.com>"
+supabase secrets set SMTP_FROM="PikAppoint <timecraft.bookings@gmail.com>"
 ```
 
 Verify secrets are set:
@@ -224,7 +224,7 @@ curl -X POST http://localhost:54321/functions/v1/send-email \
    - Check email inbox for confirmation
 
 3. **Verify email came from your account**:
-   - Should show: `From: TimeCraft <timecraft.bookings@gmail.com>`
+   - Should show: `From: PikAppoint <timecraft.bookings@gmail.com>`
 
 ---
 
