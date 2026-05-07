@@ -701,13 +701,9 @@ export function Appointments() {
     ? activeAppointments.filter(a => a.status !== 'pending')
     : activeAppointments;
 
-  const filteredNonPendingActive = isOrgView
-    ? applyDateFilter(nonPendingActive, dateFilter)
-    : nonPendingActive;
+  const filteredNonPendingActive = applyDateFilter(nonPendingActive, dateFilter);
 
-  const filteredInactive = isOrgView
-    ? applyDateFilter(inactiveAppointments, dateFilter)
-    : inactiveAppointments;
+  const filteredInactive = applyDateFilter(inactiveAppointments, dateFilter);
 
   const renderBookerInfo= (appointment: Appointment) => {
     const bookerSlug = appointment.booker_slug;
@@ -1148,21 +1144,19 @@ export function Appointments() {
               </Select>
             )}
           </div>
-          {isOrgView && (
-            <div role="group" aria-label="Date filter" className="flex flex-wrap gap-2 mt-3">
-              {(['all', 'today', 'week', 'month'] as DateFilter[]).map(f => (
-                <Button
-                  key={f}
-                  variant={dateFilter === f ? 'default' : 'outline'}
-                  size="sm"
-                  aria-pressed={dateFilter === f}
-                  onClick={() => setDateFilter(f)}
-                >
-                  {f === 'all' ? 'All' : f === 'today' ? 'Today' : f === 'week' ? 'This Week' : 'This Month'}
-                </Button>
-              ))}
-            </div>
-          )}
+          <div role="group" aria-label="Date filter" className="flex flex-wrap gap-2 mt-3">
+            {(['all', 'today', 'week', 'month'] as DateFilter[]).map(f => (
+              <Button
+                key={f}
+                variant={dateFilter === f ? 'default' : 'outline'}
+                size="sm"
+                aria-pressed={dateFilter === f}
+                onClick={() => setDateFilter(f)}
+              >
+                {f === 'all' ? 'All' : f === 'today' ? 'Today' : f === 'week' ? 'This Week' : 'This Month'}
+              </Button>
+            ))}
+          </div>
         </CardContent>
       </Card>
 
@@ -1261,7 +1255,7 @@ export function Appointments() {
             {filteredNonPendingActive.length > 0 ? (
               <div className="space-y-4">
                 {(() => {
-                  const showWeekDividers = isOrgView && (dateFilter === 'all' || dateFilter === 'month');
+                  const showWeekDividers = dateFilter === 'all' || dateFilter === 'month';
                   let lastWeekStart = '';
                   return filteredNonPendingActive.map((apt) => {
                     const weekStart = getWeekStartSunday(apt.date);
@@ -1283,7 +1277,7 @@ export function Appointments() {
                 })()}
               </div>
             ) : (
-              isOrgView && dateFilter !== 'all' ? (
+              dateFilter !== 'all' ? (
                 <p className="text-muted-foreground text-sm">No appointments for this period.</p>
               ) : !isOrgView || !groupedPendingByOpening || groupedPendingByOpening.size === 0 ? (
                 <Card className="shadow-soft border-card-border">
@@ -1314,7 +1308,7 @@ export function Appointments() {
                 <Card className="shadow-soft border-card-border">
                   <CardContent className="text-center py-12">
                     <p className="text-lg text-muted-foreground">
-                      {isOrgView && dateFilter !== 'all' ? 'No inactive appointments for this period.' : 'No inactive appointments'}
+                      {dateFilter !== 'all' ? 'No inactive appointments for this period.' : 'No inactive appointments'}
                     </p>
                   </CardContent>
                 </Card>
