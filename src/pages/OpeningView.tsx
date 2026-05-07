@@ -10,6 +10,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescript
 import { SignInDialog } from '@/components/SignInDialog';
 import { ArrowLeft, Calendar, Clock, User, MapPin, Share2, Check, Loader2 } from 'lucide-react';
 import { DATE_FORMATS, LOCALE } from '@/config/formats';
+import { parseLocation, formatLocation } from '@/lib/address';
 import { toast } from 'sonner';
 
 const PENDING_BOOKING_KEY = 'pending_booking_opening_id';
@@ -199,7 +200,7 @@ export function OpeningView() {
                       <p className="text-sm text-muted-foreground">Location</p>
                       <div className="flex items-center space-x-2">
                         <MapPin className="h-4 w-4 text-muted-foreground" />
-                        <p className="font-medium text-foreground">{opening.location}</p>
+                        <p className="font-medium text-foreground">{formatLocation(parseLocation(opening.location))}</p>
                       </div>
                     </div>
                   )}
@@ -302,7 +303,7 @@ export function OpeningView() {
             {opening.location && (
               <div className="flex justify-between">
                 <span className="text-sm font-medium">Location:</span>
-                <span className="text-sm">{opening.location}</span>
+                <span className="text-sm">{formatLocation(parseLocation(opening.location))}</span>
               </div>
             )}
             <div className="flex justify-between">
