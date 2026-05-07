@@ -500,12 +500,13 @@ export function Appointments() {
   });
 
   const today = new Date().toISOString().split('T')[0];
-  const activeAppointments = filteredAppointments.filter(
-    apt => (apt.status === 'confirmed' || apt.status === 'pending') && apt.date >= today
-  );
-  const inactiveAppointments = filteredAppointments.filter(
-    apt => apt.status === 'completed' || apt.status === 'cancelled' || apt.date < today
-  );
+  const activeAppointments = filteredAppointments
+    .filter(apt => (apt.status === 'confirmed' || apt.status === 'pending') && apt.date >= today)
+    .sort((a, b) => a.date.localeCompare(b.date)); // ascending — earliest first
+
+  const inactiveAppointments = filteredAppointments
+    .filter(apt => apt.status === 'completed' || apt.status === 'cancelled' || apt.date < today)
+    .sort((a, b) => b.date.localeCompare(a.date)); // descending — latest first
 
   const handleApprove = async (appointmentId: string) => {
     if (!user) return;
@@ -861,8 +862,8 @@ export function Appointments() {
                     )}
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm">
-                          <CalendarPlus className="h-4 w-4" />
+                        <Button variant="ghost" size="sm" aria-label="Add to calendar">
+                          <CalendarPlus className="h-4 w-4" aria-hidden="true" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
@@ -968,8 +969,8 @@ export function Appointments() {
                 )}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm">
-                      <CalendarPlus className="h-4 w-4" />
+                    <Button variant="ghost" size="sm" aria-label="Add to calendar">
+                      <CalendarPlus className="h-4 w-4" aria-hidden="true" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
@@ -1069,15 +1070,24 @@ export function Appointments() {
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <div className="flex items-center gap-2">
+                <div
+                  className="flex items-center gap-2"
+                  tabIndex={0}
+                  role="img"
+                  aria-label={
+                    permissionStatus === 'granted' ? 'Notifications enabled' :
+                    permissionStatus === 'denied' ? 'Notifications blocked — enable in browser settings' :
+                    'Waiting for notification permission response'
+                  }
+                >
                   {permissionStatus === 'granted' && (
-                    <BellRing className="h-5 w-5 text-green-600 dark:text-green-400" />
+                    <BellRing className="h-5 w-5 text-green-600 dark:text-green-400" aria-hidden="true" />
                   )}
                   {permissionStatus === 'denied' && (
-                    <BellOff className="h-5 w-5 text-gray-400 dark:text-gray-600" />
+                    <BellOff className="h-5 w-5 text-gray-400 dark:text-gray-600" aria-hidden="true" />
                   )}
                   {permissionStatus === 'default' && (
-                    <Bell className="h-5 w-5 text-amber-500 dark:text-amber-400" />
+                    <Bell className="h-5 w-5 text-amber-500 dark:text-amber-400" aria-hidden="true" />
                   )}
                 </div>
               </TooltipTrigger>
@@ -1099,6 +1109,7 @@ export function Appointments() {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
                 placeholder="Search appointments..."
+                aria-label="Search appointments"
                 value={searchTerm}
                 onChange={(e) => { setSearchTerm(e.target.value); setSelectedIds(new Set()); }}
                 className="pl-10"
@@ -1137,12 +1148,13 @@ export function Appointments() {
             )}
           </div>
           {isOrgView && (
-            <div className="flex flex-wrap gap-2 mt-3">
+            <div role="group" aria-label="Date filter" className="flex flex-wrap gap-2 mt-3">
               {(['all', 'today', 'week', 'month'] as DateFilter[]).map(f => (
                 <Button
                   key={f}
                   variant={dateFilter === f ? 'default' : 'outline'}
                   size="sm"
+                  aria-pressed={dateFilter === f}
                   onClick={() => setDateFilter(f)}
                 >
                   {f === 'all' ? 'All' : f === 'today' ? 'Today' : f === 'week' ? 'This Week' : 'This Month'}
@@ -1288,10 +1300,11 @@ export function Appointments() {
             <Button
               variant="ghost"
               onClick={() => setShowInactive(!showInactive)}
+              aria-expanded={showInactive}
               className="flex items-center space-x-2 p-0 h-auto hover:bg-transparent"
             >
               <h3 className="text-xl font-semibold text-foreground">Inactive Appointments</h3>
-              {showInactive ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+              {showInactive ? <ChevronUp className="h-5 w-5" aria-hidden="true" /> : <ChevronDown className="h-5 w-5" aria-hidden="true" />}
             </Button>
             {showInactive && (
               filteredInactive.length > 0 ? (
