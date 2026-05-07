@@ -296,44 +296,20 @@ export function Appointments() {
     [submittedProofs]
   );
 
-  const openingIds = useMemo(() => [...new Set(appointments.map(a => a.opening_id))], [appointments]);
-  const providerIds = useMemo(() => [...new Set(appointments.map(a => a.provider_id))], [appointments]);
-
-  const { data: openingRates = [] } = useQuery({
-    queryKey: ['opening-rates', openingIds],
-    enabled: openingIds.length > 0,
+  const { data: appointmentRates = [] } = useQuery({
+    queryKey: ['appointment-rates', appointmentIds],
+    enabled: appointmentIds.length > 0,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('openings')
-        .select('id, hourly_rate')
-        .in('id', openingIds);
+        .rpc('get_appointment_rates', { _appointment_ids: appointmentIds });
       if (error) throw error;
-      return (data ?? []) as { id: string; hourly_rate: number }[];
+      return (data ?? []) as { appointment_id: string; hourly_rate: number }[];
     },
   });
 
-  const openingRateMap = useMemo(
-    () => new Map(openingRates.map(o => [o.id, Number(o.hourly_rate ?? 0)])),
-    [openingRates]
-  );
-
-  // Fallback: when opening is deleted, use provider's profile hourly_rate
-  const { data: providerRates = [] } = useQuery({
-    queryKey: ['provider-rates', providerIds],
-    enabled: providerIds.length > 0 && !isOrgView,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, hourly_rate')
-        .in('id', providerIds);
-      if (error) throw error;
-      return (data ?? []) as { id: string; hourly_rate: number }[];
-    },
-  });
-
-  const providerRateMap = useMemo(
-    () => new Map(providerRates.map(p => [p.id, Number(p.hourly_rate ?? 0)])),
-    [providerRates]
+  const appointmentRateMap = useMemo(
+    () => new Map(appointmentRates.map(r => [r.appointment_id, Number(r.hourly_rate ?? 0)])),
+    [appointmentRates]
   );
 
   const { data: providerPayments = [], isFetching: loadingProviderPayments } = useQuery({
@@ -529,15 +505,15 @@ export function Appointments() {
 
   const getAppointmentTotal = (apt: Appointment): { isFree: boolean; total: number } => {
     let rate: number;
+    // Priority 1: rate saved on appointment at booking time (after 20260507 migration)
     if (apt.hourly_rate != null && Number(apt.hourly_rate) > 0) {
-      // Best: rate captured at booking time (populated after migration 20260507_add_hourly_rate_to_appointments)
       rate = Number(apt.hourly_rate);
+    // Priority 2: org view uses org_workers rate
     } else if (isOrgView) {
-      // Org view: worker's configured rate from org_workers
-      rate = getWorkerRate(apt.worker);
+      rate = getWorkerRate(apt.worker) || appointmentRateMap.get(apt.id) || 0;
+    // Priority 3: server-side RPC lookup (works for customers - bypasses RLS)
     } else {
-      // Non-org: opening rate → provider profile rate (opening may have been deleted)
-      rate = openingRateMap.get(apt.opening_id) || providerRateMap.get(apt.provider_id) || 0;
+      rate = appointmentRateMap.get(apt.id) || 0;
     }
     const isFree = rate === 0;
     // duration stored in hours (e.g. 1.5 = 90 min); guard: if > 24 assume minutes
