@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -51,6 +51,32 @@ export default function Notifications() {
     },
     enabled: !!user,
   });
+
+  // Collect appointment IDs from new-booking notifications to check payment status
+  const newBookingAppointmentIds = useMemo(
+    () =>
+      notifications
+        .filter(n => n.event_type === 'appointment.created' && n.entity_id)
+        .map(n => n.entity_id as string),
+    [notifications]
+  );
+
+  const { data: submittedProofs } = useQuery({
+    queryKey: ['payment-proofs-bulk', newBookingAppointmentIds],
+    enabled: newBookingAppointmentIds.length > 0,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('payment_proofs')
+        .select('appointment_id')
+        .in('appointment_id', newBookingAppointmentIds);
+      return data ?? [];
+    },
+  });
+
+  const paidAppointmentIds = useMemo(
+    () => new Set((submittedProofs ?? []).map((p: { appointment_id: string }) => p.appointment_id)),
+    [submittedProofs]
+  );
 
   // Mark all as read on mount
   useEffect(() => {
@@ -134,6 +160,9 @@ export default function Notifications() {
                     <div className="flex items-center gap-2 flex-wrap">
                       <p className={`text-foreground ${n.is_unread ? 'font-bold' : 'font-medium'}`}>{cfg.label}</p>
                       {n.is_unread && <Badge variant="secondary" className="text-xs">New</Badge>}
+                      {n.event_type === 'appointment.created' && n.entity_id && paidAppointmentIds.has(n.entity_id) && (
+                        <Badge variant="outline" className="text-green-600 border-green-600 dark:text-green-400 dark:border-green-400 text-xs">Paid</Badge>
+                      )}
                     </div>
                     {n.metadata && Object.keys(n.metadata).length > 0 && (
                       <p className={`text-sm mt-0.5 truncate ${n.is_unread ? 'text-foreground font-semibold' : 'text-muted-foreground'}`}>
