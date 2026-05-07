@@ -27,6 +27,7 @@ import Notifications from "@/pages/Notifications";
 
 import { AppSidebar } from "@/components/AppSidebar";
 import { APP_NAME } from "@/config/app";
+import { ROUTES } from "@/config/routes";
 
 const queryClient = new QueryClient();
 
@@ -75,20 +76,20 @@ const App = () => {
                     <main className="flex-1 overflow-auto max-w-7xl w-full mx-auto">
                       <Routes>
                         <Route path="/" element={<RootRedirect />} />
-                        <Route path="/dashboard" element={<Dashboard />} />
-                        <Route path="/calendar" element={<Calendar />} />
-                        <Route path="/browse" element={<BookingBrowse />} />
-                        <Route path="/browse/:providerId" element={<BookingBrowse />} />
-                        <Route path="/workers" element={<Workers />} />
-                        <Route path="/appointments" element={<Appointments />} />
-                        <Route path="/appointments/:id" element={<AppointmentView />} />
-                        <Route path="/openings/:id" element={<OpeningView />} />
-                        <Route path="/auth" element={<Auth />} />
-                        <Route path="/settings" element={<Settings />} />
-                        <Route path="/profile" element={<Profile />} />
-                        <Route path="/profile/:slug" element={<Profile />} />
-                        <Route path="/reports" element={<AdminReports />} />
-                        <Route path="/notifications" element={<Notifications />} />
+                        <Route path={ROUTES.dashboard} element={<Dashboard />} />
+                        <Route path={ROUTES.calendar} element={<Calendar />} />
+                        <Route path={ROUTES.browse} element={<BookingBrowse />} />
+                        <Route path={ROUTES.browseProvider} element={<BookingBrowse />} />
+                        <Route path={ROUTES.workers} element={<Workers />} />
+                        <Route path={ROUTES.appointments} element={<Appointments />} />
+                        <Route path={ROUTES.appointmentDetail} element={<AppointmentView />} />
+                        <Route path={ROUTES.openingDetail} element={<OpeningView />} />
+                        <Route path={ROUTES.auth} element={<Auth />} />
+                        <Route path={ROUTES.settings} element={<Settings />} />
+                        <Route path={ROUTES.profile} element={<Profile />} />
+                        <Route path={ROUTES.profileSlug} element={<Profile />} />
+                        <Route path={ROUTES.reports} element={<AdminReports />} />
+                        <Route path={ROUTES.notifications} element={<Notifications />} />
                         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                         <Route path="*" element={<NotFound />} />
                       </Routes>
@@ -101,20 +102,20 @@ const App = () => {
               <main className="md:hidden flex-1 overflow-auto max-w-7xl w-full mx-auto">
                 <Routes>
                   <Route path="/" element={<RootRedirect />} />
-                  <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/calendar" element={<Calendar />} />
-                  <Route path="/browse" element={<BookingBrowse />} />
-                  <Route path="/browse/:providerId" element={<BookingBrowse />} />
-                  <Route path="/workers" element={<Workers />} />
-                  <Route path="/appointments" element={<Appointments />} />
-                  <Route path="/appointments/:id" element={<AppointmentView />} />
-                  <Route path="/openings/:id" element={<OpeningView />} />
-                  <Route path="/auth" element={<Auth />} />
-                  <Route path="/settings" element={<Settings />} />
-                  <Route path="/profile" element={<Profile />} />
-                  <Route path="/profile/:slug" element={<Profile />} />
-                  <Route path="/reports" element={<AdminReports />} />
-                  <Route path="/notifications" element={<Notifications />} />
+                  <Route path={ROUTES.dashboard} element={<Dashboard />} />
+                  <Route path={ROUTES.calendar} element={<Calendar />} />
+                  <Route path={ROUTES.browse} element={<BookingBrowse />} />
+                  <Route path={ROUTES.browseProvider} element={<BookingBrowse />} />
+                  <Route path={ROUTES.workers} element={<Workers />} />
+                  <Route path={ROUTES.appointments} element={<Appointments />} />
+                  <Route path={ROUTES.appointmentDetail} element={<AppointmentView />} />
+                  <Route path={ROUTES.openingDetail} element={<OpeningView />} />
+                  <Route path={ROUTES.auth} element={<Auth />} />
+                  <Route path={ROUTES.settings} element={<Settings />} />
+                  <Route path={ROUTES.profile} element={<Profile />} />
+                  <Route path={ROUTES.profileSlug} element={<Profile />} />
+                  <Route path={ROUTES.reports} element={<AdminReports />} />
+                  <Route path={ROUTES.notifications} element={<Notifications />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>

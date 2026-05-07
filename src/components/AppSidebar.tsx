@@ -1,5 +1,6 @@
 import { Search, Home, Calendar as CalendarIcon, Users, Clock, Settings, LogIn, LogOut, UserCircle, Shield, Bell } from 'lucide-react';
 import { APP_NAME } from '@/config/app';
+import { ROUTES } from '@/config/routes';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRoles } from '@/hooks/useUserRoles';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
@@ -38,16 +39,16 @@ export function AppSidebar() {
   });
 
   const userNavItems = [
-    { id: 'browse', label: 'Browse', icon: Search, path: '/browse' },
-    { id: 'openings', label: 'Opening', icon: CalendarIcon, path: '/calendar' },
-    { id: 'appointments-user', label: 'Reservations', icon: Clock, path: '/appointments' },
+    { id: 'browse', label: 'Browse', icon: Search, path: ROUTES.browse },
+    { id: 'openings', label: 'Opening', icon: CalendarIcon, path: ROUTES.calendar },
+    { id: 'appointments-user', label: 'Reservations', icon: Clock, path: ROUTES.appointments },
   ];
 
   const orgNavItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: Home, path: '/dashboard' },
-    { id: 'openings', label: 'Opening', icon: CalendarIcon, path: '/calendar?mode=org' },
-    { id: 'workers', label: 'Workers', icon: Users, path: '/workers' },
-    { id: 'appointments-org', label: 'Reservations', icon: Clock, path: '/appointments?mode=org' },
+    { id: 'dashboard', label: 'Dashboard', icon: Home, path: ROUTES.dashboard },
+    { id: 'openings', label: 'Opening', icon: CalendarIcon, path: `${ROUTES.calendar}?mode=org` },
+    { id: 'workers', label: 'Workers', icon: Users, path: ROUTES.workers },
+    { id: 'appointments-org', label: 'Reservations', icon: Clock, path: `${ROUTES.appointments}?mode=org` },
   ];
 
   const isActive = (path: string) => {
@@ -56,7 +57,7 @@ export function AppSidebar() {
     if (search) {
       return location.pathname === pathname && currentSearch === `?${search}`;
     }
-    return location.pathname === pathname || (pathname === '/dashboard' && location.pathname === '/');
+    return location.pathname === pathname || (pathname === ROUTES.dashboard && location.pathname === '/');
   };
 
   const showOrgSection = isInternalDev || (isOrganization && viewMode === 'user');
@@ -145,9 +146,9 @@ export function AppSidebar() {
             <h3 className="text-xs font-semibold text-muted-foreground px-4 mb-2">BROWSE</h3>
             <div className="space-y-1 px-2">
               <Link
-                to="/browse"
+                to={ROUTES.browse}
                 className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
-                  isActive('/browse')
+                  isActive(ROUTES.browse)
                     ? 'bg-primary text-primary-foreground'
                     : 'text-foreground hover:bg-accent'
                 }`}
@@ -169,9 +170,9 @@ export function AppSidebar() {
             {/* Profile and Settings */}
             <div className="space-y-1">
               <Link
-                to="/notifications"
+                to={ROUTES.notifications}
                 className={`flex items-center justify-between gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
-                  isActive('/notifications')
+                  isActive(ROUTES.notifications)
                     ? 'bg-primary text-primary-foreground'
                     : 'text-foreground hover:bg-accent'
                 }`}
@@ -188,9 +189,9 @@ export function AppSidebar() {
               </Link>
 
               <Link
-                to="/profile"
+                to={ROUTES.profile}
                 className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
-                  isActive('/profile')
+                  isActive(ROUTES.profile)
                     ? 'bg-primary text-primary-foreground'
                     : 'text-foreground hover:bg-accent'
                 }`}
@@ -201,9 +202,9 @@ export function AppSidebar() {
 
               {isInternalDev && (
                 <Link
-                  to="/reports"
+                  to={ROUTES.reports}
                   className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
-                    isActive('/reports')
+                    isActive(ROUTES.reports)
                       ? 'bg-primary text-primary-foreground'
                       : 'text-foreground hover:bg-accent'
                   }`}
@@ -214,9 +215,9 @@ export function AppSidebar() {
               )}
 
               <Link
-                to="/settings"
+                to={ROUTES.settings}
                 className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
-                  isActive('/settings')
+                  isActive(ROUTES.settings)
                     ? 'bg-primary text-primary-foreground'
                     : 'text-foreground hover:bg-accent'
                 }`}
@@ -253,7 +254,7 @@ export function AppSidebar() {
         {!user && (
           <Button 
             className="w-full gap-2 justify-start"
-            onClick={() => navigate('/auth')}
+            onClick={() => navigate(ROUTES.auth)}
           >
             <LogIn className="h-4 w-4" />
             <span>Sign In</span>
