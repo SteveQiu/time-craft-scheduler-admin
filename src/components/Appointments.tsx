@@ -780,19 +780,12 @@ export function Appointments() {
                         <Badge variant="outline" className="text-green-600 border-green-600 dark:text-green-400 dark:border-green-400 text-xs">
                           Paid
                         </Badge>
-                        {paidAppointmentIds.get(apt.id) && (
-                          <button
-                            className="text-xs text-blue-500 hover:text-blue-700 underline"
-                            onClick={() => {
-                              const photo = paidAppointmentIds.get(apt.id);
-                              if (!photo) return;
-                              const win = window.open('', '_blank');
-                              if (win) { win.document.write(`<img src="${photo}" style="max-width:100%;height:auto;" />`); win.document.close(); }
-                            }}
-                          >
-                            📎 View Proof
-                          </button>
-                        )}
+                        <button
+                          className="text-xs text-blue-500 hover:text-blue-700 underline"
+                          onClick={() => setProviderViewProofAppointmentId(apt.id)}
+                        >
+                          📎 View Proof
+                        </button>
                       </>
                     )}
                     {aptIsProvider ? (
@@ -907,19 +900,12 @@ export function Appointments() {
                     <Badge variant="outline" className="text-green-600 border-green-600 dark:text-green-400 dark:border-green-400 text-xs">
                       Paid
                     </Badge>
-                    {paidAppointmentIds.get(appointment.id) && (
-                      <button
-                        className="text-xs text-blue-500 hover:text-blue-700 underline"
-                        onClick={() => {
-                          const photo = paidAppointmentIds.get(appointment.id);
-                          if (!photo) return;
-                          const win = window.open('', '_blank');
-                          if (win) { win.document.write(`<img src="${photo}" style="max-width:100%;height:auto;" />`); win.document.close(); }
-                        }}
-                      >
-                        📎 View Proof
-                      </button>
-                    )}
+                    <button
+                      className="text-xs text-blue-500 hover:text-blue-700 underline"
+                      onClick={() => setProviderViewProofAppointmentId(appointment.id)}
+                    >
+                      📎 View Proof
+                    </button>
                   </>
                 )}
                 <DropdownMenu>
