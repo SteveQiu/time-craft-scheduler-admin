@@ -208,6 +208,7 @@ export function Appointments() {
   const [paymentProofAppointmentId, setPaymentProofAppointmentId] = useState<string | null>(null);
   const [providerViewProofAppointmentId, setProviderViewProofAppointmentId] = useState<string | null>(null);
   const [proofImageError, setProofImageError] = useState(false);
+  const [selectedPaymentTabId, setSelectedPaymentTabId] = useState<string | null>(null);
   const [dateFilter, setDateFilter] = useState<DateFilter>('all');
 
   const modeParam= searchParams.get('mode');
@@ -399,6 +400,16 @@ export function Appointments() {
     if (!acceptedIds || acceptedIds.length === 0) return deduped;
     return deduped.filter(m => acceptedIds.includes(m.id));
   }, [providerPayments, orgPayments, paymentInfoOpening]);
+
+  // The currently active tab in the payment dialog (default to first/default method)
+  const activePaymentMethod = useMemo(() => {
+    if (!allAvailableMethods.length) return null;
+    const activeId = selectedPaymentTabId ?? (allAvailableMethods.find(m => m.is_default) ?? allAvailableMethods[0])?.id;
+    return allAvailableMethods.find(m => m.id === activeId) ?? null;
+  }, [allAvailableMethods, selectedPaymentTabId]);
+
+  const isActiveMethodCash = activePaymentMethod?.type === 'cash';
+  const noteRequired = !isActiveMethodCash;
 
   const { data: existingPaymentProof, isFetching: loadingExistingProof } = useQuery({    queryKey: ['payment-proof', paymentProofAppointmentId],
     enabled: !!paymentProofAppointmentId,
@@ -1491,6 +1502,7 @@ export function Appointments() {
           setPaymentProofNote('');
           setPaymentProofPhoto(null);
           setPaymentProofPhotoName('');
+          setSelectedPaymentTabId(null);
         }
       }}>
         <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
@@ -1514,6 +1526,7 @@ export function Appointments() {
                 defaultValue={
                   (allAvailableMethods.find(m => m.is_default) ?? allAvailableMethods[0])?.id
                 }
+                onValueChange={(val) => setSelectedPaymentTabId(val)}
               >
                 <TabsList className="flex flex-wrap h-auto gap-1 mb-3">
                   {allAvailableMethods.map((pm) => (
@@ -1579,7 +1592,7 @@ export function Appointments() {
                       )}
                       <div>
                         <label className="text-xs text-muted-foreground mb-1 block">
-                          Payment note <span className="text-destructive">*</span>
+                          Payment note{noteRequired ? <span className="text-destructive ml-0.5">*</span> : <span className="text-muted-foreground"> (optional)</span>}
                         </label>
                         <Textarea
                           placeholder="e.g. Sent $50 via PayPal on May 5. Transaction ID: ..."
@@ -1623,7 +1636,7 @@ export function Appointments() {
                       </div>
                       <Button
                         onClick={handleSubmitPaymentProof}
-                        disabled={isSubmittingProof || !paymentProofNote.trim()}
+                        disabled={isSubmittingProof || (noteRequired && !paymentProofNote.trim())}
                         className="w-full"
                         size="sm"
                       >
