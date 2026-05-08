@@ -1,0 +1,9 @@
+docs: Merge bishop conduct authority & paid query isolation decisions
+
+- Session log: Bishop promoted to Frontend Conduct Authority over Dallas
+- User directive: Dallas requires independent QA verification (Ralph)
+- Architecture: Paid status query isolation from method queries constraint
+- Deduped & merged .squad/decisions/inbox/* → decisions.md
+- Deleted inbox files
+
+Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
