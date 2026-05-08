@@ -22,6 +22,16 @@ Bishop's role expanded from UX advisor to binding conduct authority over Dallas'
 
 Ralph (QA & Tester) must independently verify all Dallas frontend changes before work accepted done. Coordinator never trusts Dallas self-certification — "tsc passes" and "build passes" necessary but not sufficient. Ralph's verification checklist: page not blank, existing features intact, new feature works in browser. Dallas and Ralph always spawned together for frontend tasks. Permanent rule, applies to all future Dallas work regardless of feature. Dallas's pattern: declared work done while broken (Appointments.tsx twice queried non-existent DB columns, broke paid buttons, only user caught it).
 
+### 2026-05-07T21:54:45: Use LemonSqueezy for subscription/payment processing
+**By:** SteveQiu (via Copilot)
+
+User request: integrate LemonSqueezy for premium tier subscription and payment processing. Captured for team memory.
+
+### 2026-05-08T00:00:00: Dallas retired, Ripley hired
+**By:** SteveQiu (via Squad Coordinator)
+
+Dallas retired due to repeated critical failures (banned from Appointments.tsx, broke paid buttons twice, unreliable self-certification). Replaced by Ripley — same frontend scope, clean record, no restrictions. Dallas's supervision overhead (dual overseers, file ban) cost more than contribution. Dallas archived to `.squad/agents/_alumni/dallas/`. Bishop's conduct authority role removed — no longer needed.
+
 ---
 
 ## Architecture & Patterns
@@ -260,3 +270,47 @@ Provider proof fetch is on-demand (keyed by selected appointment ID), not bulk-p
 - `appointment.user_id === user?.id` → customer CreditCard button (How to Pay + submit proof)
 - `canManage && appointment.user_id !== user?.id` → provider CreditCard button (view-only proof dialog)
 - Two buttons never coexist for same user on same card
+
+---
+
+### Payment Proof Photo: Base64 → Supabase Storage
+**Date:** 2026-05-08 | **Authority:** Bishop (Frontend Dev & Conduct Authority) | **Status:** Implemented
+
+Migrate payment proof photo storage from base64 TEXT column to Supabase Storage bucket.
+
+**Old flow (removed):**
+- FileReader → canvas compress → base64 data URL → stored in `payment_proofs.photo TEXT`
+- Bloated DB (500MB limit), 33% overhead, full blob on every query
+
+**New flow:**
+- File held in component state (`paymentProofPhotoFile: File | null`)
+- On submit: upload to `payment-proofs` Supabase Storage bucket
+- Store path in `payment_proofs.photo_url TEXT`
+
+**DB migration:** `supabase/migrations/20260508_migrate_payment_proofs_photo_to_storage.sql`
+- `RENAME COLUMN photo TO photo_url`
+- Creates `payment-proofs` storage bucket (private, 2MB limit, image types only)
+- RLS policies: authenticated upload/read; delete own only
+
+**Appointments.tsx:**
+- Added `paymentProofPhotoFile: File | null` state
+- `handlePaymentPhotoUpload`: captures File object; keeps canvas preview for display
+- `handleSubmitPaymentProof`: uploads file to Storage, stores path in `photo_url`
+- Falls back to existing `photo_url` if no new file selected (edit flow)
+- All `photo` column references → `photo_url`
+
+**Rationale:** DB storage unsustainable. Storage bucket purpose-built for blobs, cheaper at scale, doesn't bloat row data.
+
+---
+
+### Signed URLs for payment-proofs Storage
+**Date:** 2026-05-08 | **Authority:** Ripley (Frontend Dev) | **Status:** Implemented
+
+`payment-proofs` Supabase Storage bucket is private. All display of proof images must use signed URLs, not public URLs.
+
+**Rules:**
+1. **Uploads**: store only the storage `filePath` (e.g. `userId/appointmentId-ts.jpg`) in `payment_proofs.photo_url`. Never store the full public URL.
+2. **Display**: always call `supabase.storage.from('payment-proofs').createSignedUrl(path, 3600)` and use `data.signedUrl` as the `<img>` source.
+3. **Backward compat**: use `extractProofStoragePath()` (defined in `Appointments.tsx`) to convert legacy full URLs to storage paths before signing.
+
+**Rationale:** Private buckets return 403 on public URLs. Signed URLs with 1-hour expiry correct access pattern and more secure (URLs expire automatically).
