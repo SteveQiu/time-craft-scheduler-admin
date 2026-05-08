@@ -2,6 +2,9 @@
 ALTER TABLE public.payment_proofs
   RENAME COLUMN photo TO photo_url;
 
+-- Wipe existing base64 data — nobody using it, storage URLs will replace
+UPDATE public.payment_proofs SET photo_url = NULL;
+
 -- Update comment
 COMMENT ON COLUMN public.payment_proofs.photo_url IS 'Supabase Storage URL to payment proof image (was base64 in photo column)';
 
