@@ -118,6 +118,20 @@ Replace direct `openings`/`profiles` queries with `get_appointment_rates` RPC. C
 
 **Why:** Customers were seeing "Free" for all appointments because RLS blocked rate lookups.
 
+### LemonSqueezy Webhook & orgs.plan Column (2026-05-08)
+**Authority:** Ripley (Frontend Dev)
+
+Added `plan` column to `orgs` table and a Supabase Edge Function to keep it in sync with LemonSqueezy subscription events.
+
+**Implementation:**
+- `orgs.plan` is `TEXT NOT NULL DEFAULT 'free'`, values: `'free' | 'premium'`
+- Edge Function `lemonsqueezy-webhook` uses HMAC-SHA256 signature verification (`X-Signature` header) before processing
+- Org identified via `event.data.attributes.custom_data.org_id` — callers must pass this when creating checkout sessions
+- Function registered in `supabase/config.toml` with `verify_jwt = false` (LemonSqueezy is not an authenticated caller)
+- Service role client used for DB writes (bypasses RLS)
+
+**Rationale:** Single `plan` column on `orgs` avoids joining `subscriptions` table on every request. Simplest path to org-level billing state. Existing `subscriptions` table (per-user) can coexist; `orgs.plan` is the authoritative gate for org-level feature access.
+
 ### User Directive: Bishop UI Review Gate (2026-05-06)
 **Authority:** SteveQiu (via Copilot)
 
