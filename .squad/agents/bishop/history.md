@@ -470,3 +470,31 @@
 - Future cash button work needs surgical, minimal changes with runtime verification before commit
 - All `.squad/` file updates (history, decisions, logs) are disk-only — no git commits
 - Dev server runs on http://localhost:8080 via `npm run dev`
+
+
+## Payment Proof Storage Migration (2026-05-08)
+
+**Requested by:** SteveQiu  
+**Scope:** src/components/Appointments.tsx, supabase/migrations/
+
+### What Changed
+
+Migrated payment proof photo storage from base64-in-database to Supabase Storage bucket.
+
+**SQL Migration created:** `supabase/migrations/20260508_migrate_payment_proofs_photo_to_storage.sql`
+- RENAME COLUMN photo TO photo_url
+- payment-proofs Storage bucket (private, 2MB, image types only)
+- RLS policies: authenticated upload/read; users delete own only
+
+**Appointments.tsx changes:**
+1. Added `paymentProofPhotoFile: File | null` state
+2. `handlePaymentPhotoUpload`: sets File in state before FileReader (preview kept for thumbnail)
+3. `handleSubmitPaymentProof`: uploads file to Storage, stores public URL as `photo_url`; falls back to existing URL if no new file selected
+4. Clear effect + Remove button: also call `setPaymentProofPhotoFile(null)`
+5. Bulk query: `select('appointment_id, photo_url')`; type updated to `photo_url: string | null`
+6. Pre-fill effect: `existingPaymentProof.photo_url`
+7. Provider view dialog: `providerViewProof.photo_url` throughout (3 references)
+
+**TypeScript:** `tsc --noEmit` passes with 0 errors after all changes.
+
+**Decision written:** `.squad/decisions/inbox/bishop-photo-storage-migration.md`

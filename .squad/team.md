@@ -13,9 +13,9 @@
 | Name | Role | Charter | Status |
 |------|------|---------|--------|
 | Guardian | Security & Secrets Guardian | `.squad/agents/guardian/charter.md` | 🔒 Active |
-| Dallas | Frontend Dev ⚠️ | `.squad/agents/dallas/charter.md` | ⚛️ Active — requires QA supervision |
-| Bishop | Accessibility & UX Designer (Frontend Conduct Authority) | `.squad/agents/bishop/charter.md` | 🎨 Active — corrects & disciplines Dallas |
-| Ralph | QA & Tester | `.squad/agents/ralph/charter.md` | 🧪 Active — supervises Dallas |
+| Ripley | Frontend Dev | `.squad/agents/ripley/charter.md` | ⚛️ Active |
+| Bishop | Accessibility & UX Designer | `.squad/agents/bishop/charter.md` | 🎨 Active |
+| Ralph | QA & Tester | `.squad/agents/ralph/charter.md` | 🧪 Active — verifies Ripley's work |
 
 
 ## Coding Agent

@@ -1,16 +1,6 @@
-## ⛔ MANDATORY QA GATE — DALLAS'S WORD IS NOT ENOUGH
+## QA Gate
 
-**Dallas has a pattern of declaring work complete when it is broken or untested.**
-She has shipped code that caused blank pages, missing buttons, and customer-facing regressions — then reported success.
-
-**Rule: Ralph independently verifies ALL Dallas frontend work. No exceptions.**
-
-- Coordinator does NOT accept Dallas's "done" without Ralph's sign-off.
-- Dallas claiming "tsc passes" or "build passes" is NOT sufficient — runtime breakage has happened even when tsc was clean.
-- Ralph opens the actual page in a browser (or Playwright), confirms it is not blank, and confirms the feature works.
-- If Ralph finds a failure, the task is NOT done — regardless of what Dallas reported.
-
-This gate exists because Dallas's self-certification has proven unreliable. Trust the test, not the agent.
+Ralph independently verifies ALL Ripley frontend work before any task is closed. Runtime verification in browser is required — tsc passing is necessary but not sufficient.
 
 ---
 
@@ -19,9 +9,9 @@ This gate exists because Dallas's self-certification has proven unreliable. Trus
 | Work Type | Route To | Examples |
 |-----------|----------|---------|
 | Security & secrets | Guardian | Pre-commit secret scanning, secret detection, blocking unsafe commits |
-| Frontend components, React/TSX | Dallas → **Ralph verifies** | Dallas builds; Ralph confirms working in browser before task is closed |
+| Frontend components, React/TSX | Ripley → **Ralph verifies** | Ripley builds; Ralph confirms working in browser before task is closed |
 | Accessibility & UX | Bishop | a11y audits, mobile responsiveness, layout improvements, touch UX |
-| Mobile design | Bishop (lead), Dallas (implementation) | Phone/tablet responsive design, responsive breakpoints |
+| Mobile design | Bishop (lead), Ripley (implementation) | Phone/tablet responsive design, responsive breakpoints |
 | QA & regression testing | Ralph | Playwright tests, page-not-blank checks, feature verification |
 | Session logging | Scribe | Automatic — never needs routing |
 

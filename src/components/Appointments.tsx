@@ -203,6 +203,7 @@ export function Appointments() {
   const [paymentProofNote, setPaymentProofNote] = useState('');
   const [paymentProofPhoto, setPaymentProofPhoto] = useState<string | null>(null);
   const [paymentProofPhotoName, setPaymentProofPhotoName] = useState('');
+  const [paymentProofPhotoFile, setPaymentProofPhotoFile] = useState<File | null>(null);
   const [isSubmittingProof, setIsSubmittingProof] = useState(false);
   const [proofSubmitted, setProofSubmitted] = useState(false);
   const [paymentProofAppointmentId, setPaymentProofAppointmentId] = useState<string | null>(null);
@@ -284,7 +285,7 @@ export function Appointments() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('payment_proofs')
-        .select('appointment_id, photo')
+        .select('appointment_id, photo_url')
         .in('appointment_id', appointmentIds);
       if (error) console.error('[payment-proofs] query error:', error);
       return data ?? [];
@@ -293,7 +294,7 @@ export function Appointments() {
 
   const paidAppointmentIds = useMemo(
     () => new Map(
-      (submittedProofs ?? []).map((p: { appointment_id: string; photo: string | null }) => [p.appointment_id, p.photo ?? null])
+      (submittedProofs ?? []).map((p: { appointment_id: string; photo_url: string | null }) => [p.appointment_id, p.photo_url ?? null])
     ),
     [submittedProofs]
   );
@@ -442,7 +443,7 @@ export function Appointments() {
   useEffect(() => {
     if (existingPaymentProof && paymentProofAppointmentId) {
       setPaymentProofNote(existingPaymentProof.note ?? '');
-      setPaymentProofPhoto(existingPaymentProof.photo ?? null);
+      setPaymentProofPhoto(existingPaymentProof.photo_url ?? null);
       setProofSubmitted(true);
     }
   }, [existingPaymentProof, paymentProofAppointmentId]);
@@ -453,6 +454,7 @@ export function Appointments() {
       setPaymentProofNote('');
       setPaymentProofPhoto(null);
       setPaymentProofPhotoName('');
+      setPaymentProofPhotoFile(null);
       setProofSubmitted(false);
     }
   }, [paymentProofAppointmentId]);
@@ -464,6 +466,7 @@ export function Appointments() {
       toast.error('Photo must be under 20MB');
       return;
     }
+    setPaymentProofPhotoFile(file);
     const reader = new FileReader();
     reader.onload = (ev) => {
       const img = new Image();
@@ -500,13 +503,38 @@ export function Appointments() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
+      let photoUrl: string | null = null;
+
+      if (paymentProofPhotoFile) {
+        const ext = paymentProofPhotoFile.name.split('.').pop() ?? 'jpg';
+        const filePath = `${user.id}/${paymentProofAppointmentId}-${Date.now()}.${ext}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('payment-proofs')
+          .upload(filePath, paymentProofPhotoFile, {
+            upsert: true,
+            contentType: paymentProofPhotoFile.type,
+          });
+
+        if (uploadError) throw uploadError;
+
+        const { data: urlData } = supabase.storage
+          .from('payment-proofs')
+          .getPublicUrl(filePath);
+
+        photoUrl = urlData.publicUrl;
+      } else if (existingPaymentProof?.photo_url) {
+        // Keep existing URL if no new file selected
+        photoUrl = existingPaymentProof.photo_url;
+      }
+
       const { error } = await supabase
         .from('payment_proofs')
         .upsert({
           appointment_id: paymentProofAppointmentId,
           customer_id: user.id,
           note: paymentProofNote || null,
-          photo: paymentProofPhoto || null,
+          photo_url: photoUrl,
         }, { onConflict: 'appointment_id' });
 
       if (error) throw error;
@@ -1615,7 +1643,7 @@ export function Appointments() {
                                 variant="ghost"
                                 size="sm"
                                 className="text-destructive hover:text-destructive h-6 px-0 text-xs"
-                                onClick={() => { setPaymentProofPhoto(null); setPaymentProofPhotoName(''); }}
+                                onClick={() => { setPaymentProofPhoto(null); setPaymentProofPhotoName(''); setPaymentProofPhotoFile(null); }}
                               >
                                 Remove
                               </Button>
@@ -1690,7 +1718,7 @@ export function Appointments() {
                       No payment proof submitted yet.
                     </p>
                   </div>
-                ) : !providerViewProof.photo && !providerViewProof.note ? (
+                ) : !providerViewProof.photo_url && !providerViewProof.note ? (
                   <div className="text-center py-6 bg-muted/30 rounded-lg">
                     <FileImage className="h-10 w-10 mx-auto mb-2 text-muted-foreground/50" aria-hidden="true" />
                     <p className="text-sm text-muted-foreground">
@@ -1707,7 +1735,7 @@ export function Appointments() {
                         </div>
                       </div>
                     )}
-                    {providerViewProof.photo && (
+                    {providerViewProof.photo_url && (
                       <div>
                         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Payment Screenshot</p>
                         {proofImageError ? (
@@ -1717,7 +1745,7 @@ export function Appointments() {
                           </div>
                         ) : (
                           <img 
-                            src={providerViewProof.photo} 
+                            src={providerViewProof.photo_url} 
                             alt="Payment proof submitted by customer" 
                             className="max-w-full rounded-md border shadow-sm" 
                             onError={() => setProofImageError(true)}
