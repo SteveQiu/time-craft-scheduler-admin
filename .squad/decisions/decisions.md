@@ -12,6 +12,16 @@ AI-generated/supplementary markdown files must NOT be at repo root. Use `.github
 
 After task involving bugs/mistakes, update affected agents' `history.md` with lessons learned. Example: refactoring imports requires verifying ALL usages of removed symbols, not just direct replacements (Settings blank-page bug from removing Edit/Trash2 icons during payment refactor).
 
+### 2026-05-07T19:03:10: Bishop promoted to Frontend Conduct Authority over Dallas
+**By:** User (via Copilot)
+
+Bishop's role expanded from UX advisor to binding conduct authority over Dallas's frontend coding practices. Bishop can correct, discipline, and escalate repeat offenses. Dallas's charter updated to acknowledge dual supervision (Ralph for QA, Bishop for frontend practice). Dallas has repeatedly shipped sloppy code, self-certified broken work, and ignored known failure patterns. Bishop now has explicit authority to name bad practices, issue corrective directives, and escalate to coordinator for lockout on repeat offenses.
+
+### 2026-05-07T18:15:00: Dallas Requires Independent QA Verification
+**By:** Coordinator (user directive)
+
+Ralph (QA & Tester) must independently verify all Dallas frontend changes before work accepted done. Coordinator never trusts Dallas self-certification — "tsc passes" and "build passes" necessary but not sufficient. Ralph's verification checklist: page not blank, existing features intact, new feature works in browser. Dallas and Ralph always spawned together for frontend tasks. Permanent rule, applies to all future Dallas work regardless of feature. Dallas's pattern: declared work done while broken (Appointments.tsx twice queried non-existent DB columns, broke paid buttons, only user caught it).
+
 ---
 
 ## Architecture & Patterns
@@ -77,6 +87,13 @@ Used `Dialog` (not `AlertDialog`) for blocked-openings warning in Calendar day v
 - Blocked openings shown with date/time/worker/service
 - "Delete Safe Ones" only renders when `safeIdsToDelete.length > 0`
 - Deleted opening selections cleared; blocked ones kept selected
+
+---
+
+### Paid Status Query Isolation from Method Queries
+**Date:** 2026-05-07 | **Author:** SteveQiu (via Copilot) | **Status:** Enforced
+
+`paidAppointmentIds` query (`select('appointment_id, photo')`) must NEVER be combined with optional supplementary queries (e.g., `payment_method_type`). Supabase returns `{ data: null }` for unknown columns — combining them wipes ALL paid buttons. Supplementary data (method type, styling info) uses separate, independent `useQuery`. Both queries degrade gracefully with `console.error`, never `throw`. Paid status must survive any query error. Dallas broke Appointments.tsx twice in same session by combining these queries. Documented architectural constraint, not style suggestion.
 
 ---
 
