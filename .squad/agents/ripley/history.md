@@ -7,6 +7,24 @@
 **Joined:** 2026-05-08 (replaced Dallas)
 **Requested by:** SteveQiu
 
+## LemonSqueezy Webhook Infrastructure (2026-05-08)
+
+**Task:** Add plan billing support via LemonSqueezy webhooks.
+
+**Files created:**
+- `supabase/migrations/20260508_add_plan_to_orgs.sql` — adds `plan TEXT NOT NULL DEFAULT 'free'` to `orgs`
+- `supabase/functions/lemonsqueezy-webhook/index.ts` — Edge Function: HMAC-SHA256 verify → route event → update `orgs.plan`
+- `supabase/functions/lemonsqueezy-webhook/README.md` — deploy/config instructions
+- `supabase/config.toml` — registered function with `verify_jwt = false` (LemonSqueezy has no JWT)
+
+**Event routing:**
+- `subscription_created`/`subscription_updated` + `status=active` → `plan='premium'`
+- `subscription_cancelled` or `status` in `cancelled|expired|past_due` → `plan='free'`
+- All others → 200 silent ack
+
+**Build gate:** `npx tsc --noEmit` passes clean.
+**Handoff:** Ralph for review.
+
 ## Day-1 Context
 
 App is an admin scheduler for organizations. Key pages: Appointments, Workers, Browse.
