@@ -6,7 +6,7 @@ import { Input } from './ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
-import { Plus, Search, Edit, Trash2, Clock, Star, Mail, Phone, Calendar, Send, Loader2 } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Clock, Star, Calendar, Send, Loader2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
@@ -31,8 +31,6 @@ export function Workers() {
 
   const [editForm, setEditForm] = useState({
     worker_name: '',
-    worker_email: '',
-    phone: '',
     skills: '',
     hourly_rate: 0,
   });
@@ -83,8 +81,6 @@ export function Workers() {
     setEditingWorker(worker);
     setEditForm({
       worker_name: worker.worker_name,
-      worker_email: worker.worker_email,
-      phone: worker.phone || '',
       skills: worker.skills.join(', '),
       hourly_rate: worker.hourly_rate,
     });
@@ -97,8 +93,6 @@ export function Workers() {
       await updateWorker.mutateAsync({
         id: editingWorker.id,
         worker_name: editForm.worker_name,
-        worker_email: editForm.worker_email,
-        phone: editForm.phone || null,
         skills: editForm.skills.split(',').map(s => s.trim()).filter(Boolean),
         hourly_rate: editForm.hourly_rate,
       });
@@ -192,20 +186,6 @@ export function Workers() {
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Contact Info */}
-              <div className="space-y-2">
-                <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                  <Mail className="h-4 w-4" />
-                  <span>{worker.worker_email}</span>
-                </div>
-                {worker.phone && (
-                  <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                    <Phone className="h-4 w-4" />
-                    <span>{worker.phone}</span>
-                  </div>
-                )}
-              </div>
-
               {/* Service to provide */}
               <div>
                 <p className="text-sm font-medium text-foreground mb-2">Service to provide</p>
@@ -332,23 +312,6 @@ export function Workers() {
                 id="name"
                 value={editForm.worker_name}
                 onChange={(e) => setEditForm({...editForm, worker_name: e.target.value})}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={editForm.worker_email}
-                onChange={(e) => setEditForm({...editForm, worker_email: e.target.value})}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="phone">Phone</Label>
-              <Input
-                id="phone"
-                value={editForm.phone}
-                onChange={(e) => setEditForm({...editForm, phone: e.target.value})}
               />
             </div>
             <div className="space-y-2">
