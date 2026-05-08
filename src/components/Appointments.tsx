@@ -172,6 +172,16 @@ function applyDateFilter(apts: Appointment[], filter: DateFilter): Appointment[]
   });
 }
 
+function extractProofStoragePath(photoUrl: string): string {
+  const publicMarker = '/object/public/payment-proofs/';
+  const idx = photoUrl.indexOf(publicMarker);
+  if (idx !== -1) return photoUrl.slice(idx + publicMarker.length);
+  const signedMarker = '/object/sign/payment-proofs/';
+  const idx2 = photoUrl.indexOf(signedMarker);
+  if (idx2 !== -1) return photoUrl.slice(idx2 + signedMarker.length).split('?')[0];
+  return photoUrl; // Already a storage path
+}
+
 export function Appointments() {
   const { workers, acceptedWorkers, getWorkerRate } = useOrgWorkers();
   const navigate = useNavigate();
@@ -209,6 +219,8 @@ export function Appointments() {
   const [paymentProofAppointmentId, setPaymentProofAppointmentId] = useState<string | null>(null);
   const [providerViewProofAppointmentId, setProviderViewProofAppointmentId] = useState<string | null>(null);
   const [proofImageError, setProofImageError] = useState(false);
+  const [providerViewSignedUrl, setProviderViewSignedUrl] = useState<string | null>(null);
+  const [providerViewSignedUrlLoading, setProviderViewSignedUrlLoading] = useState(false);
   const [selectedPaymentTabId, setSelectedPaymentTabId] = useState<string | null>(null);
   const [dateFilter, setDateFilter] = useState<DateFilter>('all');
 
@@ -443,8 +455,16 @@ export function Appointments() {
   useEffect(() => {
     if (existingPaymentProof && paymentProofAppointmentId) {
       setPaymentProofNote(existingPaymentProof.note ?? '');
-      setPaymentProofPhoto(existingPaymentProof.photo_url ?? null);
       setProofSubmitted(true);
+      if (existingPaymentProof.photo_url) {
+        const path = extractProofStoragePath(existingPaymentProof.photo_url);
+        supabase.storage.from('payment-proofs').createSignedUrl(path, 3600).then(({ data }) => {
+          setPaymentProofPhoto(data?.signedUrl ?? null);
+        });
+        setPaymentProofPhotoName('Uploaded photo');
+      } else {
+        setPaymentProofPhoto(null);
+      }
     }
   }, [existingPaymentProof, paymentProofAppointmentId]);
 
@@ -458,6 +478,23 @@ export function Appointments() {
       setProofSubmitted(false);
     }
   }, [paymentProofAppointmentId]);
+
+  // Generate signed URL for provider view dialog
+  useEffect(() => {
+    const photoUrl = providerViewProof?.photo_url;
+    if (!photoUrl) {
+      setProviderViewSignedUrl(null);
+      setProviderViewSignedUrlLoading(false);
+      return;
+    }
+    setProviderViewSignedUrlLoading(true);
+    const path = extractProofStoragePath(photoUrl);
+    supabase.storage.from('payment-proofs').createSignedUrl(path, 3600).then(({ data, error }) => {
+      if (error) console.error('[payment-proofs] signed URL error:', error);
+      setProviderViewSignedUrl(data?.signedUrl ?? null);
+      setProviderViewSignedUrlLoading(false);
+    });
+  }, [providerViewProof?.photo_url]);
 
   const handlePaymentPhotoUpload= (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -518,11 +555,7 @@ export function Appointments() {
 
         if (uploadError) throw uploadError;
 
-        const { data: urlData } = supabase.storage
-          .from('payment-proofs')
-          .getPublicUrl(filePath);
-
-        photoUrl = urlData.publicUrl;
+        photoUrl = filePath; // Store storage path; signed URL generated on display
       } else if (existingPaymentProof?.photo_url) {
         // Keep existing URL if no new file selected
         photoUrl = existingPaymentProof.photo_url;
@@ -1694,6 +1727,8 @@ export function Appointments() {
             if (!open) {
               setProviderViewProofAppointmentId(null);
               setProofImageError(false);
+              setProviderViewSignedUrl(null);
+              setProviderViewSignedUrlLoading(false);
             }
           }}>
             <DialogContent className="w-[calc(100%-2rem)] sm:max-w-lg max-h-[90vh] overflow-y-auto">
@@ -1743,9 +1778,13 @@ export function Appointments() {
                             <ImageIcon className="h-8 w-8 mx-auto mb-2 text-muted-foreground/50" aria-hidden="true" />
                             <p className="text-sm text-muted-foreground">Could not load image</p>
                           </div>
+                        ) : providerViewSignedUrlLoading || !providerViewSignedUrl ? (
+                          <div className="flex items-center justify-center py-6" role="status" aria-label="Loading image">
+                            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                          </div>
                         ) : (
                           <img 
-                            src={providerViewProof.photo_url} 
+                            src={providerViewSignedUrl} 
                             alt="Payment proof submitted by customer" 
                             className="max-w-full rounded-md border shadow-sm" 
                             onError={() => setProofImageError(true)}

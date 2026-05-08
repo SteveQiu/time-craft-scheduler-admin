@@ -30,3 +30,11 @@ App is an admin scheduler for organizations. Key pages: Appointments, Workers, B
 - Guardian: secret scanning
 
 ## Learnings
+
+### Signed URLs for Private Supabase Storage Buckets (2026)
+
+`payment-proofs` bucket is private — `getPublicUrl()` returns a 403-prone URL. Fix:
+- **Upload**: store storage `filePath` (e.g. `userId/appointmentId-ts.jpg`) in `photo_url`, not the public URL.
+- **Display**: call `supabase.storage.from('payment-proofs').createSignedUrl(path, 3600)` and use `data.signedUrl` as `<img src>`.
+- **Backward compat**: `extractProofStoragePath()` helper strips old full public URLs down to the storage path before signing.
+- **Pattern**: signed URL generation goes in a `useEffect` watching the `photo_url` value; signed URL state cleared on dialog close + `proofImageError` reset.
