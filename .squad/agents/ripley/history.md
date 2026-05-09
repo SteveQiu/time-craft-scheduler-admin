@@ -56,3 +56,19 @@ App is an admin scheduler for organizations. Key pages: Appointments, Workers, B
 - **Display**: call `supabase.storage.from('payment-proofs').createSignedUrl(path, 3600)` and use `data.signedUrl` as `<img src>`.
 - **Backward compat**: `extractProofStoragePath()` helper strips old full public URLs down to the storage path before signing.
 - **Pattern**: signed URL generation goes in a `useEffect` watching the `photo_url` value; signed URL state cleared on dialog close + `proofImageError` reset.
+
+### LemonSqueezy Webhook: User-Only Subscriptions (2026-05-08)
+
+**Task:** Simplified webhook to handle ONLY user-level subscriptions via `subscriptions` table. No org-level plan support.
+
+**Key changes:**
+- `custom_data` from `event.meta.custom_data` (LemonSqueezy payload structure)
+- Require `user_id` — return 400 if missing
+- Removed ALL `org_id` logic (no more `orgs.plan` updates)
+- Premium: upsert `{ user_id, plan_type: 'premium', status: 'active', started_at }`
+- Free/cancel: upsert `{ user_id, plan_type: 'free', status: 'cancelled' }`
+- Unknown events → 200 silently
+- Log: `user {userId} plan → {plan} (event: {eventName})`
+- Migration `20260508_add_plan_to_orgs.sql` deleted (never ran in prod)
+
+**Rationale:** User decision (Steve) — orgs are also users in this app. Individual subscription model simpler. `subscriptions` table is single source of truth for premium status.
