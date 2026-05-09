@@ -115,3 +115,28 @@ App is an admin scheduler for organizations. Key pages: Appointments, Workers, B
 4. Submit button: added `(allAvailableMethods.length > 0 && !activePaymentMethod)` to `disabled` — prevents saving `null` type on new proofs
 
 **Build gate:** `tsc --noEmit` → 0 errors. `npm run build` → exit 0.
+
+## Clean Code Refactor (2026-05-09)
+
+**Task:** Extract hooks, sub-components. Reduce Appointments, Calendar, Profile, Settings below 300 lines each.
+
+**Pattern:**
+- Identified hook-extractable logic in each monolith
+- Created sub-components for sections (modals, tabs, cards)
+- Moved hook state + queries to custom hooks in `src/hooks/`
+- Preserved all existing functionality
+
+**Files refactored:**
+- `src/components/Appointments.tsx` → <300 lines (was ~500+)
+- `src/components/Calendar.tsx` → <300 lines
+- `src/components/Profile.tsx` → <300 lines
+- `src/components/Settings.tsx` → <300 lines
+
+**Architectural rule preserved:**
+- Dual-query pattern: `paidAppointmentIds` query + independent payment method query
+- Both queries remain separate; never merged (as per decision rule)
+- Payment proof signed URL logic extracted to reusable hook
+
+**Build gate:** `tsc --noEmit` → 0 errors.
+
+**Handoff:** Ralph for test verification.

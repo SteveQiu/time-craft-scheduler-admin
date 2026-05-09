@@ -32,3 +32,21 @@ Initial setup complete.
 - Future cash button work needs surgical, minimal changes with runtime verification before commit
 - All `.squad/` file updates (history, decisions, logs) are disk-only — no git commits
 - Dev server runs on http://localhost:8080 via `npm run dev`
+
+## Clean Code Refactor Test Suite (2026-05-09)
+
+**Task:** Write Playwright specs for refactored components. Baseline all tests at 33/33 PASS.
+
+**Deliverables:**
+- 4 Playwright spec files
+- 33 test cases total:
+  - Appointments workflows (create, view, filter)
+  - Calendar interactions (navigate, select date)
+  - Profile updates (edit, photo upload)
+  - Settings changes (subscription, roles)
+
+**Build:** ✅ 33/33 PASS (baseline established)
+
+**Verification:** Final runtime verification run in progress.
+
+**Pattern:** Tests cover happy path + edge cases. Each spec targets one component. Reuse fixtures for auth, data setup.
