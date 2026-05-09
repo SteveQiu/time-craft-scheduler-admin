@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRoles } from '@/hooks/useUserRoles';
@@ -14,7 +14,9 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { ReviewSection } from '@/components/ReviewSection';
 import { ReportDialog } from '@/components/ReportDialog';
-import { Edit, Save, X, Mail, Phone, MapPin, Star, Flag, Share2, DollarSign, Wrench, Plus, Trash2, Calendar, Bookmark, ArrowLeft, Eye, EyeOff } from 'lucide-react';
+import { PhotoLightbox } from '@/components/PhotoLightbox';
+import { Edit, Save, X, Mail, Phone, MapPin, Star, Flag, Share2, DollarSign, Wrench, Plus, Trash2, Calendar, Bookmark, ArrowLeft, Eye, EyeOff, Camera } from 'lucide-react';
+import { useSubscription } from '@/hooks/useSubscription';
 
 interface ProfileData {
   id: string;
@@ -62,6 +64,8 @@ export default function Profile() {
   const [reportOpen, setReportOpen] = useState(false);
   const [skillInput, setSkillInput] = useState('');
   const [isBookmarked, setIsBookmarked] = useState(false);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
   const [address, setAddress] = useState<AddressData>({
     address_line_1: '',
     address_line_2: '',
@@ -94,6 +98,10 @@ export default function Profile() {
     hourly_rate_public: true,
     skills_public: true,
   });
+
+  const { isPremium } = useSubscription();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingSlot, setUploadingSlot] = useState(false);
 
   // Determine if viewing own profile or someone else's
   const isOwnProfile = !slug;
@@ -166,6 +174,24 @@ export default function Profile() {
     enabled: !!profile?.id,
   });
 
+  const { data: profilePhotos = [], refetch: refetchPhotos } = useQuery({
+    queryKey: ['profile-photos', profile?.id],
+    queryFn: async () => {
+      if (!profile?.id) return [];
+      const { data, error } = await (supabase as any)
+        .from('profile_photos')
+        .select('id, storage_path, display_order')
+        .eq('user_id', profile.id)
+        .order('display_order', { ascending: true });
+      if (error) return [];
+      return data as { id: string; storage_path: string; display_order: number }[];
+    },
+    enabled: !!profile?.id,
+  });
+
+  const getPhotoUrl = (storagePath: string) =>
+    supabase.storage.from('profile-photos').getPublicUrl(storagePath).data.publicUrl;
+
   useEffect(() => {
     if (profile) {
       setForm({
@@ -199,6 +225,32 @@ export default function Profile() {
       }
     }
   }, [profile]);
+
+  const handlePhotoUpload = async (file: File) => {
+    if (!user || !profile) return;
+    const ext = file.name.split('.').pop();
+    const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
+    const { error: uploadError } = await supabase.storage.from('profile-photos').upload(path, file);
+    if (uploadError) {
+      console.error('Storage upload error:', uploadError);
+      toast({ title: 'Upload failed', description: uploadError.message, variant: 'destructive' });
+      return;
+    }
+    const nextOrder = profilePhotos.length > 0 ? Math.max(...profilePhotos.map(p => p.display_order)) + 1 : 0;
+    const { error: dbError } = await (supabase as any).from('profile_photos').insert({ user_id: user.id, storage_path: path, display_order: nextOrder });
+    if (dbError) {
+      console.error('DB insert error:', dbError);
+      toast({ title: 'Save failed', description: dbError.message, variant: 'destructive' });
+      return;
+    }
+    refetchPhotos();
+  };
+
+  const handlePhotoDelete = async (photoId: string, storagePath: string) => {
+    await supabase.storage.from('profile-photos').remove([storagePath]);
+    await (supabase as any).from('profile_photos').delete().eq('id', photoId);
+    refetchPhotos();
+  };
 
   const saveMutation = useMutation({
     mutationFn: async () => {
@@ -417,6 +469,91 @@ export default function Profile() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Profile Photos */}
+      {(profilePhotos.length > 0 || (isOwnProfile && editing)) && (
+        <Card className="shadow-soft border-card-border">
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Camera className="h-5 w-5" />
+              Photos
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-3">
+              {profilePhotos.map((photo, idx) => (
+                <div key={photo.id} className="relative w-24 h-24 rounded-lg overflow-hidden bg-muted">
+                  {photo.storage_path ? (
+                    <img
+                      src={getPhotoUrl(photo.storage_path)}
+                      alt="Profile photo"
+                      className="w-full h-full object-cover cursor-pointer hover:opacity-80 transition-opacity"
+                      onClick={() => { setLightboxIndex(idx); setLightboxOpen(true); }}
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Camera className="h-6 w-6 text-muted-foreground opacity-40" />
+                    </div>
+                  )}
+                  {isOwnProfile && editing && (
+                    <button
+                      className="absolute top-1 right-1 bg-black/60 rounded-full p-0.5 text-white hover:bg-black/80"
+                      onClick={() => handlePhotoDelete(photo.id, photo.storage_path)}
+                      aria-label="Remove photo"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  )}
+                </div>
+              ))}
+
+              {isOwnProfile && editing && (() => {
+                const maxSlots = isPremium ? 10 : 3;
+                const canAddMore = profilePhotos.length < maxSlots;
+                return (
+                  <>
+                    {canAddMore && (
+                      <button
+                        className="w-24 h-24 rounded-lg border-2 border-dashed border-muted-foreground/30 flex items-center justify-center hover:border-primary/50 hover:bg-muted/50 transition-colors"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={uploadingSlot}
+                        aria-label="Upload photo"
+                      >
+                        <Camera className="h-6 w-6 text-muted-foreground opacity-40" />
+                      </button>
+                    )}
+                    {!isPremium && !canAddMore && (
+                      <button
+                        className="w-24 h-24 rounded-lg border-2 border-dashed border-amber-400/60 flex flex-col items-center justify-center gap-1 hover:bg-amber-50 transition-colors"
+                        onClick={() => navigate('/settings?tab=subscription')}
+                        title="Upgrade to Premium to add more photos"
+                        aria-label="Upgrade to add more photos"
+                      >
+                        <Plus className="h-6 w-6 text-amber-500" />
+                        <span className="text-xs text-amber-600 font-medium text-center leading-tight px-1">Upgrade</span>
+                      </button>
+                    )}
+                  </>
+                );
+              })()}
+            </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                setUploadingSlot(true);
+                await handlePhotoUpload(file);
+                setUploadingSlot(false);
+                e.target.value = '';
+              }}
+            />
+          </CardContent>
+        </Card>
+      )}
 
       {/* Profile Details */}
       <Card className="shadow-soft border-card-border">
@@ -788,6 +925,13 @@ export default function Profile() {
           reportedUserId={profile.id}
         />
       )}
+
+      <PhotoLightbox
+        photos={profilePhotos.filter(p => p.storage_path).map(p => getPhotoUrl(p.storage_path))}
+        initialIndex={lightboxIndex}
+        open={lightboxOpen}
+        onClose={() => setLightboxOpen(false)}
+      />
     </div>
   );
 }

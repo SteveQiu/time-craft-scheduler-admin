@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRoles } from '@/hooks/useUserRoles';
 import { Button } from '@/components/ui/button';
@@ -12,8 +13,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, MapPin, CreditCard, Star, Lock, Shield, Edit, Trash2 } from 'lucide-react';
+import { Plus, MapPin, CreditCard, Star, Lock, Shield, Edit, Trash2, Zap } from 'lucide-react';
 import { PrivacySettings } from '@/components/Privacy';
+import { useSubscription } from '@/hooks/useSubscription';
+import { Skeleton } from '@/components/ui/skeleton';
 import { COUNTRIES, PROVINCES_BY_COUNTRY } from '@/lib/address';
 import { AddressInput } from '@/components/ui/AddressInput';
 import { PAYMENT_METHOD_CONFIGS, getMethodConfig } from '@/lib/payment/methods';
@@ -63,6 +66,13 @@ export default function Settings() {
   const { roles, loading } = useUserRoles();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { isPremium, status, planType, loading: loadingSubscription } = useSubscription();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get('tab') || 'addresses';
+
+  const handleTabChange = (value: string) => {
+    setSearchParams({ tab: value }, { replace: true });
+  };
 
   // Address dialog state
   const [showAddressDialog, setShowAddressDialog] = useState(false);
@@ -299,7 +309,7 @@ export default function Settings() {
     <div className="p-6 space-y-6">
       <h1 className="text-3xl font-bold text-foreground">Settings</h1>
 
-      <Tabs defaultValue="addresses">
+      <Tabs value={activeTab} onValueChange={handleTabChange}>
         <TabsList className="flex-col sm:flex-row h-auto w-full sm:w-auto sm:inline-flex">
           <TabsTrigger value="addresses" className="w-full sm:w-auto justify-start sm:justify-center text-xs sm:text-sm px-2 sm:px-3 py-2">
             <MapPin className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
@@ -320,6 +330,10 @@ export default function Settings() {
           <TabsTrigger value="roles" className="w-full sm:w-auto justify-start sm:justify-center text-xs sm:text-sm px-2 sm:px-3 py-2">
             <Star className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
             Roles
+          </TabsTrigger>
+          <TabsTrigger value="subscription" className="w-full sm:w-auto justify-start sm:justify-center text-xs sm:text-sm px-2 sm:px-3 py-2">
+            <Zap className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+            Subscription
           </TabsTrigger>
           <TabsTrigger value="privacy" className="w-full sm:w-auto justify-start sm:justify-center text-xs sm:text-sm px-2 sm:px-3 py-2">
             <Shield className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
@@ -588,6 +602,64 @@ export default function Settings() {
                 <Star className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
                 <p className="text-lg text-muted-foreground">No roles assigned</p>
                 <p className="text-sm text-muted-foreground">Your assigned roles in the system will appear here</p>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        {/* Subscription Tab */}
+        <TabsContent value="subscription" className="space-y-4">
+          {loadingSubscription ? (
+            <Card>
+              <CardHeader>
+                <Skeleton className="h-6 w-40" />
+                <Skeleton className="h-4 w-60 mt-1" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-4 w-32" />
+              </CardContent>
+            </Card>
+          ) : isPremium ? (
+            <Card className="border-green-500 bg-green-50 dark:bg-green-950">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-green-700 dark:text-green-300">
+                  <Zap className="h-5 w-5" />
+                  Premium Active
+                </CardTitle>
+                <CardDescription className="text-green-600 dark:text-green-400">
+                  You have full access to all premium features.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-1 text-sm text-green-700 dark:text-green-300">
+                <p>Plan: <span className="font-medium capitalize">{planType}</span></p>
+                <p>Status: <span className="font-medium capitalize">{status}</span></p>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Zap className="h-5 w-5 text-muted-foreground" />
+                  Free Plan
+                </CardTitle>
+                <CardDescription>Upgrade to Premium for full access.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {import.meta.env.VITE_LEMONSQUEEZY_CHECKOUT_URL ? (
+                  <Button
+                    onClick={() =>
+                      window.open(
+                        `${import.meta.env.VITE_LEMONSQUEEZY_CHECKOUT_URL}?checkout[custom][user_id]=${user?.id}`,
+                        '_blank'
+                      )
+                    }
+                  >
+                    <Zap className="h-4 w-4 mr-2" />
+                    Upgrade to Premium
+                  </Button>
+                ) : (
+                  <Button disabled>Upgrade coming soon</Button>
+                )}
               </CardContent>
             </Card>
           )}

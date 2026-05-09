@@ -72,3 +72,32 @@ App is an admin scheduler for organizations. Key pages: Appointments, Workers, B
 - Migration `20260508_add_plan_to_orgs.sql` deleted (never ran in prod)
 
 **Rationale:** User decision (Steve) — orgs are also users in this app. Individual subscription model simpler. `subscriptions` table is single source of truth for premium status.
+
+### Subscription UI in Settings (2026-05-08)
+
+**Task:** Add `useSubscription` hook + Subscription tab to Settings page.
+
+**Files created:**
+- `src/hooks/useSubscription.ts` — queries `get_subscription_status` RPC via `@tanstack/react-query`, returns `{ isPremium, status, planType, loading, refetch }`
+
+**Files modified:**
+- `src/pages/Settings.tsx` — added `Zap` icon import, `Skeleton` import, `useSubscription` hook call, Subscription tab trigger (between Roles and Privacy), and tab content with premium/free state + LemonSqueezy checkout button
+
+**Pattern:** RPC returns array — `data[0]` extracts first row. `VITE_LEMONSQUEEZY_CHECKOUT_URL` missing → disabled "coming soon" button. `isPremium = planType === 'premium' && status === 'active'`.
+
+**Build gate:** `npx tsc --noEmit` → zero errors.
+
+### Profile Photos Section (2026)
+
+**Task:** Add profile photos card to `src/pages/Profile.tsx` between the header card and the About card.
+
+**Files modified:**
+- `src/pages/Profile.tsx` — added `useRef`, `Camera` import, `useSubscription` hook; photo query (`profile_photos` table via `supabase as any`); signed URL `useEffect`; upload/delete handlers; Photos card JSX.
+
+**Key patterns:**
+- `profile_photos` not in generated types → cast with `(supabase as any)` — graceful empty on error
+- Signed URLs: `createSignedUrl(path, 3600)` in `useEffect` watching `profilePhotos`, stored in `photoSignedUrls` state map keyed by photo id
+- Free users: 3 slots; premium: 10 slots; upgrade CTA navigates to `/settings`
+- Other user view: only occupied photos shown in flex-wrap row; section hidden if none
+- Upload: `profile-photos/{user.id}/{uuid}.{ext}` path in `profile-photos` Storage bucket
+- Delete: `storage.remove()` then table row delete, then `refetchPhotos()`
