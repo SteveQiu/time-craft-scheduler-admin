@@ -119,13 +119,7 @@ export function PaymentDisplay({ type, details }: PaymentDisplayProps) {
       return (
         <div className="space-y-1">
           {email && (
-            <a 
-              href={`mailto:${email}`} 
-              className="inline-flex items-center gap-2 text-sm font-medium px-5 py-2.5 rounded-md bg-black text-white hover:bg-neutral-800 break-all"
-            >
-              {email}
-              <ExternalLink className="h-4 w-4" />
-            </a>
+            <p className="text-sm font-medium break-all">{email}</p>
           )}
           {phone && <p className="text-sm text-muted-foreground">{phone}</p>}
           {message && <p className="text-sm text-muted-foreground">{message}</p>}
