@@ -186,7 +186,7 @@ export function Appointments() {
   const { workers, acceptedWorkers, getWorkerRate } = useOrgWorkers();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { isOrganization, isInternalDev } = useUserRoles();
   const queryClient = useQueryClient();
   
@@ -1207,6 +1207,14 @@ export function Appointments() {
       </Card>
     );
   };
+
+  if (authLoading) {
+    return (
+      <div className="p-6 flex justify-center py-24">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   if (!user) {
     return (
