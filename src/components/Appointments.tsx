@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRoles } from '@/hooks/useUserRoles';
@@ -223,6 +223,7 @@ export function Appointments() {
   const [providerViewSignedUrlLoading, setProviderViewSignedUrlLoading] = useState(false);
   const [selectedPaymentTabId, setSelectedPaymentTabId] = useState<string | null>(null);
   const [dateFilter, setDateFilter] = useState<DateFilter>('all');
+  const backfilledPaymentMethodRef = useRef<string | null>(null);
 
   const modeParam= searchParams.get('mode');
   const isOrgView = modeParam === 'org' && (isOrganization || isInternalDev);
@@ -468,6 +469,31 @@ export function Appointments() {
     }
   }, [existingPaymentProof, paymentProofAppointmentId]);
 
+  // Silently backfill payment_method_type for existing proofs that have null
+  useEffect(() => {
+    if (
+      existingPaymentProof &&
+      existingPaymentProof.payment_method_type === null &&
+      activePaymentMethod &&
+      paymentProofAppointmentId &&
+      backfilledPaymentMethodRef.current !== paymentProofAppointmentId
+    ) {
+      backfilledPaymentMethodRef.current = paymentProofAppointmentId;
+      supabase
+        .from('payment_proofs')
+        .update({ payment_method_type: activePaymentMethod.type })
+        .eq('appointment_id', paymentProofAppointmentId)
+        .then(({ error }) => {
+          if (error) {
+            console.error('[payment-method-type] backfill error:', error);
+          } else {
+            console.log('[payment-method-type] backfilled:', paymentProofAppointmentId, activePaymentMethod.type);
+            queryClient.invalidateQueries({ queryKey: ['payment-methods-bulk'] });
+          }
+        });
+    }
+  }, [existingPaymentProof, activePaymentMethod, paymentProofAppointmentId, queryClient]);
+
   // Clear form when dialog closes
   useEffect(() => {
     if (!paymentProofAppointmentId) {
@@ -568,6 +594,7 @@ export function Appointments() {
           customer_id: user.id,
           note: paymentProofNote || null,
           photo_url: photoUrl,
+          payment_method_type: activePaymentMethod?.type ?? null,
         }, { onConflict: 'appointment_id' });
 
       if (error) throw error;
@@ -581,6 +608,7 @@ export function Appointments() {
 
       queryClient.invalidateQueries({ queryKey: ['payment-proof', paymentProofAppointmentId] });
       queryClient.invalidateQueries({ queryKey: ['payment-proofs-bulk'] });
+      queryClient.invalidateQueries({ queryKey: ['payment-methods-bulk'] });
       setProofSubmitted(true);
     } catch (err: any) {
       console.error('Failed to submit payment proof:', err);
@@ -1705,7 +1733,7 @@ export function Appointments() {
                       </div>
                       <Button
                         onClick={handleSubmitPaymentProof}
-                        disabled={isSubmittingProof || (noteRequired && !paymentProofNote.trim())}
+                        disabled={isSubmittingProof || (noteRequired && !paymentProofNote.trim()) || (allAvailableMethods.length > 0 && !activePaymentMethod)}
                         className="w-full"
                         size="sm"
                       >

@@ -101,3 +101,17 @@ App is an admin scheduler for organizations. Key pages: Appointments, Workers, B
 - Other user view: only occupied photos shown in flex-wrap row; section hidden if none
 - Upload: `profile-photos/{user.id}/{uuid}.{ext}` path in `profile-photos` Storage bucket
 - Delete: `storage.remove()` then table row delete, then `refetchPhotos()`
+
+### Cash Payment Backfill Fix (2026)
+
+**Task:** Fix "Paid" (green) showing instead of "Cash" (orange) for old cash proofs where `payment_method_type` is `null` in DB.
+
+**Root cause:** Old proofs saved before `payment_method_type` column was added. When customer opens the proof dialog, `proofSubmitted` is set to `true` via the existing-proof effect — but no re-submit happens, so the column stays `null`. Steve sees no cash appointments → button stays green.
+
+**Fix (Appointments.tsx):**
+1. Added `useRef` to React import
+2. Added `backfilledPaymentMethodRef = useRef<string | null>(null)` to track which appointment IDs have been backfilled (prevents double-fire)
+3. Added a silent backfill `useEffect`: fires when `existingPaymentProof.payment_method_type === null` + `activePaymentMethod` is loaded → `supabase.update({ payment_method_type })` → `queryClient.invalidateQueries(['payment-methods-bulk'])` on success, `console.error` on failure — never throws
+4. Submit button: added `(allAvailableMethods.length > 0 && !activePaymentMethod)` to `disabled` — prevents saving `null` type on new proofs
+
+**Build gate:** `tsc --noEmit` → 0 errors. `npm run build` → exit 0.

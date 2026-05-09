@@ -273,6 +273,18 @@ export function Calendar() {
     }
   }, [isOrgMode, ownProfile, acceptedWorkers]);
 
+  // Auto-select all provider payment methods for new openings when they load
+  useEffect(() => {
+    if (providerPaymentMethods.length > 0) {
+      setNewOpening(prev => ({
+        ...prev,
+        acceptedPaymentMethodIds: prev.acceptedPaymentMethodIds.length === 0
+          ? providerPaymentMethods.map(pm => pm.id)
+          : prev.acceptedPaymentMethodIds,
+      }));
+    }
+  }, [providerPaymentMethods]);
+
   const monthNames = [
     'January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December'
@@ -696,9 +708,8 @@ export function Calendar() {
       dateRangeStart: '',
       dateRangeEnd: '',
       weekdays: new Set([0, 1, 2, 3, 4, 5, 6]),
-      acceptedPaymentMethodIds: [],
+      acceptedPaymentMethodIds: providerPaymentMethods.map(pm => pm.id),
     });
-    setErrors({});
   };
 
   const removeOpening = async (id: string) => {
@@ -1368,8 +1379,33 @@ export function Calendar() {
 
             {/* Accepted Payment Methods */}
             <div className="space-y-2">
-              <Label>Accepted Payment Methods</Label>
+              <div className="flex items-center justify-between">
+                <Label>Accepted Payment Methods</Label>
+                <span className="text-xs text-muted-foreground">
+                  {newOpening.acceptedPaymentMethodIds.length}/{providerPaymentMethods.length} selected
+                </span>
+              </div>
               <p className="text-xs text-muted-foreground">Customer will choose from these methods when paying</p>
+              <div className="flex gap-2 mb-1">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 px-2 text-xs"
+                  onClick={() => setNewOpening(prev => ({ ...prev, acceptedPaymentMethodIds: providerPaymentMethods.map(pm => pm.id) }))}
+                >
+                  Select All
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 px-2 text-xs"
+                  onClick={() => setNewOpening(prev => ({ ...prev, acceptedPaymentMethodIds: [] }))}
+                >
+                  Deselect All
+                </Button>
+              </div>
               <div className="space-y-2">
                 {providerPaymentMethods.map((pm) => (
                   <div key={pm.id} className="flex items-center space-x-2">
@@ -1553,8 +1589,33 @@ export function Calendar() {
 
             {/* Accepted Payment Methods */}
             <div className="space-y-2">
-              <Label>Accepted Payment Methods</Label>
+              <div className="flex items-center justify-between">
+                <Label>Accepted Payment Methods</Label>
+                <span className="text-xs text-muted-foreground">
+                  {editForm.acceptedPaymentMethodIds.length}/{providerPaymentMethods.length} selected
+                </span>
+              </div>
               <p className="text-xs text-muted-foreground">Customer will choose from these methods when paying</p>
+              <div className="flex gap-2 mb-1">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 px-2 text-xs"
+                  onClick={() => setEditForm(prev => ({ ...prev, acceptedPaymentMethodIds: providerPaymentMethods.map(pm => pm.id) }))}
+                >
+                  Select All
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 px-2 text-xs"
+                  onClick={() => setEditForm(prev => ({ ...prev, acceptedPaymentMethodIds: [] }))}
+                >
+                  Deselect All
+                </Button>
+              </div>
               <div className="space-y-2">
                 {providerPaymentMethods.map((pm) => (
                   <div key={pm.id} className="flex items-center space-x-2">
