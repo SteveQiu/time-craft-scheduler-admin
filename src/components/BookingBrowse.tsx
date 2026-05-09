@@ -13,6 +13,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescript
 import { Calendar as CalendarIcon, Clock, User, MapPin, Search, Filter, Loader2, Share2, ExternalLink, ChevronRight, ArrowLeft, Check, Bookmark } from 'lucide-react';
 import { toast } from 'sonner';
 import { BrowseDetail } from './BrowseDetail';
+import { ProviderPhotoStrip } from './ProviderPhotoStrip';
 import { parseLocation, formatLocation } from '@/lib/address';
 
 interface OpeningWithProfile {
@@ -323,6 +324,7 @@ export function BookingBrowse() {
       setSelectedSlot(null);
       queryClient.invalidateQueries({ queryKey: ['browse-openings'] });
       toast.success('Appointment booked!');
+      navigate('/appointments');
     } catch (error) {
       console.error('Booking failed:', error);
       toast.error('Failed to book appointment. Please try again.');
@@ -504,6 +506,9 @@ export function BookingBrowse() {
                           {provider.workers.join(', ')}
                         </p>
                       </div>
+                      <div onClick={e => e.stopPropagation()}>
+                        <ProviderPhotoStrip userId={provider.user_id} thumbClass="w-14 h-14" />
+                      </div>
                     </CardContent>
                   </Card>
                 ))}
@@ -572,6 +577,9 @@ export function BookingBrowse() {
                         <p className="text-sm text-foreground truncate">
                           {provider.workers.join(', ')}
                         </p>
+                      </div>
+                      <div onClick={e => e.stopPropagation()}>
+                        <ProviderPhotoStrip userId={provider.user_id} thumbClass="w-14 h-14" />
                       </div>
                     </CardContent>
                   </Card>

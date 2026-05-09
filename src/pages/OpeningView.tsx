@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { SignInDialog } from '@/components/SignInDialog';
+import { ProviderPhotoStrip } from '@/components/ProviderPhotoStrip';
 import { ArrowLeft, Calendar, Clock, User, MapPin, Share2, Check, Loader2 } from 'lucide-react';
 import { DATE_FORMATS, LOCALE } from '@/config/formats';
 import { parseLocation, formatLocation } from '@/lib/address';
@@ -270,6 +271,7 @@ export function OpeningView() {
                   <p className="text-sm text-muted-foreground">{opening.worker}</p>
                 </div>
               </div>
+              <ProviderPhotoStrip userId={opening.user_id} />
               <Button
                 variant="outline"
                 className="w-full"
