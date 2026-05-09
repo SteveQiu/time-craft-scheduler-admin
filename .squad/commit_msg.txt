@@ -1,9 +1,11 @@
-docs: Merge bishop conduct authority & paid query isolation decisions
+webhook(lemonsqueezy): dual-mode org/user subscription routing
 
-- Session log: Bishop promoted to Frontend Conduct Authority over Dallas
-- User directive: Dallas requires independent QA verification (Ralph)
-- Architecture: Paid status query isolation from method queries constraint
-- Deduped & merged .squad/decisions/inbox/* → decisions.md
-- Deleted inbox files
+Enhanced webhook handler to support both org-level and user-level subscriptions via custom_data. Routes org_id → orgs.plan and user_id → subscriptions table. Both paths supported in single POST.
+
+- custom_data.org_id updates orgs(plan) to premium/free
+- custom_data.user_id upserts subscriptions(plan, active) for user
+- Validates at least one ID present
+- subscription_created|updated + active → premium
+- subscription_cancelled|status → free
 
 Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>

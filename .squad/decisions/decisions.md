@@ -32,6 +32,13 @@ User request: integrate LemonSqueezy for premium tier subscription and payment p
 
 Dallas retired due to repeated critical failures (banned from Appointments.tsx, broke paid buttons twice, unreliable self-certification). Replaced by Ripley — same frontend scope, clean record, no restrictions. Dallas's supervision overhead (dual overseers, file ban) cost more than contribution. Dallas archived to `.squad/agents/_alumni/dallas/`. Bishop's conduct authority role removed — no longer needed.
 
+### 2026-05-08: Per-user subscriptions only
+**By:** Steve (via Copilot)
+
+Subscriptions are per-user only. No org-level plan column. `subscriptions` table (linked to profiles) is the single source of truth for premium status. `orgs.plan` column not used.
+
+**Why:** User decision — orgs are also users in this app. Individual subscription model is simpler.
+
 ---
 
 ## Architecture & Patterns
@@ -314,3 +321,41 @@ Migrate payment proof photo storage from base64 TEXT column to Supabase Storage 
 3. **Backward compat**: use `extractProofStoragePath()` (defined in `Appointments.tsx`) to convert legacy full URLs to storage paths before signing.
 
 **Rationale:** Private buckets return 403 on public URLs. Signed URLs with 1-hour expiry correct access pattern and more secure (URLs expire automatically).
+
+---
+
+### LemonSqueezy Webhook Dual-Mode Support
+**Date:** 2026-05-08 | **Authority:** Ripley (Frontend Dev) | **Status:** Implemented
+
+Extended `supabase/functions/lemonsqueezy-webhook/index.ts` to support both org-level and individual user subscriptions.
+
+**Context:** Original webhook only supported org-level subscriptions (`orgs.plan` column). Need to support individual users (no org) subscribing directly. Existing `subscriptions` table already in DB with schema: `user_id`, `plan_type`, `status`, `started_at`, `expires_at`.
+
+**Implementation:**
+
+Webhook now accepts:
+- `event.meta.custom_data.org_id` → updates `orgs.plan`
+- `event.meta.custom_data.user_id` → upserts `subscriptions` table
+- Both → handles both updates
+- Neither → returns 400
+
+Fixed bug: `custom_data` location moved from `attrs.custom_data` (incorrect) to `event.meta.custom_data` (correct per LemonSqueezy docs).
+
+User subscription logic:
+- Premium: `{ plan_type: 'premium', status: 'active', started_at: now() }`
+- Free/cancel: `{ plan_type: 'free', status: 'cancelled' }`
+- Uses `.upsert({ user_id, ... }, { onConflict: 'user_id' })`
+
+**Rationale:** Supports two billing models:
+1. **Org pays** → all org users get premium via `orgs.plan`
+2. **Individual user** → writes to `subscriptions` table, checked per-user
+
+No schema changes required — `subscriptions` table already exists with correct columns.
+
+**Files Modified:** `supabase/functions/lemonsqueezy-webhook/index.ts`
+
+**Impact:** Frontend can now check premium access via:
+- Org user: `org.plan === 'premium'`
+- Individual: join `subscriptions` table and check `status === 'active'`
+
+No breaking changes — org-only webhooks still work (just pass `org_id` only).
