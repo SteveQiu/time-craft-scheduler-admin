@@ -1,0 +1,89 @@
+import { useMemo } from 'react';
+import { Appointment } from '@/components/appointments/types';
+import { DateFilter, applyDateFilter } from '@/components/appointments/calendarExport';
+
+export function useAppointmentFiltering({
+  appointments,
+  searchTerm,
+  statusFilter,
+  workerFilter,
+  dateFilter,
+  isOrgView,
+}: {
+  appointments: Appointment[];
+  searchTerm: string;
+  statusFilter: string;
+  workerFilter: string;
+  dateFilter: DateFilter;
+  isOrgView: boolean;
+}) {
+  const today = useMemo(() => new Date().toISOString().split('T')[0], []);
+
+  const filteredAppointments = useMemo(
+    () =>
+      appointments.filter(apt => {
+        const matchesSearch =
+          apt.worker.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          apt.service.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (apt.location || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (apt.booker_name || '').toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesStatus = statusFilter === 'all' || apt.status === statusFilter;
+        const matchesWorker = workerFilter === 'all' || apt.worker === workerFilter;
+        return matchesSearch && matchesStatus && matchesWorker;
+      }),
+    [appointments, searchTerm, statusFilter, workerFilter],
+  );
+
+  const activeAppointments = useMemo(
+    () =>
+      filteredAppointments
+        .filter(apt => (apt.status === 'confirmed' || apt.status === 'pending') && apt.date >= today)
+        .sort((a, b) => a.date.localeCompare(b.date)),
+    [filteredAppointments, today],
+  );
+
+  const inactiveAppointments = useMemo(
+    () =>
+      filteredAppointments
+        .filter(apt => apt.status === 'completed' || apt.status === 'cancelled' || apt.date < today)
+        .sort((a, b) => b.date.localeCompare(a.date)),
+    [filteredAppointments, today],
+  );
+
+  const groupedPendingByOpening = useMemo(() => {
+    if (!isOrgView) return null;
+    const pendingAppts = activeAppointments.filter(a => a.status === 'pending');
+    const groups = new Map<string, Appointment[]>();
+    for (const apt of pendingAppts) {
+      const existing = groups.get(apt.opening_id) || [];
+      existing.push(apt);
+      groups.set(apt.opening_id, existing);
+    }
+    return groups;
+  }, [isOrgView, activeAppointments]);
+
+  const nonPendingActive = useMemo(
+    () => (isOrgView ? activeAppointments.filter(a => a.status !== 'pending') : activeAppointments),
+    [isOrgView, activeAppointments],
+  );
+
+  const filteredNonPendingActive = useMemo(
+    () => applyDateFilter(nonPendingActive, dateFilter),
+    [nonPendingActive, dateFilter],
+  );
+
+  const filteredInactive = useMemo(
+    () => applyDateFilter(inactiveAppointments, dateFilter),
+    [inactiveAppointments, dateFilter],
+  );
+
+  return {
+    filteredAppointments,
+    activeAppointments,
+    inactiveAppointments,
+    groupedPendingByOpening,
+    nonPendingActive,
+    filteredNonPendingActive,
+    filteredInactive,
+  };
+}
