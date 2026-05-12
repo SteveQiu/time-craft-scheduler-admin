@@ -44,14 +44,14 @@ export function Calendar() {
 
   const [editingOpening, setEditingOpening] = useState<Opening | null>(null);
   const [editForm, setEditForm] = useState<EditOpeningForm>({
-    service: '', startTime: '', endTime: '', isFree: false, hourlyRate: 0, acceptedPaymentMethodIds: [],
+    service: '', startTime: '', endTime: '', isFree: false, hourlyRate: 0, total: 0, acceptedPaymentMethodIds: [],
   });
   const [isEditSaving, setIsEditSaving] = useState(false);
 
   const [newOpening, setNewOpening] = useState<NewOpeningForm>({
     startTime: '09:00', endTime: '', duration: 1, worker: '', service: '',
     locationFields: { city: '', province: '', country: '', zip: '' },
-    multipleSlots: false, interval: 1, isFree: false, multipleDates: false,
+    multipleSlots: false, interval: 1, isFree: false, rateMode: 'default', customTotal: 0, multipleDates: false,
     dateRangeStart: '', dateRangeEnd: '', weekdays: new Set([0, 1, 2, 3, 4, 5, 6]),
     acceptedPaymentMethodIds: [],
   });

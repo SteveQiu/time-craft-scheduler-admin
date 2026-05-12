@@ -192,6 +192,7 @@ export interface OpeningInsertData {
   location: string;
   is_available: boolean;
   hourly_rate: number;
+  total: number;
   accepted_payment_method_ids: string[] | null;
 }
 
@@ -200,23 +201,26 @@ export function generateOpeningRecords({
   selectedDate,
   workerUserId,
   workerName,
-  rateValue,
+  totalValue,
 }: {
   newOpening: NewOpeningForm;
   selectedDate: Date;
   workerUserId: string | null;
   workerName: string;
-  rateValue: number;
+  totalValue: number;
 }): { records: OpeningInsertData[]; warning?: string } {
   const acceptedIds = newOpening.acceptedPaymentMethodIds.length > 0
     ? newOpening.acceptedPaymentMethodIds : null;
+  const slotDuration = newOpening.multipleSlots ? newOpening.interval : newOpening.duration;
+  const derivedRate = slotDuration > 0 ? totalValue / slotDuration : 0;
   const base = {
     user_id: workerUserId,
     worker: workerName,
     service: newOpening.service,
     location: serializeLocation(newOpening.locationFields),
     is_available: true,
-    hourly_rate: rateValue,
+    hourly_rate: derivedRate,
+    total: totalValue,
     accepted_payment_method_ids: acceptedIds,
   };
 

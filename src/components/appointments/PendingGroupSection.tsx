@@ -33,6 +33,10 @@ function getAppointmentTotal(
   getWorkerRate: (name: string) => number,
   appointmentRateMap: Map<string, number>,
 ): { isFree: boolean; total: number } {
+  if (apt.total != null && Number(apt.total) > 0) {
+    const total = Number(apt.total);
+    return { isFree: total === 0, total };
+  }
   let rate: number;
   if (apt.hourly_rate != null && Number(apt.hourly_rate) > 0) {
     rate = Number(apt.hourly_rate);

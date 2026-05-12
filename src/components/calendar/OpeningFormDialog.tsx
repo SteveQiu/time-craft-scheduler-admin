@@ -232,34 +232,86 @@ export function OpeningFormDialog({
           <div className="space-y-2">
             <Label>Rate</Label>
             <Select
-              value={newOpening.isFree ? 'free' : 'paid'}
-              onValueChange={(value) => setNewOpening({ ...newOpening, isFree: value === 'free' })}
+              value={newOpening.rateMode}
+              onValueChange={(value: 'free' | 'default' | 'custom') => {
+                const slotDur = newOpening.multipleSlots ? Number(newOpening.interval) : Number(newOpening.duration);
+                const defaultTotal = Number(getWorkerRate(workerNameForRate)) * slotDur;
+                setNewOpening({
+                  ...newOpening,
+                  rateMode: value,
+                  isFree: value === 'free',
+                  customTotal: value === 'custom'
+                    ? (newOpening.customTotal || defaultTotal || 0)
+                    : 0,
+                });
+              }}
             >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="free">Free ($0/hr)</SelectItem>
-                <SelectItem value="paid">${Number(getWorkerRate(workerNameForRate))}/hr</SelectItem>
+                <SelectItem value="free">Free ($0)</SelectItem>
+                <SelectItem value="default">${Number(getWorkerRate(workerNameForRate))}/hr (default)</SelectItem>
+                <SelectItem value="custom">Custom total</SelectItem>
               </SelectContent>
             </Select>
+
+            {newOpening.rateMode === 'custom' && (() => {
+              const dur = newOpening.multipleSlots ? Number(newOpening.interval) : Number(newOpening.duration);
+              const derivedRate = dur > 0 ? newOpening.customTotal / dur : 0;
+              return (
+                <div className="space-y-1">
+                  <Label className="text-sm text-muted-foreground">Custom Total</Label>
+                  <div className="flex items-center gap-2">
+                    <span className="text-muted-foreground">$</span>
+                    <Input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      placeholder="0.00"
+                      value={newOpening.customTotal || ''}
+                      onChange={(e) => setNewOpening({
+                        ...newOpening,
+                        customTotal: parseFloat(e.target.value) || 0,
+                      })}
+                      className="w-32"
+                    />
+                    <span className="text-muted-foreground text-sm">
+                      (≈ ${derivedRate.toFixed(2)}/hr)
+                    </span>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
 
-          {(isOrgMode ? newOpening.worker : true) && (
-            <div className="bg-secondary/30 p-3 rounded-lg">
-              <div className="text-sm text-muted-foreground">Rate Preview</div>
-              <div className="font-medium">
-                {newOpening.isFree ? 'Free ($0/hr)' : `$${Number(getWorkerRate(workerNameForRate))}/hr`}
-              </div>
-              {!newOpening.isFree && (
-                newOpening.multipleSlots ? (
-                  <div className="text-sm">Each slot: ${Number(getWorkerRate(workerNameForRate)) * Number(newOpening.interval)}</div>
+          {(isOrgMode ? newOpening.worker : true) && (() => {
+            const dur = newOpening.multipleSlots ? Number(newOpening.interval) : Number(newOpening.duration);
+            const defaultRate = Number(getWorkerRate(workerNameForRate));
+            const total = newOpening.rateMode === 'free' ? 0
+              : newOpening.rateMode === 'custom' ? Number(newOpening.customTotal) || 0
+              : defaultRate * dur;
+            const ratePerHr = dur > 0 ? total / dur : 0;
+            return (
+              <div className="bg-secondary/30 p-3 rounded-lg">
+                <div className="text-sm text-muted-foreground">Rate Preview</div>
+                {newOpening.rateMode === 'free' ? (
+                  <div className="font-medium">Free ($0)</div>
                 ) : (
-                  <div className="text-sm">Total: ${Number(getWorkerRate(workerNameForRate)) * Number(newOpening.duration)}</div>
-                )
-              )}
-            </div>
-          )}
+                  <>
+                    <div className="font-medium">
+                      {newOpening.multipleSlots
+                        ? `Each slot: $${total.toFixed(2)}`
+                        : `Total: $${total.toFixed(2)}`}
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      (${ratePerHr.toFixed(2)}/hr)
+                    </div>
+                  </>
+                )}
+              </div>
+            );
+          })()}
 
           {/* Accepted Payment Methods */}
           <OpeningPaymentSection

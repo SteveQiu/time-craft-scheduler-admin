@@ -6,6 +6,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 import { ChevronDown, Trash2, X, Pencil } from 'lucide-react';
 import { DATE_FORMATS, TIME_FORMATS, LOCALE } from '@/config/formats';
 import type { Opening } from './types';
+import { getEffectiveTotal } from '@/lib/utils';
 
 interface DaySlotsPanelProps {
   selectedDate: Date;
@@ -136,9 +137,14 @@ export function DaySlotsPanel({
                             </div>
                             <div className="font-medium">{opening.service}</div>
                             <div>
-                              {Number(opening.hourly_rate) === 0
-                                ? 'Free'
-                                : `$${Number(opening.hourly_rate) * Number(opening.duration)}`}
+                              {(() => {
+                                const total = getEffectiveTotal({
+                                  total: opening.total,
+                                  hourly_rate: opening.hourly_rate,
+                                  duration: opening.duration,
+                                });
+                                return total === 0 ? 'Free' : `$${total.toFixed(2)}`;
+                              })()}
                             </div>
                           </div>
                           {!confirmedOpeningIds.has(opening.id) && (

@@ -14,6 +14,7 @@ export interface Appointment {
   notes: string | null;
   created_at: string;
   hourly_rate?: number | null;
+  total?: number | null;
   approved_by?: string | null;
   booker_name?: string | null;
   booker_email?: string | null;

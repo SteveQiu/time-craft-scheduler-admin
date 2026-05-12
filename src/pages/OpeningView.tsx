@@ -191,9 +191,17 @@ export function OpeningView() {
                   <div>
                     <p className="text-sm text-muted-foreground">Rate</p>
                     <p className="font-medium text-foreground">
-                      {Number(opening.hourly_rate) === 0
-                        ? 'Free'
-                        : `$${Number(opening.hourly_rate)}/hr · Total: $${Number(opening.hourly_rate) * Number(opening.duration)}`}
+                      {(() => {
+                        const total = getEffectiveTotal({
+                          total: opening.total,
+                          hourly_rate: opening.hourly_rate,
+                          duration: opening.duration,
+                        });
+                        if (total === 0) return 'Free';
+                        const dur = Number(opening.duration) || 0;
+                        const ratePerHr = dur > 0 ? total / dur : 0;
+                        return `Total: $${total.toFixed(2)} ($${ratePerHr.toFixed(2)}/hr)`;
+                      })()}
                     </p>
                   </div>
                   {opening.location && (
