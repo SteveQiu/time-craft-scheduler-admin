@@ -119,16 +119,59 @@ export function EditOpeningDialog({
             <Label>Rate</Label>
             <Select
               value={editForm.isFree ? 'free' : 'paid'}
-              onValueChange={(v) => setEditForm(prev => ({ ...prev, isFree: v === 'free' }))}
+              onValueChange={(v) => {
+                const isFree = v === 'free';
+                if (isFree) {
+                  setEditForm(prev => ({ ...prev, isFree: true, total: 0 }));
+                } else if (editingOpening) {
+                  const dur = Number(editingOpening.duration) || 0;
+                  const defaultTotal = Number(getWorkerRate(workerName)) * dur;
+                  setEditForm(prev => ({
+                    ...prev,
+                    isFree: false,
+                    total: prev.total > 0 ? prev.total : defaultTotal,
+                  }));
+                } else {
+                  setEditForm(prev => ({ ...prev, isFree: false }));
+                }
+              }}
             >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="free">Free ($0/hr)</SelectItem>
-                <SelectItem value="paid">${Number(getWorkerRate(workerName))}/hr</SelectItem>
+                <SelectItem value="free">Free ($0)</SelectItem>
+                <SelectItem value="paid">Paid (custom total)</SelectItem>
               </SelectContent>
             </Select>
+
+            {!editForm.isFree && editingOpening && (() => {
+              const dur = Number(editingOpening.duration) || 0;
+              const derivedRate = dur > 0 ? editForm.total / dur : 0;
+              return (
+                <div className="space-y-1">
+                  <Label className="text-sm text-muted-foreground">Total</Label>
+                  <div className="flex items-center gap-2">
+                    <span className="text-muted-foreground">$</span>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      placeholder="0.00"
+                      value={editForm.total || ''}
+                      onChange={(e) => setEditForm(prev => ({
+                        ...prev,
+                        total: parseFloat(e.target.value) || 0,
+                      }))}
+                      className="w-32 h-9 px-3 py-1 rounded-md border border-input bg-background text-sm"
+                    />
+                    <span className="text-muted-foreground text-sm">
+                      (≈ ${derivedRate.toFixed(2)}/hr · default ${Number(getWorkerRate(workerName))}/hr)
+                    </span>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
 
           {/* Accepted Payment Methods */}

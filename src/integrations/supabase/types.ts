@@ -21,6 +21,7 @@ export type Database = {
           date: string
           duration: number
           end_time: string
+          hourly_rate: number
           id: string
           location: string | null
           notes: string | null
@@ -29,6 +30,7 @@ export type Database = {
           service: string
           start_time: string
           status: string
+          total: number
           updated_at: string
           user_id: string
           worker: string
@@ -39,6 +41,7 @@ export type Database = {
           date: string
           duration: number
           end_time: string
+          hourly_rate?: number
           id?: string
           location?: string | null
           notes?: string | null
@@ -47,6 +50,7 @@ export type Database = {
           service: string
           start_time: string
           status?: string
+          total?: number
           updated_at?: string
           user_id: string
           worker: string
@@ -57,6 +61,7 @@ export type Database = {
           date?: string
           duration?: number
           end_time?: string
+          hourly_rate?: number
           id?: string
           location?: string | null
           notes?: string | null
@@ -65,6 +70,7 @@ export type Database = {
           service?: string
           start_time?: string
           status?: string
+          total?: number
           updated_at?: string
           user_id?: string
           worker?: string
@@ -166,41 +172,9 @@ export type Database = {
         }
         Relationships: []
       }
-      payment_proofs: {
-        Row: {
-          id: string
-          appointment_id: string
-          customer_id: string
-          note: string | null
-          photo: string | null
-          payment_method_type: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          appointment_id: string
-          customer_id: string
-          note?: string | null
-          photo?: string | null
-          payment_method_type?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          appointment_id?: string
-          customer_id?: string
-          note?: string | null
-          photo?: string | null
-          payment_method_type?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
       openings: {
         Row: {
+          accepted_payment_method_ids: string[] | null
           created_at: string
           date: string
           duration: number
@@ -211,11 +185,13 @@ export type Database = {
           location: string | null
           service: string
           start_time: string
+          total: number
           updated_at: string
           user_id: string
           worker: string
         }
         Insert: {
+          accepted_payment_method_ids?: string[] | null
           created_at?: string
           date: string
           duration: number
@@ -226,11 +202,13 @@ export type Database = {
           location?: string | null
           service: string
           start_time: string
+          total?: number
           updated_at?: string
           user_id: string
           worker: string
         }
         Update: {
+          accepted_payment_method_ids?: string[] | null
           created_at?: string
           date?: string
           duration?: number
@@ -241,6 +219,7 @@ export type Database = {
           location?: string | null
           service?: string
           start_time?: string
+          total?: number
           updated_at?: string
           user_id?: string
           worker?: string
@@ -381,6 +360,86 @@ export type Database = {
           },
         ]
       }
+      payment_proofs: {
+        Row: {
+          appointment_id: string
+          created_at: string
+          customer_id: string
+          id: string
+          note: string | null
+          payment_method_type: string | null
+          photo_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          appointment_id: string
+          created_at?: string
+          customer_id: string
+          id?: string
+          note?: string | null
+          payment_method_type?: string | null
+          photo_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          appointment_id?: string
+          created_at?: string
+          customer_id?: string
+          id?: string
+          note?: string | null
+          payment_method_type?: string | null
+          photo_url?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_proofs_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profile_photos: {
+        Row: {
+          created_at: string | null
+          display_order: number
+          id: string
+          storage_path: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          display_order?: number
+          id?: string
+          storage_path: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          display_order?: number
+          id?: string
+          storage_path?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profile_photos_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profile_photos_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           address: string | null
@@ -396,6 +455,7 @@ export type Database = {
           introduction: string | null
           phone: string | null
           phone_public: boolean | null
+          profile_url: string | null
           skills: string[]
           skills_public: boolean | null
           slug: string | null
@@ -415,6 +475,7 @@ export type Database = {
           introduction?: string | null
           phone?: string | null
           phone_public?: boolean | null
+          profile_url?: string | null
           skills?: string[]
           skills_public?: boolean | null
           slug?: string | null
@@ -434,6 +495,7 @@ export type Database = {
           introduction?: string | null
           phone?: string | null
           phone_public?: boolean | null
+          profile_url?: string | null
           skills?: string[]
           skills_public?: boolean | null
           slug?: string | null
@@ -705,6 +767,20 @@ export type Database = {
         Args: { _appointment_id: string; _caller_id: string }
         Returns: undefined
       }
+      get_appointment_rates: {
+        Args: { _appointment_ids: string[] }
+        Returns: {
+          appointment_id: string
+          hourly_rate: number
+        }[]
+      }
+      get_appointment_totals: {
+        Args: { _appointment_ids: string[] }
+        Returns: {
+          appointment_id: string
+          total: number
+        }[]
+      }
       get_my_invites: {
         Args: { _email: string }
         Returns: {
@@ -732,11 +808,17 @@ export type Database = {
       get_public_profile: {
         Args: { profile_slug: string }
         Returns: {
+          address: string
           avatar_url: string
           created_at: string
+          email: string
           full_name: string
+          hourly_rate: number
           id: string
           introduction: string
+          phone: string
+          profile_url: string
+          skills: string[]
           slug: string
         }[]
       }
@@ -752,6 +834,7 @@ export type Database = {
           id: string
           introduction: string
           phone: string
+          profile_url: string
           skills: string[]
           slug: string
         }[]

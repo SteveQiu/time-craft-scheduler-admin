@@ -86,12 +86,17 @@ export function useCalendarActions({
 
   const openEditDialog = (opening: Opening) => {
     setEditingOpening(opening);
+    const rate = Number(opening.hourly_rate) || 0;
+    const dur = Number(opening.duration) || 0;
+    const persistedTotal = Number(opening.total ?? 0);
+    const effectiveTotal = persistedTotal > 0 ? persistedTotal : rate * dur;
     setEditForm({
       service: opening.service,
       startTime: opening.start_time.slice(0, 5),
       endTime: opening.end_time.slice(0, 5),
-      isFree: Number(opening.hourly_rate) === 0,
-      hourlyRate: Number(opening.hourly_rate),
+      isFree: effectiveTotal === 0,
+      hourlyRate: rate,
+      total: effectiveTotal,
       acceptedPaymentMethodIds: opening.accepted_payment_method_ids ?? [],
     });
   };
@@ -111,6 +116,8 @@ export function useCalendarActions({
       multipleSlots: false,
       interval: 1,
       isFree: false,
+      rateMode: 'default',
+      customTotal: 0,
       multipleDates: false,
       dateRangeStart: '',
       dateRangeEnd: '',
@@ -137,9 +144,13 @@ export function useCalendarActions({
       return;
     }
     try {
-      const rateValue = newOpening.isFree ? 0 : Number(getWorkerRate(workerName));
+      const slotDuration = newOpening.multipleSlots ? Number(newOpening.interval) : Number(newOpening.duration);
+      const defaultRate = Number(getWorkerRate(workerName)) || 0;
+      const totalValue = newOpening.rateMode === 'free' ? 0
+        : newOpening.rateMode === 'custom' ? Number(newOpening.customTotal) || 0
+        : defaultRate * slotDuration;
       const { records, warning } = generateOpeningRecords({
-        newOpening, selectedDate, workerUserId, workerName, rateValue,
+        newOpening, selectedDate, workerUserId, workerName, totalValue,
       });
       if (warning) {
         toast.warning(warning);
@@ -163,13 +174,17 @@ export function useCalendarActions({
     if (!editingOpening) return;
     setIsEditSaving(true);
     try {
+      const dur = Number(editingOpening.duration) || 0;
+      const newTotal = editForm.isFree ? 0 : Number(editForm.total) || 0;
+      const newRate = editForm.isFree ? 0 : (dur > 0 ? newTotal / dur : 0);
       const { error } = await supabase
         .from('openings')
         .update({
           service: editForm.service,
           start_time: editForm.startTime,
           end_time: editForm.endTime,
-          hourly_rate: editForm.isFree ? 0 : editForm.hourlyRate,
+          hourly_rate: newRate,
+          total: newTotal,
           accepted_payment_method_ids: editForm.acceptedPaymentMethodIds.length > 0 ? editForm.acceptedPaymentMethodIds : null,
           updated_at: new Date().toISOString(),
         })
@@ -177,7 +192,7 @@ export function useCalendarActions({
       if (error) throw error;
       setOpenings(prev => prev.map(o =>
         o.id === editingOpening.id
-          ? { ...o, service: editForm.service, start_time: editForm.startTime, end_time: editForm.endTime, hourly_rate: editForm.isFree ? 0 : editForm.hourlyRate, accepted_payment_method_ids: editForm.acceptedPaymentMethodIds.length > 0 ? editForm.acceptedPaymentMethodIds : null }
+          ? { ...o, service: editForm.service, start_time: editForm.startTime, end_time: editForm.endTime, hourly_rate: newRate, total: newTotal, accepted_payment_method_ids: editForm.acceptedPaymentMethodIds.length > 0 ? editForm.acceptedPaymentMethodIds : null }
           : o
       ));
       toast.success('Opening updated');

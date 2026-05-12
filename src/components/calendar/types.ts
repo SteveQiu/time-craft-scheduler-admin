@@ -20,6 +20,7 @@ export interface Opening {
   service: string;
   is_available: boolean;
   hourly_rate: number;
+  total?: number;
   created_at: string;
   updated_at: string;
   accepted_payment_method_ids?: string[] | null;
@@ -35,6 +36,8 @@ export interface NewOpeningForm {
   multipleSlots: boolean;
   interval: number;
   isFree: boolean;
+  rateMode: 'free' | 'default' | 'custom';
+  customTotal: number;
   multipleDates: boolean;
   dateRangeStart: string;
   dateRangeEnd: string;
@@ -48,5 +51,6 @@ export interface EditOpeningForm {
   endTime: string;
   isFree: boolean;
   hourlyRate: number;
+  total: number;
   acceptedPaymentMethodIds: string[];
 }

@@ -8,6 +8,7 @@ import { Badge } from './ui/badge';
 import { Calendar, Clock, MapPin, ArrowRightLeft, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatLocation, parseLocation } from '@/lib/address';
+import { getEffectiveTotal } from '@/lib/utils';
 
 interface ModifyAppointmentDialogProps {
   appointmentId: string;
@@ -107,9 +108,16 @@ export function ModifyAppointmentDialog({ appointmentId, currentOpeningId, userI
                       </span>
                     )}
                   </div>
-                  {opening.hourly_rate > 0 && (
-                    <Badge variant="secondary" className="text-xs">${opening.hourly_rate}/hr</Badge>
-                  )}
+                  {(() => {
+                    const total = getEffectiveTotal({
+                      total: opening.total,
+                      hourly_rate: opening.hourly_rate,
+                      duration: opening.duration,
+                    });
+                    return total > 0 ? (
+                      <Badge variant="secondary" className="text-xs">${total.toFixed(2)}</Badge>
+                    ) : null;
+                  })()}
                 </div>
                 <Button
                   size="sm"

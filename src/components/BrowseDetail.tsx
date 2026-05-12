@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { formatLocation, parseLocation } from '@/lib/address';
 import { TIME_FORMATS, LOCALE } from '@/config/formats';
 import { ProviderPhotoStrip } from './ProviderPhotoStrip';
+import { getEffectiveTotal } from '@/lib/utils';
 
 interface OpeningWithProfile {
   id: string;
@@ -22,6 +23,7 @@ interface OpeningWithProfile {
   is_available: boolean;
   location: string | null;
   hourly_rate: number;
+  total: number;
   provider_name: string | null;
   provider_email: string | null;
   provider_slug: string | null;
@@ -324,7 +326,21 @@ export function BrowseDetail({
                   <div><strong>Date:</strong> {new Date(selectedSlot.date).toLocaleDateString()}</div>
                   <div><strong>Time:</strong> {selectedSlot.start_time} - {selectedSlot.end_time}</div>
                   <div><strong>Duration:</strong> {selectedSlot.duration}h</div>
-                  <div><strong>Rate:</strong> ${selectedSlot.hourly_rate}/h</div>
+                  {(() => {
+                    const total = getEffectiveTotal({
+                      total: selectedSlot.total,
+                      hourly_rate: selectedSlot.hourly_rate,
+                      duration: selectedSlot.duration,
+                    });
+                    if (total === 0) return <div><strong>Total:</strong> Free</div>;
+                    const ratePerHr = selectedSlot.duration > 0 ? total / selectedSlot.duration : 0;
+                    return (
+                      <div>
+                        <strong>Total:</strong> ${total.toFixed(2)}
+                        <span className="text-muted-foreground"> (${ratePerHr.toFixed(2)}/hr)</span>
+                      </div>
+                    );
+                  })()}
                 </div>
               )}
             </AlertDialogDescription>
@@ -382,8 +398,8 @@ export function BrowseDetail({
                   setSelectedSlot(null);
                   toast.success('Appointment booked successfully!');
                   
-                  // Refresh the page to show updated availability
-                  setTimeout(() => window.location.reload(), 1000);
+                  // Redirect to browse — page reload causes infinite spinner when no slots remain
+                  setTimeout(() => navigate('/browse'), 1000);
                 } catch (error) {
                   console.error('Booking failed:', error);
                   const errorMessage = error instanceof Error ? error.message : 'Failed to book appointment. Please try again.'; toast.error(errorMessage);

@@ -28,6 +28,7 @@ interface OpeningWithProfile {
   is_available: boolean;
   location: string | null;
   hourly_rate: number;
+  total: number;
   provider_name: string | null;
   provider_email: string | null;
   provider_slug: string | null;
@@ -134,6 +135,7 @@ export function BookingBrowse() {
         is_available: opening.is_available,
         location: opening.location || null,
         hourly_rate: opening.hourly_rate || 0,
+        total: opening.total || 0,
         provider_name: nameMap.get(opening.user_id) || 'Organization',
         provider_email: null,
         provider_slug: slugMap.get(opening.user_id) || null,

@@ -140,3 +140,33 @@ App is an admin scheduler for organizations. Key pages: Appointments, Workers, B
 **Build gate:** `tsc --noEmit` → 0 errors.
 
 **Handoff:** Ralph for test verification.
+
+## Switch to `total` Source-of-Truth (2026-05-12)
+
+**Task:** Migrate openings + appointments from `hourly_rate × duration` derivation to a persisted `total` column. Enables flat-fee jobs (rate becomes derived only).
+
+**Files created:**
+- `supabase/migrations/20260512000000_switch_to_total.sql` — adds `openings.total`, `appointments.total`; backfills from `hourly_rate × duration`; rewrites `book_opening` RPC to persist BOTH `total` (truth) and `hourly_rate` (back-compat = total/duration); adds `get_appointment_totals(_appointment_ids uuid[])` RPC mirroring `get_appointment_rates`.
+
+**Files modified:**
+- `src/lib/utils.ts` — added `getEffectiveTotal(record)` helper: `total > 0 ? total : hourly_rate * duration`. Handles legacy minute-coded durations (>24).
+- `src/components/calendar/types.ts` — `NewOpeningForm.customRate → customTotal`; `EditOpeningForm.total` added; `Opening.total?` added.
+- `src/hooks/useCalendarActions.ts` — `addOpening` computes `totalValue` (free=0, default=`rate × duration`, custom=`customTotal`); `saveEditOpening` writes `total` + back-compat `hourly_rate`; `openEditDialog` initializes `total` from persisted or derived; `resetForm` uses `customTotal: 0`.
+- `src/components/calendar/calendarUtils.ts` — `generateOpeningRecords` accepts `totalValue`, sets `total` + derives back-compat `hourly_rate`.
+- `src/components/calendar/OpeningFormDialog.tsx` — Custom Total input replaces Custom $/hr; Rate Preview shows `Total: $X` primary, `($Y/hr)` secondary; "Custom rate" → "Custom total".
+- `src/components/calendar/EditOpeningDialog.tsx` — Total input added; rate is now derived display only.
+- `src/components/Calendar.tsx` — `customTotal: 0` initial state; `editForm` includes `total: 0`.
+- `src/components/calendar/DaySlotsPanel.tsx` — uses `getEffectiveTotal`.
+- `src/pages/OpeningView.tsx` — uses `getEffectiveTotal`; Total primary, $/hr secondary.
+- `src/components/ModifyAppointmentDialog.tsx` — badge shows total $X (was $X/hr).
+- `src/components/BookingBrowse.tsx` + `src/components/BrowseDetail.tsx` — `OpeningWithProfile.total` added; booking dialog shows Total (with /hr derived).
+- `src/components/appointments/types.ts` — `Appointment.total?` added.
+- `src/components/appointments/AppointmentCard.tsx` + `PendingGroupSection.tsx` — `getAppointmentTotal` prefers `apt.total > 0` then falls back to existing rate × duration chain.
+
+**Notes:**
+- `profiles.hourly_rate` intentionally untouched — still the worker's $/hr default used to compute total when no custom is entered.
+- `hourly_rate` columns kept on openings + appointments for rollback safety; populated via `total/duration` derivation.
+- `as any` casts on `total` reads/writes pending types regen after Steve applies migration.
+
+**Build gate:** `npx tsc --noEmit` → 0 errors.
+**Handoff:** Ralph for runtime verification.

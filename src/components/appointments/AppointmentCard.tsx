@@ -103,19 +103,21 @@ export function AppointmentCard({
   const canManage = isOrgView || appointment.provider_id === userId;
 
   const getAppointmentTotal = (apt: Appointment): { isFree: boolean; total: number } => {
+    // Priority 1: persisted `total` on the appointment (post-20260512 migration)
+    if (apt.total != null && Number(apt.total) > 0) {
+      const total = Number(apt.total);
+      return { isFree: total === 0, total };
+    }
+    // Legacy fallback: derive from rate × duration
     let rate: number;
-    // Priority 1: rate saved on appointment at booking time (after 20260507 migration)
     if (apt.hourly_rate != null && Number(apt.hourly_rate) > 0) {
       rate = Number(apt.hourly_rate);
-    // Priority 2: org view uses org_workers rate
     } else if (isOrgView) {
       rate = getWorkerRate(apt.worker) || appointmentRateMap.get(apt.id) || 0;
-    // Priority 3: server-side RPC lookup (works for customers - bypasses RLS)
     } else {
       rate = appointmentRateMap.get(apt.id) || 0;
     }
     const isFree = rate === 0;
-    // duration stored in hours (e.g. 1.5 = 90 min); guard: if > 24 assume minutes
     const durationHours = apt.duration > 24 ? apt.duration / 60 : apt.duration;
     const total = isFree ? 0 : rate * durationHours;
     return { isFree, total };
