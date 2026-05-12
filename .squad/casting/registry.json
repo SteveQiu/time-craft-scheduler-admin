@@ -31,6 +31,21 @@
       "status": "active"
     },
     {
+      "persistent_name": "Burke",
+      "universe": "alien",
+      "created_at": "2026-05-12",
+      "legacy_named": false,
+      "status": "active"
+    },
+    {
+      "persistent_name": "Hicks",
+      "universe": "alien",
+      "created_at": "2026-05-12",
+      "legacy_named": false,
+      "status": "active",
+      "role": "Legal Fact-Checker (reviewer-gate over Burke)"
+    },
+    {
       "persistent_name": "Ralph",
       "universe": "exempt",
       "created_at": "2026-04-22",

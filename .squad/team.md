@@ -16,6 +16,8 @@
 | Ripley | Frontend Dev | `.squad/agents/ripley/charter.md` | ⚛️ Active |
 | Bishop | Accessibility & UX Designer | `.squad/agents/bishop/charter.md` | 🎨 Active |
 | Ralph | QA & Tester | `.squad/agents/ralph/charter.md` | 🧪 Active — verifies Ripley's work |
+| Burke | Legal Counsel & Compliance Reviewer | `.squad/agents/burke/charter.md` | ⚖️ Active — drafts/reviews legal pages before LemonSqueezy production |
+| Hicks | Legal Fact-Checker | `.squad/agents/hicks/charter.md` | 🔍 Active — verifies Burke's claims against primary legal sources (reviewer-gate) |
 
 
 ## Coding Agent

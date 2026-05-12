@@ -105,3 +105,89 @@ Initial setup complete.
 4. Once auth works, re-run test to check if Calendar render loop is still present
 
 **Conclusion:** HMR theory was wrong. Server restart revealed a different bug — Supabase auth is broken. Can't test Calendar until auth works.
+
+### 2026-05-12 — Legal Compliance QA Cycle (BLOCKED)
+
+**Task:** Verify Ripley's 3 legal page changes + extend test with SubscriptionTab cancel button cases.
+
+**Result:** ❌ **BLOCKED** — 0/7 baseline tests pass. All pages blank.
+
+**Failure Mode:**
+- `tests/legal-pages-qa.spec.ts` — 7/7 fail
+- All 3 legal pages (`/terms`, `/privacy`, `/refund`) render blank (desktop + mobile)
+- Auth page (`/auth`) also blank (signup tab timeout)
+- Screenshots: solid gray, no content
+
+**Not Ripley's Fault:**
+- Ripley's changes: `Refund.tsx` EU/UK `<strong>`, `Terms.tsx` Section 5 links, `SubscriptionTab.tsx` cancel button
+- All 3 are syntactically valid JSX, isolated edits
+- Runtime crash affects ALL pages (not just legal), suggests broken global component or routing
+
+**Diagnostics:**
+- tsc: ✅ Clean exit
+- npm run build: ✅ Passes (1 warning: duplicate `"prepare"` key in package.json)
+- Dev server: Logs "ready in 947 ms" but pages don't load
+- Restarted server 3× — same result
+
+**Root Cause Hypothesis:**
+- Pre-existing runtime error (likely in `App.tsx` lines 79/108 `<main>` wrappers, or `AppSidebar`, or global providers)
+- Matches Dallas pattern: tsc passes, runtime crashes (see 2026-05-07 cash button revert)
+
+**Blocked Work:**
+- Cannot verify EU/UK `<strong>` rendering (page blank)
+- Cannot verify Terms Section 5 links (page blank)
+- Cannot extend test for SubscriptionTab cancel button (page blank)
+- Manual visual sanity-check impossible
+
+**Next Steps:**
+1. Debug blank-page crash (check `App.tsx`, `AppSidebar.tsx`, legal page imports/exports)
+2. Run baseline test to confirm 7/7 PASS
+3. Re-run this QA cycle after fix
+
+**Escalation:** Flagged to coordinator. Ripley's changes syntactically correct but unverifiable until runtime fixed.
+
+**Lesson:** Baseline tests were already broken BEFORE Ripley's changes. Legal cycle exposed pre-existing app-wide crash.
+
+---
+
+### 2026-05-12 — Legal Compliance QA Pass 2 (RESOLVED ✅)
+
+**False Block Root Cause:**
+1. **Pipe truncation killed dev server.** Earlier QA used `npm run dev | Select-Object -First N`, which closed vite's stdout when pipe terminated → vite exited code 0.
+2. **Zombie port race.** Each dead vite left process holding port 8080. Next vite bound to 8081, 8082 — but tests hardcoded 8080 → blank pages.
+
+**Solution:** Checked ports 8080-8082 before start (clear). Started vite `mode: "async"` WITHOUT pipes. Confirmed 8080 responds (HTTP 200).
+
+**DOM Duplication Fixed:** App.tsx renders 2× `<main>` (desktop + mobile, both in DOM). Playwright strict mode violations fixed with `.first()` (desktop) or `.last()` (mobile).
+
+**Result:** ✅ **7/7 baseline tests PASS** (20.2s, HTTP 200, no console errors, pages NOT blank).
+
+**Cancel UX:** ⚠️ **5/5 SKIPPED** — Auth timeout (test account issue). Visual verification incomplete.
+
+**Recommendation:** **APPROVE legal pages**. Cancel button needs manual QA or fixed test account.
+
+---
+
+## Learnings (Updated 2026-05-12)
+
+### PowerShell Pipe Truncation + Zombie Ports
+
+**Problem:** `npm run dev | Select-Object -First N` kills vite when PowerShell closes upstream pipe → vite exits code 0 → server dies mid-test.
+
+**Solution:** Use `powershell` with `mode: "async"` and NO pipes/Out-String when starting long-lived processes.
+
+**Port Detection:** Before launching dev server:
+```powershell
+Get-NetTCPConnection -LocalPort 8080,8081,8082 -ErrorAction SilentlyContinue | Select-Object LocalPort, OwningProcess
+```
+If occupied, kill with `Stop-Process -Id <PID> -Force`.
+
+**Vite Port Fallback:** Vite binds to next available port if 8080 occupied. Always verify bound port in vite output matches test `BASE_URL` — OR make BASE_URL dynamic.
+
+### DOM Duplication in App.tsx
+
+**Problem:** App.tsx renders 2× `<Routes>` in 2× `<main>` (desktop `hidden md:flex`, mobile `md:hidden`). Both in DOM. Playwright `locator('main')` matches both → strict mode violations.
+
+**Solution:** Use `.first()` for desktop viewport (1280×800), `.last()` for mobile viewport (375×667).
+
+**Same Issue with Auth.tsx:** 2× email input, 2× password input, 2× "Sign In" button (sidebar + form). Always use `.first()` or `.last()`.

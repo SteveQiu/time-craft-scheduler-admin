@@ -13,6 +13,9 @@ Ralph independently verifies ALL Ripley frontend work before any task is closed.
 | Accessibility & UX | Bishop | a11y audits, mobile responsiveness, layout improvements, touch UX |
 | Mobile design | Bishop (lead), Ripley (implementation) | Phone/tablet responsive design, responsive breakpoints |
 | QA & regression testing | Ralph | Playwright tests, page-not-blank checks, feature verification |
+| Legal copy review (Terms / Privacy / Refund / consent flows) | Burke writes → **Hicks fact-checks** → **Ralph verifies routes** | Burke drafts/edits; Hicks verifies every claim against primary legal sources (web_fetch); Ralph confirms pages render |
+| Lemon Squeezy / payment-processor compliance | Burke (drafts) → Hicks (verifies against Lemon Squeezy ToS + applicable consumer law) | Pre-listing review, processor-required clauses, refund-policy alignment |
+| Legal fact verification against laws & primary sources | Hicks | EU/UK/AU consumer law, GDPR, CCPA, processor agreements — cite-or-it-didn't-happen |
 | Session logging | Scribe | Automatic — never needs routing |
 
 ## Issue Routing

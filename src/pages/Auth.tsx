@@ -346,12 +346,20 @@ export default function Auth() {
                       onCheckedChange={(checked) => setAgreeToTerms(checked as boolean)}
                       className="mt-1"
                       disabled={isLoading}
-                      aria-label="Agree to Terms of Service"
+                      aria-label="Agree to Terms of Service, Privacy Policy, and Refund Policy"
                     />
                     <Label htmlFor="terms" className="font-normal text-sm leading-relaxed cursor-pointer">
                       I agree to the{' '}
-                      <Link to="/tos" className="text-primary hover:underline" target="_blank">
+                      <Link to="/terms" className="text-primary hover:underline" target="_blank">
                         Terms of Service
+                      </Link>
+                      ,{' '}
+                      <Link to="/privacy" className="text-primary hover:underline" target="_blank">
+                        Privacy Policy
+                      </Link>
+                      , and{' '}
+                      <Link to="/refund" className="text-primary hover:underline" target="_blank">
+                        Refund Policy
                       </Link>
                     </Label>
                   </div>

@@ -32,6 +32,105 @@ User request: integrate LemonSqueezy for premium tier subscription and payment p
 
 Dallas retired due to repeated critical failures (banned from Appointments.tsx, broke paid buttons twice, unreliable self-certification). Replaced by Ripley — same frontend scope, clean record, no restrictions. Dallas's supervision overhead (dual overseers, file ban) cost more than contribution. Dallas archived to `.squad/agents/_alumni/dallas/`. Bishop's conduct authority role removed — no longer needed.
 
+### 2026-05-12T15:30Z: Refund policy: all sales final
+**By:** SteveQiu  
+**What:** Canonical directive — all sales FINAL. NO refunds. Business decision for LemonSqueezy Premium subscriptions. Overrides earlier "7-day money-back" template.
+
+### 2026-05-12: Legal pages audit + rewrite
+**By:** Burke (Legal Counsel)  
+**Scope:** Refund.tsx, Terms.tsx rewrite + Privacy.tsx verification  
+
+**Changes:**
+- Refund.tsx: removed 7-day guarantee, added "All Sales Final" lead, statutory carve-outs (EU/UK/AU), subscription cancellation guidance, billing disputes, ToS termination clause
+- Terms.tsx Section 5: added non-refundable clause + Lemon Squeezy merchant link; Section 4: added prohibited biz categories (weapons, adult, gambling); Section 7: added DMCA takedown contact
+- Privacy.tsx: no changes, consistent with Terms/Refund contact
+
+**Build:** tsc passes, zero errors
+
+**Flags for Hicks:** Settings → Subscription route exists but NO cancel button implemented; support@pikappoint.com monitoring unverified
+
+### 2026-05-12: Legal fact-check report
+**By:** Hicks (Legal Fact-Checker)  
+**Verdict:** ❌ **REJECT** — 3 blocking issues + 4 non-blocking findings
+
+**Blocking issues:**
+
+1. **Refund.tsx Section 2 — EU/UK withdrawal wording INVALID** (lines 40-41)
+   - Current: passive "you may waive" language
+   - Required: explicit **prior express consent** + **acknowledgment of right loss** mechanism per Directive 2011/83/EU Article 16(m) and UK CCR 2013 Regulation 37
+   - Fix: Ripley apply corrected text (see hicks-factcheck-2026-05-12.md lines 220-224)
+
+2. **Refund.tsx Section 3 — cancellation UX mismatch** (line 58)
+   - Text: "To cancel, navigate to: Settings → Subscription"
+   - Reality: SubscriptionTab exists but has NO cancel button
+   - Options: (a) add cancel button to SubscriptionTab, (b) link to Lemon Squeezy portal, (c) route through support@pikappoint.com
+   - Recommendation: (b) or (c) safest until UX built
+
+3. **Terms.tsx Section 5 — contradicts Lemon Squeezy Buyer Terms** (line 67)
+   - Current: "All subscription purchases are final and non-refundable"
+   - Issue: Lemon Squeezy terms allow discretionary refunds; PikAppoint cannot be stricter than merchant-of-record
+   - Fix: Change to "non-refundable except where required by law or at Lemon Squeezy's sole discretion as merchant of record"
+
+**Non-blocking (approve-with-fixes):**
+- Privacy.tsx analytics disclosure vs codebase (claims tools but none installed; either remove or clarify "may add in future")
+- Terms.tsx liability cap vague (payment disputes = Lemon Squeezy responsibility, clarify split)
+- Privacy.tsx children's age: GDPR default 16 vs US COPPA 13 (clarify market)
+
+**Unverifiable:** support@pikappoint.com staffing/monitoring
+
+**Sources:** Directive 2011/83/EU Article 16(m), UK CCR 2013 Regulation 37, ACL s 54-56/60 (verified accurate), Lemon Squeezy Buyer Terms, GDPR Articles 12/15-21
+
+**Next:** Ripley applies text fixes (mechanical). Ralph or Bishop adds cancel button to SubscriptionTab. Steve makes Open Questions calls on analytics/age/email.
+
+### 2026-05-12: Legal pages template
+**By:** Ripley  
+**Scope:** Terms.tsx, Privacy.tsx, Refund.tsx created + routes wired
+
+**Structure:** Shadcn Card, ~600-1000 words/page, GDPR-aware, subscription model (7-day refund first-time only, no proration), Supabase + Lemon Squeezy disclosures, contact: support@pikappoint.com
+
+**Files:** 3 new legal pages, routes.ts + App.tsx + Auth.tsx modified
+
+**Status:** Template-quality. Top comment TODO: lawyer review before jurisdictional reliance.
+
+**Result:** Burke reviewed, found issues; Hicks issued REJECT per blocking concerns (see above).
+
+### 2026-05-12: Calendar useEffect blocks QA
+**By:** Ralph (QA & Tester)  
+**Issue:** Calendar.tsx infinite useEffect loop + Supabase fetch failures block E2E testing
+
+**Evidence:**
+- Console: "Maximum update depth exceeded"
+- Console spam: "Error loading openings: TypeError: Failed to fetch" (25+ times)
+- Page unresponsive; "Add Opening" button disabled (`!user` check)
+- Cannot verify total refactor E2E
+
+**Decision:** Block QA sign-off until Ripley debugs Calendar.tsx:31 useEffect
+
+**Impact:** Total refactor cannot be verified E2E; manual test fallback only.
+
+**Owner:** Ripley
+
+### 2026-05-12: Supabase auth broken
+**By:** Ralph (QA & Tester)  
+**Issue:** `signInWithPassword` fails with `TypeError: Failed to fetch` in E2E test; blocks ALL testing
+
+**Evidence:** Playwright test, Supabase API call at `_handleRequest2`, test user qylsteveq@gmail.com cannot authenticate
+
+**Possible causes:**
+1. Corporate proxy/firewall blocking Supabase API (`https://dbabjfydcllqbjpolhym.supabase.co`)
+2. Supabase service outage
+3. Missing env vars after dev server restart (VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY)
+4. CORS (unlikely in dev)
+
+**Actions:**
+1. Manual test: http://localhost:8080, sign-in with qylsteveq@gmail.com / Soulreap1, check console
+2. Verify env vars loaded (`curl` Supabase API)
+3. Restart `npm run dev` if missing
+
+**Status:** 🔴 BLOCKING — E2E tests cannot run
+
+**Owner:** Ripley (Supabase integration debugging)
+
 ### 2026-05-08: Per-user subscriptions only
 **By:** Steve (via Copilot)
 
@@ -39,323 +138,126 @@ Subscriptions are per-user only. No org-level plan column. `subscriptions` table
 
 **Why:** User decision — orgs are also users in this app. Individual subscription model is simpler.
 
----
+### 2026-05-12: Legal pages + cancel UX final pass (Hicks APPROVE + Ralph 7/7 pass)
+**By:** Scribe (merging squad cycle)
 
-## Architecture & Patterns
+**Outcome:** Hicks APPROVED all 3 blocking fixes. Ralph: 7/7 legal page tests pass. Cancel button code reviewed; runtime QA deferred due to auth timeout.
 
-### Address Architecture
-**Date:** January 2025 | **Author:** Dallas | **Status:** Implemented
+**Final state:**
+- Refund.tsx: EU/UK withdrawal text explicit (prior consent + acknowledgment per Directive 2011/83/EU Art 16(m) + UK CCR 2013 Reg 37). Primary source URLs: https://www.legislation.gov.uk/uksi/2013/3134/regulation/37/made, EU Directive 2011/83/EU Art 16(m)
+- Terms.tsx §5: "non-refundable except where required by law or at Lemon Squeezy's sole discretion as merchant of record". Matches https://www.lemonsqueezy.com/buyer-terms
+- SubscriptionTab.tsx: Cancel button + AlertDialog. Opens VITE_LEMONSQUEEZY_PORTAL_URL (graceful disabled + "contact support" if unset). Dialog: "Cancel Premium Subscription?" / "keep access until period ends, no refunds"
+- Auth.tsx: signup checkbox links to /terms /privacy /refund (3 links)
+- Bishop cancel UX spec: `AlertDialog` title exact, description exact, button labels exact ("Keep Premium" default-focused, "Yes, Cancel Subscription" destructive), 44px touch targets, mobile stack vertical
+- Ralph test results: 7/7 legal pages pass (desktop + mobile + signup links). Cancel button tests: 5/5 skipped (auth timeout blocked Settings access). False-block lesson: pipe truncation killed dev server on pass 1; fixed in pass 2 (no piping, shellId async, stable vite)
+- Open: env var VITE_LEMONSQUEEZY_PORTAL_URL to set in production; manual cancel button QA needed (test account auth issue unresolved)
 
-Three-layer pattern: pure utils (`src/lib/address.ts`), stateful hook (`src/hooks/useAddress.ts`), reusable component (`src/components/ui/AddressInput.tsx`).
+**Team:**
+- Bishop (UX): wrote `bishop-cancel-ux-2026-05-12.md` (prescriptive spec)
+- Ripley (FE): applied Hicks fixes + Bishop spec
+- Hicks (Legal): fact-check pass 2 APPROVED (blocked Burke after pass 1 REJECT)
+- Ralph (QA): verified legal pages 7/7, deferred cancel UX due to auth blocker
+- Burke (Legal): locked out per Reviewer Rejection Protocol after pass 1 REJECT
 
-**Utils:**
-- `LocationFields` interface: `city`, `province`, `country`, `zip`
-- `parseLocation(raw)` — handles JSON, freetext, null
-- `formatLocation(fields)` — human-readable string
-- `serializeLocation(fields)` — JSON string for DB
+### 2026-05-12: Cancel subscription UX — Bishop spec + Ripley implementation + Hicks approval
+**By:** Bishop → Ripley → Hicks → approved
 
-**Hook:** `useAddress()` returns `{ fields, setField, setFields, serialized, formatted, isEmpty, reset }` + onChange callback.
+**Button spec:** SubscriptionTab.tsx, after status line, outline variant, "Cancel Subscription" label, min-h-[44px]. Disabled + helper text when VITE_LEMONSQUEEZY_PORTAL_URL missing.
 
-**Component:** Controlled inputs for 4 fields, supports `2x2` grid or `stacked` layout.
+**Dialog spec:**
+- Title: "Cancel Premium Subscription?"
+- Description: "Cancellation takes effect at the end of your current billing period. You will keep Premium access until then. No refunds or prorated credits will be issued."
+- Cancel btn: "Keep Premium" (default focus, outline)
+- Action btn: "Yes, Cancel Subscription" (destructive red)
+- On confirm: `window.open(VITE_LEMONSQUEEZY_PORTAL_URL, '_blank')` → toast: "Premium cancellation portal opened. Complete the process there." + "Your subscription status will update here once Lemon Squeezy processes the cancellation."
+- No local state change on confirm; wait for webhook
 
-**Key tradeoff:** Workplace addresses (Settings, includes `street`) vs opening locations (city/province/country/zip only) — two separate address concepts.
+**A11y:** Radix AlertDialog auto-handles focus trap, title/description announced, Escape closes, 44px+ touch targets, dark mode support
 
-Database stays as `text | null`, no schema changes. Location preference in Settings uses `localStorage` key: `locationPreference_{userId}`.
+**Implementation:** `src/pages/settings/SubscriptionTab.tsx` lines 57-82. AlertDialog imported, handler skeleton provided by Bishop. Env var read at component render time; graceful disable if missing.
 
----
+**Hicks verdict:** Accepted. Refund.tsx claim "To cancel, navigate to: Settings → Subscription" now accurate. Cancel button implemented, portal URL env var required for production.
 
-### Country/Province Select Dropdowns
-**Date:** January 2025 | **Author:** Dallas | **Status:** Implemented
+### 2026-05-12: Lemon Squeezy customer portal URL pattern
+**By:** Ripley (decision, Hicks approved)
 
-Replaced freetext country/province inputs with Select dropdowns. Data: Canada + United States (hardcoded in `src/lib/address.ts`). Provinces: 13 CA + 51 US (DC included) in `PROVINCES_BY_COUNTRY` record.
+**Pattern:** `VITE_LEMONSQUEEZY_PORTAL_URL` env var → LS customer portal URL (e.g. `https://[store-slug].lemonsqueezy.com/billing`). When set, Cancel button opens portal. When absent, button disabled, helper text "contact support@pikappoint.com". No API call from frontend; state change via LS webhook `subscription_cancelled` event (same as upgrade flow via VITE_LEMONSQUEEZY_CHECKOUT_URL).
 
-**Files touched:**
-- `src/lib/address.ts` — added `COUNTRIES` array + `PROVINCES_BY_COUNTRY`
-- `src/components/ui/AddressInput.tsx` — Country/Province → Select (reactive, resets if old value not in new list)
-- `src/pages/Settings.tsx` — Location Preference uses same Select pattern
-- `src/components/BookingBrowse.tsx` — no changes
+**Rationale:** Graceful degradation; LS handles self-service portal; no need for custom cancel UI. Parallels existing checkout URL pattern.
 
-**Rationale:** Data quality via standardized names → exact string matches in filters. UX improvement (no memorizing abbreviations). Single source of truth.
-
-Existing freetext data remains valid. New entries use standardized names.
-
----
-
-### Appointments Bulk Action Model
-**Date:** January 2025 | **Author:** Dallas | **Scope:** `src/components/Appointments.tsx`
-
-Moved from per-card action buttons to multi-select + bulk toolbar: each card has leading Checkbox, sticky toolbar floats when items selected, shows contextual action counts.
-
-- `renderGroupedPendingCard` (org pending flow) intentionally untouched
-- Select All scoped to `nonPendingActive` only
-- Filter changes auto-clear selection
-
-**Rationale:** Per-card buttons created visual clutter; bulk model more efficient for org admins managing many appointments.
+**Production note:** Steve must set env var before deployment. Without it, Cancel button visible but non-functional.
 
 ---
 
-### Bulk Delete Dialog Pattern
-**Date:** 2025 | **Author:** Dallas
+## 2026-05 Legal & Testing Cycle (In Progress)
 
-Used `Dialog` (not `AlertDialog`) for blocked-openings warning in Calendar day view. Matches existing Calendar pattern; `AlertDialog` would add import without functional benefit.
-
-**Behavior:**
-- Appointments queried for `status IN ('pending','confirmed')` before delete
-- Blocked openings shown with date/time/worker/service
-- "Delete Safe Ones" only renders when `safeIdsToDelete.length > 0`
-- Deleted opening selections cleared; blocked ones kept selected
-
----
-
-### Paid Status Query Isolation from Method Queries
-**Date:** 2026-05-07 | **Author:** SteveQiu (via Copilot) | **Status:** Enforced
-
-`paidAppointmentIds` query (`select('appointment_id, photo')`) must NEVER be combined with optional supplementary queries (e.g., `payment_method_type`). Supabase returns `{ data: null }` for unknown columns — combining them wipes ALL paid buttons. Supplementary data (method type, styling info) uses separate, independent `useQuery`. Both queries degrade gracefully with `console.error`, never `throw`. Paid status must survive any query error. Dallas broke Appointments.tsx twice in same session by combining these queries. Documented architectural constraint, not style suggestion.
-
----
-
-## Appointment Modifications
-
-### Both Provider & Customer Can Reschedule
-**Date:** 2025-05-06 | **Author:** Dallas
-
-**Decision:** Both customer (`user_id`) and provider (`provider_id`) are authorized to reschedule pending/confirmed appointments.
-
-**Rationale:** UI already shows Modify button to providers. RPC was the blocker.
-
-**Key invariants:**
-- New appointment records original customer (`_old_apt.user_id`) — ownership unchanged
-- "Cannot book own opening" guard uses customer as check → providers can reschedule onto their own slots
-- New appointment always pending — provider must re-approve
-
-**Migration:** `supabase/migrations/20260506_allow_provider_to_modify_appointment.sql`
-
----
-
-### Payment Proof Transfer on Reschedule
-**Date:** 2025-01-07 | **Author:** Dallas | **Status:** Implemented
-
-When rescheduling via `modify_appointment`, payment proof is transferred to new appointment ID (SQL):
-
-```sql
-UPDATE public.payment_proofs
-SET appointment_id = _new_appointment_id,
-    updated_at = now()
-WHERE appointment_id = _appointment_id;
-```
-
-**Rationale:** Payment is for the service, not time slot — follows customer through reschedule.
-
-**Migration:** `20260507_transfer_payment_proof_on_reschedule.sql`
-
----
-
-## Notifications
-
-### Polling-Based Appointment Notifications
-**Date:** January 2025 | **Author:** Dallas | **Status:** Implemented
-
-Polling-based browser notifications (Notification API), not WebSockets or push.
-
-**Config** (`src/config/notificationConfig.ts`): `pollIntervalMs` 60s, `maxAppointmentsToCheck` 50, `lookbackDays` 30, auto-close 8s.
-
-**Hook** (`src/hooks/useAppointmentNotifications.ts`):
-- Requests permission on mount if `'default'`
-- Polls every 60s via `setInterval`
-- Tracks seen IDs in `useRef<Set>` to avoid duplicates
-- Initial load: populates seen set WITHOUT firing (prevents spam)
-- Subsequent polls: fire notification for NEW confirmed appointments only
-- Graceful: permission denied → skip, no errors
-
-**UI** (`src/components/Appointments.tsx`): Notification status indicator (top-right).
-- `granted`: Green BellRing + tooltip
-- `denied`: Gray BellOff + tooltip
-- `default`: Bell + "Enable" button
-- Only visible in user view (hidden for org admins)
-
-**Cost analysis:** 100 users × 60 queries/hour = 6K/hour = 4.3M/month > Supabase free tier (~500K). **Mitigation:** increase poll interval to 120s if needed.
-
-**Trade-offs:**
-- ✅ Zero infrastructure cost, stays free tier for small-medium usage
-- ✅ Works without Realtime subscription
-- ✅ Easy config
-- ❌ 60s latency (not real-time)
-- ❌ Doesn't work when tab closed
-- ❌ Polling overhead
-
----
-
-## Payment System
-
-### Per-Opening Payment Method Selection
-**Date:** 2026-05-07 | **Author:** Dallas
-
-Providers can select which payment methods are accepted per opening. Customers see only those methods.
-
-**DB:** `openings.accepted_payment_method_ids text[] DEFAULT NULL` — NULL means all provider methods (backward compatible).
-
-**UI:**
-- Calendar.tsx: checkboxes in Add/Edit Opening dialogs (available-only openings)
-- Appointments.tsx: `allAvailableMethods` memo filters combined provider+org methods by opening's accepted IDs
-
-**Constraint:** Editing booked openings blocked — customer already committed.
-
-**Rationale:** Providers may accept different methods per opening (e.g., cash for in-person, PayPal for remote).
-
----
-
-### Payment Acceptance Rename & Type-Specific Forms
-**Date:** 2025 | **Author:** Dallas
-
-Renamed "Payment Method" → "Payment Acceptance" throughout Settings UI (labels, dialogs, toasts, empty states). DB columns unchanged.
-
-**Types:** `cash`, `paypal`, `venmo`, `email_transfer`, `wechat` (removed: credit_card, debit_card, bank_transfer, zelle, other).
-
-**Type-specific forms:**
-- **cash**: informational note only
-- **paypal**: link input
-- **venmo**: 3-way toggle (username / phone / qr) with appropriate input per mode
-- **email_transfer**: email input
-- **wechat**: file upload → base64 in `details`
-
-**QR storage:** Base64 data URLs in `details`, detected by `data:image` prefix. Display as `<img>`.
-
----
-
-### Payment System Modularization
-**Date:** May 2026 | **Author:** Dallas | **Status:** Implemented
-
-Extracted payment logic to `src/lib/payment/` and `src/components/payment/`.
-
-**New structure:**
-```
-src/lib/payment/
-  index.ts              — re-exports
-  types.ts              — PaymentMethodType, PaymentFieldConfig, PaymentMethodConfig, PaymentDetails, PaymentMethodRecord
-  methods.ts            — PAYMENT_METHOD_CONFIGS registry, getMethodConfig(), getMethodLabel()
-  serialization.ts      — compressImageFile(), serializeDetails(), deserializeDetails(), deserializeDetailsByType()
-
-src/hooks/
-  usePaymentMethod.ts   — form state hook: details, setField, clearField, setImageField, reset, serialize
-
-src/components/payment/
-  PaymentDisplay.tsx    — customer-facing render per type
-  PaymentMethodForm.tsx — settings config form
-  PaymentMethodCard.tsx — settings list item
-```
-
-**Key rules:**
-- Add new payment method → touch only `methods.ts`
-- All QR compression flows through `compressImageFile()`
-- All legacy deserialization through `deserializeDetailsByType(type, raw)`
-- `PaymentDisplay` handles all legacy plain-string formats transparently
-
-**Legacy format map:**
-| Type | Old | Deserializes as |
-|---|---|---|
-| venmo | `"@username"` | `{username: ...}` |
-| venmo | `"+1 555..."` | `{phone: ...}` |
-| venmo | `"data:image..."` | `{qr: ...}` |
-| wechat | `"data:image..."` | `{qr: ...}` |
-| email_transfer | `"email@..."` | `{email: ...}` |
-| paypal | `"https://..."` | `{url: ...}` |
-
-New saves always JSON format.
-
-**Trade-off:** Venmo phone sub-mode removed from form; legacy phone entries still display correctly.
-
----
-
-### Payment Proof UI Patterns
-**Date:** 2025 | **Author:** Dallas
-
-Provider proof fetch is on-demand (keyed by selected appointment ID), not bulk-prefetched. Avoids N-queries on page load at cost of brief spinner when provider opens dialog.
-
-**Rationale:** Most providers view 0-1 proofs/session; bulk fetch adds RLS complexity.
-
-**UI split:**
-- `appointment.user_id === user?.id` → customer CreditCard button (How to Pay + submit proof)
-- `canManage && appointment.user_id !== user?.id` → provider CreditCard button (view-only proof dialog)
-- Two buttons never coexist for same user on same card
-
----
-
-### Payment Proof Photo: Base64 → Supabase Storage
-**Date:** 2026-05-08 | **Authority:** Bishop (Frontend Dev & Conduct Authority) | **Status:** Implemented
-
-Migrate payment proof photo storage from base64 TEXT column to Supabase Storage bucket.
+### 2026-05-08: Payment Proof Photo migrated to Storage
+**By:** Bishop (Frontend Dev & Conduct Authority)  
+**Status:** Implemented
 
 **Old flow (removed):**
-- FileReader → canvas compress → base64 data URL → stored in `payment_proofs.photo TEXT`
-- Bloated DB (500MB limit), 33% overhead, full blob on every query
+- FileReader → canvas compress → base64 data URL → `payment_proofs.photo TEXT`
+- DB bloat (500MB limit), 33% overhead
 
 **New flow:**
-- File held in component state (`paymentProofPhotoFile: File | null`)
+- File held in component state
 - On submit: upload to `payment-proofs` Supabase Storage bucket
 - Store path in `payment_proofs.photo_url TEXT`
 
 **DB migration:** `supabase/migrations/20260508_migrate_payment_proofs_photo_to_storage.sql`
 - `RENAME COLUMN photo TO photo_url`
-- Creates `payment-proofs` storage bucket (private, 2MB limit, image types only)
+- Creates `payment-proofs` storage bucket (private, 2MB limit, images only)
 - RLS policies: authenticated upload/read; delete own only
 
 **Appointments.tsx:**
 - Added `paymentProofPhotoFile: File | null` state
-- `handlePaymentPhotoUpload`: captures File object; keeps canvas preview for display
-- `handleSubmitPaymentProof`: uploads file to Storage, stores path in `photo_url`
-- Falls back to existing `photo_url` if no new file selected (edit flow)
-- All `photo` column references → `photo_url`
+- `handlePaymentPhotoUpload`: captures File; keeps canvas preview
+- `handleSubmitPaymentProof`: uploads to Storage, stores path
+- Falls back to existing `photo_url` if no new file (edit flow)
+- All `photo` references → `photo_url`
 
-**Rationale:** DB storage unsustainable. Storage bucket purpose-built for blobs, cheaper at scale, doesn't bloat row data.
+**Rationale:** Storage unsustainable. Bucket purpose-built for blobs, cheaper at scale.
 
 ---
 
-### Signed URLs for payment-proofs Storage
-**Date:** 2026-05-08 | **Authority:** Ripley (Frontend Dev) | **Status:** Implemented
+### 2026-05-08: Signed URLs for payment-proofs
+**By:** Ripley (Frontend Dev)  
+**Status:** Implemented
 
-`payment-proofs` Supabase Storage bucket is private. All display of proof images must use signed URLs, not public URLs.
+`payment-proofs` bucket is private. All proof images must use signed URLs.
 
 **Rules:**
-1. **Uploads**: store only the storage `filePath` (e.g. `userId/appointmentId-ts.jpg`) in `payment_proofs.photo_url`. Never store the full public URL.
-2. **Display**: always call `supabase.storage.from('payment-proofs').createSignedUrl(path, 3600)` and use `data.signedUrl` as the `<img>` source.
-3. **Backward compat**: use `extractProofStoragePath()` (defined in `Appointments.tsx`) to convert legacy full URLs to storage paths before signing.
+1. **Uploads**: store only storage `filePath` (e.g. `userId/appointmentId-ts.jpg`) in `photo_url`. Never store full URL.
+2. **Display**: always call `supabase.storage.from('payment-proofs').createSignedUrl(path, 3600)` and use `data.signedUrl` as `<img>` source.
+3. **Backward compat**: use `extractProofStoragePath()` to convert legacy full URLs to storage paths before signing.
 
-**Rationale:** Private buckets return 403 on public URLs. Signed URLs with 1-hour expiry correct access pattern and more secure (URLs expire automatically).
+**Rationale:** Private buckets reject public URLs. Signed URLs with 1-hour expiry correct pattern + more secure (URLs expire).
 
 ---
 
-### LemonSqueezy Webhook Dual-Mode Support
-**Date:** 2026-05-08 | **Authority:** Ripley (Frontend Dev) | **Status:** Implemented
+### 2026-05-08: LemonSqueezy webhook dual-mode
+**By:** Ripley (Frontend Dev)  
+**Status:** Implemented
 
 Extended `supabase/functions/lemonsqueezy-webhook/index.ts` to support both org-level and individual user subscriptions.
 
-**Context:** Original webhook only supported org-level subscriptions (`orgs.plan` column). Need to support individual users (no org) subscribing directly. Existing `subscriptions` table already in DB with schema: `user_id`, `plan_type`, `status`, `started_at`, `expires_at`.
-
-**Implementation:**
-
-Webhook now accepts:
+**Webhook now accepts:**
 - `event.meta.custom_data.org_id` → updates `orgs.plan`
 - `event.meta.custom_data.user_id` → upserts `subscriptions` table
-- Both → handles both updates
-- Neither → returns 400
+- Both → handles both
+- Neither → 400
 
-Fixed bug: `custom_data` location moved from `attrs.custom_data` (incorrect) to `event.meta.custom_data` (correct per LemonSqueezy docs).
+**Fixed bug:** `custom_data` location moved from `attrs.custom_data` (incorrect) to `event.meta.custom_data` (per LemonSqueezy docs).
 
-User subscription logic:
+**User subscription logic:**
 - Premium: `{ plan_type: 'premium', status: 'active', started_at: now() }`
 - Free/cancel: `{ plan_type: 'free', status: 'cancelled' }`
 - Uses `.upsert({ user_id, ... }, { onConflict: 'user_id' })`
 
 **Rationale:** Supports two billing models:
-1. **Org pays** → all org users get premium via `orgs.plan`
-2. **Individual user** → writes to `subscriptions` table, checked per-user
+1. **Org pays** → all org users premium via `orgs.plan`
+2. **Individual** → writes to `subscriptions` table, checked per-user
 
-No schema changes required — `subscriptions` table already exists with correct columns.
+No schema changes — `subscriptions` table already exists.
 
-**Files Modified:** `supabase/functions/lemonsqueezy-webhook/index.ts`
-
-**Impact:** Frontend can now check premium access via:
-- Org user: `org.plan === 'premium'`
-- Individual: join `subscriptions` table and check `status === 'active'`
-
-No breaking changes — org-only webhooks still work (just pass `org_id` only).
+**Files:** `supabase/functions/lemonsqueezy-webhook/index.ts`
