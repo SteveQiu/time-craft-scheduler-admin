@@ -34,6 +34,7 @@ export function PaymentMethodsTab() {
       const { data, error } = await supabase
         .from('payment_methods')
         .select('*')
+        .eq('user_id', user!.id)
         .order('is_default', { ascending: false })
         .order('created_at', { ascending: false });
       if (error) throw error;
