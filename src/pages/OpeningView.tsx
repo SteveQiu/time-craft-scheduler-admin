@@ -12,6 +12,7 @@ import { ProviderPhotoStrip } from '@/components/ProviderPhotoStrip';
 import { ArrowLeft, Calendar, Clock, User, MapPin, Share2, Check, Loader2 } from 'lucide-react';
 import { DATE_FORMATS, LOCALE } from '@/config/formats';
 import { parseLocation, formatLocation } from '@/lib/address';
+import { getEffectiveTotal } from '@/lib/utils';
 import { toast } from 'sonner';
 
 const PENDING_BOOKING_KEY = 'pending_booking_opening_id';
