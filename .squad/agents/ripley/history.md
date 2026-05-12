@@ -49,6 +49,10 @@ App is an admin scheduler for organizations. Key pages: Appointments, Workers, B
 
 ## Learnings
 
+### Cancel UX + env var pattern (2026-05-12)
+Bishop's cancel UX spec → explicit `AlertDialog` with title/description/button labels, 44px touch targets, dark mode. `VITE_LEMONSQUEEZY_PORTAL_URL` env var opens portal on confirm; graceful disable + support email fallback if missing. Hicks approved text; Ralph: legal pages 7/7 pass, cancel UX deferred (auth timeout).
+
+
 ### Signed URLs for Private Supabase Storage Buckets (2026)
 
 `payment-proofs` bucket is private — `getPublicUrl()` returns a 403-prone URL. Fix:
@@ -170,3 +174,68 @@ App is an admin scheduler for organizations. Key pages: Appointments, Workers, B
 
 **Build gate:** `npx tsc --noEmit` → 0 errors.
 **Handoff:** Ralph for runtime verification.
+
+## Legal Pages for LemonSqueezy Application (2026-05-12)
+
+**Task:** Add Terms, Privacy, Refund pages at `/terms`, `/privacy`, `/refund` + fix Auth.tsx broken `/tos` link. Urgent blocker for LemonSqueezy application approval.
+
+**Files created:**
+- `src/pages/legal/Terms.tsx` — 14 sections, GDPR-aware, subscription model, [JURISDICTION TBD] placeholder
+- `src/pages/legal/Privacy.tsx` — data collected (account, profile, payments via Lemon Squeezy), third-party processors (Supabase, Lemon Squeezy), GDPR rights, retention, cookies, children's privacy
+- `src/pages/legal/Refund.tsx` — 7-day money-back for first-time subs, no prorated refunds, Lemon Squeezy as merchant of record
+
+**Page structure:** Shadcn Card, max-w-4xl mx-auto, CardHeader with title + "Last updated: May 12, 2026", sections with h2 (text-xl font-semibold mt-6 mb-2), footer links to /auth + /dashboard. Top comment: `{/* TODO: Have a lawyer review before relying on this for jurisdictional compliance. */}`. Contact email: support@pikappoint.com. APP_NAME import from config/app.ts used throughout.
+
+**Files modified:**
+- `src/config/routes.ts` — added `terms: '/terms'`, `privacy: '/privacy'`, `refund: '/refund'`
+- `src/App.tsx` — imported Terms, Privacy, Refund components; added 3 routes to BOTH desktop (lines 90-92) and mobile (lines 117-119) `<Routes>` blocks above the `*` catch-all route
+- `src/pages/Auth.tsx` — fixed broken `/tos` link → `/terms`; expanded terms checkbox label to mention Privacy + Refund with 3 separate links, target="_blank"; updated aria-label
+
+**Build gate:** `npx tsc --noEmit` → 0 errors. `npm run build` → exit 0 (1m12s).
+
+**Learnings:**
+
+### App.tsx Dual-Routes Pattern (2026-05-12)
+
+**Critical:** App.tsx has TWO `<Routes>` blocks — one for desktop (inside `<PanelGroup>`, lines 77-95), one for mobile (lines 103-121). When adding new routes, MUST update BOTH sections. Desktop is hidden on mobile, mobile is hidden on desktop. Each routes block is complete with its own NotFound catch-all. Caught me this time — added only to one initially.
+
+**Handoff:** Ralph for runtime verification (routes load, signup links work).
+
+### Legal Pages & EU/UK Statutory Rights (2026-05-12)
+
+**Hicks fact-check discovered blocking issues:**
+
+1. **EU/UK withdrawal rights require explicit mechanism** — vague passive wording ("you may waive") is legally insufficient. Both Directive 2011/83/EU Article 16(m) and UK CCR 2013 Regulation 37 require THREE-part explicit mechanism:
+   - **prior express consent** (clear affirmative act by user)
+   - **acknowledgment that they lose withdrawal right** (documented understanding)
+   - **confirmation** (supplier provides proof)
+   - **When digital content delivery begins immediately**, right waiver applies ONLY if all three are documented. Passive language fails legal review.
+   - **Fix:** Replace passive "By starting your subscription immediately, you may waive this right" with active structure: "You waive this right when: (1) you give prior express consent for immediate access, AND (2) you acknowledge that you lose your right of withdrawal by giving that consent"
+
+2. **Merchant-of-record liability split** — Lemon Squeezy is merchant of record for payment processing. PikAppoint's liability cap wording must clarify split:
+   - Payment disputes (chargebacks, transaction errors) = Lemon Squeezy liability per their Buyer Terms
+   - Platform disputes (service quality, SaaS access issues) = PikAppoint liability
+   - **Current wording** "amount you paid us in 12 months" blurs this split
+   - **Fix:** Clarify "Our liability for {APP_NAME} platform claims (excluding payment disputes governed by Lemon Squeezy's Buyer Terms as merchant of record) shall not exceed..."
+
+3. **Refund policy contradiction** — Terms.tsx "All subscription purchases are final and non-refundable" contradicts Lemon Squeezy Buyer Terms, which allow discretionary refunds. PikAppoint cannot be stricter than merchant-of-record allows.
+   - **Fix:** "non-refundable except where required by law or at Lemon Squeezy's sole discretion as merchant of record"
+
+**Pattern:** Legal prose in React pages requires fact-check against published primary sources (official legislation URLs, payment processor terms). Passive voice insufficient for statutory disclosures; explicit consent + acknowledgment + confirmation mechanism required for EU/UK digital content.
+
+### Hicks Legal Fix (2026-05-12)
+
+**Task:** Apply Hicks's 3 blocking fixes after Burke lockout.
+
+**Files changed:**
+- `src/pages/legal/Refund.tsx` — EU/UK paragraphs now use active "You waive this right when: (1) you give **prior express consent**, AND (2) you **acknowledge that you lose your right of withdrawal**..." (JSX `<strong>` tags, not markdown asterisks)
+- `src/pages/legal/Terms.tsx` — Section 5 "non-refundable except where required by law or at Lemon Squeezy's sole discretion as merchant of record", linked to `/refund` and `https://www.lemonsqueezy.com/buyer-terms` (external link with `target="_blank" rel="noopener noreferrer"`)
+- `src/pages/settings/SubscriptionTab.tsx` — Cancel button in premium branch; `AlertDialog` confirmation "Cancel Premium Subscription?" / "You'll lose access to premium features at the end of your current billing period. Your account will revert to the free plan. No refunds will be issued for unused time." / "Keep Premium" (cancel) + "Yes, cancel" (confirm) → opens `VITE_LEMONSQUEEZY_PORTAL_URL` in new tab; button disabled + text "Cancellation portal coming soon — contact support@pikappoint.com" if env var missing
+
+**New env var:** `VITE_LEMONSQUEEZY_PORTAL_URL` — expected to be Lemon Squeezy's hosted customer portal (e.g. `https://[store-slug].lemonsqueezy.com/billing`); when set, Cancel button opens portal in new tab on confirmation; actual subscription state flip happens only when LS webhook fires `subscription_cancelled` event → same pattern as upgrade flow via `VITE_LEMONSQUEEZY_CHECKOUT_URL`
+
+**Build gate:** `npx tsc --noEmit` → 0 errors, `npm run build` → exit 0 (38s)
+
+**JSX gotcha:** Bold in legal pages is `<strong>` (not markdown `**text**`) — these pages render as JSX, not markdown
+
+**Handoff:** Hicks (re-fact-check text), Ralph (runtime QA)

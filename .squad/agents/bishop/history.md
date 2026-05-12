@@ -498,3 +498,41 @@ Migrated payment proof photo storage from base64-in-database to Supabase Storage
 **TypeScript:** `tsc --noEmit` passes with 0 errors after all changes.
 
 **Decision written:** `.squad/decisions/inbox/bishop-photo-storage-migration.md`
+
+---
+
+## 2026-05-12 — Cancel Subscription UX Spec
+
+**Requested by:** SteveQiu  
+**Context:** Hicks rejected Refund.tsx for promising "Settings → Subscription" cancellation when no cancel button exists. Steve approved building it now.
+
+### UX Pattern Established
+
+**Cancel button pattern (no-prorated-refund framing):**
+- Button label: "Cancel Subscription" (outline variant, not destructive)
+- AlertDialog confirmation required before action
+- Dialog copy emphasizes: cancellation takes effect at end of billing period, user keeps Premium until then, no refunds/prorated credits
+- Action button: "Yes, Cancel Subscription" (destructive variant)
+- Cancel button: "Keep Premium" (outline, default focus — safer)
+- Post-confirm: Opens LemonSqueezy customer portal in new tab (hosted cancel flow)
+- Toast: "Premium cancellation portal opened. Complete the process there." + reminder that status syncs after LS webhook
+- Disabled state: When `VITE_LEMONSQUEEZY_PORTAL_URL` missing, button disabled with helper text: "Subscription management unavailable (portal URL not configured)."
+
+### Key Learning
+
+**Billing-period-end timing + hosted-portal handoff:**
+- Always frame cancellation as "end of current period" (never "immediate")
+- Emphasize user keeps access until then (reduces support friction)
+- Never use "refund", "prorated", "unused days" language (violates canonical "all sales final" policy)
+- Hosted portal (LemonSqueezy) owns cancellation flow — app only opens portal + shows toast
+- State sync waits for webhook (no local optimistic update)
+
+### A11y Notes
+
+- Touch target: 44x44px enforced via `min-h-[44px]`
+- Default focus: Cancel button (safer)
+- Screen reader: Radix AlertDialog auto-announces title + description
+- Mobile: Dialog responsive (`w-[calc(100%-2rem)] sm:max-w-md`), buttons stack vertically
+
+**Spec written:** `.squad/decisions/inbox/bishop-cancel-ux-2026-05-12.md`  
+**Collaboration:** Ripley implements (replacing Dallas per 2026-05-08 team roster change)

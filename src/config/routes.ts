@@ -13,6 +13,9 @@ export const ROUTES = {
   profileSlug: '/profile/:slug',
   reports: '/reports',
   notifications: '/notifications',
+  terms: '/terms',
+  privacy: '/privacy',
+  refund: '/refund',
 } as const;
 
 export type AppRoute = (typeof ROUTES)[keyof typeof ROUTES];

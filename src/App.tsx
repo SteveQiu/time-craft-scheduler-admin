@@ -24,6 +24,9 @@ import Settings from "@/pages/Settings";
 import Profile from "@/pages/Profile";
 import AdminReports from "@/pages/AdminReports";
 import Notifications from "@/pages/Notifications";
+import Terms from "@/pages/legal/Terms";
+import Privacy from "@/pages/legal/Privacy";
+import Refund from "@/pages/legal/Refund";
 
 import { AppSidebar } from "@/components/AppSidebar";
 import { APP_NAME } from "@/config/app";
@@ -90,6 +93,9 @@ const App = () => {
                         <Route path={ROUTES.profileSlug} element={<Profile />} />
                         <Route path={ROUTES.reports} element={<AdminReports />} />
                         <Route path={ROUTES.notifications} element={<Notifications />} />
+                        <Route path={ROUTES.terms} element={<Terms />} />
+                        <Route path={ROUTES.privacy} element={<Privacy />} />
+                        <Route path={ROUTES.refund} element={<Refund />} />
                         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                         <Route path="*" element={<NotFound />} />
                       </Routes>
@@ -116,6 +122,9 @@ const App = () => {
                   <Route path={ROUTES.profileSlug} element={<Profile />} />
                   <Route path={ROUTES.reports} element={<AdminReports />} />
                   <Route path={ROUTES.notifications} element={<Notifications />} />
+                  <Route path={ROUTES.terms} element={<Terms />} />
+                  <Route path={ROUTES.privacy} element={<Privacy />} />
+                  <Route path={ROUTES.refund} element={<Refund />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
