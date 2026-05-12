@@ -14,6 +14,7 @@ export interface ProfileData {
   email_public?: boolean;
   hourly_rate_public?: boolean;
   skills_public?: boolean;
+  profile_url?: string | null;
 }
 
 export interface AddressData {
@@ -42,6 +43,7 @@ export interface FormState {
   slug: string;
   skills: string[];
   hourly_rate: number;
+  profile_url: string;
 }
 
 export interface PrivacySettings {

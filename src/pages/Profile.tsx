@@ -52,6 +52,7 @@ export default function Profile() {
     slug: '',
     skills: [],
     hourly_rate: 0,
+    profile_url: '',
   });
   const [privacySettings, setPrivacySettings] = useState<PrivacySettings>({
     address_public: false,
@@ -87,6 +88,7 @@ export default function Profile() {
         slug: profile.slug || '',
         skills: profile.skills || [],
         hourly_rate: profile.hourly_rate || 0,
+        profile_url: profile.profile_url || '',
       });
       setPrivacySettings({
         address_public: profile.address_public ?? false,

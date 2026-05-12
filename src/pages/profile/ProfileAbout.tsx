@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Mail, Phone, MapPin, Eye, EyeOff } from 'lucide-react';
+import { Mail, Phone, MapPin, Eye, EyeOff, Link } from 'lucide-react';
 import type { ProfileData, FormState, PrivacySettings } from './types';
 
 interface ProfileAboutProps {
@@ -114,6 +114,15 @@ export function ProfileAbout({
             />
           </div>
         </div>
+        <div className="space-y-2">
+          <Label>Website / Profile Link</Label>
+          <Input
+            type="url"
+            value={form.profile_url}
+            onChange={(e) => onFormChange({ ...form, profile_url: e.target.value })}
+            placeholder="https://linkedin.com/in/yourname"
+          />
+        </div>
       </>
     );
   }
@@ -138,6 +147,19 @@ export function ProfileAbout({
           <div className="flex items-center space-x-2 text-sm text-muted-foreground">
             <MapPin className="h-4 w-4" />
             <span>{profile.address}</span>
+          </div>
+        )}
+        {profile.profile_url && (
+          <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+            <Link className="h-4 w-4" />
+            <a
+              href={profile.profile_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:underline text-primary"
+            >
+              {profile.profile_url}
+            </a>
           </div>
         )}
       </div>

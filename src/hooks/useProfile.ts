@@ -161,6 +161,7 @@ export function useProfile({ slug, user, onSaveSuccess }: UseProfileOptions) {
           slug: form.slug || null,
           skills: form.skills,
           hourly_rate: form.hourly_rate,
+          profile_url: form.profile_url || null,
           address_public: privacySettings.address_public,
           phone_public: privacySettings.phone_public,
           email_public: privacySettings.email_public,
