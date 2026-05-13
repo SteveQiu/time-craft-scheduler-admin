@@ -10,7 +10,7 @@ export default function Terms() {
       <Card>
         <CardHeader>
           <CardTitle className="text-3xl">Terms of Service</CardTitle>
-          <p className="text-sm text-muted-foreground">Last updated: May 12, 2026</p>
+          <p className="text-sm text-muted-foreground">Last updated: May 13, 2026</p>
         </CardHeader>
         <CardContent className="space-y-6">
           <section>
@@ -37,6 +37,10 @@ export default function Terms() {
             <h2 className="text-xl font-semibold mt-6 mb-2">3. Account Responsibilities</h2>
             <p>
               You are responsible for maintaining the confidentiality of your account credentials and for all activities under your account. You must provide accurate, current information during registration and keep your profile up to date. You must notify us immediately of any unauthorized access or security breach.
+            </p>
+            {/* Burke: added email-visibility consent clause per May 2026 appointment contact-info feature */}
+            <p className="mt-2">
+              By booking or accepting an appointment with another user, you acknowledge and consent that your email address will be shared with your appointment co-participant (provider or customer) for the purpose of direct communication about that appointment. This sharing is a core feature of the appointment service and occurs regardless of your public profile email visibility setting. See our <Link to={ROUTES.privacy} className="text-primary hover:underline">Privacy Policy</Link> for details.
             </p>
           </section>
 

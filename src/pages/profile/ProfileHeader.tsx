@@ -1,8 +1,8 @@
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Star, Share2, Calendar, Bookmark, Flag, Edit, Save, X } from 'lucide-react';
-import type { ProfileData, FormState } from './types';
+import { Star, Share2, Calendar, Bookmark, Flag, Edit, Save, X, Eye, EyeOff } from 'lucide-react';
+import type { ProfileData, FormState, PrivacySettings } from './types';
 import type { User } from '@supabase/supabase-js';
 
 interface ProfileHeaderProps {
@@ -16,6 +16,8 @@ interface ProfileHeaderProps {
   shareUrl: string | null;
   form: FormState;
   onFormChange: (form: FormState) => void;
+  privacySettings: PrivacySettings;
+  onPrivacyChange: (settings: PrivacySettings) => void;
   onEdit: () => void;
   onSave: () => void;
   onCancelEdit: () => void;
@@ -37,6 +39,8 @@ export function ProfileHeader({
   shareUrl,
   form,
   onFormChange,
+  privacySettings,
+  onPrivacyChange,
   onEdit,
   onSave,
   onCancelEdit,
@@ -74,7 +78,30 @@ export function ProfileHeader({
               {profile.full_name || 'No name set'}
             </h2>
           )}
-          <p className="text-muted-foreground">{profile.email}</p>
+          <p className="text-muted-foreground flex items-center gap-1">
+            {profile.email}
+            {isOwnProfile && editing && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6"
+                onClick={() =>
+                  onPrivacyChange({ ...privacySettings, email_public: !privacySettings.email_public })
+                }
+                aria-label={
+                  privacySettings.email_public
+                    ? 'Hide email from public profile'
+                    : 'Show email on public profile'
+                }
+              >
+                {privacySettings.email_public ? (
+                  <Eye className="h-3.5 w-3.5" />
+                ) : (
+                  <EyeOff className="h-3.5 w-3.5" />
+                )}
+              </Button>
+            )}
+          </p>
           {avgRating && (
             <div className="flex items-center space-x-1 mt-1">
               <Star className="h-4 w-4 text-warning fill-current" />

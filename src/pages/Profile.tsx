@@ -154,6 +154,8 @@ export default function Profile() {
             shareUrl={shareUrl}
             form={form}
             onFormChange={setForm}
+            privacySettings={privacySettings}
+            onPrivacyChange={setPrivacySettings}
             onEdit={() => setEditing(true)}
             onSave={() => saveMutation.mutate({ form, address, privacySettings })}
             onCancelEdit={() => setEditing(false)}
