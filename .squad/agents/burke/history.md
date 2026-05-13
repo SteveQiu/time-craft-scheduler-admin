@@ -32,6 +32,37 @@
 Burke locked per Reviewer Rejection Protocol after pass 1 REJECT. Ripley applied Hicks's corrected text. Outcome: EU/UK withdrawal rights explicit (prior consent + acknowledgment). Terms §5 carve-out for LS discretion. SubscriptionTab cancel button + env var pattern approved. Ripley owned full rewrite; mechanical fixes completed.
 
 
+### 2026-05-12: Production-ready Terms of Service — Delaware jurisdiction selected
+
+**Task:** Research and fill `[JURISDICTION TBD]` placeholders in Section 12 (Governing Law and Disputes).
+
+**Research findings:**
+- LemonSqueezy (merchant of record) incorporated in Delaware
+- Delaware is standard US SaaS jurisdiction: business-friendly, predictable case law, investor-preferred
+- Without confirmed PikAppoint incorporation state in codebase, Delaware is safest legal default
+- Arbitration clause present and structured correctly for SaaS
+
+**Changes made:**
+- Section 12: Replaced both `[JURISDICTION TBD]` instances with "the State of Delaware"
+- Added HTML comment explaining rationale and instructing Steve to change if PikAppoint is incorporated elsewhere
+- No other production-readiness issues found
+
+**Production-readiness audit (Terms.tsx):**
+- ✅ Limitation of liability correctly structured (Section 9: cap at 12 months fees paid)
+- ✅ DMCA contact present in Section 7 (support@pikappoint.com for takedown requests)
+- ✅ Acceptable Use (Section 4) covers Lemon Squeezy-required prohibitions (fraud, illegal services, prohibited MCC categories, IP infringement)
+- ✅ Account termination clause (Section 11) does not waive GDPR data portability rights (no data retention claims made)
+- ✅ Internal consistency with Refund Policy and Privacy Policy maintained
+- ✅ All links resolve (Refund Policy, Privacy Policy, Lemon Squeezy Buyer Terms)
+
+**Build gate:** `npx tsc --noEmit` passed with zero errors.
+
+**Flags for Hicks:**
+- Confirm PikAppoint's actual state of incorporation (change from Delaware if needed)
+- Verify arbitration clause in Section 12 complies with current consumer protection standards (some states restrict consumer arbitration clauses)
+
+**Decision inbox:** `.squad/decisions/inbox/burke-jurisdiction-research.md`
+
 ### 2026-05-12: First legal audit — Refund Policy rewrite + cross-page consistency
 
 **Task:** Replace Ripley's 7-day money-back refund template with canonical no-refunds policy.

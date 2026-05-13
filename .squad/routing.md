@@ -17,6 +17,7 @@ Ralph independently verifies ALL Ripley frontend work before any task is closed.
 | Lemon Squeezy / payment-processor compliance | Burke (drafts) → Hicks (verifies against Lemon Squeezy ToS + applicable consumer law) | Pre-listing review, processor-required clauses, refund-policy alignment |
 | Legal fact verification against laws & primary sources | Hicks | EU/UK/AU consumer law, GDPR, CCPA, processor agreements — cite-or-it-didn't-happen |
 | Session logging | Scribe | Automatic — never needs routing |
+| Cross-check / rubber duck review | Hudson (gpt-5.2) + Vasquez (gemini-3-pro-preview) — always together | Spawn both in parallel when any artifact needs independent second opinion; always use non-Claude models |
 
 ## Issue Routing
 
