@@ -239,3 +239,26 @@ Bishop's cancel UX spec → explicit `AlertDialog` with title/description/button
 **JSX gotcha:** Bold in legal pages is `<strong>` (not markdown `**text**`) — these pages render as JSX, not markdown
 
 **Handoff:** Hicks (re-fact-check text), Ralph (runtime QA)
+
+### PikAppoint Remotion Demo Video (2026-05-12)
+
+**Task:** Build standalone Remotion project for marketing demo video.
+
+**Project location:** C:\git\pikappoint-demo (SEPARATE repo outside time-craft-scheduler-admin)
+
+**Deliverables:**
+- 8 narrative scenes: Hook, Problem, Calendar, Browse, Appointments, Team, Premium, CTA
+- TransitionSeries fade transitions between scenes (@remotion/transitions)
+- TypeScript clean (0 errors)
+- Preview & render ready
+
+**Key Remotion patterns:**
+- CSS animations forbidden — use `interpolate()` for all animations
+- `@remotion/transitions` library: `<TransitionSeries>` wraps scenes with `name="fade-in-black"` or similar
+- Each scene is a React component returning JSX
+- Composition orchestrates via `<Sequence>` (timing) + `<TransitionSeries>` (transitions)
+- Studio: `npx remotion studio` for interactive preview
+- Render: `npx remotion render PikAppoint-Demo out/pikappoint-demo.mp4` for final export
+
+**Files created:**
+- Root.tsx, PikAppointDemo.tsx, scenes/{Hook,Problem,Calendar,Browse,Appointments,Team,Premium,CTA}Scene.tsx + config
