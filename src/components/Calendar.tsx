@@ -50,7 +50,7 @@ export function Calendar() {
 
   const [newOpening, setNewOpening] = useState<NewOpeningForm>({
     startTime: '09:00', endTime: '', duration: 1, worker: '', service: '',
-    locationFields: { city: '', province: '', country: '', zip: '' },
+    locationFields: { address_line_1: '', address_line_2: '', city: '', province: '', country: '', zip: '' },
     multipleSlots: false, interval: 1, isFree: false, rateMode: 'default', customTotal: 0, multipleDates: false,
     dateRangeStart: '', dateRangeEnd: '', weekdays: new Set([0, 1, 2, 3, 4, 5, 6]),
     acceptedPaymentMethodIds: [],

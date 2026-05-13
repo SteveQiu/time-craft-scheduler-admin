@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Mail, Phone, MapPin, Eye, EyeOff, Link } from 'lucide-react';
+import { Phone, MapPin, Eye, EyeOff, Link } from 'lucide-react';
 import type { ProfileData, FormState, PrivacySettings } from './types';
 
 interface ProfileAboutProps {
@@ -34,36 +34,6 @@ export function ProfileAbout({
             onChange={(e) => onFormChange({ ...form, introduction: e.target.value })}
             placeholder="Tell people about yourself..."
             rows={3}
-          />
-        </div>
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <Label>Email</Label>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-11 w-11"
-              onClick={() =>
-                onPrivacyChange({ ...privacySettings, email_public: !privacySettings.email_public })
-              }
-              aria-label={
-                privacySettings.email_public
-                  ? 'Hide email from public profile'
-                  : 'Show email on public profile'
-              }
-            >
-              {privacySettings.email_public ? (
-                <Eye className="h-4 w-4" />
-              ) : (
-                <EyeOff className="h-4 w-4" />
-              )}
-            </Button>
-          </div>
-          <Input
-            type="email"
-            value={form.email}
-            onChange={(e) => onFormChange({ ...form, email: e.target.value })}
-            placeholder="your@email.com"
           />
         </div>
         <div className="space-y-2">
@@ -131,19 +101,13 @@ export function ProfileAbout({
     <>
       {profile.introduction && <p className="text-foreground">{profile.introduction}</p>}
       <div className="space-y-2">
-        {profile.email && (isOwnProfile || profile.email_public) && (
-          <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-            <Mail className="h-4 w-4" />
-            <span>{profile.email}</span>
-          </div>
-        )}
-        {profile.phone && (isOwnProfile || profile.phone_public) && (
+        {profile.phone && (
           <div className="flex items-center space-x-2 text-sm text-muted-foreground">
             <Phone className="h-4 w-4" />
             <span>{profile.phone}</span>
           </div>
         )}
-        {profile.address && (isOwnProfile || profile.address_public) && (
+        {profile.address && (
           <div className="flex items-center space-x-2 text-sm text-muted-foreground">
             <MapPin className="h-4 w-4" />
             <span>{profile.address}</span>

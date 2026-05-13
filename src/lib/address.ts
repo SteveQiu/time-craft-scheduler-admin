@@ -1,4 +1,6 @@
 export interface LocationFields {
+  address_line_1: string;
+  address_line_2: string;
   city: string;
   province: string;
   country: string;
@@ -80,17 +82,24 @@ export const PROVINCES_BY_COUNTRY: Record<string, string[]> = {
 };
 
 export function parseLocation(raw: string | null | undefined): LocationFields {
-  if (!raw) return { city: '', province: '', country: '', zip: '' };
+  if (!raw) return { address_line_1: '', address_line_2: '', city: '', province: '', country: '', zip: '' };
   try {
     const p = JSON.parse(raw);
-    if (p && typeof p === 'object' && ('city' in p || 'province' in p)) return p as LocationFields;
+    if (p && typeof p === 'object' && ('city' in p || 'province' in p)) return {
+      address_line_1: p.address_line_1 || '',
+      address_line_2: p.address_line_2 || '',
+      city: p.city || '',
+      province: p.province || '',
+      country: p.country || '',
+      zip: p.zip || '',
+    };
   } catch {}
   // Legacy freetext — put it in city
-  return { city: raw, province: '', country: '', zip: '' };
+  return { address_line_1: '', address_line_2: '', city: raw, province: '', country: '', zip: '' };
 }
 
 export function formatLocation(f: LocationFields): string {
-  return [f.city, f.province, f.country, f.zip].filter(Boolean).join(', ');
+  return [f.address_line_1, f.address_line_2, f.city, f.province, f.country, f.zip].filter(Boolean).join(', ');
 }
 
 export function serializeLocation(f: LocationFields): string {

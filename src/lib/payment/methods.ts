@@ -7,6 +7,13 @@ export const PAYMENT_METHOD_CONFIGS: PaymentMethodConfig[] = [
     fields: [],
   },
   {
+    id: 'onsite_credit_card',
+    label: 'Onsite Credit Card',
+    fields: [
+      { key: 'instructions', label: 'Instructions (optional)', type: 'text', placeholder: 'e.g. We accept Visa, Mastercard via Square', optional: true },
+    ],
+  },
+  {
     id: 'paypal',
     label: 'PayPal',
     fields: [

@@ -34,14 +34,14 @@ export function BookerInfo({ appointment, navigate }: BookerInfoProps) {
         {bookerSlug ? (
           <span
             className="text-sm font-medium text-primary hover:underline cursor-pointer"
-            onClick={() => navigate(`/profile/${bookerSlug}`)}
+            onClick={(e) => { e.stopPropagation(); navigate(`/profile/${bookerSlug}`); }}
           >
             {appointment.booker_name || 'Unknown'}
           </span>
         ) : (
           <span
             className="text-sm font-medium text-primary hover:underline cursor-pointer"
-            onClick={() => navigate(`/profile/${appointment.user_id}`)}
+            onClick={(e) => { e.stopPropagation(); navigate(`/profile/${appointment.user_id}`); }}
           >
             {appointment.booker_name || 'Unknown'}
           </span>
@@ -50,13 +50,13 @@ export function BookerInfo({ appointment, navigate }: BookerInfoProps) {
       {(appointment.booker_email || appointment.booker_phone) && (
         <div className="flex items-center gap-3 text-sm text-muted-foreground">
           {appointment.booker_email && (
-            <a href={`mailto:${appointment.booker_email}`} className="flex items-center space-x-1 hover:text-primary transition-colors">
+            <a href={`mailto:${appointment.booker_email}`} className="flex items-center space-x-1 hover:text-primary transition-colors" onClick={(e) => e.stopPropagation()}>
               <Mail className="h-3 w-3" />
               <span>{appointment.booker_email}</span>
             </a>
           )}
           {appointment.booker_phone && (
-            <a href={`tel:${appointment.booker_phone}`} className="flex items-center space-x-1 hover:text-primary transition-colors">
+            <a href={`tel:${appointment.booker_phone}`} className="flex items-center space-x-1 hover:text-primary transition-colors" onClick={(e) => e.stopPropagation()}>
               <Phone className="h-3 w-3" />
               <span>{appointment.booker_phone}</span>
             </a>
@@ -124,7 +124,11 @@ export function AppointmentCard({
   };
 
   return (
-    <Card key={appointment.id} className="shadow-soft border-card-border hover:shadow-lg transition-shadow">
+    <Card
+      key={appointment.id}
+      className="shadow-soft border-card-border hover:shadow-lg transition-shadow cursor-pointer"
+      onClick={() => navigate(`/appointments/${appointment.id}`)}
+    >
       <CardContent className="p-6 space-y-4">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between space-y-4 lg:space-y-0">
           <div className="flex items-center space-x-4">
@@ -137,20 +141,30 @@ export function AppointmentCard({
               </div>
             )}
             <div
-              className={`w-12 h-12 bg-primary rounded-full flex items-center justify-center ${appointment.provider_slug ? 'cursor-pointer hover:ring-2 hover:ring-primary transition-all' : ''}`}
-              onClick={() => appointment.provider_slug && navigate(`/profile/${appointment.provider_slug}`)}
+              className="w-12 h-12 bg-primary rounded-full flex items-center justify-center cursor-pointer hover:ring-2 hover:ring-primary transition-all"
+              onClick={(e) => { e.stopPropagation(); navigate(`/profile/${appointment.provider_slug || appointment.provider_id}`); }}
             >
               <span className="text-primary-foreground font-semibold">
                 {appointment.worker.substring(0, 2).toUpperCase()}
               </span>
             </div>
             <div
-              className={appointment.provider_slug ? 'cursor-pointer' : ''}
-              onClick={() => appointment.provider_slug && navigate(`/profile/${appointment.provider_slug}`)}
+              className="cursor-pointer"
+              onClick={(e) => { e.stopPropagation(); navigate(`/profile/${appointment.provider_slug || appointment.provider_id}`); }}
             >
-              <h3 className={`font-semibold text-foreground ${appointment.provider_slug ? 'hover:underline' : ''}`}>{appointment.worker}</h3>
+              <h3 className="font-semibold text-foreground hover:underline">{appointment.worker}</h3>
               <p className="text-sm text-muted-foreground">{appointment.service}</p>
             </div>
+            {!canManage && appointment.provider_email && (
+              <a
+                href={`mailto:${appointment.provider_email}`}
+                className="flex items-center space-x-1 text-sm text-muted-foreground hover:text-primary transition-colors"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <Mail className="h-3 w-3" />
+                <span>{appointment.provider_email}</span>
+              </a>
+            )}
           </div>
 
           <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-6">
@@ -193,7 +207,7 @@ export function AppointmentCard({
                       variant="outline"
                       size="sm"
                       className={`min-h-[44px] min-w-[44px] px-3 text-xs gap-1.5 ${cashAppointmentIds.has(appointment.id) ? 'border-orange-500 text-orange-600 hover:bg-orange-50' : 'border-green-500 text-green-600 hover:bg-green-50'}`}
-                      onClick={() => onProviderViewProof(appointment.id)}
+                      onClick={(e) => { e.stopPropagation(); onProviderViewProof(appointment.id); }}
                       aria-label={`View payment proof for ${appointment.booker_name || 'this appointment'}`}
                     >
                       <FileImage className="w-4 h-4" aria-hidden="true" />
@@ -213,7 +227,7 @@ export function AppointmentCard({
               })()}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" aria-label="Add to calendar">
+                  <Button variant="ghost" size="sm" aria-label="Add to calendar" onClick={(e) => e.stopPropagation()}>
                     <CalendarPlus className="h-4 w-4" aria-hidden="true" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -236,7 +250,7 @@ export function AppointmentCard({
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => onPaymentInfo(appointment.provider_id, appointment.worker, appointment.opening_id, appointment.id)}
+                        onClick={(e) => { e.stopPropagation(); onPaymentInfo(appointment.provider_id, appointment.worker, appointment.opening_id, appointment.id); }}
                       >
                         <CreditCard className="h-4 w-4" />
                       </Button>
@@ -252,7 +266,7 @@ export function AppointmentCard({
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => onProviderViewProof(appointment.id)}
+                        onClick={(e) => { e.stopPropagation(); onProviderViewProof(appointment.id); }}
                       >
                         <CreditCard className="h-4 w-4" />
                       </Button>

@@ -4,6 +4,7 @@ export type PaymentMethodType =
   | 'wechat'
   | 'email_transfer'
   | 'cash'
+  | 'onsite_credit_card'
   | string;
 
 export interface PaymentFieldConfig {

@@ -47,24 +47,26 @@ export function useAppointments({ userId, isOrgView, acceptedWorkers }: UseAppoi
         profileMap = new Map((profiles || []).map((p: any) => [p.id, { full_name: p.full_name, slug: p.slug }]));
       }
 
-      let bookerContactMap = new Map<string, { email: string | null; phone: string | null }>();
-      if (bookerIds.length > 0) {
-        const contactResults = await Promise.all(
-          bookerIds.map((id) => supabase.rpc('get_public_profile_by_id', { profile_id: id }))
-        );
-        contactResults.forEach((res, idx) => {
-          const p = (res.data && (res.data as any)[0]) || null;
-          bookerContactMap.set(bookerIds[idx], { email: p?.email ?? null, phone: p?.phone ?? null });
+      // Fetch contact info for all participants — direct query bypasses the email_public gate
+      // so both sides of a confirmed appointment always see each other's contact details.
+      const allContactIds = [...new Set([...bookerIds, ...providerIds])];
+      let contactMap = new Map<string, { email: string | null; phone: string | null }>();
+      if (allContactIds.length > 0) {
+        const { data: contacts } = await supabase
+          .rpc('get_appointment_contact_info', { profile_ids: allContactIds });
+        (contacts || []).forEach((c: any) => {
+          contactMap.set(c.id, { email: c.email ?? null, phone: c.phone ?? null });
         });
       }
 
       return (data || []).map((a: any) => ({
         ...a,
         provider_slug: profileMap.get(a.provider_id)?.slug || null,
+        provider_email: contactMap.get(a.provider_id)?.email || null,
         booker_name: profileMap.get(a.user_id)?.full_name || null,
         booker_slug: profileMap.get(a.user_id)?.slug || null,
-        booker_email: bookerContactMap.get(a.user_id)?.email || null,
-        booker_phone: bookerContactMap.get(a.user_id)?.phone || null,
+        booker_email: contactMap.get(a.user_id)?.email || null,
+        booker_phone: contactMap.get(a.user_id)?.phone || null,
         approved_by_name: profileMap.get(a.approved_by)?.full_name || null,
       })) as Appointment[];
     },

@@ -1,8 +1,33 @@
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MapPin, Eye, EyeOff } from 'lucide-react';
+import { AddressInput } from '@/components/ui/AddressInput';
+import { LocationFields } from '@/lib/address';
+import { WorkplaceAddress } from '@/pages/settings/types';
+import { parseAddress } from '@/pages/settings/settingsUtils';
 import type { AddressData, PrivacySettings } from './types';
+
+function toLocationFields(a: AddressData): LocationFields {
+  return {
+    address_line_1: a.address_line_1,
+    address_line_2: a.address_line_2,
+    city: a.city,
+    province: a.province_state,
+    country: a.country,
+    zip: a.postal_code,
+  };
+}
+
+function fromLocationFields(f: LocationFields): AddressData {
+  return {
+    address_line_1: f.address_line_1,
+    address_line_2: f.address_line_2,
+    city: f.city,
+    province_state: f.province,
+    country: f.country,
+    postal_code: f.zip,
+  };
+}
 
 interface ProfileAddressProps {
   editing: boolean;
@@ -10,6 +35,7 @@ interface ProfileAddressProps {
   onAddressChange: (address: AddressData) => void;
   privacySettings: PrivacySettings;
   onPrivacyChange: (settings: PrivacySettings) => void;
+  savedAddresses?: WorkplaceAddress[];
 }
 
 export function ProfileAddress({
@@ -18,58 +44,44 @@ export function ProfileAddress({
   onAddressChange,
   privacySettings,
   onPrivacyChange,
+  savedAddresses = [],
 }: ProfileAddressProps) {
   if (editing) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2 md:col-span-2">
-          <Label>Address Line 1</Label>
-          <Input
-            value={address.address_line_1}
-            onChange={(e) => onAddressChange({ ...address, address_line_1: e.target.value })}
-            placeholder="123 Main Street"
-          />
-        </div>
-        <div className="space-y-2 md:col-span-2">
-          <Label>Address Line 2</Label>
-          <Input
-            value={address.address_line_2}
-            onChange={(e) => onAddressChange({ ...address, address_line_2: e.target.value })}
-            placeholder="Suite 100 (optional)"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label>City</Label>
-          <Input
-            value={address.city}
-            onChange={(e) => onAddressChange({ ...address, city: e.target.value })}
-            placeholder="Toronto"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label>Province/State</Label>
-          <Input
-            value={address.province_state}
-            onChange={(e) => onAddressChange({ ...address, province_state: e.target.value })}
-            placeholder="Ontario"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label>Country</Label>
-          <Input
-            value={address.country}
-            onChange={(e) => onAddressChange({ ...address, country: e.target.value })}
-            placeholder="Canada"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label>Postal Code</Label>
-          <Input
-            value={address.postal_code}
-            onChange={(e) => onAddressChange({ ...address, postal_code: e.target.value })}
-            placeholder="M5V 3A8"
-          />
-        </div>
+      <div className="space-y-3">
+        {savedAddresses.length > 0 && (
+          <Select
+            value=""
+            onValueChange={(value) => {
+              try {
+                const parsed = parseAddress(value);
+                onAddressChange({
+                  address_line_1: parsed.address_line_1,
+                  address_line_2: parsed.address_line_2,
+                  city: parsed.city,
+                  province_state: parsed.province,
+                  country: parsed.country,
+                  postal_code: parsed.zip,
+                });
+              } catch {}
+            }}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Use saved address" />
+            </SelectTrigger>
+            <SelectContent>
+              {savedAddresses.map((addr) => (
+                <SelectItem key={addr.id} value={addr.address}>
+                  {addr.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+        <AddressInput
+          value={toLocationFields(address)}
+          onChange={(fields) => onAddressChange(fromLocationFields(fields))}
+        />
       </div>
     );
   }

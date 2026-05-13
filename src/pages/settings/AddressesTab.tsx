@@ -38,7 +38,8 @@ export function AddressesTab() {
   const handleSave = () => {
     if (!user) return;
     const addressJson = JSON.stringify({
-      street: addressForm.street,
+      address_line_1: addressForm.address_line_1,
+      address_line_2: addressForm.address_line_2,
       city: addressForm.city,
       province: addressForm.province,
       country: addressForm.country,
@@ -137,23 +138,15 @@ export function AddressesTab() {
                 onChange={(e) => setAddressForm({ ...addressForm, label: e.target.value })}
               />
             </div>
-            <div className="space-y-2">
-              <Label>Street Address</Label>
-              <Input
-                placeholder="123 Main St"
-                value={addressForm.street}
-                onChange={(e) => setAddressForm({ ...addressForm, street: e.target.value })}
-              />
-            </div>
             <AddressInput
-              value={{ city: addressForm.city, province: addressForm.province, country: addressForm.country, zip: addressForm.zip }}
+              value={addressForm}
               onChange={(fields) => setAddressForm({ ...addressForm, ...fields })}
             />
             <div className="flex justify-end gap-2 pt-4">
               <Button variant="outline" onClick={() => setShowDialog(false)}>Cancel</Button>
               <Button
                 onClick={handleSave}
-                disabled={!addressForm.label || !addressForm.street || !addressForm.city || saveAddress.isPending}
+                disabled={!addressForm.label || !addressForm.address_line_1 || !addressForm.city || saveAddress.isPending}
               >
                 {saveAddress.isPending ? 'Saving...' : 'Save'}
               </Button>

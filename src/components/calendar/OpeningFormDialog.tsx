@@ -197,6 +197,8 @@ export function OpeningFormDialog({
                       setNewOpening({
                         ...newOpening,
                         locationFields: {
+                          address_line_1: addr.address_line_1 || addr.street || '',
+                          address_line_2: addr.address_line_2 || '',
                           city: addr.city || '',
                           province: addr.province || '',
                           country: addr.country || '',

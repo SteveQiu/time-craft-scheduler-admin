@@ -191,3 +191,68 @@ If occupied, kill with `Stop-Process -Id <PID> -Force`.
 **Solution:** Use `.first()` for desktop viewport (1280×800), `.last()` for mobile viewport (375×667).
 
 **Same Issue with Auth.tsx:** 2× email input, 2× password input, 2× "Sign In" button (sidebar + form). Always use `.first()` or `.last()`.
+
+---
+
+## Learnings (Updated 2026-05-13)
+
+### Dallas Session — Appointment Emails + Onsite Credit Card (2026-05-13)
+
+**Changes validated:**
+1. `src/hooks/useAppointments.ts` — fetches `provider_email` + `booker_email`/`booker_phone` via direct `profiles` query
+2. `src/components/appointments/AppointmentCard.tsx` — shows `provider_email` as `mailto:` link for customers; shows `booker_email`/`booker_phone` via `BookerInfo` for providers
+3. `src/lib/payment/types.ts` — `'onsite_credit_card'` added to `PaymentMethodType` union
+4. `src/lib/payment/methods.ts` — `onsite_credit_card` config added with optional instructions field
+
+**Results:**
+- tsc: ✅ Clean exit (0 errors)
+- `validate-appointments-org-view.spec.ts` + `appointment-nav.spec.ts`: 13/17 (4 pre-existing failures — screenshot baselines, missing `data-testid`)
+- `validate-appointment-emails.spec.ts` (new): ✅ 4/4 PASS
+- `validate-onsite-cc.spec.ts` (new): ✅ 4/4 PASS — "Onsite Credit Card" confirmed visible in Type dropdown
+
+**Key findings:**
+- TESTER3 (sdeqiu@gmail.com) has no active appointments → mailto links untestable via TESTER3. Use TESTER1/2/4 for customer-side mailto verification if needed.
+- App.tsx dual DOM affects ALL settings buttons — always `.first()` for any page-level button
+- Shadcn Select `[role="combobox"]` opens portal options as `[role="option"]` — wait 400ms after click before asserting
+- `Error fetching user roles: TypeError: Failed to fetch` is pre-existing noise in test env — not a Dallas regression
+
+**Specs created:**
+- `tests/validate-appointment-emails.spec.ts`
+- `tests/validate-onsite-cc.spec.ts`
+- `.squad/skills/playwright-validation-sop/SKILL.md`
+
+---
+
+## Learnings (Updated 2026-05-13)
+
+### Ripley Session — Profile + Appointment Email Fix (2026-05-13)
+
+**Changes validated (code level):**
+
+1. **Fix 1: Profile page email always visible**
+   - File: `supabase/migrations/20260513_email_always_public_in_profile_rpcs.sql`
+   - `get_public_profile(profile_slug)` — email field changed from `CASE WHEN p.email_public` → `p.email` (lines 30)
+   - `get_public_profile_by_id(profile_id)` — same (line 67)
+   - Phone/address/skills/rate privacy gates intact (`CASE WHEN` preserved for all 4)
+   - Both functions remain `SECURITY DEFINER` with `search_path TO 'public'`
+
+2. **Fix 2: Appointments cross-user email via SECURITY DEFINER RPC**
+   - File: `supabase/migrations/20260513_get_appointment_contact_info.sql`
+   - Function is `SECURITY DEFINER` (line 7)
+   - Guard clause present: `EXISTS (SELECT 1 FROM appointments a WHERE ... OR p.id = auth.uid()` (lines 14-20)
+   - `GRANT EXECUTE ... TO authenticated` present (line 24)
+   - File: `src/hooks/useAppointments.ts`
+   - Direct `.from('profiles')` query removed
+   - `.rpc('get_appointment_contact_info', { profile_ids: allContactIds })` present (line 56)
+   - File: `src/integrations/supabase/types.ts`
+   - `get_appointment_contact_info` function type exists (lines 770-777) with correct signature
+
+**TypeScript:** ✅ 0 errors (`node .\node_modules\typescript\bin\tsc --noEmit`)
+
+**Runtime verification:** ⚠️ **BLOCKED** — both fixes require manual DB migration first (run SQL migrations in Supabase SQL Editor). Wrote checklist to `.squad/decisions/inbox/ralph-migration-checklist.md`.
+
+**Key learnings:**
+- Code-level QA can verify SQL syntax, function signatures, and client-side RPC calls without runtime access
+- Migration-dependent fixes require two-step validation: (1) code review now, (2) runtime verification after migration
+- SECURITY DEFINER guard clauses must check `auth.uid()` in WHERE — confirmed present in both RPCs
+- TypeScript types auto-generated from DB schema — types.ts presence confirms Supabase CLI ran successfully

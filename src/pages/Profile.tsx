@@ -9,6 +9,7 @@ import { PhotoLightbox } from '@/components/PhotoLightbox';
 import { ArrowLeft, Camera } from 'lucide-react';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useProfile } from '@/hooks/useProfile';
+import { useWorkplaceAddresses } from '@/hooks/useWorkplaceAddresses';
 import { ProfileHeader } from './profile/ProfileHeader';
 import { ProfileAbout } from './profile/ProfileAbout';
 import { ProfileSkillsRate } from './profile/ProfileSkillsRate';
@@ -77,6 +78,8 @@ export default function Profile() {
     shareUrl,
     copyShareLink,
   } = useProfile({ slug, user, onSaveSuccess: () => setEditing(false) });
+
+  const { addresses: savedAddresses } = useWorkplaceAddresses(user?.id);
 
   useEffect(() => {
     if (profile) {
@@ -239,6 +242,7 @@ export default function Profile() {
               onAddressChange={setAddress}
               privacySettings={privacySettings}
               onPrivacyChange={setPrivacySettings}
+              savedAddresses={savedAddresses}
             />
           </CardContent>
         </Card>

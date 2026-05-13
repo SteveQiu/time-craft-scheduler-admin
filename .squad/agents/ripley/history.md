@@ -262,3 +262,24 @@ Bishop's cancel UX spec → explicit `AlertDialog` with title/description/button
 
 **Files created:**
 - Root.tsx, PikAppointDemo.tsx, scenes/{Hook,Problem,Calendar,Browse,Appointments,Team,Premium,CTA}Scene.tsx + config
+
+### Appointment Card Navigation + Real AppointmentView Data (2026)
+
+**Task:** Two changes on `/appointments` page:
+1. Clicking blank space on an `AppointmentCard` navigates to `/appointments/{id}`.
+2. `AppointmentView` replaced mock data with real Supabase query via React Query.
+
+**AppointmentCard.tsx changes:**
+- Added `onClick={() => navigate('/appointments/${appointment.id}')}` + `cursor-pointer` class to outer `<Card>`.
+- All interactive children received `e.stopPropagation()`: provider avatar div, provider name div, DropdownMenu trigger button, FileImage/Paid button, both CreditCard buttons, email `<a>`, phone `<a>`, booker name spans in `BookerInfo`.
+- Merged stopPropagation into existing onClick handlers (no wrapper divs added — surgical).
+
+**AppointmentView.tsx changes:**
+- Removed: `mockAppointments` array, chat state (`message`, `chatMessages`), `handleSendMessage`, `ScrollArea`, `Input`, `Send` imports, chat box right column, Reschedule/Cancel actions.
+- Added: `useQuery` fetch from `supabase.from('appointments').select('*').eq('id', id).single()`, enriched with `get_public_profile_names` RPC (provider_slug, booker_name, booker_slug) and `get_public_profile_by_id` RPC (booker_email, booker_phone).
+- Loading state: `Loader2` spinner while fetching.
+- Layout: single-column `max-w-4xl` card with Client Info (conditional), Service Details (worker clickable → profile), Schedule (date, start–end, location), Notes.
+
+**Build gate:** `tsc --noEmit` → 0 errors. `npm run build` → exit 0 (47s).
+**Handoff:** Ralph for runtime verification.
+

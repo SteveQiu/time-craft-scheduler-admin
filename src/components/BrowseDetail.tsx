@@ -326,6 +326,9 @@ export function BrowseDetail({
                   <div><strong>Date:</strong> {new Date(selectedSlot.date).toLocaleDateString()}</div>
                   <div><strong>Time:</strong> {selectedSlot.start_time} - {selectedSlot.end_time}</div>
                   <div><strong>Duration:</strong> {selectedSlot.duration}h</div>
+                  {selectedSlot.location && formatLocation(parseLocation(selectedSlot.location)) && (
+                    <div><strong>Location:</strong> {formatLocation(parseLocation(selectedSlot.location))}</div>
+                  )}
                   {(() => {
                     const total = getEffectiveTotal({
                       total: selectedSlot.total,

@@ -767,6 +767,14 @@ export type Database = {
         Args: { _appointment_id: string; _caller_id: string }
         Returns: undefined
       }
+      get_appointment_contact_info: {
+        Args: { profile_ids: string[] }
+        Returns: {
+          id: string
+          email: string
+          phone: string
+        }[]
+      }
       get_appointment_rates: {
         Args: { _appointment_ids: string[] }
         Returns: {
