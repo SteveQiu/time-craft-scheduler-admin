@@ -67,3 +67,17 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 echo "✅ TypeScript OK"
+
+# --- Legal Pages Advisory ---
+LEGAL_CHANGED=$(git diff --cached --name-only --diff-filter=ACM 2>/dev/null | grep -E '^src/pages/legal/' || true)
+if [ -n "$LEGAL_CHANGED" ]; then
+  echo ""
+  echo "⚖️  Legal pages changed:"
+  for f in $LEGAL_CHANGED; do echo "   • $f"; done
+  echo ""
+  echo "   📋 SOP: Run Burke + Hicks review before merging to main."
+  echo "   Ask: 'Team, get legal team to review and update terms/privacy'"
+  echo "   This is advisory only — commit proceeds."
+  echo ""
+fi
+# --- End Legal Pages Advisory ---
