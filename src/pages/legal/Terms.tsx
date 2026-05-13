@@ -116,8 +116,9 @@ export default function Terms() {
 
           <section>
             <h2 className="text-xl font-semibold mt-6 mb-2">12. Governing Law and Disputes</h2>
+            {/* Hicks 2026-05-12: Burke's Delaware rationale was rejected — LemonSqueezy is a Utah LLC, not Delaware. Jurisdiction corrected to Province of British Columbia, Canada (Steve confirmed PikAppoint is BC-based, not yet incorporated). Update this if you incorporate in a different province. */}
             <p>
-              These Terms shall be governed by and construed in accordance with the laws of [JURISDICTION TBD], without regard to conflict of law principles. Any disputes arising from these Terms or your use of {APP_NAME} shall be resolved through binding arbitration or in the courts of [JURISDICTION TBD].
+              These Terms shall be governed by and construed in accordance with the laws of the Province of British Columbia and the applicable laws of Canada, without regard to conflict of law principles. Any disputes arising from these Terms or your use of {APP_NAME} shall be resolved through binding arbitration or in the courts of British Columbia, Canada.
             </p>
           </section>
 
