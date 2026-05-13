@@ -263,6 +263,24 @@ Bishop's cancel UX spec → explicit `AlertDialog` with title/description/button
 **Files created:**
 - Root.tsx, PikAppointDemo.tsx, scenes/{Hook,Problem,Calendar,Browse,Appointments,Team,Premium,CTA}Scene.tsx + config
 
+### Hicks Legal Fix #2 — Email Visibility Disclosure (2026-05-13)
+
+**Task:** Apply Hicks's 3 fixes after Burke lockout (Reviewer Rejection Protocol).
+
+**Files changed:**
+- `src/pages/legal/Privacy.tsx` — Removed Art. 6(1)(f) ("legitimate interest") from appointment co-participant email sharing lawful basis. Now cites 6(1)(b) only. Added PIPEDA implied consent clause after GDPR sentence.
+- `src/pages/legal/Terms.tsx` — Section 3: "acknowledge and consent" → "acknowledge" (removes false Art. 6(1)(a) consent implication; lawful basis is 6(1)(b)).
+
+**Both files already had "Last updated: May 13, 2026" — no date change needed.**
+
+**Rationale:**
+1. Art. 6(1)(f) requires LIA (never performed); 6(1)(b) is sufficient and more defensible.
+2. PIPEDA has no "legitimate interest" basis — implied consent via booking action is the correct Canadian basis.
+3. "Consent" in Terms conflated Art. 6(1)(a) with Art. 6(1)(b) — legally imprecise.
+
+**Build gate:** `tsc --noEmit` → exit 0.
+**Decision written:** `.squad/decisions/inbox/ripley-legal-hicks-fixes.md`
+
 ### Appointment Card Navigation + Real AppointmentView Data (2026)
 
 **Task:** Two changes on `/appointments` page:

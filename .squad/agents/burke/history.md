@@ -63,7 +63,26 @@ Burke locked per Reviewer Rejection Protocol after pass 1 REJECT. Ripley applied
 
 **Decision inbox:** `.squad/decisions/inbox/burke-jurisdiction-research.md`
 
-### 2026-05-12: First legal audit — Refund Policy rewrite + cross-page consistency
+### 2026-05-13: Email visibility disclosure — appointment co-participant sharing + email_public toggle
+
+**Task:** Disclose two new behaviors: (1) email always shared between appointment co-participants via SECURITY DEFINER RPC, (2) `email_public` toggle controls only public profile, not appointment sharing.
+
+**Changes made:**
+
+- **Privacy.tsx §2:** Updated "Process appointments" bullet to explicitly mention email sharing with co-participants.
+- **Privacy.tsx §3:** Added "Appointment Co-Participants" paragraph disclosing automatic email sharing upon appointment confirmation, independence from `email_public` toggle, and GDPR lawful basis (Art. 6(1)(b) + 6(1)(f)).
+- **Terms.tsx §3:** Added consent paragraph — users acknowledge email is shared with appointment co-participants when booking/accepting an appointment; linked to Privacy Policy.
+- Both files: date bumped to May 13, 2026.
+
+**Build gate:** `tsc --noEmit` — zero errors.
+
+**Flags for Hicks/Steve:**
+- Verify `email_public` UI label matches policy wording ("Show email on public profile").
+- PIPEDA (Canada): legitimate interest is a weaker basis than GDPR Art. 6(1)(f); consider explicit notice at appointment confirmation if Canadian user base is significant.
+
+**Decision inbox:** `.squad/decisions/inbox/burke-email-visibility-disclosure.md`
+
+
 
 **Task:** Replace Ripley's 7-day money-back refund template with canonical no-refunds policy.
 

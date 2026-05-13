@@ -101,3 +101,23 @@ Section 12.2: Governing law is **State of Utah**, not Delaware.
 **Burke locked out per Reviewer Rejection Protocol.** Steve must confirm PikAppoint's actual state of incorporation before Section 12 can be fixed by a different agent.
 
 Report: `.squad/decisions/inbox/hicks-factcheck-2026-05-12-jurisdiction.md`
+
+### 2026-05-13 — Email Visibility Disclosure Fact-Check (Burke's appointment email-sharing edits)
+
+**Verdict:** REJECT — 2 blocking issues + 1 material inaccuracy (PIPEDA non-compliance)
+
+**Key findings:**
+1. **✅ GDPR Art. 6(1)(b) accurately cited** — Email sharing to enable appointment communication is contractually necessary. (https://gdpr-info.eu/art-6-gdpr/)
+2. **⚠️ GDPR Art. 6(1)(f) redundantly cited** — Legitimate interest is supplementary and weaker than 6(1)(b). Dual citing suggests uncertainty. Primary basis should be 6(1)(b) alone.
+3. **✅ Disclosure language (GDPR Art. 13/14) compliant** — Clear statement of purpose, timing, scope, and lawful bases. (https://gdpr-info.eu/art-13-gdpr/, https://gdpr-info.eu/art-14-gdpr/)
+4. **❌ BLOCKING: Terms.tsx "acknowledge and consent" conflates GDPR bases** — This is contractually necessary (Art. 6(1)(b)), NOT consent-based (Art. 6(1)(a)). "Consent" misrepresents the lawful basis. Should say "acknowledge" only. (https://gdpr-info.eu/art-6-gdpr/)
+5. **❌ BLOCKING: Privacy Policy ignores PIPEDA (Canada)** — Relies on GDPR Art. 6(1)(f) "legitimate interest" for all users, but PIPEDA does NOT recognize legitimate interest as a lawful basis. Canadian users require EXPLICIT OR IMPLIED CONSENT. Material jurisdiction gap. (https://www.priv.gc.ca/en/privacy-topics/privacy-laws-in-canada/the-personal-information-protection-and-electronic-documents-act-pipeda/)
+
+**Required fixes:**
+1. Terms.tsx line 43: Remove "and consent"; replace with "acknowledge" (contract performance, not consent).
+2. Privacy.tsx line 64: Add PIPEDA-compliant language clarifying consent basis for Canadian users.
+3. Privacy.tsx line 64: Simplify lawful bases to cite 6(1)(b) PRIMARY only, or add explicit disclaimer that 6(1)(f) is supplementary pending Legitimate Interest Assessment.
+
+**Burke locked out per Reviewer Rejection Protocol.** Reassign to Ripley (text correction).
+
+Report: `.squad/decisions/inbox/hicks-factcheck-20260513.md`

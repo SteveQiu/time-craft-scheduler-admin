@@ -40,7 +40,7 @@ export default function Terms() {
             </p>
             {/* Burke: added email-visibility consent clause per May 2026 appointment contact-info feature */}
             <p className="mt-2">
-              By booking or accepting an appointment with another user, you acknowledge and consent that your email address will be shared with your appointment co-participant (provider or customer) for the purpose of direct communication about that appointment. This sharing is a core feature of the appointment service and occurs regardless of your public profile email visibility setting. See our <Link to={ROUTES.privacy} className="text-primary hover:underline">Privacy Policy</Link> for details.
+              By booking or accepting an appointment with another user, you acknowledge that your email address will be shared with your appointment co-participant (provider or customer) for the purpose of direct communication about that appointment. This sharing is a core feature of the appointment service and occurs regardless of your public profile email visibility setting. See our <Link to={ROUTES.privacy} className="text-primary hover:underline">Privacy Policy</Link> for details.
             </p>
           </section>
 

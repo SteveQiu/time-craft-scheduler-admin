@@ -186,6 +186,25 @@ Always hire rubber duck cross-checkers for review work. Use Gemini and GPT model
 
 ## Legal & Compliance
 
+### Email Visibility Disclosure — Privacy & Terms Updates (2026-05-13)
+**Authority:** Ripley (Frontend Dev, per Hicks approval)
+
+**Context:** Appointment email sharing requires legal disclosure. Provider and customer can see each other's email via SECURITY DEFINER RPC (`get_appointment_contact_info`) upon confirmation.
+
+**Changes Made:**
+- **Privacy.tsx:** Appointment co-participant disclosure paragraph (Section 3) explaining email sharing, automatic upon confirmation, toggle behavior (email_public ≠ appointment sharing).
+- **Terms.tsx:** Section 3 updated — "acknowledge that your email will be shared" (removed "and consent" per Hicks correction).
+- **Lawful bases:** GDPR Art. 6(1)(b) contract performance (primary); added PIPEDA implied consent clause for Canadian users.
+- **Removed:** Art. 6(1)(f) dual cite (redundant, requires unlisted LIA).
+- **Build:** `tsc --noEmit` → exit 0 ✅
+
+**Rationale (per Hicks fact-check):**
+1. Art. 6(1)(b) sufficient for appointment email sharing; 6(1)(f) is supplementary and legally weaker.
+2. PIPEDA does not recognize "legitimate interests" — Canadian users need consent (implied via booking action).
+3. "Acknowledge and consent" conflates GDPR consent (6(1)(a)) with contract necessity (6(1)(b)) — legally imprecise.
+
+**Status:** ✅ Approved — ready for commit.
+
 ### Jurisdiction: Delaware (Pending Fact-Check) (2026-05-12)
 **Authority:** Burke (Legal Counsel)
 
