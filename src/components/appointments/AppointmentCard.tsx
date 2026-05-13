@@ -50,7 +50,8 @@ export function BookerInfo({ appointment, navigate }: BookerInfoProps) {
       {(appointment.booker_email || appointment.booker_phone) && (
         <div className="flex items-center gap-3 text-sm text-muted-foreground">
           {appointment.booker_email && (
-            <a href={`mailto:${appointment.booker_email}`} className="flex items-center space-x-1 hover:text-primary transition-colors" onClick={(e) => e.stopPropagation()}>
+            <a
+                href={`mailto:${appointment.booker_email}`} className="flex items-center space-x-1 hover:text-primary transition-colors" onClick={(e) => e.stopPropagation()}>
               <Mail className="h-3 w-3" />
               <span>{appointment.booker_email}</span>
             </a>
@@ -156,14 +157,24 @@ export function AppointmentCard({
               <p className="text-sm text-muted-foreground">{appointment.service}</p>
             </div>
             {!canManage && appointment.provider_email && (
-              <a
-                href={`mailto:${appointment.provider_email}`}
-                className="flex items-center space-x-1 text-sm text-muted-foreground hover:text-primary transition-colors"
-                onClick={(e) => e.stopPropagation()}
-              >
+              <div className="flex items-center space-x-1 text-sm text-muted-foreground" onClick={(e) => e.stopPropagation()}>
                 <Mail className="h-3 w-3" />
-                <span>{appointment.provider_email}</span>
-              </a>
+                <span
+                  className="font-medium text-primary hover:underline cursor-pointer"
+                  onClick={(e) => { e.stopPropagation(); navigate(`/profile/${appointment.provider_slug || appointment.provider_id}`); }}
+                >
+                  {appointment.worker}
+                </span>
+                <span>(</span>
+                <a
+                  href={`mailto:${appointment.provider_email}`}
+                  className="hover:text-primary transition-colors"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {appointment.provider_email}
+                </a>
+                <span>)</span>
+              </div>
             )}
           </div>
 

@@ -10,7 +10,7 @@ export default function Privacy() {
       <Card>
         <CardHeader>
           <CardTitle className="text-3xl">Privacy Policy</CardTitle>
-          <p className="text-sm text-muted-foreground">Last updated: May 12, 2026</p>
+          <p className="text-sm text-muted-foreground">Last updated: May 13, 2026</p>
         </CardHeader>
         <CardContent className="space-y-6">
           <section>
@@ -41,7 +41,7 @@ export default function Privacy() {
             </p>
             <ul className="list-disc list-inside ml-4 space-y-1 mt-2">
               <li>Provide, operate, and maintain the {APP_NAME} platform</li>
-              <li>Process appointments, send notifications, and facilitate communication</li>
+              <li>Process appointments, send notifications, and facilitate communication — including sharing your email address with confirmed appointment co-participants for direct communication about that appointment</li>
               <li>Process payments and subscriptions (via Lemon Squeezy)</li>
               <li>Improve our services, develop new features, and troubleshoot issues</li>
               <li>Send account-related emails (confirmations, password resets, policy updates)</li>
@@ -59,6 +59,10 @@ export default function Privacy() {
               <li><strong>Lemon Squeezy:</strong> Our payment processor (merchant of record). Lemon Squeezy handles all payment transactions and is responsible for payment data security and compliance.</li>
               <li><strong>Analytics Providers:</strong> We may use privacy-respecting analytics tools to understand usage patterns (IP addresses are anonymized where possible).</li>
             </ul>
+            {/* Burke: disclosed appointment-participant email sharing and scope of email_public toggle — required by GDPR transparency obligation */}
+            <p className="mt-2">
+              <strong>Appointment Co-Participants:</strong> When you share a confirmed appointment with another user, your email address is made visible to that co-participant (e.g., a provider can see a customer's email and vice versa) on the appointments page to enable direct communication about that appointment. This disclosure occurs automatically upon appointment confirmation and cannot be disabled on a per-appointment basis. It is independent of your <em>Show email on public profile</em> setting, which only controls whether your email is displayed on your public-facing profile page — it does not affect appointment-participant sharing. GDPR lawful basis: performance of a contract (Art. 6(1)(b)) and legitimate interest in facilitating appointment communication (Art. 6(1)(f)).
+            </p>
             <p className="mt-2">
               We may also disclose information if required by law, to protect our rights, or in connection with a business transfer (merger, acquisition, or sale).
             </p>
