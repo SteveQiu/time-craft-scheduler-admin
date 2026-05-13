@@ -14,7 +14,7 @@ async function login(page: Page) {
   await page.waitForURL((url) => !url.pathname.startsWith('/auth'), { timeout: 20000 });
 }
 
-test.describe('Dallas change — Onsite Credit Card payment method type', () => {
+test.describe('Dallas change — Onsite Debit/Credit payment method type', () => {
   test.beforeEach(async ({ page }) => {
     await login(page);
   });
@@ -38,7 +38,7 @@ test.describe('Dallas change — Onsite Credit Card payment method type', () => 
     console.log('✅ CHECK 2 PASS: Add Payment Acceptance Method button visible');
   });
 
-  test('CHECK 3: "Onsite Credit Card" appears in Type dropdown of Add dialog', async ({ page }) => {
+  test('CHECK 3: "Onsite Debit/Credit" appears in Type dropdown of Add dialog', async ({ page }) => {
     await page.goto(`${BASE}/settings?tab=payments`, { waitUntil: 'networkidle' });
     await page.waitForTimeout(1500);
 
@@ -58,8 +58,8 @@ test.describe('Dallas change — Onsite Credit Card payment method type', () => 
     await typeTrigger.click();
     await page.waitForTimeout(400);
 
-    // Look for the "Onsite Credit Card" option in the dropdown
-    const onsiteOption = page.locator('[role="option"]:has-text("Onsite Credit Card")');
+    // Look for the "Onsite Debit/Credit" option in the dropdown
+    const onsiteOption = page.locator('[role="option"]:has-text("Onsite Debit/Credit")');
     const onsiteCount = await onsiteOption.count();
     console.log(`"Onsite Credit Card" options found: ${onsiteCount}`);
 
@@ -70,7 +70,7 @@ test.describe('Dallas change — Onsite Credit Card payment method type', () => 
     }
 
     expect(onsiteCount).toBeGreaterThan(0);
-    console.log('✅ CHECK 3 PASS: "Onsite Credit Card" visible in Type dropdown');
+    console.log('✅ CHECK 3 PASS: "Onsite Debit/Credit" visible in Type dropdown');
 
     // Close dialog by pressing Escape
     await page.keyboard.press('Escape');
