@@ -1,7 +1,0 @@
-fix: always show email on profile page + appointment contact RLS fix
-
-- get_public_profile and get_public_profile_by_id RPCs now return email unconditionally
-- New get_appointment_contact_info SECURITY DEFINER RPC for cross-user email fetch
-- useAppointments.ts uses new RPC instead of direct profiles query
-
-Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
