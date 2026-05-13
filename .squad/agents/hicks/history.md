@@ -73,3 +73,31 @@ Report: `.squad/decisions/inbox/hicks-factcheck-2026-05-12.md`
 ### 2026-05-12 — Legal Pages Fact-Check Pass 2 (Ripley's edits after Burke lockout)
 
 **Verdict:** APPROVE — All 3 blocking issues cleared. Ripley applied corrected text; cancel button implemented in SubscriptionTab. Deployment caveat: `VITE_LEMONSQUEEZY_PORTAL_URL` required for functional cancel button. Report: `.squad/decisions/inbox/hicks-factcheck-2026-05-12-pass2.md`
+
+### 2026-05-12 — Burke Jurisdiction Update Fact-Check
+
+**Verdict:** REJECT — 1 blocking issue (Delaware jurisdiction claim factually wrong)
+
+**Key finding:**
+Burke claimed "LemonSqueezy incorporated in Delaware" — this is **FALSE**. 
+LemonSqueezy Terms (https://www.lemonsqueezy.com/terms) explicitly states:
+> "Sold through Link, LLC f/k/a Lemon Squeezy LLC, **a Utah limited liability company**"
+
+Section 12.2: Governing law is **State of Utah**, not Delaware.
+
+**Sources verified:**
+- LemonSqueezy Terms of Service (https://www.lemonsqueezy.com/terms) — Utah LLC confirmed
+- DMCA 512 requirements (https://www.copyright.gov/512/)
+- GDPR Article 20 (https://gdpr-info.eu/art-20-gdpr/)
+- UK CRA 2015 Part 2 (https://www.legislation.gov.uk/ukpga/2015/15/part/2)
+- LemonSqueezy Appendix A Prohibited Products
+
+**Other findings:**
+- ✅ Liability cap structure valid with "fullest extent permitted by law" qualifier
+- ⚠️ DMCA contact present but incomplete (missing notice requirements, no agent registration)
+- ✅ Acceptable Use covers LemonSqueezy MCCs
+- ⚠️ Termination clause doesn't explicitly address GDPR Art 20 data export window
+
+**Burke locked out per Reviewer Rejection Protocol.** Steve must confirm PikAppoint's actual state of incorporation before Section 12 can be fixed by a different agent.
+
+Report: `.squad/decisions/inbox/hicks-factcheck-2026-05-12-jurisdiction.md`

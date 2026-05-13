@@ -18,6 +18,8 @@
 | Ralph | QA & Tester | `.squad/agents/ralph/charter.md` | 🧪 Active — verifies Ripley's work |
 | Burke | Legal Counsel & Compliance Reviewer | `.squad/agents/burke/charter.md` | ⚖️ Active — drafts/reviews legal pages before LemonSqueezy production |
 | Hicks | Legal Fact-Checker | `.squad/agents/hicks/charter.md` | 🔍 Active — verifies Burke's claims against primary legal sources (reviewer-gate) |
+| Hudson | Rubber Duck Cross-Checker (GPT) | `.squad/agents/hudson/charter.md` | 🦆 Active — gpt-5.2, second opinion on any artifact; always spawned with Vasquez |
+| Vasquez | Rubber Duck Cross-Checker (Gemini) | `.squad/agents/vasquez/charter.md` | 🦆 Active — gemini-3-pro-preview, structural/consistency review; always spawned with Hudson |
 
 
 ## Coding Agent

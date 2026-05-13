@@ -175,6 +175,41 @@ Squad agents and Scribe must never `git commit` unless the commit is deployment-
 
 **Lesson:** Build gate (tsc) is necessary but NOT sufficient. Runtime testing required before commit. If re-attempted, use smallest possible changes with runtime verification.
 
+## Team & Process
+
+### Rubber Duck Cross-Checkers (2026-05-12)
+**Authority:** SteveQiu (via Copilot)
+
+Always hire rubber duck cross-checkers for review work. Use Gemini and GPT models — not Claude — so the perspective is genuinely independent from the primary agents.
+
+**Why:** User request — different model families catch different classes of errors. Diversity of model perspective strengthens review quality.
+
+## Legal & Compliance
+
+### Jurisdiction: Delaware (Pending Fact-Check) (2026-05-12)
+**Authority:** Burke (Legal Counsel)
+
+**Claim:** Delaware selected as governing law jurisdiction for Terms of Service (Section 12).
+
+**Rationale:** LemonSqueezy (merchant of record) is incorporated in Delaware; Delaware is standard US SaaS jurisdiction for predictability and investor preference.
+
+**Status:** ⚠️ **REJECTED by Hicks (fact-check)**. LemonSqueezy is a **Utah LLC** (confirmed: Section 12.2 of LemonSqueezy Terms states "State of Utah"), not Delaware. Burke's factual basis is incorrect.
+
+**Action Required:** Steve must confirm PikAppoint's actual state of incorporation and use that, OR choose jurisdiction with independent legal basis (not LemonSqueezy's incorporation).
+
+**Blocking:** Yes — must fix Section 12 before production.
+
+### Demo Video Production Guide (2026-05-12)
+**Authority:** Demo Video Producer (Squad)
+
+Complete end-to-end guide for recording, editing, and uploading LemonSqueezy product demo. Covers:
+- Video specs (1920×1080 MP4, H.264, 60–120 seconds, <200 MB)
+- Toolchain (OBS Studio, DaVinci Resolve, Adobe Podcast Enhance)
+- Complete demo script (~90 seconds, 5 feature sections)
+- Recording checklist and LemonSqueezy upload instructions
+
+Purpose: Enable solo founder (zero prior video experience) to produce professional product demo.
+
 ## Governance
 
 - All meaningful changes require team consensus
