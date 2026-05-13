@@ -144,6 +144,12 @@ Fix: move the `useState` call to the top-level of the component. The IIFE can st
 - Non-cash button: unchanged green theme, FileImage icon, label "Paid"
 - Old proof records (null method type) → green "Paid" button (correct backward-compat behavior)
 
+### Onsite Credit Card Payment Type Added (2026)
+
+- Added `'onsite_credit_card'` to `PaymentMethodType` union in `src/lib/payment/types.ts`
+- Added config entry in `src/lib/payment/methods.ts` `PAYMENT_METHOD_CONFIGS` after `cash` — single optional `instructions` text field
+- No changes to `PaymentMethodForm.tsx` — the form renders fields dynamically from config; `fields.length === 0` early return doesn't trigger since this type has 1 field
+
 ### RLS-Safe Rate Lookup via SECURITY DEFINER RPC (2026-05-07)
 
 - Customers can't read `openings` or `profiles` directly — RLS blocks all rows → all rates returned 0 → "Free" shown for all appointments
@@ -819,3 +825,11 @@ Built public/landing.html — standalone marketing page for PikAppoint.
 **Safe approach:** kept `paidAppointmentIds` intact, added parallel `cashAppointmentIds` Set — no structural change to existing Map
 
 **tsc result:** exit 0, no errors
+
+### Provider Email on Appointment Card for Customers (2026)
+
+- Added `provider_email?: string | null` to `Appointment` interface in `types.ts`
+- `useAppointments.ts`: built `providerContactMap` using same `get_public_profile_by_id` RPC pattern as `bookerContactMap`; mapped `provider_email` onto each appointment
+- `AppointmentCard.tsx`: added `{!canManage && appointment.provider_email && <a href="mailto:...">}` block after the cursor-pointer provider name/service div, inside the same `flex items-center space-x-4` container; `Mail` icon was already imported
+- Email only shows for non-canManage users (customers); providers/orgs see `BookerInfo` as before
+- tsc: exit 0, no errors

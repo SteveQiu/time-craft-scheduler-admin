@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { PhotoLightbox } from './PhotoLightbox';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 interface Props {
   userId: string;
@@ -14,6 +15,7 @@ const PREVIEW_COUNT = 3;
 export function ProviderPhotoStrip({ userId, thumbClass = 'w-16 h-16' }: Props) {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [photoGridOpen, setPhotoGridOpen] = useState(false);
 
   const { data: photoUrls = [] } = useQuery({
     queryKey: ['provider-photos', userId],
@@ -65,7 +67,7 @@ export function ProviderPhotoStrip({ userId, thumbClass = 'w-16 h-16' }: Props) 
         {showMoreButton && (
           <button
             className={`${thumbClass} rounded-lg bg-primary/10 hover:bg-primary/20 border border-primary/20 flex flex-col items-center justify-center text-primary font-semibold transition-colors cursor-pointer`}
-            onClick={() => open(PREVIEW_COUNT)}
+            onClick={() => setPhotoGridOpen(true)}
             aria-label={`View ${hiddenCount} more photos`}
           >
             <span className="text-lg leading-none">+{hiddenCount}</span>
@@ -73,6 +75,24 @@ export function ProviderPhotoStrip({ userId, thumbClass = 'w-16 h-16' }: Props) 
           </button>
         )}
       </div>
+      <Dialog open={photoGridOpen} onOpenChange={setPhotoGridOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Photos ({photoUrls.length})</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-3 gap-2 mt-2">
+            {photoUrls.map((url, idx) => (
+              <img
+                key={idx}
+                src={url}
+                alt={`Provider photo ${idx + 1}`}
+                className="w-full aspect-square object-cover rounded-lg cursor-pointer hover:opacity-80 hover:ring-2 hover:ring-primary transition-all"
+                onClick={() => { setPhotoGridOpen(false); open(idx); }}
+              />
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
       <PhotoLightbox
         photos={photoUrls}
         initialIndex={lightboxIndex}

@@ -112,7 +112,7 @@ export function useCalendarActions({
       duration: 1,
       worker: defaultWorker,
       service: defaultSkills[0] || '',
-      locationFields: { city: '', province: '', country: '', zip: '' },
+      locationFields: { address_line_1: '', address_line_2: '', city: '', province: '', country: '', zip: '' },
       multipleSlots: false,
       interval: 1,
       isFree: false,

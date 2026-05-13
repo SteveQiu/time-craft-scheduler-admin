@@ -38,7 +38,29 @@ export function AddressInput({
 
   return (
     <div className={className}>
-      <div className={gridClass}>
+      <div className="space-y-3">
+        <div>
+          <Label htmlFor="address-line1">Address</Label>
+          <Input
+            id="address-line1"
+            value={value.address_line_1}
+            onChange={(e) => handleChange('address_line_1', e.target.value)}
+            disabled={disabled}
+            placeholder="123 Main Street"
+          />
+        </div>
+        <div>
+          <Label htmlFor="address-line2">Address 2</Label>
+          <Input
+            id="address-line2"
+            value={value.address_line_2}
+            onChange={(e) => handleChange('address_line_2', e.target.value)}
+            disabled={disabled}
+            placeholder="Suite 100 (optional)"
+          />
+        </div>
+      </div>
+      <div className={`${gridClass} mt-3`}>
         <div className={layout === '2x2' ? '' : ''}>
           <Label htmlFor="address-city">
             City {required && <span className="text-destructive">*</span>}

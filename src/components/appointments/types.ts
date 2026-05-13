@@ -22,5 +22,6 @@ export interface Appointment {
   booker_slug?: string | null;
   provider_name?: string | null;
   provider_slug?: string | null;
+  provider_email?: string | null;
   approved_by_name?: string | null;
 }
