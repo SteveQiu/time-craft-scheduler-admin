@@ -241,6 +241,42 @@ export type Database = {
           },
         ]
       }
+      orgs: {
+        Row: {
+          id: string
+          plan: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id: string
+          plan?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          plan?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orgs_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orgs_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       org_workers: {
         Row: {
           created_at: string

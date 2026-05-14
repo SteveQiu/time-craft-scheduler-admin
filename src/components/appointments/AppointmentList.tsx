@@ -159,6 +159,7 @@ export function AppointmentList({
                       }}
                       paidAppointmentIds={paidAppointmentIds}
                       cashAppointmentIds={cashAppointmentIds}
+                      cardAppointmentIds={cardAppointmentIds}
                       appointmentRateMap={appointmentRateMap}
                       getWorkerRate={getWorkerRate}
                       onProviderViewProof={onProviderViewProof}
@@ -217,6 +218,7 @@ export function AppointmentList({
                   }}
                   paidAppointmentIds={paidAppointmentIds}
                   cashAppointmentIds={cashAppointmentIds}
+                  cardAppointmentIds={cardAppointmentIds}
                   appointmentRateMap={appointmentRateMap}
                   getWorkerRate={getWorkerRate}
                   onProviderViewProof={onProviderViewProof}

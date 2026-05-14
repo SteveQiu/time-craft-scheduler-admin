@@ -9,11 +9,14 @@ import { DATE_FORMATS, LOCALE } from '@/config/formats';
 import { ROUTES } from '@/config/routes';
 import { supabase } from '@/integrations/supabase/client';
 import { parseLocation, formatLocation } from '@/lib/address';
+import { useAuth } from '@/hooks/useAuth';
+import { PremiumUpgrade } from '@/components/PremiumUpgrade';
 import { Appointment } from '@/components/appointments/types';
 
 export function AppointmentView() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const { data: appointment, isLoading } = useQuery<Appointment>({
     queryKey: ['appointment', id],
@@ -96,16 +99,18 @@ export function AppointmentView() {
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between max-w-4xl mx-auto">
-        <Button variant="ghost" onClick={() => navigate(ROUTES.appointments)}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" onClick={() => navigate(ROUTES.appointments)}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Appointments
         </Button>
         <Badge className={getStatusColor(appointment.status)}>
           {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
         </Badge>
       </div>
-
-      <div className="max-w-4xl mx-auto">
+      <div className="flex justify-end max-w-4xl mx-auto">
+        {user && <PremiumUpgrade orgId={user.id} />}
+      </div>
         <Card className="shadow-soft border-card-border">
           <CardHeader>
             <CardTitle className="text-2xl">Appointment Details</CardTitle>

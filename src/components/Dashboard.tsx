@@ -5,9 +5,12 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { WorkerInvites } from './WorkerInvites';
+import { PremiumUpgrade } from './PremiumUpgrade';
+import { useOrgPlan } from '@/hooks/useOrgPlan';
 
 export function Dashboard() {
   const { user } = useAuth();
+  const { plan } = useOrgPlan(user?.id || null);
 
   // Fetch user's appointments
   const { data: appointments = [], isLoading } = useQuery({
@@ -63,9 +66,12 @@ export function Dashboard() {
 
   return (
     <div className="p-6 space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold text-foreground mb-2">Dashboard</h2>
-        <p className="text-muted-foreground">Your appointment overview</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-3xl font-bold text-foreground mb-2">Dashboard</h2>
+          <p className="text-muted-foreground">Your appointment overview</p>
+        </div>
+        <PremiumUpgrade orgId={user?.id || null} />
       </div>
 
       {/* Worker Invites */}

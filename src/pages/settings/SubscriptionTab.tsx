@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Skeleton } from '@/components/ui/skeleton';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Zap } from 'lucide-react';
+import { PremiumUpgrade } from '@/components/PremiumUpgrade';
 
 export function SubscriptionTab() {
   const { user } = useAuth();
@@ -94,21 +95,7 @@ export function SubscriptionTab() {
         <CardDescription>Upgrade to Premium for full access.</CardDescription>
       </CardHeader>
       <CardContent>
-        {import.meta.env.VITE_LEMONSQUEEZY_CHECKOUT_URL ? (
-          <Button
-            onClick={() =>
-              window.open(
-                `${import.meta.env.VITE_LEMONSQUEEZY_CHECKOUT_URL}?checkout[custom][user_id]=${user?.id}`,
-                '_blank'
-              )
-            }
-          >
-            <Zap className="h-4 w-4 mr-2" />
-            Upgrade to Premium
-          </Button>
-        ) : (
-          <Button disabled>Upgrade coming soon</Button>
-        )}
+        {user && <PremiumUpgrade orgId={user.id} />}
       </CardContent>
     </Card>
   );

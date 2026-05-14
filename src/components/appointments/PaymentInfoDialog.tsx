@@ -63,7 +63,8 @@ export function PaymentInfoDialog({
   handleSubmitPaymentProof,
 }: PaymentInfoDialogProps) {
   const isActiveMethodCash = activePaymentMethod?.type === 'cash';
-  const noteRequired = !isActiveMethodCash;
+  const isCardPayment = activePaymentMethod?.type === 'onsite_credit_card';
+  const noteRequired = !(isActiveMethodCash || isCardPayment);
 
   return (
     <Dialog open={!!paymentInfoProviderId} onOpenChange={(open) => { if (!open) onClose(); }}>

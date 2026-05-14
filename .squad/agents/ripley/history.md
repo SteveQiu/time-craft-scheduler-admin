@@ -98,6 +98,16 @@ Bishop's cancel UX spec → explicit `AlertDialog` with title/description/button
 **Files modified:**
 - `src/pages/Profile.tsx` — added `useRef`, `Camera` import, `useSubscription` hook; photo query (`profile_photos` table via `supabase as any`); signed URL `useEffect`; upload/delete handlers; Photos card JSX.
 
+### Blank Org View Bug After Approval (2026-05-13)
+
+**Bug:** Org appointments view went blank after approving an appointment.
+
+**Root cause:** Commit 332137c added `cardAppointmentIds` prop to `AppointmentCard` interface but only passed it to `PendingGroupSection`. The two `AppointmentCard` components for non-pending active and inactive appointments didn't receive it. When React tried to render confirmed appointments after approval, `cardAppointmentIds.has()` threw "Cannot read property 'has' of undefined", crashing the page.
+
+**Fix:** Added `cardAppointmentIds={cardAppointmentIds}` to both `AppointmentCard` usages in `AppointmentList.tsx` (lines ~162 and ~220).
+
+**Lesson:** When adding required props to component interfaces, grep for ALL usages, not just the main one. TypeScript catches this, but only if `tsc` is run before commit. Runtime crash = blank page for users.
+
 **Key patterns:**
 - `profile_photos` not in generated types → cast with `(supabase as any)` — graceful empty on error
 - Signed URLs: `createSignedUrl(path, 3600)` in `useEffect` watching `profilePhotos`, stored in `photoSignedUrls` state map keyed by photo id
@@ -300,4 +310,24 @@ Bishop's cancel UX spec → explicit `AlertDialog` with title/description/button
 
 **Build gate:** `tsc --noEmit` → 0 errors. `npm run build` → exit 0 (47s).
 **Handoff:** Ralph for runtime verification.
+
+### Cloudflare Turnstile Captcha Integration (2026-05-13)
+
+**Task:** Add Cloudflare Turnstile captcha to both signup and signin forms.
+
+**Package installed:** `@marsidev/react-turnstile` (1 package added)
+
+**Files changed:**
+- `.env` — added `VITE_TURNSTILE_SITE_KEY="1x00000000000000000000AA"` (test key — replace with prod key from Cloudflare dashboard)
+- `src/pages/Auth.tsx` — imported `Turnstile` component; added `signInCaptchaToken`/`signUpCaptchaToken` state; added captcha validation to both `handleSignIn` and `handleSignUp` (blocks submit if no token); inserted `<Turnstile>` component in both forms (above submit button); disabled submit buttons when captcha incomplete
+
+**Implementation pattern:**
+- `<Turnstile siteKey={import.meta.env.VITE_TURNSTILE_SITE_KEY} onSuccess={(token) => setToken(token)} onError={() => setToken(null)} onExpire={() => setToken(null)} />`
+- Submit handler checks `if (!captchaToken) { toast('Verification required', 'Please complete the captcha.'); return; }`
+- Button disabled state includes `|| !captchaToken`
+
+**Build gate:** `npx tsc --noEmit` → 0 errors. `npm run build` → exit 0 (6.38s).
+**Handoff:** Ralph for runtime verification (dev server http://127.0.0.1:8081/ — verify captcha renders, blocks submit when incomplete, passes token on success).
+
+## Learnings
 
