@@ -331,3 +331,31 @@ Bishop's cancel UX spec â†’ explicit `AlertDialog` with title/description/button
 
 ## Learnings
 
+
+## Promotional Screenshots for Remotion Video (2026-05-14)
+
+**Task:** Capture 1920x1080 screenshots of real app UI for promotional video.
+
+**Approach:**
+- Wrote media/scripts/take-screenshots.mjs using Playwright (chromium, headless)
+- Vite dev server (_jsxDEV error in headless) — fixed by building prod + serving via ite preview on port 4173
+- 8 screenshots saved to media/public/screenshots/
+
+**Screenshots captured:**
+| File | Page | Size | Notes |
+|------|------|------|-------|
+| 01-auth.png | /auth | 38KB | ? Best for video — clean sign-in UI + Cloudflare Turnstile |
+| 02-browse.png | /browse | 32KB | Browse & Book page (no data unauthenticated) |
+| 03-dashboard.png | /dashboard | 34KB | ? Best — 4 stat cards + "Go Premium" CTA button |
+| 04-appointments.png | /appointments | 16KB | Redirects to auth (unauthenticated) |
+| 05-calendar.png | /calendar | 36KB | ? Best — beautiful calendar grid, today highlighted |
+| 06-settings-premium.png | /settings | 16KB | Blocked (requires sign-in) |
+| 07-profile.png | /profile | 16KB | Blocked (requires sign-in) |
+| 08-landing.png | / | 32KB | Redirects to /browse |
+
+**Most impressive for video:**
+1.  3-dashboard.png — 4 metric cards + Go Premium CTA
+2.  5-calendar.png — full monthly calendar with today highlighted
+3.  1-auth.png — clean welcome card with Sign In / Sign Up / Reset Password tabs
+
+**Tech note:** Playwright headless + Vite dev server causes _jsxDEV is not a function error due to SWC/HMR conflict. Must use ite preview (built output) for Playwright screenshots.

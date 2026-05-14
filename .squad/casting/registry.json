@@ -76,6 +76,22 @@
       "status": "active",
       "role": "Rubber Duck Cross-Checker",
       "model": "gemini-3-pro-preview"
+    },
+    {
+      "persistent_name": "Newt",
+      "universe": "alien",
+      "created_at": "2026-05-14",
+      "legacy_named": false,
+      "status": "active",
+      "role": "Media & Video Engineer"
+    },
+    {
+      "persistent_name": "Frost",
+      "universe": "alien",
+      "created_at": "2026-05-14",
+      "legacy_named": false,
+      "status": "active",
+      "role": "Researcher & DevOps Specialist"
     }
   ]
 }
