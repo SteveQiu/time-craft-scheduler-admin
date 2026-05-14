@@ -1,47 +1,163 @@
-# Logs
-logs
+# ============================================================================
+# NODE & PACKAGE MANAGERS
+# ============================================================================
+node_modules/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+bun.lock*
+dist/
+dist-ssr/
+
+# ============================================================================
+# ENVIRONMENT & SECRETS
+# ============================================================================
+# Never commit credentials, API keys, or private configuration
+.env
+.env.local
+.env.*.local
+.secret
+.secrets/
+secrets.json
+private/
+credentials/
+
+# ============================================================================
+# LOGS
+# ============================================================================
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+*.log[0-9]*
 
-node_modules
-dist
-dist-ssr
-*.local
+# ============================================================================
+# BUILD & BUNDLE ARTIFACTS
+# ============================================================================
+dist/
+dist-ssr/
+build/
+out/
+coverage/
+.next/
+*.tsbuildinfo
 
-# Editor directories and files
+# ============================================================================
+# IDE & EDITOR
+# ============================================================================
 .vscode/*
 !.vscode/extensions.json
-.idea
+!.vscode/settings.json
+!.vscode/launch.json
+.idea/
+.webstorm/
+*.swp
+*.swo
+*~
+*.sublime-workspace
+*.sublime-project
+.IntelliJIDEAConfig
+.project
+.classpath
+.settings/
+*.iml
+*.iws
+*.ipr
+
+# ============================================================================
+# OS FILES
+# ============================================================================
 .DS_Store
+Thumbs.db
+desktop.ini
+.directory
+Icon?
+ehthumbs.db
+.Spotlight-V100
+.Trashes
+
+# ============================================================================
+# VITE-SPECIFIC
+# ============================================================================
+.vite/
+.vite-cache/
+vite.config.ts.timestamp-*
+
+# ============================================================================
+# TESTING
+# ============================================================================
+test-results/
+playwright-report/
+coverage/
+.nyc_output/
+junit.xml
+test-debug-screenshot.png
+*-screenshots/
+firefox-debug-screenshots/
+firefox-validation-screenshots/
+debug/
+
+# ============================================================================
+# TEMPORARY & DEBUG FILES
+# ============================================================================
+*.local
+debug-*.png
+test-*.png
+migration-reports/
+.temp/
+tmp/
+temp/
+
+# ============================================================================
+# MEDIA FOLDER - Remotion, TTS, and Asset Management
+# ============================================================================
+# Include: templates, scripts, docs, public
+# Exclude: runtime outputs, cache, intermediates
+media/cache/
+media/videos/output/
+media/videos/*.mp4
+media/videos/*.webm
+media/audio/*.mp3
+media/audio/**/*.mp3
+media/audio/*.wav
+media/audio/cache/
+media/public/audio/
+media/assets/temp/
+media/assets/cache/
+
+# ============================================================================
+# SQUAD & PROJECT-SPECIFIC
+# ============================================================================
+# Squad runtime state - never tracked, regenerated per session
+.squad/orchestration-log/
+.squad/log/
+.squad/decisions/inbox/
+.squad/sessions/
+.squad-workstream
+.squad/sessions/
+
+# Squad agent cache
+.squad/agents/*/cache/
+.squad/agents/*/temp/
+.squad/agents/*/.tmp/
+
+# ============================================================================
+# HUSKY & GIT HOOKS
+# ============================================================================
+.husky/_/
+
+# ============================================================================
+# MISC
+# ============================================================================
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
-debug
-test-results
-migration-reports
-.secret
-
-# Screenshots and validation outputs
-*.png
-*.jpg
-*.jpeg
-*-screenshots/
-firefox-debug-screenshots/
-firefox-validation-screenshots/
-test-debug-screenshot.png
-# Squad: ignore runtime state (logs, inbox, sessions)
-.squad/orchestration-log/
-.squad/log/
-.squad/decisions/inbox/
-.squad/sessions/
-# Squad: SubSquad activation file (local to this machine)
-.squad-workstream
-
-playwright-report/
-test-results/
+.eslintcache
+.prettierignore
+.prettierrc.json
+node-uuid.json
