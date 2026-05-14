@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Calendar, ChevronDown, ChevronUp } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -19,6 +19,7 @@ interface AppointmentListProps {
   setSelectedIds: React.Dispatch<React.SetStateAction<Set<string>>>;
   paidAppointmentIds: Map<string, string | null>;
   cashAppointmentIds: Set<string>;
+  cardAppointmentIds: Set<string>;
   appointmentRateMap: Map<string, number>;
   getWorkerRate: (name: string) => number;
   groupedPendingByOpening: Map<string, Appointment[]> | null;
@@ -50,6 +51,7 @@ export function AppointmentList({
   setSelectedIds,
   paidAppointmentIds,
   cashAppointmentIds,
+  cardAppointmentIds,
   appointmentRateMap,
   getWorkerRate,
   groupedPendingByOpening,
@@ -114,6 +116,7 @@ export function AppointmentList({
             setSelectedIds={setSelectedIds}
             paidAppointmentIds={paidAppointmentIds}
             cashAppointmentIds={cashAppointmentIds}
+            cardAppointmentIds={cardAppointmentIds}
             appointmentRateMap={appointmentRateMap}
             getWorkerRate={getWorkerRate}
             onProviderViewProof={onProviderViewProof}
@@ -238,3 +241,5 @@ export function AppointmentList({
     </>
   );
 }
+
+

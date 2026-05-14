@@ -78,6 +78,9 @@ function getSummary(
     case 'cash':
       return <p className="text-sm text-muted-foreground">Cash accepted</p>;
 
+    case 'onsite_credit_card':
+      return <p className="text-sm text-muted-foreground">Card accepted</p>;
+
     case 'venmo': {
       const username = details.username;
       const phone = details.phone || (details.url && /^[+\d\s\-().]+$/.test(details.url) ? details.url : undefined);

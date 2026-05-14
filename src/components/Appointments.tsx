@@ -51,7 +51,7 @@ export function Appointments() {
   const isOrgView = modeParam === 'org' && (isOrganization || isInternalDev);
   const { data: appointments = [], isLoading } = useAppointments({ userId: user?.id, isOrgView, acceptedWorkers });
   const appointmentIds = useMemo(() => appointments.map(a => a.id), [appointments]);
-  const { paidAppointmentIds, cashAppointmentIds } = usePaymentStatus(appointmentIds);
+  const { paidAppointmentIds, cashAppointmentIds, cardAppointmentIds } = usePaymentStatus(appointmentIds);
   const { appointmentRateMap } = useAppointmentRates(appointmentIds);
 
   const {
@@ -196,6 +196,7 @@ export function Appointments() {
             setSelectedIds={setSelectedIds}
             paidAppointmentIds={paidAppointmentIds}
             cashAppointmentIds={cashAppointmentIds}
+            cardAppointmentIds={cardAppointmentIds}
             appointmentRateMap={appointmentRateMap}
             getWorkerRate={getWorkerRate}
             groupedPendingByOpening={groupedPendingByOpening}

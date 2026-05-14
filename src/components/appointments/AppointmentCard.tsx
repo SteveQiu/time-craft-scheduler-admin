@@ -77,6 +77,7 @@ interface AppointmentCardProps {
   onSelectionChange: (id: string, checked: boolean) => void;
   paidAppointmentIds: Map<string, string | null>;
   cashAppointmentIds: Set<string>;
+  cardAppointmentIds: Set<string>;
   appointmentRateMap: Map<string, number>;
   getWorkerRate: (name: string) => number;
   onProviderViewProof: (id: string) => void;
@@ -95,6 +96,7 @@ export function AppointmentCard({
   onSelectionChange,
   paidAppointmentIds,
   cashAppointmentIds,
+  cardAppointmentIds,
   appointmentRateMap,
   getWorkerRate,
   onProviderViewProof,
@@ -213,16 +215,18 @@ export function AppointmentCard({
                 if (paidAppointmentIds.has(appointment.id)) {
                   // Provider sees "Paid" button to view submitted proof
                   if (!canManage) return null;
+                  const isCash = cashAppointmentIds.has(appointment.id);
+                  const isCard = cardAppointmentIds.has(appointment.id);
                   return (
                     <Button
                       variant="outline"
                       size="sm"
-                      className={`min-h-[44px] min-w-[44px] px-3 text-xs gap-1.5 ${cashAppointmentIds.has(appointment.id) ? 'border-orange-500 text-orange-600 hover:bg-orange-50' : 'border-green-500 text-green-600 hover:bg-green-50'}`}
+                      className={`min-h-[44px] min-w-[44px] px-3 text-xs gap-1.5 ${isCash || isCard ? 'border-orange-500 text-orange-600 hover:bg-orange-50' : 'border-green-500 text-green-600 hover:bg-green-50'}`}
                       onClick={(e) => { e.stopPropagation(); onProviderViewProof(appointment.id); }}
                       aria-label={`View payment proof for ${appointment.booker_name || 'this appointment'}`}
                     >
                       <FileImage className="w-4 h-4" aria-hidden="true" />
-                      {cashAppointmentIds.has(appointment.id) ? 'Cash' : 'Paid'}
+                      {isCash ? 'Cash' : isCard ? 'Card' : 'Paid'}
                     </Button>
                   );
                 }
