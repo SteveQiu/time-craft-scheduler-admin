@@ -1,8 +1,3 @@
 {
-  "version": 1,
-  "defaultCaveman": "full",
-  "agentDefaults": {
-    "caveman": "full"
-  },
-  "note": "Caveman mode 'full' enabled globally: all agents use compressed communication ~75% token savings while maintaining technical accuracy"
+    "defaultModel":  "claude-opus-4.6"
 }

@@ -20,6 +20,8 @@
 | Hicks | Legal Fact-Checker | `.squad/agents/hicks/charter.md` | 🔍 Active — verifies Burke's claims against primary legal sources (reviewer-gate) |
 | Hudson | Rubber Duck Cross-Checker (GPT) | `.squad/agents/hudson/charter.md` | 🦆 Active — gpt-5.2, second opinion on any artifact; always spawned with Vasquez |
 | Vasquez | Rubber Duck Cross-Checker (Gemini) | `.squad/agents/vasquez/charter.md` | 🦆 Active — gemini-3-pro-preview, structural/consistency review; always spawned with Hudson |
+| Newt | Media & Video Engineer | `.squad/agents/newt/charter.md` | 🎬 Active — Remotion, video generation, TTS integration |
+| Frost | Researcher & DevOps Specialist | `.squad/agents/frost/charter.md` | 🔍 Active — gitignore strategy, project structure, best practices research |
 
 
 ## Coding Agent
