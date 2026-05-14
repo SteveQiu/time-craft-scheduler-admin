@@ -3,6 +3,28 @@
 ## Project Context
 
 - **Project:** time-craft-scheduler-admin (Steve Qiu)
+
+### PowerPoint-Style Slide Scenes (2026-05-14)
+
+**Task:** Add 3 PowerPoint-style slide scenes (SlideA, SlideB, SlideC) per Bishop's design spec. Re-render full video.
+
+**What was built:**
+- **SlideA — Feature Highlights** (120→245 frames): 3 glass-morphism cards with staggered fade-in (📅 Smart Scheduling, 👑 Premium Visibility, 📊 Analytics)
+- **SlideB — Social Proof** (150→289 frames): Count-up stat counters (500+, 10,000+, 4.9★) with sub-headline fade-in
+- **SlideC — Pricing** (150→314 frames): Side-by-side FREE vs PREMIUM cards with amber glow pulse on Premium
+
+**New scene order (7 scenes):**
+1. Hook → 2. SlideA (features) → 3. Solution → 4. Benefits → 5. SlideB (stats) → 6. SlideC (pricing) → 7. CTA
+
+**Audio:** 3 new Google Translate TTS files generated (slide-a-features.mp3, slide-b-stats.mp3, slide-c-pricing.mp3)
+
+**Output:** 1382 frames / 46.07s, 11.37 MB H.264 MP4
+
+**Files modified:**
+- `media/templates/premium-product-demo.tsx` — Added SlideA, SlideB, SlideC + helper components (FeatureCard, StatCounter, PricingCard)
+- `media/Root.tsx` — Updated calculateMetadata for 7 audio files
+- `media/scripts/generate-slide-audio.mjs` — New TTS generation script for slide audio
+- `media/public/audio/premium-product-demo/slide-{a,b,c}-*.mp3` — 3 new audio files
 - **Task:** Generate Lemon Squeezy promotional/explainer videos using Remotion + free TTS
 - **Current goal:** Learn Remotion, evaluate free TTS options, build video generation workflow
 - **Team:** Ripley (Frontend Dev), Bishop (UX Designer), Ralph (QA/Tester), + legal/review agents
@@ -224,6 +246,12 @@ All compositions use `calculateMetadata` to dynamically size based on TTS audio 
 **FPS:** 30 (standard, smooth motion, good balance of quality/file size).
 
 **Rationale:** Web distribution, Lemon Squeezy product page embedding, social media compatibility.
+
+### Remotion Video Pipeline Skill (2026-05-14)
+
+**Action:** Wrote comprehensive skill documentation at `.squad/skills/remotion-video-pipeline/SKILL.md`.
+
+Covers the full proven pipeline: remotion.config.ts placement (critical gotcha), TTS audio generation, HTML mockup screenshots via Playwright, Ken Burns composition patterns, programmatic rendering, and all anti-patterns/troubleshooting learned during the premium-product-demo build. Any agent can now recreate the entire video pipeline from scratch using this skill.
 
 ## Team Updates
 
