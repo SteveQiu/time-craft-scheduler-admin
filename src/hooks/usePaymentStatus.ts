@@ -45,5 +45,14 @@ export function usePaymentStatus(appointmentIds: string[]) {
     [paymentMethods]
   );
 
-  return { paidAppointmentIds, cashAppointmentIds, submittedProofs, paymentMethods };
+  const cardAppointmentIds = useMemo(
+    () => new Set(
+      (paymentMethods ?? [])
+        .filter((p: { appointment_id: string; payment_method_type: string | null }) => p.payment_method_type === 'onsite_credit_card')
+        .map((p: { appointment_id: string; payment_method_type: string | null }) => p.appointment_id)
+    ),
+    [paymentMethods]
+  );
+
+  return { paidAppointmentIds, cashAppointmentIds, cardAppointmentIds, submittedProofs, paymentMethods };
 }

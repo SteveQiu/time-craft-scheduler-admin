@@ -16,6 +16,9 @@ export function PaymentDisplay({ type, details }: PaymentDisplayProps) {
     case 'cash':
       return <p className="text-sm text-muted-foreground">Cash accepted</p>;
 
+    case 'onsite_credit_card':
+      return <span className="inline-block px-3 py-1 bg-orange-100 text-orange-700 rounded text-sm">Card</span>;
+
     case 'venmo': {
       const username = details.username;
       // legacy phone: stored in details.phone (new) or details.url (old phone-format)

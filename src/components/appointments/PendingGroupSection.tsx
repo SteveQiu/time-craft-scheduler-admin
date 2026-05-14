@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Calendar, Clock, MapPin, Users, Check, X, FileImage, CalendarPlus } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -19,6 +19,7 @@ interface PendingGroupSectionProps {
   setSelectedIds: React.Dispatch<React.SetStateAction<Set<string>>>;
   paidAppointmentIds: Map<string, string | null>;
   cashAppointmentIds: Set<string>;
+  cardAppointmentIds: Set<string>;
   appointmentRateMap: Map<string, number>;
   getWorkerRate: (name: string) => number;
   onProviderViewProof: (id: string) => void;
@@ -60,6 +61,7 @@ export function PendingGroupSection({
   setSelectedIds,
   paidAppointmentIds,
   cashAppointmentIds,
+  cardAppointmentIds,
   appointmentRateMap,
   getWorkerRate,
   onProviderViewProof,
@@ -154,12 +156,12 @@ export function PendingGroupSection({
                         <Button
                           variant="outline"
                           size="sm"
-                          className={`min-h-[44px] min-w-[44px] px-3 text-xs gap-1.5 ${cashAppointmentIds.has(apt.id) ? 'border-orange-500 text-orange-600 hover:bg-orange-50' : 'border-green-500 text-green-600 hover:bg-green-50'}`}
+                          className={`min-h-[44px] min-w-[44px] px-3 text-xs gap-1.5 ${cardAppointmentIds.has(apt.id) || cashAppointmentIds.has(apt.id) ? 'border-orange-500 text-orange-600 hover:bg-orange-50' : 'border-green-500 text-green-600 hover:bg-green-50'}`}
                           onClick={() => onProviderViewProof(apt.id)}
                           aria-label={`View payment proof for ${apt.booker_name || 'this appointment'}`}
                         >
                           <FileImage className="w-4 h-4" aria-hidden="true" />
-                          {cashAppointmentIds.has(apt.id) ? 'Cash' : 'Paid'}
+                          {cardAppointmentIds.has(apt.id) || cashAppointmentIds.has(apt.id) ? (cardAppointmentIds.has(apt.id) ? 'Card' : 'Cash') : 'Paid'}
                         </Button>
                       );
                     }
@@ -216,3 +218,7 @@ export function PendingGroupSection({
     </Card>
   );
 }
+
+
+
+
