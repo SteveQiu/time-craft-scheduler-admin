@@ -32,6 +32,14 @@
 
 ## Learnings
 
+### Asset Management & gitignore Policy (2026-05-14)
+
+**Action:** Added two new sections to `.squad/skills/remotion-video-pipeline/SKILL.md`:
+1. **Asset Management & gitignore Policy** — Documents what is committed (source scripts) vs gitignored (MP3, MP4, PNG outputs), the rationale (large/regeneratable vs small/valuable), and the exact gitignore rules.
+2. **Full Quality Reproduction Checklist** — Complete 8-step checklist from fresh clone to rendered video, including the previously missing slide audio generation step. Includes quality verification table and troubleshooting guide.
+
+Also fixed the "Full pipeline" command block to include the slide audio step (`generate-slide-audio.mjs`).
+
 ### Premium Product Demo Video (2026-05-14)
 
 **Task:** Generate premium product demo video with Remotion (4 scenes, 17.80s, H.264 MP4).
@@ -252,6 +260,20 @@ All compositions use `calculateMetadata` to dynamically size based on TTS audio 
 **Action:** Wrote comprehensive skill documentation at `.squad/skills/remotion-video-pipeline/SKILL.md`.
 
 Covers the full proven pipeline: remotion.config.ts placement (critical gotcha), TTS audio generation, HTML mockup screenshots via Playwright, Ken Burns composition patterns, programmatic rendering, and all anti-patterns/troubleshooting learned during the premium-product-demo build. Any agent can now recreate the entire video pipeline from scratch using this skill.
+
+### Skill Update — Slide Patterns & 7-Scene Architecture (2026-05-14)
+
+**Action:** Extended SKILL.md with lessons from 7-scene hybrid video build.
+
+**New sections added:**
+- PowerPoint-style slide scenes pattern (when to use slides vs screenshots)
+- 7-scene composition architecture (proven scene order)
+- Slide component patterns: Feature Highlights, Social Proof/Stats, Pricing
+- Audio duration planning (Google TTS produces ~2x expected duration)
+- Bishop ↔ Newt collaboration pattern (design spec → implementation handoff)
+- Second proven output entry (46.07s, 1382 frames, 11.37 MB)
+
+**Key insight captured:** Google Translate TTS without FFmpeg atempo produces audio ~2x longer than estimated. Plan 8–10s per slide scene, not 3–5s.
 
 ## Team Updates
 
