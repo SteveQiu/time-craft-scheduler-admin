@@ -13,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Calendar } from 'lucide-react';
 import { ResetPasswordFlow } from '@/components/ResetPasswordFlow';
 import { APP_NAME } from '@/config/app';
+import { Turnstile } from '@marsidev/react-turnstile';
 
 type AppRole = 'USER' | 'ORGANIZATION';
 
@@ -30,6 +31,7 @@ export default function Auth() {
   // Sign in state
   const [signInEmail, setSignInEmail] = useState('');
   const [signInPassword, setSignInPassword] = useState('');
+  const [signInCaptchaToken, setSignInCaptchaToken] = useState<string | null>(null);
 
   // Sign up state
   const [signUpEmail, setSignUpEmail] = useState('');
@@ -37,6 +39,7 @@ export default function Auth() {
   const [signUpFullName, setSignUpFullName] = useState('');
   const [signUpRole, setSignUpRole] = useState<AppRole>('USER');
   const [agreeToTerms, setAgreeToTerms] = useState(false);
+  const [signUpCaptchaToken, setSignUpCaptchaToken] = useState<string | null>(null);
 
   // Password reset state
   const [resetEmail, setResetEmail] = useState('');
@@ -54,6 +57,10 @@ export default function Auth() {
     if (isLoading) return;
     if (!signInEmail || !signInPassword) {
       toast({ title: 'Missing info', description: 'Enter email and password.', variant: 'destructive' });
+      return;
+    }
+    if (!signInCaptchaToken) {
+      toast({ title: 'Verification required', description: 'Please complete the captcha.', variant: 'destructive' });
       return;
     }
     setIsLoading(true);
@@ -100,6 +107,10 @@ export default function Auth() {
         description: 'Please agree to the Terms of Service to continue.',
         variant: 'destructive',
       });
+      return;
+    }
+    if (!signUpCaptchaToken) {
+      toast({ title: 'Verification required', description: 'Please complete the captcha.', variant: 'destructive' });
       return;
     }
 
@@ -266,10 +277,18 @@ export default function Auth() {
                       disabled={isLoading}
                     />
                   </div>
+                  <div className="space-y-2">
+                    <Turnstile
+                      siteKey={import.meta.env.VITE_TURNSTILE_SITE_KEY}
+                      onSuccess={(token) => setSignInCaptchaToken(token)}
+                      onError={() => setSignInCaptchaToken(null)}
+                      onExpire={() => setSignInCaptchaToken(null)}
+                    />
+                  </div>
                   <Button
                     type="submit"
                     className="w-full"
-                    disabled={isLoading}
+                    disabled={isLoading || !signInCaptchaToken}
                     onClick={handleSignIn}
                   >
                     {isLoading ? 'Signing in...' : 'Sign In'}
@@ -363,10 +382,18 @@ export default function Auth() {
                       </Link>
                     </Label>
                   </div>
+                  <div className="space-y-2">
+                    <Turnstile
+                      siteKey={import.meta.env.VITE_TURNSTILE_SITE_KEY}
+                      onSuccess={(token) => setSignUpCaptchaToken(token)}
+                      onError={() => setSignUpCaptchaToken(null)}
+                      onExpire={() => setSignUpCaptchaToken(null)}
+                    />
+                  </div>
                   <Button
                     type="submit"
                     className="w-full"
-                    disabled={isLoading || !agreeToTerms}
+                    disabled={isLoading || !agreeToTerms || !signUpCaptchaToken}
                     onClick={handleSignUp}
                   >
                     {isLoading ? 'Creating account...' : 'Sign Up'}

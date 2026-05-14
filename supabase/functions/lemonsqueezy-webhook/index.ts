@@ -20,12 +20,12 @@ Deno.serve(async (req) => {
   const eventName: string = event.meta?.event_name ?? "";
   const attrs = event.data?.attributes ?? {};
 
-  // 3. Extract user_id from custom_data
-  const customData = event.meta?.custom_data ?? {};
-  const userId: string | undefined = customData.user_id;
+  // 3. Extract org_id from custom_data
+  const customData = attrs.custom_data ?? {};
+  const orgId: string | undefined = customData.org_id;
 
-  if (!userId) {
-    return new Response("Missing user_id in custom_data", { status: 400 });
+  if (!orgId) {
+    return new Response("Missing org_id in custom_data", { status: 400 });
   }
 
   // 4. Determine plan change
@@ -55,30 +55,18 @@ Deno.serve(async (req) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
   );
 
-  // 5. Upsert user subscription
-  const subscriptionData = status === "active"
-    ? {
-        user_id: userId,
-        plan_type: planType,
-        status: status,
-        started_at: new Date().toISOString(),
-      }
-    : {
-        user_id: userId,
-        plan_type: planType,
-        status: status,
-      };
-
+  // 5. Update org plan
   const { error } = await supabase
-    .from("subscriptions")
-    .upsert(subscriptionData, { onConflict: "user_id" });
+    .from("orgs")
+    .update({ plan: planType })
+    .eq("id", orgId);
 
   if (error) {
-    console.error("Failed to upsert user subscription:", error);
+    console.error("Failed to update org plan:", error);
     return new Response("Internal Server Error", { status: 500 });
   }
 
-  console.log(`user ${userId} plan → ${planType} (event: ${eventName})`);
+  console.log(`org ${orgId} plan → ${planType} (event: ${eventName})`);
 
   return new Response("OK", { status: 200 });
 });
