@@ -13,7 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Calendar } from 'lucide-react';
 import { ResetPasswordFlow } from '@/components/ResetPasswordFlow';
 import { APP_NAME } from '@/config/app';
-import { Turnstile } from '@marsidev/react-turnstile';
+import HCaptcha from '@hcaptcha/react-hcaptcha';
 
 type AppRole = 'USER' | 'ORGANIZATION';
 
@@ -278,9 +278,9 @@ export default function Auth() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Turnstile
-                      siteKey={import.meta.env.VITE_TURNSTILE_SITE_KEY}
-                      onSuccess={(token) => setSignInCaptchaToken(token)}
+                    <HCaptcha
+                      sitekey={import.meta.env.VITE_HCAPTCHA_SITE_KEY}
+                      onVerify={(token) => setSignInCaptchaToken(token)}
                       onError={() => setSignInCaptchaToken(null)}
                       onExpire={() => setSignInCaptchaToken(null)}
                     />
@@ -383,9 +383,9 @@ export default function Auth() {
                     </Label>
                   </div>
                   <div className="space-y-2">
-                    <Turnstile
-                      siteKey={import.meta.env.VITE_TURNSTILE_SITE_KEY}
-                      onSuccess={(token) => setSignUpCaptchaToken(token)}
+                    <HCaptcha
+                      sitekey={import.meta.env.VITE_HCAPTCHA_SITE_KEY}
+                      onVerify={(token) => setSignUpCaptchaToken(token)}
                       onError={() => setSignUpCaptchaToken(null)}
                       onExpire={() => setSignUpCaptchaToken(null)}
                     />
