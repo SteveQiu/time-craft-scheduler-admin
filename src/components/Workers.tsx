@@ -69,7 +69,7 @@ export function Workers() {
         skills: inviteForm.skills.split(',').map(s => s.trim()).filter(Boolean),
         hourly_rate: inviteForm.hourly_rate,
       });
-      toast.success('Worker invited successfully!');
+      toast.success('Resource invited successfully!');
       setShowInviteDialog(false);
       setInviteForm({ worker_name: '', worker_email: '', phone: '', skills: '', hourly_rate: 0 });
     } catch (error: any) {
@@ -96,7 +96,7 @@ export function Workers() {
         skills: editForm.skills.split(',').map(s => s.trim()).filter(Boolean),
         hourly_rate: editForm.hourly_rate,
       });
-      toast.success('Worker updated!');
+      toast.success('Resource updated!');
       setShowEditDialog(false);
       setEditingWorker(null);
     } catch (error: any) {
@@ -107,7 +107,7 @@ export function Workers() {
   const handleDelete = async (worker: OrgWorker) => {
     try {
       await deleteWorker.mutateAsync(worker.id);
-      toast.success('Worker removed!');
+      toast.success('Resource removed!');
     } catch (error: any) {
       toast.error(error.message || 'Failed to remove worker');
     }
@@ -134,12 +134,12 @@ export function Workers() {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold text-foreground">Workers</h2>
+          <h2 className="text-3xl font-bold text-foreground">Resources</h2>
           <p className="text-muted-foreground">Manage your team of service providers</p>
         </div>
         <Button className="flex items-center space-x-2" onClick={() => setShowInviteDialog(true)}>
           <Plus className="h-4 w-4" />
-          <span>Invite Worker</span>
+          <span>Invite Resource</span>
         </Button>
       </div>
 
@@ -233,11 +233,11 @@ export function Workers() {
         </Card>
       )}
 
-      {/* Invite Worker Dialog */}
+      {/* Invite Resource Dialog */}
       <Dialog open={showInviteDialog} onOpenChange={setShowInviteDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Invite Worker</DialogTitle>
+            <DialogTitle>Invite Resource</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 pt-4">
             <div className="space-y-2">
@@ -299,11 +299,11 @@ export function Workers() {
         </DialogContent>
       </Dialog>
 
-      {/* Edit Worker Dialog */}
+      {/* Edit Resource Dialog */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Edit Worker</DialogTitle>
+            <DialogTitle>Edit Resource</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 pt-4">
             <div className="space-y-2">
