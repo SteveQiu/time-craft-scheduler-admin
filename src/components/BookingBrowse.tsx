@@ -362,7 +362,7 @@ export function BookingBrowse() {
 
   // If provider detail view, render BrowseDetail component
   if (providerId) {
-    return <BrowseDetail allOpenings={allOpenings} providers={providers} />;
+    return <BrowseDetail allOpenings={allOpenings} providers={providers} isLoading={openingsLoading} />;
   }
 
   // Provider List View
