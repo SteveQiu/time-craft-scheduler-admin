@@ -366,3 +366,46 @@ If occupied, kill with `Stop-Process -Id <PID> -Force`.
 **Known issue:** zod version mismatch (3.23.8 vs 4.3.6) — does not block studio or render, but should be fixed with `npx remotion add zod` if build errors occur.
 
 **Newt's work: APPROVED for release.**
+
+---
+
+## Learnings (Updated 2026-05-15)
+
+### Ripley — QR Share Feature (APPROVED ✅)
+
+**Files verified:**
+- `src/pages/profile/ProfileQRDialog.tsx` — new component
+- `src/pages/profile/ProfileHeader.tsx` — updated
+
+**Code review findings:**
+- `ProfileQRDialog`: imports `QRCodeSVG` from `qrcode.react` (installed, ^4.2.0). Shows 180px QR code + copy-link button with "Copied!" toggle. Props: `open`, `onOpenChange`, `shareUrl`. ✅
+- `ProfileHeader`: imports `QrCode` from `lucide-react`. Renders `<Button>` with `QrCode` icon when `shareUrl` exists. On click: `setQrOpen(true)`. `ProfileQRDialog` rendered in-tree with correct props. ✅
+- No regression to existing Share2/Edit/Bookmark/Flag/Browse buttons — all intact. ✅
+
+**Build:** ✅ exit 0 (7.45s, 2226 modules)
+**TypeScript:** ✅ 0 errors
+**Dev server:** ✅ HTTP 200, 2108 bytes (not blank)
+
+**Result:** ✅ APPROVED — QR button present, dialog implementation correct, no regressions.
+
+---
+
+### Moya — Bulk Deny Feature (APPROVED ✅)
+
+**Files verified:**
+- `src/hooks/useAppointmentActions.ts` — added `handleBulkDeny`
+- `src/components/Appointments.tsx` — wires `handleBulkDeny` → `onBulkDeny`
+- `src/components/appointments/AppointmentList.tsx` — passes `onBulkDeny` → BulkActionBar
+- `src/components/appointments/BulkActionBar.tsx` — renders Deny button
+
+**Code review findings:**
+- `handleBulkDeny`: filters `pending` + `provider_id === user.id`, calls `reject_appointment` RPC (correct — distinct from cancel). Returns value exported. ✅
+- `BulkActionBar`: Deny button shown when `hasPending && isProviderOfAny` — same condition as Approve. `variant="destructive"`. Shows count. ✅
+- Approve button (lines 48-51) unchanged — same condition, same handler. Not broken. ✅
+- `AppointmentList` interface: `onBulkDeny: () => void` prop declared and destructured. ✅
+
+**Build:** ✅ (same run as above)
+**TypeScript:** ✅ 0 errors
+**Dev server:** ✅ not blank
+
+**Result:** ✅ APPROVED — Deny button appears alongside Approve for pending appointments (same guard conditions), existing Approve button intact.

@@ -22,6 +22,7 @@ Ensures UI is accessible to all users and improves experience through thoughtful
 - Identify user friction points (small buttons, confusing layouts, visual hierarchy)
 - Collaborate with Ripley on implementation of UX improvements
 - Use caveman mode (full intensity) for communications
+- Read `.squad/skills/caveman-mode/SKILL.md` for compressed communication standards
 
 ## Skills & Practices
 

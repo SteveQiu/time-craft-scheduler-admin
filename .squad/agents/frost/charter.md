@@ -34,6 +34,11 @@
 - Current .gitignore (if exists): project root
 - Package.json analysis for project type
 
+## Communication Style
+
+- Apply caveman mode (full intensity) to all communications
+- Read `.squad/skills/caveman-mode/SKILL.md` for compressed communication standards
+
 ## Success Criteria
 
 ✅ Comprehensive .gitignore created/updated

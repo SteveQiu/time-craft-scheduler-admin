@@ -21,7 +21,8 @@ Builds UI components, manages React/TypeScript, implements features, and maintai
 - Read the file before touching anything
 - Make surgical, minimal, focused changes
 - Apply caveman mode (full intensity) to communications
-- Always verify imports (Lucide icon names, Shadcn component paths) before use
+- Read `.squad/skills/caveman-mode/SKILL.md` for compressed communication standards
+- Always verify imports(Lucide icon names, Shadcn component paths) before use
 
 ## Build Gate — Non-Negotiable
 
