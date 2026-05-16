@@ -205,18 +205,21 @@ export function usePaymentProof({
       if (error) throw error;
 
       // Also notify provider via audit event (for their notification feed)
-      await supabase.rpc('log_audit_event', {
+      const { error: auditErr } = await supabase.rpc('log_audit_event', {
         _event_type: 'payment.proof_submitted',
         _entity_id: paymentProofAppointmentId,
         _metadata: { note: paymentProofNote, customer_name: user.email },
       });
+      if (auditErr) console.error('[audit] log_audit_event failed:', auditErr);
 
       queryClient.invalidateQueries({ queryKey: ['payment-proof', paymentProofAppointmentId] });
       queryClient.invalidateQueries({ queryKey: ['payment-proofs-bulk'] });
       queryClient.invalidateQueries({ queryKey: ['payment-methods-bulk'] });
       setProofSubmitted(true);
+      toast.success('Payment proof submitted!');
     } catch (err: any) {
       console.error('Failed to submit payment proof:', err);
+      toast.error('Failed to submit payment proof. Please try again.');
     } finally {
       setIsSubmittingProof(false);
     }
