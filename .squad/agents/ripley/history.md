@@ -393,3 +393,15 @@ Bishop's cancel UX spec → explicit `AlertDialog` with title/description/button
 3.  1-auth.png � clean welcome card with Sign In / Sign Up / Reset Password tabs
 
 **Tech note:** Playwright headless + Vite dev server causes _jsxDEV is not a function error due to SWC/HMR conflict. Must use ite preview (built output) for Playwright screenshots.
+
+### shareUrl ID Fallback (2026)
+
+**Task:** Fix `shareUrl` in `useProfile.ts` to fall back to `profile.id` (UUID) when `profile.slug` is absent.
+
+**File changed:** `src/hooks/useProfile.ts` (lines 210-212)
+
+**Change:** Added middle branch - if no slug, use `profile.id` UUID to build `/profile/{id}` URL. Null only when both absent.
+
+**Why safe:** `useProfile` already routes UUID lookups via `isUuid` check -> `get_public_profile_by_id` RPC. Router `/profile/:slug` accepts any string including UUIDs.
+
+**Build gate:** `tsc --noEmit` -> exit 0.
