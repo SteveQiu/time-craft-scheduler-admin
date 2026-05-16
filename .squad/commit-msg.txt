@@ -1,3 +1,0 @@
-refactor: consolidate QR into Share button, remove duplicate
-
-Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
