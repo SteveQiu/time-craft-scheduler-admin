@@ -209,7 +209,9 @@ export function useProfile({ slug, user, onSaveSuccess }: UseProfileOptions) {
 
   const shareUrl = profile?.slug
     ? `${window.location.origin}/profile/${profile.slug}`
-    : null;
+    : profile?.id
+      ? `${window.location.origin}/profile/${profile.id}`
+      : null;
 
   const copyShareLink = () => {
     if (shareUrl) {

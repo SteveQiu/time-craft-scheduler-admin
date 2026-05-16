@@ -34,6 +34,7 @@ interface AppointmentListProps {
   isBulkActing: boolean;
   isLoading: boolean;
   onBulkApprove: () => void;
+  onBulkDeny: () => void;
   onBulkCancel: () => void;
   onBulkComplete: () => void;
   onStartBulkModify: () => void;
@@ -65,6 +66,7 @@ export function AppointmentList({
   navigate,
   isBulkActing,
   onBulkApprove,
+  onBulkDeny,
   onBulkCancel,
   onBulkComplete,
   onStartBulkModify,
@@ -97,6 +99,7 @@ export function AppointmentList({
           isBulkActing={isBulkActing}
           isOrgView={isOrgView}
           onApprove={onBulkApprove}
+          onDeny={onBulkDeny}
           onComplete={onBulkComplete}
           onModify={onStartBulkModify}
           onCancel={onBulkCancel}

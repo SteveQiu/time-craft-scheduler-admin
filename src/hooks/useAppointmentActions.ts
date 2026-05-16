@@ -115,6 +115,29 @@ export function useAppointmentActions({
     setIsBulkActing(false);
   };
 
+  const handleBulkDeny = async () => {
+    if (!user) return;
+    setIsBulkActing(true);
+    const toDeny = appointments.filter(
+      a => selectedIds.has(a.id) && a.status === 'pending' && a.provider_id === user.id,
+    );
+    let successCount = 0;
+    for (const apt of toDeny) {
+      try {
+        const { error } = await supabase.rpc('reject_appointment', {
+          _appointment_id: apt.id,
+          _provider_id: user.id,
+        });
+        if (!error) successCount++;
+      } catch {}
+    }
+    toast.success(`${successCount} appointment(s) denied.`);
+    setSelectedIds(new Set());
+    queryClient.invalidateQueries({ queryKey: ['appointments'] });
+    queryClient.invalidateQueries({ queryKey: ['browse-openings'] });
+    setIsBulkActing(false);
+  };
+
   const handleBulkComplete = async () => {
     if (!user) return;
     setIsBulkActing(true);
@@ -223,6 +246,7 @@ export function useAppointmentActions({
     handleCancel,
     handleComplete,
     handleBulkApprove,
+    handleBulkDeny,
     handleBulkCancel,
     handleBulkComplete,
     advanceBulkModifyQueue,
