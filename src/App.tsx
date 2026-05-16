@@ -31,8 +31,20 @@ import Refund from "@/pages/legal/Refund";
 import { AppSidebar } from "@/components/AppSidebar";
 import { APP_NAME } from "@/config/app";
 import { ROUTES } from "@/config/routes";
+import { useAuth } from "@/hooks/useAuth";
+import { usePaymentNotifications } from "@/hooks/usePaymentNotifications";
 
 const queryClient = new QueryClient();
+
+function PaymentNotificationWatcher() {
+  const { session } = useAuth();
+  usePaymentNotifications({
+    userId: session?.user?.id,
+    role: 'provider',
+    enabled: !!session?.user?.id,
+  });
+  return null;
+}
 
 const App = () => {
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -44,6 +56,7 @@ const App = () => {
           <Toaster />
           <Sonner />
           <BrowserRouter>
+            <PaymentNotificationWatcher />
             <div className="w-full h-screen flex flex-col">
               {/* Mobile header (hidden on desktop) */}
               <header className="md:hidden sticky top-0 z-50 bg-background border-b">
