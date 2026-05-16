@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Star, Share2, QrCode, Calendar, Bookmark, Flag, Edit, Save, X, Eye, EyeOff } from 'lucide-react';
+import { Star, Share2, Calendar, Bookmark, Flag, Edit, Save, X, Eye, EyeOff } from 'lucide-react';
 import type { ProfileData, FormState, PrivacySettings } from './types';
 import type { User } from '@supabase/supabase-js';
 import { ProfileQRDialog } from './ProfileQRDialog';
@@ -118,12 +118,9 @@ export function ProfileHeader({
       <div className="flex flex-wrap items-center gap-2">
         {shareUrl && (
           <>
-            <Button variant="outline" size="sm" onClick={onCopyShare}>
+            <Button variant="outline" size="sm" onClick={() => setQrOpen(true)}>
               <Share2 className="h-4 w-4 mr-1" />
               Share
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => setQrOpen(true)} aria-label="Show QR code">
-              <QrCode className="h-4 w-4" />
             </Button>
             <ProfileQRDialog open={qrOpen} onOpenChange={setQrOpen} shareUrl={shareUrl} />
           </>

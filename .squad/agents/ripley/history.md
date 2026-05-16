@@ -405,3 +405,5 @@ Bishop's cancel UX spec → explicit `AlertDialog` with title/description/button
 **Why safe:** `useProfile` already routes UUID lookups via `isUuid` check -> `get_public_profile_by_id` RPC. Router `/profile/:slug` accepts any string including UUIDs.
 
 **Build gate:** `tsc --noEmit` -> exit 0.
+
+- ProfileHeader: consolidated Share + QR icon buttons into single Share button that opens QR dialog. Removed QrCode import. onCopyShare prop retained in interface but unwired.
