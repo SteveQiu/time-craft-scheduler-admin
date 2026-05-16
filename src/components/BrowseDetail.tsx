@@ -40,11 +40,13 @@ interface ProviderAccount {
 
 export function BrowseDetail({ 
   allOpenings, 
-  providers 
+  providers,
+  isLoading = false,
 }: { 
   allOpenings: OpeningWithProfile[], 
-  providers: ProviderAccount[] 
-}) {
+  providers: ProviderAccount[],
+  isLoading?: boolean,
+}){
   const { providerId } = useParams<{ providerId?: string }>();
   const navigate = useNavigate();
   const [selectedService, setSelectedService] = useState<string | null>(null);
@@ -153,9 +155,25 @@ export function BrowseDetail({
   };
 
   if (!currentProvider) {
+    if (isLoading) {
+      return (
+        <div className="p-6 flex justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      );
+    }
     return (
-      <div className="p-6 flex justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <div className="p-6 space-y-6">
+        <Button variant="ghost" size="icon" onClick={() => navigate('/browse')}>
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
+        <Card className="shadow-soft border-card-border">
+          <CardContent className="text-center py-12">
+            <CalendarIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-foreground mb-2">No appointments available</h3>
+            <p className="text-muted-foreground">Check back later for new availability.</p>
+          </CardContent>
+        </Card>
       </div>
     );
   }
