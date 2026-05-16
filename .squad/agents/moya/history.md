@@ -12,7 +12,14 @@
 
 ## Learnings
 
-### 2026-05-07 — Session: Cash button revert + no-commit directive
+### 2026 — Bulk Deny
+
+- **RPC**: `reject_appointment(_appointment_id, _provider_id)` — distinct from `cancel_appointment`; use for denying pending requests
+- **Pattern**: Bulk deny mirrors bulk approve exactly — same filter (`status === 'pending' && provider_id === user.id`), same prop threading (`onBulkDeny` → `onDeny`)
+- **Styling**: Deny button uses `variant="destructive"` to distinguish from Approve (`variant="default"`)
+- **Visibility**: Both Approve and Deny show when `hasPending && isProviderOfAny` in BulkActionBar
+- **Files touched**: `useAppointmentActions.ts`, `BulkActionBar.tsx`, `AppointmentList.tsx`, `Appointments.tsx`
+
 
 **Project:** time-craft-scheduler-admin
 **What happened:**
@@ -29,3 +36,22 @@
 - Future cash button work needs surgical, minimal changes with runtime verification before commit
 - All `.squad/` file updates (history, decisions, logs) are disk-only — no git commits
 - Dev server runs on http://localhost:8080 via `npm run dev`
+
+### Bulk Deny Implementation (2026-05-16)
+
+**Task:** Add bulk deny (reject) button to BulkActionBar for pending appointments.
+
+**Files modified:**
+- `src/hooks/useAppointmentActions.ts` — added `handleBulkDeny` function. Filters appointments by `status === 'pending' && provider_id === user.id`. Calls `reject_appointment` RPC for each selected appointment. Returns array of results.
+- `src/components/Appointments.tsx` — added `onBulkDeny` prop. Wires `handleBulkDeny` from `useAppointmentActions` to pass down tree.
+- `src/components/appointments/AppointmentList.tsx` — updated interface to accept `onBulkDeny` prop, destructures and passes to BulkActionBar.
+- `src/components/appointments/BulkActionBar.tsx` — added Deny button (variant="destructive", shows count "Deny (5)" etc). Button visible when `hasPending && isProviderOfAny` (same condition as Approve button). Approve button unchanged.
+
+**Decision:** Use `reject_appointment` RPC (not `cancel_appointment`). Semantically correct for denying pending requests (may reopen opening slot). Mirrors individual "Reject" button in PendingGroupSection.
+
+**Build:** ✅ exit 0  
+**TypeScript:** ✅ 0 errors
+
+**Verification:** Ralph verified Deny button appears alongside Approve for pending appointments, Approve button unchanged, no regressions.
+
+**Status:** ✅ APPROVED FOR RELEASE

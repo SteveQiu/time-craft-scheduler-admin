@@ -33,6 +33,11 @@
 - TTS benchmarks: research free options during intake
 - Video encoding best practices: document findings in history.md
 
+## Communication Style
+
+- Apply caveman mode (full intensity) to all communications
+- Read `.squad/skills/caveman-mode/SKILL.md` for compressed communication standards
+
 ## Success Criteria
 
 ✅ Media folder structure created and documented
