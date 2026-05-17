@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -49,6 +49,7 @@ export function BookingBrowse() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState<string>('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [showBookingDialog, setShowBookingDialog] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<OpeningWithProfile | null>(null);
   const [isBooking, setIsBooking] = useState(false);
@@ -73,6 +74,12 @@ export function BookingBrowse() {
       }
     }
   }, [user?.id]);
+
+  // Debounce search input by 200ms
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchTerm), 200);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   // Fetch all openings (works for both authenticated and anonymous users)
   const { 
@@ -248,10 +255,12 @@ export function BookingBrowse() {
   const filteredProviders = providers.filter(provider => {
     if (provider.user_id === user?.id) return false;
     
-    const matchesSearch = searchTerm === '' ||
-      provider.provider_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      provider.services.some(s => s.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      provider.workers.some(w => w.toLowerCase().includes(searchTerm.toLowerCase()));
+    const terms = debouncedSearch.toLowerCase().split(/\s+/).filter(Boolean);
+    const matchesSearch = terms.length === 0 || terms.every(term =>
+      provider.provider_name.toLowerCase().includes(term) ||
+      provider.services.some(s => s.toLowerCase().includes(term)) ||
+      provider.workers.some(w => w.toLowerCase().includes(term))
+    );
     
     if (!matchesSearch) return false;
 
