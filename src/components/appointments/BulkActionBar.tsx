@@ -11,6 +11,7 @@ interface BulkActionBarProps {
   isBulkActing: boolean;
   isOrgView: boolean;
   onApprove: () => void;
+  onDeny: () => void;
   onComplete: () => void;
   onModify: () => void;
   onCancel: () => void;
@@ -25,6 +26,7 @@ export function BulkActionBar({
   isBulkActing,
   isOrgView,
   onApprove,
+  onDeny,
   onComplete,
   onModify,
   onCancel,
@@ -46,6 +48,11 @@ export function BulkActionBar({
         {hasPending && isProviderOfAny && (
           <Button size="sm" variant="default" disabled={isBulkActing} onClick={onApprove}>
             <Check className="h-3 w-3 mr-1" /> Approve ({selectedAppts.filter(a => a.status === 'pending' && a.provider_id === userId).length})
+          </Button>
+        )}
+        {hasPending && isProviderOfAny && (
+          <Button size="sm" variant="destructive" disabled={isBulkActing} onClick={onDeny}>
+            <X className="h-3 w-3 mr-1" /> Deny ({selectedAppts.filter(a => a.status === 'pending' && a.provider_id === userId).length})
           </Button>
         )}
         {hasConfirmed && canManageAny && (

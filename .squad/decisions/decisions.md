@@ -187,6 +187,25 @@ Subscriptions are per-user only. No org-level plan column. `subscriptions` table
 
 **Production note:** Steve must set env var before deployment. Without it, Cancel button visible but non-functional.
 
+### 2026-05-16T08:40Z: Caveman mode mandatory for all agents
+**By:** SteveQiu (via Copilot)
+
+All agents except legal (Burke, Hicks) must use caveman mode (full intensity). Apply to communications and reference `.squad/skills/caveman-mode/SKILL.md`. Cuts token usage ~75% while preserving technical accuracy.
+
+### 2026-05-16T20:14:21Z: Bulk Deny uses reject_appointment RPC
+**By:** Moya
+
+Bulk Deny uses `reject_appointment(_appointment_id, _provider_id)` RPC, not `cancel_appointment`.
+
+**Rationale:** `reject_appointment` is semantically correct for denying pending requests (may reopen the opening slot). `cancel_appointment` is for canceling confirmed or pending appointments — different intent. Mirrors individual "Reject" button behavior in PendingGroupSection.
+
+**Scope:** Deny button shows only when `hasPending && isProviderOfAny` (same as Approve). Styled `variant="destructive"` to distinguish from Approve.
+
+### 2026-05-16T20:14:21Z: Asset gitignore policy
+**By:** Newt
+
+Generated media outputs (MP3, MP4, PNG screenshots) are gitignored. Source scripts committed. Keeps repo lean; outputs are deterministically regeneratable from scripts. See `.squad/skills/asset-management/` for details.
+
 ---
 
 ## 2026-05 Legal & Testing Cycle (In Progress)

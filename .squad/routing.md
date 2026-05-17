@@ -16,6 +16,11 @@ Ralph independently verifies ALL Ripley frontend work before any task is closed.
 | Legal copy review (Terms / Privacy / Refund / consent flows) | Burke writes → **Hicks fact-checks** → **Ralph verifies routes** | Burke drafts/edits; Hicks verifies every claim against primary legal sources (web_fetch); Ralph confirms pages render |
 | Lemon Squeezy / payment-processor compliance | Burke (drafts) → Hicks (verifies against Lemon Squeezy ToS + applicable consumer law) | Pre-listing review, processor-required clauses, refund-policy alignment |
 | Legal fact verification against laws & primary sources | Hicks | EU/UK/AU consumer law, GDPR, CCPA, processor agreements — cite-or-it-didn't-happen |
+| Video generation & Remotion | Newt | Promotional videos, explainer content, TTS integration, media pipeline |
+| TTS evaluation & integration | Newt | Research free TTS options, integration, testing, quality assurance |
+| Media folder structure & asset management | Newt | Organizing video assets, encoding optimization, batch workflows |
+| Gitignore strategy & research | Frost | .gitignore analysis, best practices, security patterns, documentation |
+| Project structure & DevOps | Frost | Build configuration, environment setup, tooling research, folder hierarchy |
 | Session logging | Scribe | Automatic — never needs routing |
 | Cross-check / rubber duck review | Hudson (gpt-5.2) + Vasquez (gemini-3-pro-preview) — always together | Spawn both in parallel when any artifact needs independent second opinion; always use non-Claude models |
 

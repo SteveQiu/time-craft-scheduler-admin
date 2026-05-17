@@ -49,6 +49,22 @@ App is an admin scheduler for organizations. Key pages: Appointments, Workers, B
 
 ## Learnings
 
+### QR Share Feature in ProfileHeader (2026)
+
+**Task:** Add QR code share button to profile page.
+
+**Files created:**
+- `src/pages/profile/ProfileQRDialog.tsx` — Dialog with `QRCodeSVG` (qrcode.react), URL label, copy-link button with check confirmation
+
+**Files modified:**
+- `src/pages/profile/ProfileHeader.tsx` — added `useState` import, `QrCode` Lucide icon, `ProfileQRDialog` import; `qrOpen` state; QR icon button beside Share button; dialog render inside `shareUrl` block
+
+**Package:** `npm install qrcode.react` (was not in package.json)
+
+**Pattern:** QR dialog is self-contained — owns its own `copied` state, no props beyond `open`, `onOpenChange`, `shareUrl`. Rendered inline inside the `shareUrl &&` guard so it only mounts when a URL exists.
+
+**Build gate:** `npx tsc --noEmit` → zero errors.
+
 ### Cancel UX + env var pattern (2026-05-12)
 Bishop's cancel UX spec → explicit `AlertDialog` with title/description/button labels, 44px touch targets, dark mode. `VITE_LEMONSQUEEZY_PORTAL_URL` env var opens portal on confirm; graceful disable + support email fallback if missing. Hicks approved text; Ralph: legal pages 7/7 pass, cancel UX deferred (auth timeout).
 
@@ -244,6 +260,24 @@ Bishop's cancel UX spec → explicit `AlertDialog` with title/description/button
 
 **New env var:** `VITE_LEMONSQUEEZY_PORTAL_URL` — expected to be Lemon Squeezy's hosted customer portal (e.g. `https://[store-slug].lemonsqueezy.com/billing`); when set, Cancel button opens portal in new tab on confirmation; actual subscription state flip happens only when LS webhook fires `subscription_cancelled` event → same pattern as upgrade flow via `VITE_LEMONSQUEEZY_CHECKOUT_URL`
 
+### QR Share Feature (2026-05-16)
+
+**Task:** Add QR code share button + dialog to ProfileHeader.
+
+**Files created:**
+- `src/pages/profile/ProfileQRDialog.tsx` — new component, imports `QRCodeSVG` from `qrcode.react` (^4.2.0 installed). Props: `open`, `onOpenChange`, `shareUrl`. Renders 180px QR code + "Copy Link" button with toggle toast "Copied!"
+
+**Files modified:**
+- `src/pages/profile/ProfileHeader.tsx` — imports `QrCode` icon from `lucide-react`. Renders `<Button>` with QrCode icon when `shareUrl` prop exists. On click: `setQrOpen(true)`. ProfileQRDialog rendered in-tree with props `open={qrOpen}`, `onOpenChange={setQrOpen}`, `shareUrl={shareUrl}`.
+
+**Build:** ✅ exit 0 (7.45s, 2226 modules)  
+**TypeScript:** ✅ 0 errors  
+**Dev server:** ✅ HTTP 200
+
+**Verification:** Ralph verified QR button appears, dialog opens, no regression to existing Share2/Edit/Bookmark/Flag/Browse buttons.
+
+**Status:** ✅ APPROVED FOR RELEASE
+
 **Build gate:** `npx tsc --noEmit` → 0 errors, `npm run build` → exit 0 (38s)
 
 **JSX gotcha:** Bold in legal pages is `<strong>` (not markdown `**text**`) — these pages render as JSX, not markdown
@@ -331,3 +365,45 @@ Bishop's cancel UX spec → explicit `AlertDialog` with title/description/button
 
 ## Learnings
 
+
+## Promotional Screenshots for Remotion Video (2026-05-14)
+
+**Task:** Capture 1920x1080 screenshots of real app UI for promotional video.
+
+**Approach:**
+- Wrote media/scripts/take-screenshots.mjs using Playwright (chromium, headless)
+- Vite dev server (_jsxDEV error in headless) � fixed by building prod + serving via ite preview on port 4173
+- 8 screenshots saved to media/public/screenshots/
+
+**Screenshots captured:**
+| File | Page | Size | Notes |
+|------|------|------|-------|
+| 01-auth.png | /auth | 38KB | ? Best for video � clean sign-in UI + Cloudflare Turnstile |
+| 02-browse.png | /browse | 32KB | Browse & Book page (no data unauthenticated) |
+| 03-dashboard.png | /dashboard | 34KB | ? Best � 4 stat cards + "Go Premium" CTA button |
+| 04-appointments.png | /appointments | 16KB | Redirects to auth (unauthenticated) |
+| 05-calendar.png | /calendar | 36KB | ? Best � beautiful calendar grid, today highlighted |
+| 06-settings-premium.png | /settings | 16KB | Blocked (requires sign-in) |
+| 07-profile.png | /profile | 16KB | Blocked (requires sign-in) |
+| 08-landing.png | / | 32KB | Redirects to /browse |
+
+**Most impressive for video:**
+1.  3-dashboard.png � 4 metric cards + Go Premium CTA
+2.  5-calendar.png � full monthly calendar with today highlighted
+3.  1-auth.png � clean welcome card with Sign In / Sign Up / Reset Password tabs
+
+**Tech note:** Playwright headless + Vite dev server causes _jsxDEV is not a function error due to SWC/HMR conflict. Must use ite preview (built output) for Playwright screenshots.
+
+### shareUrl ID Fallback (2026)
+
+**Task:** Fix `shareUrl` in `useProfile.ts` to fall back to `profile.id` (UUID) when `profile.slug` is absent.
+
+**File changed:** `src/hooks/useProfile.ts` (lines 210-212)
+
+**Change:** Added middle branch - if no slug, use `profile.id` UUID to build `/profile/{id}` URL. Null only when both absent.
+
+**Why safe:** `useProfile` already routes UUID lookups via `isUuid` check -> `get_public_profile_by_id` RPC. Router `/profile/:slug` accepts any string including UUIDs.
+
+**Build gate:** `tsc --noEmit` -> exit 0.
+
+- ProfileHeader: consolidated Share + QR icon buttons into single Share button that opens QR dialog. Removed QrCode import. onCopyShare prop retained in interface but unwired.

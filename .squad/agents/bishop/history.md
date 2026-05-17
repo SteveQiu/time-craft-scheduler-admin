@@ -536,3 +536,105 @@ Migrated payment proof photo storage from base64-in-database to Supabase Storage
 
 **Spec written:** `.squad/decisions/inbox/bishop-cancel-ux-2026-05-12.md`  
 **Collaboration:** Ripley implements (replacing Dallas per 2026-05-08 team roster change)
+
+---
+
+## 2026-05-14 — Premium Product Demo Video Storyboard
+
+**Requested by:** User  
+**Context:** Design updated video storyboard using REAL app screenshots. Guide Newt (Video Engineer) on implementing Remotion composition.
+
+### Storyboard Strategy
+
+**4-scene structure matching existing audio (4 MP3s, accelerated @ 1.15x, ~18s total):**
+
+1. **Scene 1 (3.78s): Hook — Problem**
+   - Screenshot: Browse providers page (basic listings, muted colors)
+   - Visual: Ken Burns pan on undifferentiated cards = "lost in crowd"
+   - Text: "Service Providers Struggle to Get Discovered"
+   - Tone: Dark, understated, no gold accents
+
+2. **Scene 2 (5.82s): Solution — Premium Value**
+   - Screenshots: Split-screen (basic card left, premium card right with Crown badge)
+   - Visual: Premium card slides in, crown pulses golden glow
+   - Text cascade: "Enhanced Visibility" → "Professional Profiles" → "Premium Badge"
+   - Tone: Gold accents (#F59E0B), blue borders (#3B82F6), elevated positioning
+
+3. **Scene 3 (3.99s): Benefits — Proof**
+   - Screenshot: Full provider profile page (hero, bio, skills, ratings)
+   - Visual: 3 benefit cards animate in sequence (scale, slide, rotate)
+   - Text: "📈 More Bookings", "🏆 Build Your Brand", "⭐ Stand Out"
+   - Tone: Gold + blue cards float over muted profile bg
+
+4. **Scene 4 (4.14s): CTA — Strong Close**
+   - Design composition (no screenshot): Dark gradient bg, centered gold-bordered card
+   - Visual: Crown icon glow, button hover-pulse, URL prominence
+   - Text: "Upgrade to Premium", "Get Discovered. Book More.", URL + button
+   - Tone: Premium minimalism, clear conversion focus
+
+### Key Design Decisions
+
+**Screenshot Treatment:**
+- Full-screen bleed for Scenes 1–3 (preserves app context)
+- Ken Burns effect on static images (20px pan over 3.99s, suggests depth)
+- Desaturation overlays in Scene 3 (keep benefit cards pop visually)
+- Scene 4: Pure design (no photo needed, cleaner CTA)
+
+**Typography & Motion:**
+- Font: Inter, bold 48–56px for headlines
+- Gold accents: Glow + pulse animations (2–3s cycles, 40px box-shadow radius)
+- Text cascades: 0.3s fade, 0.2s stagger between elements
+- Benefit cards: Spring easing (`cubic-bezier(0.34, 1.56, 0.64, 1)`) for bouncy entrance
+
+**Color Consistency with App:**
+- Gold: #F59E0B (Premium badge, button, highlights)
+- Blue: #3B82F6 (Premium border, URL text)
+- Dark bg: #0f172a / #1e293b (app-native dark mode)
+- White text: #FFFFFF (body, headlines)
+- Contrast verified: Gold on dark = 8.2:1 (exceeds WCAG AAA)
+
+**Accessibility:**
+- All text readable on dark + light backgrounds (tested 4.5:1 minimum)
+- Icon + text pairing on benefit cards (not icon-only)
+- Captions for voiceover (provide .vtt for silent playback)
+- No interactive elements (passive video, no keyboard requirement)
+
+### Screenshot Inventory
+
+Required captures (1920×1080 or landscape aspect):
+- `scene-01-browse-basic-listings.png` — `/browse`, free-tier listings
+- `scene-02-provider-card-basic.png` — Single basic card (960×540 crop)
+- `scene-02-provider-card-premium.png` — Premium card w/ Crown badge (960×540 crop)
+- `scene-03-provider-profile-full.png` — `/profile/{slug}`, full page (1920×1440)
+
+**Capture owner:** Ripley (frontend dev) or manual browser inspection
+**Storage:** `media/assets/storyboard-screenshots/`
+
+### Remotion Implementation Checklist
+
+- [ ] Screenshots acquired & stored in `media/assets/storyboard-screenshots/`
+- [ ] Composition structure: 4 scenes, AbsoluteFill container, frame-based timing
+- [ ] Audio sync: MP3 playback per scene (114 + 175 + 120 + 124 = 533 frames @ 30fps)
+- [ ] Text overlays: Interpolate opacity + position for cascades
+- [ ] Benefit cards: Spring animation on scale/transform
+- [ ] Crown icon: Glowing box-shadow pulsing
+- [ ] Ken Burns: Animated image pan + zoom on Scenes 1–3
+- [ ] Color accuracy: Gold/blue verified in output MP4
+- [ ] Export: H.264 MP4, AAC stereo, 1920×1080, 30fps
+- [ ] Social cuts: 30s and 15s variants after full render
+
+### Notes for Implementation
+
+**For Newt (Video Engineer):**
+- Scene 2 requires careful timing: Basic card should be muted (0.5 opacity), premium card bold. Transition happens between 4.08–5.38s.
+- Scene 3 benefit cards need stagger: Card 1 starts at 9.60s, Card 2 at 11.26s, Card 3 at 12.79s. Use frame offsets to sync with audio beats.
+- Crown icon glow: Use `interpolate()` with sine-wave easing for continuous pulse (expand 0 → 40px radius, contract back, repeat 2x/sec).
+- Ken Burns on screenshots: Use `<Animated.Image />` with transform interpolation. Pan should be subtle (1–2px/sec), avoid distraction.
+- Text shadow fallback: If text blends with background, add subtle drop-shadow filter (2px 2px 8px rgba(0,0,0,0.5)).
+
+**For final validation:**
+- Test voiceover sync: Use FFprobe to confirm MP3 durations match frame counts
+- YouTube upload test: Verify gold/blue colors don't shift during YT encoding
+- Silent fallback: Ensure all critical copy appears as text overlay (captions-only mode)
+
+**Decision written:** `.squad/decisions/inbox/bishop-video-storyboard.md`

@@ -109,6 +109,7 @@ export function Appointments() {
     handleApprove,
     handleCancel,
     handleBulkApprove,
+    handleBulkDeny,
     handleBulkCancel,
     handleBulkComplete,
     advanceBulkModifyQueue,
@@ -217,6 +218,7 @@ export function Appointments() {
             isBulkActing={isBulkActing}
             isLoading={isLoading}
             onBulkApprove={handleBulkApprove}
+            onBulkDeny={handleBulkDeny}
             onBulkCancel={handleBulkCancel}
             onBulkComplete={handleBulkComplete}
             onStartBulkModify={handleStartBulkModify}
