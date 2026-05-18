@@ -78,6 +78,7 @@ function getSummary(
     case 'cash':
       return <p className="text-sm text-muted-foreground">Cash accepted</p>;
 
+    case 'onsite_debit':
     case 'onsite_credit_card':
       return <p className="text-sm text-muted-foreground">Card accepted</p>;
 

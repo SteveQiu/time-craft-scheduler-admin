@@ -5,14 +5,39 @@ import { Label } from '../ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Switch } from '../ui/switch';
 import { Input } from '../ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import { AddressInput } from '@/components/ui/AddressInput';
 import {
   generateTimeOptions,
 } from './calendarUtils';
 import type { NewOpeningForm } from './types';
+import type { LocationFields } from '@/lib/address';
 import { OpeningTimeSlotsSection } from './OpeningTimeSlotsSection';
 import { OpeningDateRangeSection } from './OpeningDateRangeSection';
 import { OpeningPaymentSection } from './OpeningPaymentSection';
+
+function addressMatchesSaved(fields: LocationFields, savedAddresses: any[]): boolean {
+  const norm = (s: string) => (s || '').trim().toLowerCase();
+  return savedAddresses.some(addr => {
+    try {
+      const parsed = typeof addr.address === 'string' ? JSON.parse(addr.address) : addr.address;
+      return (
+        norm(parsed.address_line_1) === norm(fields.address_line_1) &&
+        norm(parsed.city) === norm(fields.city) &&
+        norm(parsed.country) === norm(fields.country)
+      );
+    } catch { return false; }
+  });
+}
+
+function nextCustomAddressLabel(savedAddresses: any[]): string {
+  const customNums = savedAddresses
+    .map(a => a.label)
+    .filter((l: string) => /^Custom Address \d+$/i.test(l))
+    .map((l: string) => parseInt(l.replace(/\D/g, ''), 10));
+  const max = customNums.length ? Math.max(...customNums) : 0;
+  return `Custom Address ${max + 1}`;
+}
 
 interface AcceptedWorker {
   id: string;
@@ -42,6 +67,7 @@ interface OpeningFormDialogProps {
   setPaymentFormLabel: (label: string) => void;
   setPaymentFormType: (type: string) => void;
   resetPaymentDetails: () => void;
+  onSaveCustomAddress?: (label: string, fields: LocationFields) => void;
 }
 
 export function OpeningFormDialog({
@@ -66,11 +92,18 @@ export function OpeningFormDialog({
   setPaymentFormLabel,
   setPaymentFormType,
   resetPaymentDetails,
+  onSaveCustomAddress,
 }: OpeningFormDialogProps) {
   const workerNameForRate = isOrgMode ? newOpening.worker : selfWorkerName;
 
+  const [saveAsCustom, setSaveAsCustom] = React.useState(false);
+
+  const isAddressFilled = !!(newOpening.locationFields.address_line_1 && newOpening.locationFields.city && newOpening.locationFields.country);
+  const addressAlreadySaved = isAddressFilled && addressMatchesSaved(newOpening.locationFields, savedAddresses);
+  const customLabel = nextCustomAddressLabel(savedAddresses);
+
   return (
-    <Dialog open={showAddOpening} onOpenChange={setShowAddOpening}>
+    <Dialog open={showAddOpening} onOpenChange={(open) => { setShowAddOpening(open); if (!open) setSaveAsCustom(false); }}>
       <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add Opening for {selectedDate.toLocaleDateString()}</DialogTitle>
@@ -227,6 +260,18 @@ export function OpeningFormDialog({
               onChange={(fields) => setNewOpening({ ...newOpening, locationFields: fields })}
               required
             />
+            {isAddressFilled && !addressAlreadySaved && (
+              <div className="flex items-center space-x-2 mt-2">
+                <Checkbox
+                  id="save-custom-address"
+                  checked={saveAsCustom}
+                  onCheckedChange={(checked) => setSaveAsCustom(!!checked)}
+                />
+                <Label htmlFor="save-custom-address" className="text-sm text-muted-foreground cursor-pointer">
+                  Save as "{customLabel}"
+                </Label>
+              </div>
+            )}
             {errors.location && <p className="text-sm text-destructive">{errors.location}</p>}
           </div>
 
@@ -330,7 +375,13 @@ export function OpeningFormDialog({
             <Button variant="outline" onClick={() => setShowAddOpening(false)}>
               Cancel
             </Button>
-            <Button onClick={addOpening} disabled={loading || !user}>
+            <Button onClick={async () => {
+              await addOpening();
+              if (saveAsCustom && onSaveCustomAddress) {
+                onSaveCustomAddress(customLabel, newOpening.locationFields);
+                setSaveAsCustom(false);
+              }
+            }} disabled={loading || !user}>
               {loading ? 'Adding...' : 'Add Opening'}
             </Button>
           </div>

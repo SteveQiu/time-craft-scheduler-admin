@@ -4,6 +4,7 @@ export type PaymentMethodType =
   | 'wechat'
   | 'email_transfer'
   | 'cash'
+  | 'onsite_debit'
   | 'onsite_credit_card'
   | string;
 
