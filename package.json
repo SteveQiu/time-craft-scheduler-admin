@@ -8,7 +8,8 @@
     "npm": ">=11.0.0"
   },
   "scripts": {
-    "dev": "vite",
+    "dev": "node scripts/dev-init.cjs && vite",
+    "start": "npm run dev",
     "remotion:studio": "remotion studio media/Root.tsx",
     "remotion:render": "remotion render media/Root.tsx premium-product-demo media/videos/premium-product-demo.mp4",
     "prepare": "husky",
