@@ -136,7 +136,13 @@ export function AppointmentCard({
         <div className="flex flex-col lg:flex-row lg:items-center justify-between space-y-4 lg:space-y-0">
           <div className="flex items-center space-x-4">
             {!isInactive && (
-              <div onClick={(e) => e.stopPropagation()}>
+              <div
+                className="flex items-center self-stretch px-2 py-2 cursor-pointer"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSelectionChange(appointment.id, !selectedIds.has(appointment.id));
+                }}
+              >
                 <Checkbox
                   checked={selectedIds.has(appointment.id)}
                   onCheckedChange={(checked) => onSelectionChange(appointment.id, !!checked)}

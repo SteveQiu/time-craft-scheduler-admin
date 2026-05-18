@@ -75,10 +75,12 @@ export function useProviderPayments({ providerId, openingId, selectedPaymentTabI
   }, [providerPayments, orgPayments, paymentInfoOpening]);
 
   // The currently active tab in the payment dialog (default to first/default method)
+  // If selectedPaymentTabId is stale (from a previous dialog), fall back to default/first
   const activePaymentMethod = useMemo(() => {
     if (!allAvailableMethods.length) return null;
-    const activeId = selectedPaymentTabId ?? (allAvailableMethods.find(m => m.is_default) ?? allAvailableMethods[0])?.id;
-    return allAvailableMethods.find(m => m.id === activeId) ?? null;
+    const fallback = allAvailableMethods.find(m => m.is_default) ?? allAvailableMethods[0];
+    if (!selectedPaymentTabId) return fallback;
+    return allAvailableMethods.find(m => m.id === selectedPaymentTabId) ?? fallback;
   }, [allAvailableMethods, selectedPaymentTabId]);
 
   return {

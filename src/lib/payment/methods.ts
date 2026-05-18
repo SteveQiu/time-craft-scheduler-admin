@@ -7,8 +7,8 @@ export const PAYMENT_METHOD_CONFIGS: PaymentMethodConfig[] = [
     fields: [],
   },
   {
-    id: 'onsite_debit',
-    label: 'Onsite Debit',
+    id: 'onsite_debit_card',
+    label: 'Onsite Debit Card',
     fields: [
       { key: 'instructions', label: 'Instructions (optional)', type: 'text', placeholder: 'e.g. We accept Interac debit via Square', optional: true },
     ],
