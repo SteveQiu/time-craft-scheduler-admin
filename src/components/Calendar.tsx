@@ -5,6 +5,7 @@ import { Plus } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRoles } from '@/hooks/useUserRoles';
 import { usePaymentMethod } from '@/hooks/usePaymentMethod';
+import { PaymentMethodType } from '@/lib/payment/types';
 import { useOrgWorkers } from '@/hooks/useOrgWorkers';
 import { useCalendarProfile } from '@/hooks/useCalendarProfile';
 import { useCalendarOpenings } from '@/hooks/useCalendarOpenings';
@@ -41,7 +42,7 @@ export function Calendar() {
 
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const [paymentFormLabel, setPaymentFormLabel] = useState('');
-  const [paymentFormType, setPaymentFormType] = useState('cash');
+  const [paymentFormType, setPaymentFormType] = useState<string>(PaymentMethodType.Cash);
   const { details: paymentDetails, reset: resetPaymentDetails, serialize: serializePaymentDetails } = usePaymentMethod();
 
   const [editingOpening, setEditingOpening] = useState<Opening | null>(null);

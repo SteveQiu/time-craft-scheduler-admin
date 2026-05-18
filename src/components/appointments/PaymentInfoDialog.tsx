@@ -7,6 +7,7 @@ import { PaymentDisplay } from '@/components/payment/PaymentDisplay';
 import { PaymentMethodRecord } from '@/lib/payment/types';
 import { deserializeDetailsByType } from '@/lib/payment/serialization';
 import { getMethodLabel } from '@/lib/payment/methods';
+import { requiresPaymentNote } from '@/hooks/usePaymentMethods';
 import { PaymentProofSection } from './PaymentProofDialog';
 
 interface PaymentInfoDialogProps {
@@ -62,10 +63,9 @@ export function PaymentInfoDialog({
   handlePaymentPhotoUpload,
   handleSubmitPaymentProof,
 }: PaymentInfoDialogProps) {
-  const isActiveMethodCash = activePaymentMethod?.type === 'cash';
-  const isCardPayment = activePaymentMethod?.type === 'onsite_debit_card'
-    || activePaymentMethod?.type === 'onsite_credit_card';
-  const noteRequired = !(isActiveMethodCash || isCardPayment);
+  const noteRequired = activePaymentMethod
+    ? requiresPaymentNote(activePaymentMethod.type)
+    : false;
 
   return (
     <Dialog open={!!paymentInfoProviderId} onOpenChange={(open) => { if (!open) onClose(); }}>

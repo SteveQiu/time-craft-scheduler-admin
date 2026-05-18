@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import type { User } from '@supabase/supabase-js';
+import { PaymentMethodType } from '@/lib/payment/types';
 
 interface UseCalendarQueriesParams {
   user: User | null;
@@ -68,7 +69,7 @@ export function useCalendarQueries({
       queryClient.invalidateQueries({ queryKey: ['provider-payment-methods-for-opening', user?.id] });
       setShowPaymentDialog(false);
       setPaymentFormLabel('');
-      setPaymentFormType('cash');
+      setPaymentFormType(PaymentMethodType.Cash);
       resetPaymentDetails();
       toast.success('Payment acceptance method added');
     },

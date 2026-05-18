@@ -1,27 +1,27 @@
-import { PaymentMethodConfig } from './types';
+import { PaymentMethodConfig, PaymentMethodType } from './types';
 
 export const PAYMENT_METHOD_CONFIGS: PaymentMethodConfig[] = [
   {
-    id: 'cash',
+    id: PaymentMethodType.Cash,
     label: 'Cash',
     fields: [],
   },
   {
-    id: 'onsite_debit_card',
+    id: PaymentMethodType.OnsiteDebitCard,
     label: 'Onsite Debit Card',
     fields: [
       { key: 'instructions', label: 'Instructions (optional)', type: 'text', placeholder: 'e.g. We accept Interac debit via Square', optional: true },
     ],
   },
   {
-    id: 'onsite_credit_card',
+    id: PaymentMethodType.OnsiteCreditCard,
     label: 'Onsite Credit Card',
     fields: [
       { key: 'instructions', label: 'Instructions (optional)', type: 'text', placeholder: 'e.g. We accept Visa, Mastercard via Square', optional: true },
     ],
   },
   {
-    id: 'paypal',
+    id: PaymentMethodType.PayPal,
     label: 'PayPal',
     fields: [
       { key: 'username', label: 'PayPal Username', type: 'text', placeholder: 'username', optional: true },
@@ -33,7 +33,7 @@ export const PAYMENT_METHOD_CONFIGS: PaymentMethodConfig[] = [
     ],
   },
   {
-    id: 'venmo',
+    id: PaymentMethodType.Venmo,
     label: 'Venmo',
     fields: [
       { key: 'username', label: 'Venmo Username', type: 'text', placeholder: '@username', optional: true },
@@ -45,7 +45,7 @@ export const PAYMENT_METHOD_CONFIGS: PaymentMethodConfig[] = [
     ],
   },
   {
-    id: 'email_transfer',
+    id: PaymentMethodType.EmailTransfer,
     label: 'Email Transfer',
     fields: [
       { key: 'email', label: 'Email', type: 'text', placeholder: 'email@example.com' },
@@ -54,7 +54,7 @@ export const PAYMENT_METHOD_CONFIGS: PaymentMethodConfig[] = [
     ],
   },
   {
-    id: 'wechat',
+    id: PaymentMethodType.WeChat,
     label: 'WeChat',
     fields: [
       { key: 'qr', label: 'QR Code', type: 'image' },

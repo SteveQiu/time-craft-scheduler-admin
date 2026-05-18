@@ -3,6 +3,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { PaymentMethodConfig, PaymentDetails } from '@/lib/payment/types';
+import { PaymentMethodType } from '@/lib/payment/types';
 import { compressImageFile } from '@/lib/payment/serialization';
 import { useToast } from '@/hooks/use-toast';
 
@@ -28,7 +29,7 @@ export function PaymentMethodForm({ config, value, onChange }: PaymentMethodForm
   });
 
   if (config.fields.length === 0) {
-    if (config.id === 'cash') {
+    if (config.id === PaymentMethodType.Cash) {
       return (
         <div className="space-y-2">
           <p className="text-sm text-muted-foreground">
