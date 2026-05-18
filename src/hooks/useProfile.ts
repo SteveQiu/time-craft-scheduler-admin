@@ -104,13 +104,53 @@ export function useProfile({ slug, user, onSaveSuccess }: UseProfileOptions) {
   const getPhotoUrl = (storagePath: string) =>
     supabase.storage.from('profile-photos').getPublicUrl(storagePath).data.publicUrl;
 
+  const compressImage = (file: File): Promise<File> =>
+    new Promise((resolve, reject) => {
+      const MAX_DIM = 1048;
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        let { width, height } = img;
+        if (width > MAX_DIM || height > MAX_DIM) {
+          if (width >= height) {
+            height = Math.round((height * MAX_DIM) / width);
+            width = MAX_DIM;
+          } else {
+            width = Math.round((width * MAX_DIM) / height);
+            height = MAX_DIM;
+          }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return reject(new Error('Canvas context unavailable'));
+        ctx.drawImage(img, 0, 0, width, height);
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) return reject(new Error('toBlob returned null'));
+            const baseName = file.name.replace(/\.[^.]+$/, '');
+            resolve(new File([blob], `${baseName}.jpg`, { type: 'image/jpeg' }));
+          },
+          'image/jpeg',
+          0.85,
+        );
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error('Image failed to load'));
+      };
+      img.src = url;
+    });
+
   const handlePhotoUpload = async (file: File) => {
     if (!user || !profile) return;
-    const ext = file.name.split('.').pop();
-    const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
+    const compressed = await compressImage(file);
+    const path = `${user.id}/${crypto.randomUUID()}.jpg`;
     const { error: uploadError } = await supabase.storage
       .from('profile-photos')
-      .upload(path, file);
+      .upload(path, compressed);
     if (uploadError) {
       console.error('Storage upload error:', uploadError);
       toast({ title: 'Upload failed', description: uploadError.message, variant: 'destructive' });

@@ -13,7 +13,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescript
 import { Calendar as CalendarIcon, Clock, User, MapPin, Search, Filter, Loader2, Share2, ExternalLink, ChevronRight, ArrowLeft, Check, Bookmark } from 'lucide-react';
 import { toast } from 'sonner';
 import { BrowseDetail } from './BrowseDetail';
-import { ProviderPhotoStrip } from './ProviderPhotoStrip';
+import { ProfilePhotoStrip } from './ProfilePhotoStrip';
 import { parseLocation, formatLocation } from '@/lib/address';
 
 interface OpeningWithProfile {
@@ -518,7 +518,7 @@ export function BookingBrowse() {
                         </p>
                       </div>
                       <div onClick={e => e.stopPropagation()}>
-                        <ProviderPhotoStrip userId={provider.user_id} thumbClass="w-14 h-14" />
+                        <ProfilePhotoStrip userId={provider.user_id} thumbClass="w-14 h-14" />
                       </div>
                     </CardContent>
                   </Card>
@@ -590,7 +590,7 @@ export function BookingBrowse() {
                         </p>
                       </div>
                       <div onClick={e => e.stopPropagation()}>
-                        <ProviderPhotoStrip userId={provider.user_id} thumbClass="w-14 h-14" />
+                        <ProfilePhotoStrip userId={provider.user_id} thumbClass="w-14 h-14" />
                       </div>
                     </CardContent>
                   </Card>

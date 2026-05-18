@@ -8,7 +8,7 @@ import { Calendar as CalendarIcon, Loader2, Share2, ExternalLink, ArrowLeft, Che
 import { toast } from 'sonner';
 import { formatLocation, parseLocation } from '@/lib/address';
 import { TIME_FORMATS, LOCALE } from '@/config/formats';
-import { ProviderPhotoStrip } from './ProviderPhotoStrip';
+import { ProfilePhotoStrip } from './ProfilePhotoStrip';
 import { getEffectiveTotal } from '@/lib/utils';
 
 interface OpeningWithProfile {
@@ -225,7 +225,7 @@ export function BrowseDetail({
         </Button>
       </div>
 
-      <ProviderPhotoStrip userId={currentProvider.user_id} thumbClass="w-20 h-20" />
+      <ProfilePhotoStrip userId={currentProvider.user_id} thumbClass="w-20 h-20" />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Services */}

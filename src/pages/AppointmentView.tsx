@@ -5,20 +5,26 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Calendar, Clock, User, Phone, Mail, Loader2, MapPin } from 'lucide-react';
+import { ProfilePhotoStrip } from '@/components/ProfilePhotoStrip';
 import { DATE_FORMATS, LOCALE } from '@/config/formats';
 import { ROUTES } from '@/config/routes';
 import { supabase } from '@/integrations/supabase/client';
 import { parseLocation, formatLocation } from '@/lib/address';
-import { useAuth } from '@/hooks/useAuth';
-import { PremiumUpgrade } from '@/components/PremiumUpgrade';
 import { Appointment } from '@/components/appointments/types';
+
+interface ProviderProfile {
+  full_name: string | null;
+  slug: string | null;
+  avatar_url: string | null;
+  introduction: string | null;
+  skills: string[];
+}
 
 export function AppointmentView() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
 
-  const { data: appointment, isLoading } = useQuery<Appointment>({
+  const { data: appointment, isLoading } = useQuery<Appointment & { providerProfile: ProviderProfile | null }>({
     queryKey: ['appointment', id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -28,32 +34,33 @@ export function AppointmentView() {
         .single();
       if (error) throw error;
 
-      const allIds = [...new Set([data.provider_id, data.user_id].filter(Boolean))];
-      let profileMap = new Map<string, { full_name: string; slug: string | null }>();
-      if (allIds.length > 0) {
-        const { data: profiles } = await supabase
-          .rpc('get_public_profile_names', { profile_ids: allIds });
-        profileMap = new Map((profiles || []).map((p: any) => [p.id, { full_name: p.full_name, slug: p.slug }]));
-      }
+      const [bookerRes, providerRes] = await Promise.all([
+        data.user_id
+          ? supabase.rpc('get_public_profile_by_id', { profile_id: data.user_id })
+          : Promise.resolve({ data: null }),
+        data.provider_id
+          ? supabase.rpc('get_public_profile_by_id', { profile_id: data.provider_id })
+          : Promise.resolve({ data: null }),
+      ]);
 
-      let bookerEmail: string | null = null;
-      let bookerPhone: string | null = null;
-      if (data.user_id) {
-        const { data: bookerProfile } = await supabase
-          .rpc('get_public_profile_by_id', { profile_id: data.user_id });
-        const p = bookerProfile?.[0] ?? null;
-        bookerEmail = p?.email ?? null;
-        bookerPhone = p?.phone ?? null;
-      }
+      const booker = (bookerRes as any).data?.[0] ?? null;
+      const provider = (providerRes as any).data?.[0] ?? null;
 
       return {
         ...data,
-        provider_slug: profileMap.get(data.provider_id)?.slug ?? null,
-        booker_name: profileMap.get(data.user_id)?.full_name ?? null,
-        booker_slug: profileMap.get(data.user_id)?.slug ?? null,
-        booker_email: bookerEmail,
-        booker_phone: bookerPhone,
-      } as Appointment;
+        provider_slug: provider?.slug ?? null,
+        booker_name: booker?.full_name ?? null,
+        booker_slug: booker?.slug ?? null,
+        booker_email: booker?.email ?? null,
+        booker_phone: booker?.phone ?? null,
+        providerProfile: provider ? {
+          full_name: provider.full_name ?? null,
+          slug: provider.slug ?? null,
+          avatar_url: provider.avatar_url ?? null,
+          introduction: provider.introduction ?? null,
+          skills: provider.skills ?? [],
+        } : null,
+      } as Appointment & { providerProfile: ProviderProfile | null };
     },
     enabled: !!id,
   });
@@ -99,23 +106,73 @@ export function AppointmentView() {
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between max-w-4xl mx-auto">
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" onClick={() => navigate(ROUTES.appointments)}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
+        <Button variant="ghost" onClick={() => navigate(ROUTES.appointments)}>
+          <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Appointments
         </Button>
         <Badge className={getStatusColor(appointment.status)}>
           {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
         </Badge>
       </div>
-      <div className="flex justify-end max-w-4xl mx-auto">
-        {user && <PremiumUpgrade orgId={user.id} />}
-      </div>
+      <div className="max-w-4xl mx-auto">
         <Card className="shadow-soft border-card-border">
           <CardHeader>
             <CardTitle className="text-2xl">Appointment Details</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
+            {/* Provider */}
+            {appointment.providerProfile && (
+              <div>
+                <h3 className="text-lg font-semibold text-foreground mb-3">Provider</h3>
+                <div className="flex items-start space-x-4">
+                  <div className="w-14 h-14 rounded-full bg-primary flex items-center justify-center overflow-hidden shrink-0">
+                    {appointment.providerProfile.avatar_url ? (
+                      <img
+                        src={appointment.providerProfile.avatar_url}
+                        alt={appointment.providerProfile.full_name || ''}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <User className="h-6 w-6 text-primary-foreground" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    {appointment.providerProfile.slug ? (
+                      <button
+                        className="font-semibold text-lg text-primary hover:underline text-left"
+                        onClick={() => navigate(`/profile/${appointment.providerProfile!.slug}`)}
+                      >
+                        {appointment.providerProfile.full_name || appointment.worker}
+                      </button>
+                    ) : (
+                      <p className="font-semibold text-lg text-foreground">
+                        {appointment.providerProfile.full_name || appointment.worker}
+                      </p>
+                    )}
+                    {appointment.providerProfile.introduction && (
+                      <p className="text-sm text-muted-foreground mt-1 line-clamp-3">
+                        {appointment.providerProfile.introduction}
+                      </p>
+                    )}
+                    {appointment.providerProfile.skills?.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {appointment.providerProfile.skills.slice(0, 5).map((skill: string) => (
+                          <Badge key={skill} variant="secondary" className="text-xs">
+                            {skill}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                {appointment.provider_id && (
+                  <div className="mt-3">
+                    <ProfilePhotoStrip userId={appointment.provider_id} />
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Client Information */}
             {(appointment.booker_name || appointment.booker_email || appointment.booker_phone) && (
               <div>
@@ -158,22 +215,6 @@ export function AppointmentView() {
                 <div>
                   <p className="text-sm text-muted-foreground">Service</p>
                   <p className="font-medium text-foreground">{appointment.service}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Provider</p>
-                  <div className="flex items-center space-x-2">
-                    <User className="h-4 w-4 text-muted-foreground" />
-                    {appointment.provider_slug ? (
-                      <button
-                        className="font-medium text-primary hover:underline"
-                        onClick={() => navigate(`/profile/${appointment.provider_slug}`)}
-                      >
-                        {appointment.worker}
-                      </button>
-                    ) : (
-                      <p className="font-medium text-foreground">{appointment.worker}</p>
-                    )}
-                  </div>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Duration</p>
