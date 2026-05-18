@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Star, Edit, Trash2 } from 'lucide-react';
 import { PaymentMethodRecord } from '@/lib/payment/types';
+import { PaymentMethodType } from '@/lib/payment/types';
 import { getMethodLabel } from '@/lib/payment/methods';
 import { deserializeDetailsByType } from '@/lib/payment/serialization';
 
@@ -75,14 +76,14 @@ function getSummary(
   rawDetails: string | null,
 ): React.ReactNode {
   switch (type) {
-    case 'cash':
+    case PaymentMethodType.Cash:
       return <p className="text-sm text-muted-foreground">Cash accepted</p>;
 
-    case 'onsite_debit_card':
-    case 'onsite_credit_card':
+    case PaymentMethodType.OnsiteDebitCard:
+    case PaymentMethodType.OnsiteCreditCard:
       return <p className="text-sm text-muted-foreground">Card accepted</p>;
 
-    case 'venmo': {
+    case PaymentMethodType.Venmo: {
       const username = details.username;
       const phone = details.phone || (details.url && /^[+\d\s\-().]+$/.test(details.url) ? details.url : undefined);
       const qr = details.qr || (details.url?.startsWith('data:image') ? details.url : undefined);
@@ -92,7 +93,7 @@ function getSummary(
       return null;
     }
 
-    case 'paypal': {
+    case PaymentMethodType.PayPal: {
       const username = details.username;
       const qr = details.qr;
       const legacyUrl = details.url;
@@ -102,13 +103,13 @@ function getSummary(
       return null;
     }
 
-    case 'wechat': {
+    case PaymentMethodType.WeChat: {
       const qr = details.qr || (details.url?.startsWith('data:image') ? details.url : undefined);
       if (qr) return <img src={qr} alt="QR Code" className="w-20 h-20 object-contain mt-1 rounded" />;
       return null;
     }
 
-    case 'email_transfer': {
+    case PaymentMethodType.EmailTransfer: {
       const email = details.email || (details.url?.includes('@') ? details.url : undefined);
       if (email) return <p className="text-sm text-muted-foreground">{email}</p>;
       return null;

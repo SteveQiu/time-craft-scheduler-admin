@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Checkbox } from '@/components/ui/checkbox';
 import { Plus } from 'lucide-react';
 import { generateTimeOptions } from './calendarUtils';
+import { PaymentMethodType } from '@/lib/payment/types';
 import type { Opening, EditOpeningForm } from './types';
 
 interface EditOpeningDialogProps {
@@ -229,7 +230,7 @@ export function EditOpeningDialog({
                 size="sm"
                 onClick={() => {
                   setPaymentFormLabel('');
-                  setPaymentFormType('cash');
+                  setPaymentFormType(PaymentMethodType.Cash);
                   resetPaymentDetails();
                   setShowPaymentDialog(true);
                 }}

@@ -13,14 +13,14 @@ interface PaymentDisplayProps {
  */
 export function PaymentDisplay({ type, details }: PaymentDisplayProps) {
   switch (type) {
-    case 'cash':
+    case PaymentMethodType.Cash:
       return <p className="text-sm text-muted-foreground">Cash accepted</p>;
 
-    case 'onsite_debit_card':
-    case 'onsite_credit_card':
+    case PaymentMethodType.OnsiteDebitCard:
+    case PaymentMethodType.OnsiteCreditCard:
       return <span className="inline-block px-3 py-1 bg-orange-100 text-orange-700 rounded text-sm">Card</span>;
 
-    case 'venmo': {
+    case PaymentMethodType.Venmo: {
       const username = details.username;
       // legacy phone: stored in details.phone (new) or details.url (old phone-format)
       const phone =
@@ -55,7 +55,7 @@ export function PaymentDisplay({ type, details }: PaymentDisplayProps) {
       );
     }
 
-    case 'paypal': {
+    case PaymentMethodType.PayPal: {
       const username = details.username;
       const qr = details.qr;
       const legacyUrl = details.url;
@@ -98,7 +98,7 @@ export function PaymentDisplay({ type, details }: PaymentDisplayProps) {
       );
     }
 
-    case 'wechat': {
+    case PaymentMethodType.WeChat: {
       const qr =
         details.qr ||
         (details.url?.startsWith('data:image') ? details.url : undefined);
@@ -109,7 +109,7 @@ export function PaymentDisplay({ type, details }: PaymentDisplayProps) {
       );
     }
 
-    case 'email_transfer': {
+    case PaymentMethodType.EmailTransfer: {
       const email =
         details.email ||
         (details.url?.includes('@') ? details.url : undefined);

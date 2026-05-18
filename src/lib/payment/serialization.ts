@@ -1,4 +1,5 @@
 import { PaymentDetails } from './types';
+import { PaymentMethodType } from './types';
 
 const MAX_DIM = 800;
 const MAX_FILE_SIZE = 1 * 1024 * 1024; // 1 MB
@@ -69,15 +70,15 @@ export function deserializeDetailsByType(
   }
 
   switch (type) {
-    case 'venmo':
+    case PaymentMethodType.Venmo:
       if (raw.startsWith('data:image')) return { qr: raw };
       if (/^[+\d\s\-().]+$/.test(raw) && raw.length > 0) return { phone: raw };
       return { username: raw };
-    case 'wechat':
+    case PaymentMethodType.WeChat:
       return { qr: raw };
-    case 'email_transfer':
+    case PaymentMethodType.EmailTransfer:
       return { email: raw };
-    case 'paypal':
+    case PaymentMethodType.PayPal:
       return raw.startsWith('http') ? { url: raw } : { username: raw };
     default:
       return { url: raw };

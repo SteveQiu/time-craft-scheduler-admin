@@ -4,6 +4,7 @@ import { Label } from '../ui/label';
 import { Button } from '../ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import type { NewOpeningForm } from './types';
+import { PaymentMethodType } from '@/lib/payment/types';
 
 interface OpeningPaymentSectionProps {
   newOpening: NewOpeningForm;
@@ -79,7 +80,7 @@ export function OpeningPaymentSection({
           size="sm"
           onClick={() => {
             setPaymentFormLabel('');
-            setPaymentFormType('cash');
+            setPaymentFormType(PaymentMethodType.Cash);
             resetPaymentDetails();
             setShowPaymentDialog(true);
           }}

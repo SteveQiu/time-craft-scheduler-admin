@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { PaymentMethodType, isCardPayment } from '@/hooks/usePaymentMethods';
 
 export function usePaymentStatus(appointmentIds: string[]) {
   // Query 1: paid status (row presence only — select appointment_id, photo_url)
@@ -39,7 +40,7 @@ export function usePaymentStatus(appointmentIds: string[]) {
   const cashAppointmentIds = useMemo(
     () => new Set(
       (paymentMethods ?? [])
-        .filter((p: { appointment_id: string; payment_method_type: string | null }) => p.payment_method_type === 'cash')
+        .filter((p: { appointment_id: string; payment_method_type: string | null }) => p.payment_method_type === PaymentMethodType.Cash)
         .map((p: { appointment_id: string; payment_method_type: string | null }) => p.appointment_id)
     ),
     [paymentMethods]
@@ -48,7 +49,7 @@ export function usePaymentStatus(appointmentIds: string[]) {
   const cardAppointmentIds = useMemo(
     () => new Set(
       (paymentMethods ?? [])
-        .filter((p: { appointment_id: string; payment_method_type: string | null }) => p.payment_method_type === 'onsite_credit_card' || p.payment_method_type === 'onsite_debit_card')
+        .filter((p: { appointment_id: string; payment_method_type: string | null }) => isCardPayment(p.payment_method_type ?? ''))
         .map((p: { appointment_id: string; payment_method_type: string | null }) => p.appointment_id)
     ),
     [paymentMethods]

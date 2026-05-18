@@ -13,6 +13,7 @@ import { Plus, CreditCard } from 'lucide-react';
 import { PAYMENT_METHOD_CONFIGS, getMethodConfig } from '@/lib/payment/methods';
 import { deserializeDetailsByType } from '@/lib/payment/serialization';
 import { PaymentMethodRecord } from '@/lib/payment/types';
+import { PaymentMethodType } from '@/lib/payment/types';
 import { usePaymentMethod } from '@/hooks/usePaymentMethod';
 import { PaymentMethodForm } from '@/components/payment/PaymentMethodForm';
 import { PaymentMethodCard } from '@/components/payment/PaymentMethodCard';
@@ -25,7 +26,7 @@ export function PaymentMethodsTab() {
   const [showDialog, setShowDialog] = useState(false);
   const [editingPayment, setEditingPayment] = useState<PaymentMethodRecord | null>(null);
   const [paymentFormLabel, setPaymentFormLabel] = useState('');
-  const [paymentFormType, setPaymentFormType] = useState('cash');
+  const [paymentFormType, setPaymentFormType] = useState<string>(PaymentMethodType.Cash);
   const { details: paymentDetails, reset: resetPaymentDetails, serialize: serializePaymentDetails } = usePaymentMethod();
 
   const { data: payments = [], isLoading } = useQuery({
@@ -65,7 +66,7 @@ export function PaymentMethodsTab() {
       setShowDialog(false);
       setEditingPayment(null);
       setPaymentFormLabel('');
-      setPaymentFormType('cash');
+      setPaymentFormType(PaymentMethodType.Cash);
       resetPaymentDetails();
       toast({ title: editingPayment ? 'Payment acceptance method updated' : 'Payment acceptance method added' });
     },
@@ -96,7 +97,7 @@ export function PaymentMethodsTab() {
   const openAdd = () => {
     setEditingPayment(null);
     setPaymentFormLabel('');
-    setPaymentFormType('cash');
+    setPaymentFormType(PaymentMethodType.Cash);
     resetPaymentDetails();
     setShowDialog(true);
   };

@@ -1,12 +1,12 @@
-export type PaymentMethodType =
-  | 'venmo'
-  | 'paypal'
-  | 'wechat'
-  | 'email_transfer'
-  | 'cash'
-  | 'onsite_debit_card'
-  | 'onsite_credit_card'
-  | string;
+export enum PaymentMethodType {
+  Cash = 'cash',
+  OnsiteDebitCard = 'onsite_debit_card',
+  OnsiteCreditCard = 'onsite_credit_card',
+  PayPal = 'paypal',
+  Venmo = 'venmo',
+  EmailTransfer = 'email_transfer',
+  WeChat = 'wechat',
+}
 
 export interface PaymentFieldConfig {
   key: string;

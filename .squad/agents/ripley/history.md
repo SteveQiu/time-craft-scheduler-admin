@@ -407,3 +407,54 @@ Bishop's cancel UX spec → explicit `AlertDialog` with title/description/button
 **Build gate:** `tsc --noEmit` -> exit 0.
 
 - ProfileHeader: consolidated Share + QR icon buttons into single Share button that opens QR dialog. Removed QrCode import. onCopyShare prop retained in interface but unwired.
+  
+## Browse Tab in Org Sidebar (2026-05-08)  
+  
+**Task:** Add Browse nav item to orgNavItems in AppSidebar.tsx.  
+  
+**File changed:** src/components/AppSidebar.tsx  
+  
+**Change:** Appended { id: 'browse', label: 'Browse', icon: Search, path: ROUTES.browse } as last item in orgNavItems.  
+  
+**Result:** tsc --noEmit exits 0. No new imports needed. 
+
+## Three Refactors: Nav ID, PaymentMethodType Enum, Payment Hook (2026-05-17)
+
+**Requested by:** Steve
+
+### Task 1: Nav ID rename
+**File:** `src/components/AppSidebar.tsx`
+`{ id: 'workers', ... }` → `{ id: 'resources', ... }` in orgNavItems. Label unchanged.
+
+### Task 2: PaymentMethodType → enum
+**File:** `src/lib/payment/types.ts`
+Replaced string union (+ `| string`) with:
+```ts
+export enum PaymentMethodType {
+  Cash = 'cash', OnsiteDebitCard = 'onsite_debit_card', OnsiteCreditCard = 'onsite_credit_card',
+  PayPal = 'paypal', Venmo = 'venmo', EmailTransfer = 'email_transfer', WeChat = 'wechat',
+}
+```
+
+**All string literals updated to enum values in:**
+- `src/lib/payment/methods.ts` — PAYMENT_METHOD_CONFIGS `id:` fields
+- `src/lib/payment/serialization.ts` — switch case values in `deserializeDetailsByType`
+- `src/components/payment/PaymentDisplay.tsx` — switch cases
+- `src/components/payment/PaymentMethodCard.tsx` — switch cases in `getSummary`
+- `src/components/payment/PaymentMethodForm.tsx` — `config.id === PaymentMethodType.Cash`
+- `src/pages/settings/PaymentMethodsTab.tsx` — state init + reset calls
+- `src/components/Calendar.tsx` — state init
+- `src/hooks/useCalendarQueries.ts` — reset call on mutation success
+- `src/components/calendar/EditOpeningDialog.tsx` — Add Payment button handler
+- `src/components/calendar/OpeningPaymentSection.tsx` — Add button handler
+
+### Task 3: Centralized payment hook
+**File created:** `src/hooks/usePaymentMethods.ts`
+Exports: `PaymentMethodType` re-export, `CARD_PAYMENT_TYPES`, `NOTE_REQUIRED_TYPES`, `ONSITE_PAYMENT_TYPES` sets, `isCardPayment()`, `requiresPaymentNote()`, `isOnsitePayment()`, `getPaymentMethodLabel()`, `getAvailablePaymentMethods()`.
+
+**Inline checks replaced with helpers in:**
+- `src/hooks/usePaymentStatus.ts` — `=== 'cash'` → `=== PaymentMethodType.Cash`; inline card check → `isCardPayment()`
+- `src/components/appointments/PaymentInfoDialog.tsx` — 3-line inline logic → `requiresPaymentNote(activePaymentMethod.type)`
+
+**Build gate:** `npx tsc --noEmit` → exit 0.
+
