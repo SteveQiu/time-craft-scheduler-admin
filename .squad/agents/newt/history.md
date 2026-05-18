@@ -30,7 +30,80 @@
 - **Team:** Ripley (Frontend Dev), Bishop (UX Designer), Ralph (QA/Tester), + legal/review agents
 - **Tech stack:** React, TypeScript, Vite, Remotion (new), TTS (TBD)
 
+## Demo Video — Booking Flow (2026-05-18)
+
+**Task:** Create end-to-end booking flow demo video (4 scenes, 120s, 720p).
+
+**Deliverables:**
+- media/demo/ Remotion project (new)
+  - 4 scenes: intro, booking flow, payment, confirmation
+  - 120 seconds @ 720p
+  - media/demo/NARRATION.md (full script)
+
+**Status:** 🟡 BLOCKED on TTS API key for audio synthesis.
+
+**Notes:** Video structure complete. Scenes render. Ready for audio once TTS key provisioned.
+
 ## Learnings
+
+### PikAppoint Demo Video (2026-05-XX)
+
+**Task:** Create full end-to-end booking flow demo video (provider + customer journey).
+
+**What was built:**
+- **4 scene structure:** Step1Opening, Step2Booking, Step3Confirm, Step4Complete
+- **Screen recording simulation:** Browser frame wrapper, animated UI mockups, caption overlays, step indicators
+- **Composition architecture:** Sequence-based timing, dynamic duration from TTS audio, fallback to 30s per step
+- **Shared components:** ScreenFrame (browser chrome), Caption (animated overlay), StepIndicator (progress badge), UIElements (Button, Badge, Card, Input, Label)
+- **Narration script:** Full voice-over script in NARRATION.md (4×30s segments)
+- **TTS integration:** Placeholder audio files (silent 30s MP3s), generate-audio.mjs script (Google Translate TTS fallback)
+- **Render scripts:** Programmatic render (render-demo.mjs), npm scripts (remotion:demo, remotion:demo:preview)
+
+**Output:** 3600 frames / 120.00s, 6.1 MB H.264 MP4
+
+**Scene breakdown:**
+1. **Step1Opening (900 frames, 30s):** Provider creates opening → Calendar tab → Add Opening form → Save → Opening appears
+2. **Step2Booking (900 frames, 30s):** Customer browses → Filters openings → Book dialog → Confirmation → Pending status
+3. **Step3Confirm (900 frames, 30s):** Provider Appointments tab → Pending badge → Review details panel → Approve → Confirmed status
+4. **Step4Complete (900 frames, 30s):** Provider selects confirmed → Mark Complete → Completed status → Optional payment proof upload
+
+**Files created:**
+- `media/demo/README.md` — Setup guide, TTS options, render instructions
+- `media/demo/NARRATION.md` — Full narration script with timestamps
+- `media/demo/src/DemoVideo.tsx` — Main composition
+- `media/demo/src/scenes/*.tsx` — 4 scene components
+- `media/demo/src/components/*.tsx` — Shared UI components
+- `media/demo/generate-audio.mjs` — TTS generation script (Google Translate fallback)
+- `media/demo/render-demo.mjs` — Programmatic render script
+- `media/Root.tsx` — Added pikappoint-demo composition
+- `media/public/audio/demo/*.mp3` — 4 placeholder audio files (30s each)
+- `media/videos/pikappoint-demo.mp4` — Final output
+
+**Technical patterns used:**
+- Browser window mockup with traffic lights + URL bar
+- Frame-based animations: `useCurrentFrame()` + `interpolate()` for all motion (NO CSS animations)
+- Easing: `Easing.out(Easing.quad)` for slide-ins, `Easing.inOut(Easing.ease)` for morphs
+- Timing strategy: Named animation frame markers (e.g., `navClickFrame`, `openDialogFrame`, `fillFormFrame`)
+- Badge morph: Pending → Confirmed → Completed with scale pulse animation
+- Details panel: Slide-in from right with `translateX` interpolation
+- Caption overlay: Bottom-center, fade in/out, dark glass-morphism background
+
+**TTS blockers:**
+- Google Translate TTS returns HTTP 400 (rate-limited or blocked)
+- Workaround: FFmpeg-generated silent 30s MP3 placeholders
+- Recommendation: Use Google Cloud TTS (1M chars/month free) or ElevenLabs (10k chars/month free)
+
+**Render performance:**
+- Duration: 3600 frames (120s @ 30fps)
+- Render time: ~3 minutes (full quality, H.264)
+- Output size: 6.1 MB (50 KB/s bitrate, good compression)
+- Chrome Headless Shell: v149.0.7790.0 (reused from premium-product-demo)
+
+**UI mockup strategy:**
+- Simplified React components styled to match real app (Tailwind utility classes, shadcn/ui patterns)
+- No external dependencies beyond Remotion (all UI hand-coded)
+- Status badge colors match real app: Pending (yellow), Confirmed (green), Completed (blue)
+- PikAppoint branding: Logo in browser chrome, brand colors (#f59e0b amber accent, #3b82f6 blue primary)
 
 ### Asset Management & gitignore Policy (2026-05-14)
 
