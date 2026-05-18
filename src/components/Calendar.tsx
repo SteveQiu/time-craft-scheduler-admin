@@ -10,6 +10,8 @@ import { useCalendarProfile } from '@/hooks/useCalendarProfile';
 import { useCalendarOpenings } from '@/hooks/useCalendarOpenings';
 import { useCalendarActions } from '@/hooks/useCalendarActions';
 import { useCalendarQueries } from '@/hooks/useCalendarQueries';
+import { useWorkplaceAddresses } from '@/hooks/useWorkplaceAddresses';
+import type { LocationFields } from '@/lib/address';
 import { CalendarGrid } from './calendar/CalendarGrid';
 import { DaySlotsPanel } from './calendar/DaySlotsPanel';
 import { OpeningFormDialog } from './calendar/OpeningFormDialog';
@@ -62,6 +64,22 @@ export function Calendar() {
     user, resetPaymentDetails, paymentFormLabel, paymentFormType,
     serializePaymentDetails, setShowPaymentDialog, setPaymentFormLabel, setPaymentFormType,
   });
+
+  const { saveAddress: saveCustomAddress } = useWorkplaceAddresses(user?.id);
+
+  const handleSaveCustomAddress = (label: string, fields: LocationFields) => {
+    const addressJson = JSON.stringify({
+      address_line_1: fields.address_line_1,
+      address_line_2: fields.address_line_2,
+      city: fields.city,
+      province: fields.province,
+      country: fields.country,
+      zip: fields.zip,
+    });
+    if (user) {
+      saveCustomAddress.mutate({ label, addressJson, userId: user.id });
+    }
+  };
 
   const {
     blockedOpenings, setBlockedOpenings, isBulkDeleting, safeIdsToDelete, setSafeIdsToDelete,
@@ -174,6 +192,7 @@ export function Calendar() {
         setPaymentFormLabel={setPaymentFormLabel}
         setPaymentFormType={setPaymentFormType}
         resetPaymentDetails={resetPaymentDetails}
+        onSaveCustomAddress={handleSaveCustomAddress}
       />
 
       <DeleteOpeningDialog
