@@ -112,22 +112,24 @@ export function DaySlotsPanel({
                           className="p-1 rounded-lg border border-input bg-card hover:bg-accent transition-all flex items-center justify-between gap-3 cursor-pointer"
                           onClick={() => window.open(`/openings/${opening.id}`, '_blank')}
                         >
-                          <div
-                            className="flex-shrink-0 pl-1"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <Checkbox
-                              checked={selectedOpeningIds.has(opening.id)}
-                              onCheckedChange={(checked) => {
-                                setSelectedOpeningIds(prev => {
-                                  const next = new Set(prev);
-                                  if (checked) next.add(opening.id);
-                                  else next.delete(opening.id);
-                                  return next;
-                                });
-                              }}
-                            />
-                          </div>
+                          {!confirmedOpeningIds.has(opening.id) && (
+                            <div
+                              className="flex-shrink-0 pl-1"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <Checkbox
+                                checked={selectedOpeningIds.has(opening.id)}
+                                onCheckedChange={(checked) => {
+                                  setSelectedOpeningIds(prev => {
+                                    const next = new Set(prev);
+                                    if (checked) next.add(opening.id);
+                                    else next.delete(opening.id);
+                                    return next;
+                                  });
+                                }}
+                              />
+                            </div>
+                          )}
                           <div className="text-sm space-y-1 flex-1">
                             <div className="font-medium whitespace-nowrap overflow-hidden">
                               {new Date(`1970-01-01T${opening.start_time}`).toLocaleTimeString(LOCALE, TIME_FORMATS.time24)}
@@ -163,20 +165,22 @@ export function DaySlotsPanel({
                               <TooltipContent>Edit opening</TooltipContent>
                             </Tooltip>
                           )}
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                onClick={(e) => { e.stopPropagation(); removeOpening(opening.id); }}
-                                disabled={!user}
-                                variant="ghost"
-                                size="sm"
-                                className="text-destructive hover:text-destructive hover:bg-destructive/10 flex-shrink-0"
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Remove opening</TooltipContent>
-                          </Tooltip>
+                          {!confirmedOpeningIds.has(opening.id) && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  onClick={(e) => { e.stopPropagation(); removeOpening(opening.id); }}
+                                  disabled={!user}
+                                  variant="ghost"
+                                  size="sm"
+                                  className="text-destructive hover:text-destructive hover:bg-destructive/10 flex-shrink-0"
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Remove opening</TooltipContent>
+                            </Tooltip>
+                          )}
                         </div>
                       ))}
                     </div>

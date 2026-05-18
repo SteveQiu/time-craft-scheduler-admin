@@ -45,7 +45,7 @@ export function useCalendarOpenings({ user, isOrgMode }: UseCalendarOpeningsPara
           .from('appointments')
           .select('opening_id')
           .in('opening_id', openingIds)
-          .eq('status', 'confirmed');
+          .in('status', ['confirmed', 'completed']);
         setConfirmedOpeningIds(new Set((confirmedApts || []).map(a => a.opening_id)));
       } else {
         setConfirmedOpeningIds(new Set());
