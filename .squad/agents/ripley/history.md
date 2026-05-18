@@ -458,3 +458,17 @@ Exports: `PaymentMethodType` re-export, `CARD_PAYMENT_TYPES`, `NOTE_REQUIRED_TYP
 
 **Build gate:** `npx tsc --noEmit` → exit 0.
 
+## Payment Refactor (2026-05-18)
+
+**Task:** Extract PaymentMethodType enum & usePaymentMethods hook. Rename 'workers' → 'resources'.
+
+**Deliverables:**
+- PaymentMethodType enum (type-safe payment method handling)
+- usePaymentMethods.ts hook (encapsulates payment logic)
+- Renamed worker ids to resource ids
+- tsc ✅ (zero errors)
+
+**Status:** ✅ COMPLETE. Ralph QA approved (5/5 Playwright pass).
+
+**Notes:** Payment handling now type-safe. Ready for integration.
+
