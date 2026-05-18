@@ -12,7 +12,7 @@ interface Props {
 
 const PREVIEW_COUNT = 3;
 
-export function ProviderPhotoStrip({ userId, thumbClass = 'w-16 h-16' }: Props) {
+export function ProfilePhotoStrip({ userId, thumbClass = 'w-16 h-16' }: Props) {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [photoGridOpen, setPhotoGridOpen] = useState(false);
