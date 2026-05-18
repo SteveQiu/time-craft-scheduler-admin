@@ -101,14 +101,26 @@ export function useCalendarActions({
     });
   };
 
+  const OPENING_TIMES_KEY = 'pikappoint_opening_times';
+
   const resetForm = () => {
     const defaultWorker = isOrgMode
       ? (workerData[0]?.worker_name || '')
       : (ownProfile?.full_name || user?.email || '');
     const defaultSkills = isOrgMode ? getOrgWorkerSkills(defaultWorker) : (ownProfile?.skills || []);
+    let cachedStart = '09:00';
+    let cachedEnd = '';
+    try {
+      const cached = localStorage.getItem(OPENING_TIMES_KEY);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (parsed.startTime) cachedStart = parsed.startTime;
+        if (parsed.endTime) cachedEnd = parsed.endTime;
+      }
+    } catch {}
     setNewOpening({
-      startTime: '09:00',
-      endTime: '',
+      startTime: cachedStart,
+      endTime: cachedEnd,
       duration: 1,
       worker: defaultWorker,
       service: defaultSkills[0] || '',
@@ -160,6 +172,7 @@ export function useCalendarActions({
         toast.success(records.length === 1 ? 'Opening added successfully' : `${records.length} openings added successfully`);
       }
       await loadOpeningsForMonth(currentDate);
+      try { localStorage.setItem(OPENING_TIMES_KEY, JSON.stringify({ startTime: newOpening.startTime, endTime: newOpening.endTime })); } catch {}
       resetForm();
       setShowAddOpening(false);
     } catch (error) {

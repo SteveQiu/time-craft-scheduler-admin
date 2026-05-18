@@ -114,8 +114,16 @@ export function DaySlotsPanel({
                         >
                           {!confirmedOpeningIds.has(opening.id) && (
                             <div
-                              className="flex-shrink-0 pl-1"
-                              onClick={(e) => e.stopPropagation()}
+                              className="flex-shrink-0 flex items-center self-stretch px-2 cursor-pointer"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedOpeningIds(prev => {
+                                  const next = new Set(prev);
+                                  if (next.has(opening.id)) next.delete(opening.id);
+                                  else next.add(opening.id);
+                                  return next;
+                                });
+                              }}
                             >
                               <Checkbox
                                 checked={selectedOpeningIds.has(opening.id)}
