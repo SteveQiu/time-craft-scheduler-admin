@@ -27,6 +27,33 @@
 - Output videos optimized for web distribution (H.264, reasonable file size)
 - Work collaboratively with Ripley (frontend) for any UI integration; Bishop (design) for visual direction
 
+## Non-Negotiable Rule: Always Align Video to Audio
+
+**EVERY Remotion composition MUST use `calculateMetadata` + `getAudioDuration` to size video duration from audio files. Never hardcode `durationInFrames` when audio exists.**
+
+Pattern (mandatory):
+```tsx
+import { CalculateMetadataFunction, staticFile } from "remotion";
+import { getAudioDuration } from "@remotion/media-utils";
+
+const calculateMetadata: CalculateMetadataFunction<Props> = async () => {
+  const files = ["audio/scene1.wav", "audio/scene2a.wav", /* ... */];
+  const durations = await Promise.all(
+    files.map(f => getAudioDuration(staticFile(f)))
+  );
+  const sceneDurations = durations.map(d => Math.ceil(d * FPS));
+  return {
+    durationInFrames: sceneDurations.reduce((s, d) => s + d, 0),
+    props: { sceneDurations },
+  };
+};
+```
+
+- Fallback `durationInFrames` is allowed **only** as the default when audio files are absent
+- Audio clips always go inside `<Sequence>` wrappers — never bare `<Audio>` at composition root
+- Split long narration (>20s) into multiple segments to prevent Bark TTS cutoff
+- Audio files live in `public/` for `staticFile()` access; also copy to `audio/` for non-Remotion use
+
 ## Knowledge Sources
 
 - Remotion docs: https://www.remotion.dev/docs/ai/skills

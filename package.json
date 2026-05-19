@@ -12,6 +12,8 @@
     "start": "npm run dev",
     "remotion:studio": "remotion studio media/Root.tsx",
     "remotion:render": "remotion render media/Root.tsx premium-product-demo media/videos/premium-product-demo.mp4",
+    "remotion:demo": "remotion render media/Root.tsx pikappoint-demo media/videos/pikappoint-demo.mp4 --codec=h264",
+    "remotion:demo:preview": "remotion render media/Root.tsx pikappoint-demo media/videos/pikappoint-demo.mp4 --codec=h264 --scale=0.5",
     "prepare": "husky",
     "build": "vite build",
     "build:dev": "vite build --mode development",

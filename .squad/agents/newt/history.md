@@ -304,6 +304,48 @@ Established 8-folder layout under `media/`:
 
 **Workflow:** Prototype with gTTS → test with Google → finalize with ElevenLabs.
 
+### Bark TTS Integration (2026-05-XX)
+
+**Task:** Wire Bark TTS into PikAppoint demo video pipeline (fully offline TTS, no API key).
+
+**What was built:**
+- **generate-narration.py:** Python script generates 4 WAV files (scene1-4.wav) using Bark v2/en_speaker_6 voice
+- **Audio output:** Saves to `media/demo/audio/` + copies to `media/public/demo/audio/` (Remotion requirement)
+- **DemoVideo.tsx update:** Changed audio paths from `audio/demo/step-0X-opening.mp3` → `demo/audio/sceneX.wav`
+- **README.md update:** Replaced Google/ElevenLabs TTS docs with Bark setup instructions
+- **gitignore:** Added `media/demo/audio/*.wav` + `media/public/demo/audio/*.wav` exclusions
+
+**Bark specs:**
+- **Quality:** 9/10 (natural speech, MIT licensed)
+- **Voice:** v2/en_speaker_6 (neutral professional)
+- **First run:** Downloads ~1.5GB models to `~/.cache/suno/bark_v0/`
+- **Subsequent runs:** Fast (~30s per scene CPU, ~5s GPU)
+- **Sample rate:** 24000 Hz WAV (Remotion handles)
+
+**Files modified:**
+- `media/demo/generate-narration.py` — New TTS generation script
+- `media/demo/src/DemoVideo.tsx` — Updated audio file paths
+- `media/demo/README.md` — Replaced TTS docs with Bark instructions
+- `media/demo/audio/.gitkeep` — Created audio output folder
+- `.gitignore` — Added WAV exclusions
+
+**Requirements:**
+- Python 3.x + `pip install bark scipy`
+- ~2GB disk space (models)
+- Internet for first-run download
+
+**Not tested:** Script creation complete but Python not available on this machine. User must run `python media/demo/generate-narration.py` before rendering video.
+
+**Advantages over previous TTS:**
+- ✅ No API key required (fully offline)
+- ✅ No rate limits (unlimited generation)
+- ✅ MIT license (commercial use OK)
+- ✅ 9/10 quality (better than gTTS, comparable to Google Cloud TTS)
+- ❌ First-run download required (~1.5GB)
+- ❌ Python dependency (not JS-native)
+
+**Decision rationale:** Steve requested Bark specifically. Offline + no API key = zero ongoing cost, ideal for iteration/testing.
+
 ### Remotion Composition Pattern (2026-05-14)
 **Authority:** Newt
 

@@ -1,5 +1,6 @@
 export const ROUTES = {
   dashboard: '/dashboard',
+  openings: '/openings',
   calendar: '/calendar',
   browse: '/browse',
   browseProvider: '/browse/:providerId',
