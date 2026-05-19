@@ -34,7 +34,9 @@ Before reporting done:
 4. Any new Supabase `.select()` columns confirmed in DB (migration applied first)
 5. Hand off to Ralph for runtime verification
 
-**Ripley does NOT self-certify. Ralph verifies.**
+**Ripley does NOT self-certify. Ralph verifies using `.github/PLAYWRIGHT_VALIDATION.md` SOP.**
+
+`tsc` clean + build green ≠ page works. Runtime verification by Ralph is required before task is closed.
 
 ## ⚠️ ARCHITECTURAL RULE: Paid Status Must Be Query-Proof (Inherited Knowledge)
 

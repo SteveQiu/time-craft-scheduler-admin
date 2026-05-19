@@ -1,14 +1,33 @@
-## Dallas QA Gate — Non-Negotiable
+## Runtime Verification — Non-Negotiable
 
-**Dallas has a proven pattern of reporting work as done when it is broken.**
-She has caused customer-facing regressions (blank pages, missing Paid buttons) and self-certified them as complete.
+**`tsc clean + build green ≠ page works.`**
 
-**Coordinator rule:** Whenever Dallas does frontend work, spawn Ralph (QA) in parallel or immediately after.
-- Ralph independently opens the page and verifies: not blank, existing features intact, new feature works
-- Coordinator does NOT close or accept the task until Ralph confirms
-- Dallas's "tsc passes" / "build passes" claim is never sufficient — runtime verification by Ralph is required
+This is a standing project rule. Evidence from incidents:
+- Dallas's `payment_method_type` change: passed tsc + build → silent blank-page crash at runtime
+- Ripley's `flagConfirm.bookerName`: passed tsc → runtime null crash → blank `/appointments` page
 
-**Always spawn Dallas + Ralph together for any frontend task. Never Dallas alone.**
+**For every frontend change:**
+1. `npx tsc --noEmit` — zero errors (required but not sufficient)
+2. `npm run build` — exits 0 (required but not sufficient)
+3. `node scripts/snapshot-appointments.cjs` — must show non-blank `Text:` output (required)
+4. Screenshot in `tmp-snapshots/` must show rendered content (required)
+
+**Who runs verification:** Ralph. Always. Reference: `.github/PLAYWRIGHT_VALIDATION.md`
+
+**Who may NOT self-certify:** Any frontend agent (Ripley, Moya, or any future frontend dev).
+
+---
+
+## Frontend QA Gate — Non-Negotiable
+
+**Ripley (and Moya) have a required handoff to Ralph after every frontend change.**
+
+**Coordinator rule:** Whenever Ripley or Moya does frontend work, spawn Ralph immediately after.
+- Ralph runs `node scripts/snapshot-appointments.cjs`
+- Ralph reports actual `Text:` output — not assumptions
+- Coordinator does NOT close or accept the task until Ralph confirms non-blank render
+
+**Always spawn Ripley/Moya + Ralph together for any frontend task. Never frontend agent alone.**
 
 ---
 

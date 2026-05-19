@@ -14,6 +14,9 @@ import { useProviderPayments } from '@/hooks/useProviderPayments';
 import { usePaymentProof } from '@/hooks/usePaymentProof';
 import { useAppointmentActions } from '@/hooks/useAppointmentActions';
 import { useAppointmentFiltering } from '@/hooks/useAppointmentFiltering';
+import { useFlaggedAppointments } from '@/hooks/useFlaggedAppointments';
+import { useIsPremium } from '@/hooks/useIsPremium';
+import { useAllAttendanceStats } from '@/hooks/useAllAttendanceStats';
 import { DateFilter } from './appointments/calendarExport';
 import { AppointmentFilters } from './appointments/AppointmentFilters';
 import { AppointmentList } from './appointments/AppointmentList';
@@ -21,6 +24,16 @@ import { BulkModifyDialog } from './appointments/BulkModifyDialog';
 import { PaymentInfoDialog } from './appointments/PaymentInfoDialog';
 import { ProviderProofDialog } from './appointments/ProviderProofDialog';
 import { NotificationBadge } from './appointments/NotificationBadge';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from './ui/alert-dialog';
 
 export function Appointments() {
   const { workers, acceptedWorkers, getWorkerRate } = useOrgWorkers();
@@ -46,6 +59,7 @@ export function Appointments() {
   const [paymentProofAppointmentId, setPaymentProofAppointmentId] = useState<string | null>(null);
   const [providerViewProofAppointmentId, setProviderViewProofAppointmentId] = useState<string | null>(null);
   const [selectedPaymentTabId, setSelectedPaymentTabId] = useState<string | null>(null);
+  const [flagConfirm, setFlagConfirm] = useState<{ open: boolean; appointmentId: string; bookerUserId: string; bookerName: string; action: 'flag' | 'unflag' } | null>(null);
 
   const modeParam = searchParams.get('mode');
   const isOrgView = modeParam === 'org' && (isOrganization || isInternalDev);
@@ -54,6 +68,27 @@ export function Appointments() {
   const appointmentIds = useMemo(() => appointments.map(a => a.id), [appointments]);
   const { paidAppointmentIds, cashAppointmentIds, cardAppointmentIds } = usePaymentStatus(appointmentIds);
   const { appointmentRateMap } = useAppointmentRates(appointmentIds);
+
+  const { flaggedAppointmentIds, flagAppointment, unflagAppointment } = useFlaggedAppointments({
+    appointmentIds,
+    userId: user?.id,
+  });
+
+  const { isPremium } = useIsPremium({ userId: user?.id });
+
+  const uniqueUserIds = useMemo(() => {
+    const userIds = appointments
+      .filter(a => a.user_id)
+      .map(a => a.user_id)
+      .filter((id): id is string => !!id);
+    return Array.from(new Set(userIds));
+  }, [appointments]);
+
+  const { attendanceStatsMap } = useAllAttendanceStats({
+    userIds: uniqueUserIds,
+    providerId: user?.id,
+    enabled: isPremium,
+  });
 
   const {
     allAvailableMethods,
@@ -131,6 +166,29 @@ export function Appointments() {
     dateFilter,
     isOrgView,
   });
+
+  const handleFlag = (appointmentId: string, bookerUserId: string, bookerName: string) => {
+    setFlagConfirm({ open: true, appointmentId, bookerUserId, bookerName, action: 'flag' });
+  };
+
+  const handleUnflag = (appointmentId: string, bookerName: string) => {
+    setFlagConfirm({ open: true, appointmentId, bookerUserId: '', bookerName, action: 'unflag' });
+  };
+
+  const handleFlagConfirm = async () => {
+    if (!flagConfirm) return;
+    try {
+      if (flagConfirm.action === 'flag') {
+        await flagAppointment({ appointmentId: flagConfirm.appointmentId, bookerUserId: flagConfirm.bookerUserId });
+      } else {
+        await unflagAppointment(flagConfirm.appointmentId);
+      }
+    } catch (error) {
+      console.error('Error flagging/unflagging appointment:', error);
+    } finally {
+      setFlagConfirm(null);
+    }
+  };
 
   if (authLoading) {
     return (
@@ -225,6 +283,11 @@ export function Appointments() {
             onStartBulkModify={handleStartBulkModify}
             onExport={() => {}}
             appointments={appointments}
+            flaggedAppointmentIds={flaggedAppointmentIds}
+            onFlag={handleFlag}
+            onUnflag={handleUnflag}
+            isPremium={isPremium}
+            attendanceStatsMap={attendanceStatsMap}
           />
         )}
 
@@ -296,6 +359,30 @@ export function Appointments() {
           providerViewSignedUrl={providerViewSignedUrl}
           providerViewSignedUrlLoading={providerViewSignedUrlLoading}
         />
+
+        <AlertDialog open={!!flagConfirm} onOpenChange={() => setFlagConfirm(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>
+                {flagConfirm?.action === 'flag' ? 'Report No-Show' : 'Remove No-Show Report'}
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                {flagConfirm?.action === 'flag'
+                  ? `Report ${flagConfirm?.bookerName} as no-show for this appointment? This will affect their attendance record.`
+                  : `Remove the no-show report for ${flagConfirm?.bookerName}?`}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                className={flagConfirm?.action === 'flag' ? 'bg-red-600 hover:bg-red-700' : ''}
+                onClick={handleFlagConfirm}
+              >
+                {flagConfirm?.action === 'flag' ? 'Report' : 'Remove Report'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );

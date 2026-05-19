@@ -100,6 +100,10 @@ firefox-debug-screenshots/
 firefox-validation-screenshots/
 debug/
 
+# Test snapshots & playwright output
+# tmp-snapshots/ created by scripts/snapshot-appointments.cjs (Playwright PNGs + text)
+tmp-snapshots/
+
 # ============================================================================
 # TEMPORARY & DEBUG FILES
 # ============================================================================

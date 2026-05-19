@@ -28,6 +28,13 @@ Added grep/Node.js secrets detection to `.husky/pre-commit`. Scans staged files 
 
 **Rationale:** No external deps (Node.js + git only). Scans only staged files (fast). Fail-fast before TypeScript check. Reports pattern type, never actual secret.
 
+### No Agent Git Commit (2026-05-18T22-19-57)
+**Authority:** SteveQiu (via Copilot)
+
+No agent may run `git commit` or `git push`. User commits manually. Agents may `git add` but must stop there.
+
+**Rationale:** User request — maintains manual control over commit history.
+
 ## Configuration & Architecture
 
 ### App Name Centralization (2026-05-06)
@@ -5286,3 +5293,26 @@ All viable solutions still work. Supabase Storage (Option A) is STRONGER than or
 
 **Report Completed:** 2026-04-25  
 **Validator:** Validator (Fact-Checker & Research Auditor)
+
+
+### tsc + build green != page works (2026-05-18)
+**Authority:** SteveQiu (via Copilot)
+
+**Principle:** 	sc --noEmit clean and 
+pm run build exit 0 are necessary but NOT sufficient to claim a frontend change works.
+
+**Evidence:** Two separate incidents where tsc + build passed, runtime crashed with blank page:
+1. Dallas payment_method_type change (commit b1609e5, reverted 1b803ad)
+2. Ripley flagConfirm.bookerName null crash — blank /appointments and /appointments?mode=org
+
+**Mandatory runtime verification for all frontend changes:**
+- Run 
+ode scripts/snapshot-appointments.cjs
+- Output must show non-blank Text: content
+- Screenshot in 	mp-snapshots/ must show rendered page
+
+**Who verifies:** Ralph. Reference SOP: .github/PLAYWRIGHT_VALIDATION.md
+
+**Who may not self-certify:** Any frontend agent. Ever.
+
+**Scope:** Applies to Ripley, Moya, and any future frontend agent added to the team.

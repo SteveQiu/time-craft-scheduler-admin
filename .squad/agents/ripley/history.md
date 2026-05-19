@@ -399,8 +399,15 @@ Bishop's cancel UX spec → explicit `AlertDialog` with title/description/button
 
 ## Learnings
 
+### 2025 — User mode premium features (flag + attendance stats)
 
-## Promotional Screenshots for Remotion Video (2026-05-14)
+- `useAppointments` in user mode already fetches both customer AND provider appointments via `.or('user_id.eq.X,provider_id.eq.X')`.
+- `canManage = isOrgView || appointment.provider_id === userId` — already true for provider appointments in user mode.
+- Flag button (`canManage && appointment.user_id`) was already correct — no change needed.
+- **Root cause**: `useAllAttendanceStats` was gated on `enabled: isPremium && isOrgView`. Dropped `&& isOrgView` so attendance stats load in both org and user mode.
+- One-line fix in `Appointments.tsx`. tsc: zero errors.
+
+## Promotional Screenshotsfor Remotion Video (2026-05-14)
 
 **Task:** Capture 1920x1080 screenshots of real app UI for promotional video.
 
@@ -519,3 +526,30 @@ Exports: `PaymentMethodType` re-export, `CARD_PAYMENT_TYPES`, `NOTE_REQUIRED_TYP
 - Matched existing footer link styling (flex, gap, px, py, rounded, hover state)
 
 **Build gate:** npm run build exits 0 clean.
+
+## Flag/Unflag + Attendance % Feature (2026-05-19)
+
+**Task:** Built flag/unflag button (normal users) + attendance % display (premium users).
+
+**Files created:**
+- `supabase/migrations/20260519_add_flagged_appointments.sql` — new table `flagged_appointments(id, appointment_id, customer_id, org_id, created_at, updated_at)`
+- `src/hooks/useFlaggedAppointments.ts` — fetch flagged appointment IDs for org + customer
+- `src/hooks/useIsPremium.ts` — check if org is premium (via LemonSqueezy subscription)
+- `src/hooks/useAttendanceStats.ts` — aggregate attendance % for given appointment IDs
+- `src/hooks/useAllAttendanceStats.ts` — fetch all attendance stats for org
+
+**Files modified:**
+- `src/components/appointments/AppointmentCard.tsx` — added flag button + attendance % display (premium only)
+- `src/components/appointments/AppointmentList.tsx` — threaded `flaggedIds`, `isPremium`, `attendanceStats` props
+- `src/components/Appointments.tsx` — fetch all 4 hooks, thread props to children
+
+**Architecture:**
+- Flag button: normal users only (toggles `/flagged_appointments`)
+- Attendance %: premium users only (displays from hook result)
+- `paidAppointmentIds` query untouched (critical decision preserved)
+- All hooks independent queries (following pattern)
+
+**Build gate:** `npx tsc --noEmit` → 0 errors.
+**QA gate:** Ralph verified all props threaded, port 8080 up, runtime checks pass.
+
+**Status:** ✅ APPROVED FOR RELEASE

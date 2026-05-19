@@ -40,6 +40,11 @@ interface AppointmentListProps {
   onStartBulkModify: () => void;
   onExport: () => void;
   appointments: Appointment[];
+  flaggedAppointmentIds: Set<string>;
+  onFlag: (appointmentId: string, bookerUserId: string, bookerName: string) => void;
+  onUnflag: (appointmentId: string, bookerName: string) => void;
+  isPremium: boolean;
+  attendanceStatsMap: Map<string, { totalCount: number; flaggedCount: number; attendancePct: number }>;
 }
 
 export function AppointmentList({
@@ -71,6 +76,11 @@ export function AppointmentList({
   onBulkComplete,
   onStartBulkModify,
   appointments,
+  flaggedAppointmentIds,
+  onFlag,
+  onUnflag,
+  isPremium,
+  attendanceStatsMap,
 }: AppointmentListProps) {
   return (
     <>
@@ -126,6 +136,8 @@ export function AppointmentList({
             onApprove={onApprove}
             onCancel={onCancel}
             navigate={navigate}
+            isPremium={isPremium}
+            attendanceStatsMap={attendanceStatsMap}
           />
         ))}
 
@@ -170,6 +182,11 @@ export function AppointmentList({
                       onApprove={onApprove}
                       onCancel={onCancel}
                       navigate={navigate}
+                      flaggedAppointmentIds={flaggedAppointmentIds}
+                      onFlag={onFlag}
+                      onUnflag={onUnflag}
+                      isPremium={isPremium}
+                      attendanceStats={apt.user_id ? attendanceStatsMap.get(apt.user_id) : undefined}
                     />
                   </React.Fragment>
                 );
@@ -229,6 +246,11 @@ export function AppointmentList({
                   onApprove={onApprove}
                   onCancel={onCancel}
                   navigate={navigate}
+                  flaggedAppointmentIds={flaggedAppointmentIds}
+                  onFlag={onFlag}
+                  onUnflag={onUnflag}
+                  isPremium={isPremium}
+                  attendanceStats={a.user_id ? attendanceStatsMap.get(a.user_id) : undefined}
                 />
               ))}
             </div>

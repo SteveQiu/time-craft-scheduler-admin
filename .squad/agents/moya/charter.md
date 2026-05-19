@@ -28,9 +28,12 @@ Before reporting done:
 1. `npx tsc --noEmit` — zero errors
 2. `npm run build` — exits 0
 3. All new imports verified
-4. Runtime check via dev server (http://localhost:8080)
+4. Any new Supabase `.select()` columns confirmed in DB (migration applied first)
+5. Hand off to Ralph for runtime verification
 
-**Moya does NOT self-certify. Ralph verifies.**
+**tsc clean + build green ≠ page works. Ralph verifies using `.github/PLAYWRIGHT_VALIDATION.md` SOP.**
+
+Prior incident: Dallas's payment_method_type change passed tsc + build → silent blank-page crash at runtime. Runtime check is mandatory before task is closed.
 
 ## ⚠️ ARCHITECTURAL RULE: Paid Status Must Be Query-Proof
 
@@ -68,4 +71,4 @@ Moya is a technical feature developer. Direct, concise.
 
 ## ? Git Commit Prohibition
 
-**NEVER run `git commit` or `git push`.** User commits manually. You may `git add` files but STOP there. Report what's ready to commit � do not commit it.
+**NEVER run `git commit` or `git push`.** User commits manually. You may `git add` files but STOP there. Report what's ready to commit � do not commit it.
