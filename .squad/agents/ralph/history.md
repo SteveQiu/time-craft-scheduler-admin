@@ -15,6 +15,30 @@ Agent Ralph initialized and ready for work.
 
 Initial setup complete.
 
+### 2026-05-18 — full-booking-flow.spec.ts Selector Fix
+
+**Task:** Fix Step 2 selectors based on Ripley's investigation. Flow correct, test had wrong selectors.
+
+**What changed:**
+- **Step 2 (customer books):** Updated to use correct BrowseDetail flow:
+  - Browse list → click `.grid .shadow-soft` provider card → nav to `/browse/:providerId`
+  - Select service card → select worker card → pick date button → pick time → "Book" button
+  - AlertDialog → "Confirm Booking" button → redirects to /appointments
+- **Login:** Replaced `waitUntil: 'networkidle'` with `domcontentloaded` + `waitForSelector('button:has-text("Sign Out")')`  
+  - networkidle causing timeouts after booking
+- **Step 3 (approve):** Appointments page uses BulkActionBar — must select checkbox first, then "Approve" button appears
+- **Step 4 (complete):** Same pattern — checkbox first, then "Complete" button in bulk action bar
+- Replaced `waitForLoadState('networkidle')` on appointments page → `waitForSelector('h2:has-text("Reservations")')`
+
+**Selector patterns learned:**
+- Browse provider cards: `.grid .shadow-soft` (BookingBrowse list view)
+- Service/worker/date selection: navigate by heading context (`h3:has-text("Services")` parent)
+- Calendar date buttons: `button:not(:disabled)` with digit text
+- AlertDialog confirm: `[role="alertdialog"] button:has-text("Confirm Booking")`
+- Bulk actions: require checkbox selection first, then buttons appear in sticky bar
+
+**Current state:** Test passes Steps 1-3 consistently. Step 4 has timing flake (completed appt may need "Show inactive" toggle or page refresh). Step 3 occasionally flakes on Approve button visibility after checkbox click (race condition with React state update).
+
 ### 2026-05-07 — Session: Cash button revert + no-commit directive
 
 **Project:** time-craft-scheduler-admin

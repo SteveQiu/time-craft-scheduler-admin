@@ -123,10 +123,13 @@ media/videos/*.webm
 media/audio/*.mp3
 media/audio/**/*.mp3
 media/audio/*.wav
+media/audio/**/*.wav
 media/audio/cache/
 media/public/audio/
 media/assets/temp/
 media/assets/cache/
+media/demo/audio/*.wav
+media/public/demo/audio/*.wav
 
 # ============================================================================
 # SQUAD & PROJECT-SPECIFIC
