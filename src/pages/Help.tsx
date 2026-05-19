@@ -1,7 +1,8 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { ExternalLink, Search, Calendar, Clock, User, Bell, MapPin } from 'lucide-react';
+import { Search, Calendar, Clock, User, Bell, MapPin } from 'lucide-react';
+
+const DEMO_VIDEO_URL = 'https://github.com/SteveQiu/time-craft-scheduler-admin/raw/refs/heads/main/media/videos/pikappoint-demo.mp4';
 
 export default function Help() {
   return (
@@ -18,24 +19,15 @@ export default function Help() {
             📺 Video Tutorial
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-muted-foreground">
-            Watch a full walkthrough of PikAppoint
-          </p>
-          <Button
-            variant="outline"
-            asChild
+        <CardContent>
+          <video
+            src={DEMO_VIDEO_URL}
+            controls
+            className="w-full rounded-md"
+            preload="metadata"
           >
-            <a
-              href="https://github.com/SteveQiu/time-craft-scheduler-admin/blob/main/media/videos/pikappoint-demo.mp4"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2"
-            >
-              <span>Watch Tutorial</span>
-              <ExternalLink className="h-4 w-4" />
-            </a>
-          </Button>
+            Your browser does not support video playback.
+          </video>
         </CardContent>
       </Card>
 
