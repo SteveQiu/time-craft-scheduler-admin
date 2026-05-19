@@ -10,6 +10,16 @@
 
 ## Learnings
 
+### 2026-05 — tmp-snapshots gitignore fix
+
+- `scripts/snapshot-appointments.cjs` (Playwright) writes PNGs to `tmp-snapshots/` — ephemeral, never commit
+- Folder was staged (10 PNGs) before .gitignore was updated — required `git rm --cached -r tmp-snapshots/` to unstage
+- Added `tmp-snapshots/` to TESTING section with explanatory comment
+- No other output files from that script (console-only, no text files written to disk)
+- Existing pattern `*-screenshots/` does NOT match `tmp-snapshots/` — different naming scheme; explicit entry needed
+
+
+
 ### Gitignore Best Practices Implemented ✅
 
 **Node.js/React/Vite Standard Patterns:**

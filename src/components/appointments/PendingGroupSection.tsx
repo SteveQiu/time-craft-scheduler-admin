@@ -26,6 +26,8 @@ interface PendingGroupSectionProps {
   onApprove: (id: string) => void;
   onCancel: (id: string) => void;
   navigate: (path: string) => void;
+  isPremium: boolean;
+  attendanceStatsMap: Map<string, { totalCount: number; flaggedCount: number; attendancePct: number }>;
 }
 
 function getAppointmentTotal(
@@ -68,6 +70,8 @@ export function PendingGroupSection({
   onApprove,
   onCancel,
   navigate,
+  isPremium,
+  attendanceStatsMap,
 }: PendingGroupSectionProps) {
   const first = appts[0];
   const isProvider = first.provider_id === userId;
@@ -138,7 +142,12 @@ export function PendingGroupSection({
                       });
                     }}
                   />
-                  <BookerInfo appointment={apt} navigate={navigate} />
+                  <BookerInfo 
+                    appointment={apt} 
+                    navigate={navigate} 
+                    isPremium={isPremium} 
+                    attendanceStats={apt.user_id ? attendanceStatsMap.get(apt.user_id) : undefined} 
+                  />
                 </div>
                 <div className="flex items-center space-x-2">
                   {(() => {

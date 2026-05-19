@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar, Clock, MapPin, Mail, Phone, User, FileImage, CalendarPlus, CreditCard } from 'lucide-react';
+import { Calendar, Clock, MapPin, Mail, Phone, User, FileImage, CalendarPlus, CreditCard, Flag, FlagOff } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -23,45 +23,56 @@ const getStatusColor = (status: string) => {
 interface BookerInfoProps {
   appointment: Appointment;
   navigate: (path: string) => void;
+  isPremium: boolean;
+  attendanceStats?: { totalCount: number; flaggedCount: number; attendancePct: number };
 }
 
-export function BookerInfo({ appointment, navigate }: BookerInfoProps) {
+export function BookerInfo({ appointment, navigate, isPremium, attendanceStats }: BookerInfoProps) {
   const bookerSlug = appointment.booker_slug;
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-      <div className="flex items-center space-x-2">
-        <User className="h-4 w-4 text-muted-foreground" />
-        {bookerSlug ? (
-          <span
-            className="text-sm font-medium text-primary hover:underline cursor-pointer"
-            onClick={(e) => { e.stopPropagation(); navigate(`/profile/${bookerSlug}`); }}
-          >
-            {appointment.booker_name || 'Unknown'}
-          </span>
-        ) : (
-          <span
-            className="text-sm font-medium text-primary hover:underline cursor-pointer"
-            onClick={(e) => { e.stopPropagation(); navigate(`/profile/${appointment.user_id}`); }}
-          >
-            {appointment.booker_name || 'Unknown'}
-          </span>
+    <div className="flex flex-col gap-2">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+        <div className="flex items-center space-x-2">
+          <User className="h-4 w-4 text-muted-foreground" />
+          {bookerSlug ? (
+            <span
+              className="text-sm font-medium text-primary hover:underline cursor-pointer"
+              onClick={(e) => { e.stopPropagation(); navigate(`/profile/${bookerSlug}`); }}
+            >
+              {appointment.booker_name || 'Unknown'}
+            </span>
+          ) : (
+            <span
+              className="text-sm font-medium text-primary hover:underline cursor-pointer"
+              onClick={(e) => { e.stopPropagation(); navigate(`/profile/${appointment.user_id}`); }}
+            >
+              {appointment.booker_name || 'Unknown'}
+            </span>
+          )}
+        </div>
+        {(appointment.booker_email || appointment.booker_phone) && (
+          <div className="flex items-center gap-3 text-sm text-muted-foreground">
+            {appointment.booker_email && (
+              <a
+                  href={`mailto:${appointment.booker_email}`} className="flex items-center space-x-1 hover:text-primary transition-colors" onClick={(e) => e.stopPropagation()}>
+                <Mail className="h-3 w-3" />
+                <span>{appointment.booker_email}</span>
+              </a>
+            )}
+            {appointment.booker_phone && (
+              <a href={`tel:${appointment.booker_phone}`} className="flex items-center space-x-1 hover:text-primary transition-colors" onClick={(e) => e.stopPropagation()}>
+                <Phone className="h-3 w-3" />
+                <span>{appointment.booker_phone}</span>
+              </a>
+            )}
+          </div>
         )}
       </div>
-      {(appointment.booker_email || appointment.booker_phone) && (
-        <div className="flex items-center gap-3 text-sm text-muted-foreground">
-          {appointment.booker_email && (
-            <a
-                href={`mailto:${appointment.booker_email}`} className="flex items-center space-x-1 hover:text-primary transition-colors" onClick={(e) => e.stopPropagation()}>
-              <Mail className="h-3 w-3" />
-              <span>{appointment.booker_email}</span>
-            </a>
-          )}
-          {appointment.booker_phone && (
-            <a href={`tel:${appointment.booker_phone}`} className="flex items-center space-x-1 hover:text-primary transition-colors" onClick={(e) => e.stopPropagation()}>
-              <Phone className="h-3 w-3" />
-              <span>{appointment.booker_phone}</span>
-            </a>
-          )}
+      {isPremium && attendanceStats && (
+        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+          <span className={attendanceStats.attendancePct >= 90 ? 'text-green-600' : attendanceStats.attendancePct >= 70 ? 'text-yellow-600' : 'text-red-500'}>
+            {attendanceStats.attendancePct}% attended
+          </span>
         </div>
       )}
     </div>
@@ -85,6 +96,11 @@ interface AppointmentCardProps {
   onApprove: (id: string) => void;
   onCancel: (id: string) => void;
   navigate: (path: string) => void;
+  flaggedAppointmentIds: Set<string>;
+  onFlag: (appointmentId: string, bookerUserId: string, bookerName: string) => void;
+  onUnflag: (appointmentId: string, bookerName: string) => void;
+  isPremium: boolean;
+  attendanceStats?: { totalCount: number; flaggedCount: number; attendancePct: number };
 }
 
 export function AppointmentCard({
@@ -102,6 +118,11 @@ export function AppointmentCard({
   onProviderViewProof,
   onPaymentInfo,
   navigate,
+  flaggedAppointmentIds,
+  onFlag,
+  onUnflag,
+  isPremium,
+  attendanceStats,
 }: AppointmentCardProps) {
   const canManage = isOrgView || appointment.provider_id === userId;
 
@@ -296,6 +317,32 @@ export function AppointmentCard({
                   </Tooltip>
                 </TooltipProvider>
               )}
+              {canManage && appointment.user_id && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className={flaggedAppointmentIds.has(appointment.id) ? 'text-red-500 hover:text-red-600' : 'text-muted-foreground hover:text-foreground'}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (flaggedAppointmentIds.has(appointment.id)) {
+                            onUnflag(appointment.id, appointment.booker_name || 'this user');
+                          } else {
+                            onFlag(appointment.id, appointment.user_id, appointment.booker_name || 'this user');
+                          }
+                        }}
+                      >
+                        {flaggedAppointmentIds.has(appointment.id) ? <FlagOff className="h-4 w-4" /> : <Flag className="h-4 w-4" />}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {flaggedAppointmentIds.has(appointment.id) ? 'Remove no-show report' : 'Report no-show'}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
             </div>
           </div>
         </div>
@@ -303,7 +350,7 @@ export function AppointmentCard({
         {/* Customer info for provider */}
         {canManage && appointment.booker_name && (
           <div className="border-t border-border pt-3">
-            <BookerInfo appointment={appointment} navigate={navigate} />
+            <BookerInfo appointment={appointment} navigate={navigate} isPremium={isPremium} attendanceStats={attendanceStats} />
           </div>
         )}
 
