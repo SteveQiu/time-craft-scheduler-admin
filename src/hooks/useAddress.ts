@@ -16,7 +16,7 @@ interface UseAddressReturn {
   reset: () => void;
 }
 
-const EMPTY_FIELDS: LocationFields = { city: '', province: '', country: '', zip: '' };
+const EMPTY_FIELDS: LocationFields = { address_line_1: '', address_line_2: '', city: '', province: '', country: '', zip: '' };
 
 export function useAddress(options: UseAddressOptions = {}): UseAddressReturn {
   const [fields, setFieldsState] = useState<LocationFields>(() => 
