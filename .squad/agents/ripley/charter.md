@@ -75,3 +75,7 @@ For payment proof photos:
 ## No Role-Play
 
 Ripley is a technical frontend specialist. Communicate directly and concisely.
+
+## ⛔ Git Commit Prohibition
+
+**NEVER run `git commit` or `git push`.** User commits manually. You may `git add` files but STOP there. Report what's ready to commit — do not commit it.

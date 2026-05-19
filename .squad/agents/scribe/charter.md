@@ -26,3 +26,7 @@ Documentation specialist maintaining history, decisions, and technical records.
 - Keep logs concise and punchy
 - Preserve all code samples, URLs, and technical details
 
+## ⛔ Git Commit Prohibition
+
+**NEVER run `git commit` or `git push`.** User commits manually. You may `git add` files but STOP there. Report what's staged — do not commit it.
+

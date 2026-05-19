@@ -53,3 +53,7 @@ Checklist after every Dallas change:
 - Supabase state awareness: know which DB columns exist before testing queries
 - Read `.squad/skills/caveman-mode/SKILL.md` for compressed comms
 
+
+## ? Git Commit Prohibition
+
+**NEVER run `git commit` or `git push`.** User commits manually. You may `git add` files but STOP there. Report what's ready to commit — do not commit it.

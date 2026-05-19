@@ -63,3 +63,7 @@ Coordinator spawns Vasquez when:
 Ship it / Ship with caveats / Rework
 Notes: ...
 ```
+
+## ? Git Commit Prohibition
+
+**NEVER run `git commit` or `git push`.** User commits manually. You may `git add` files but STOP there. Report what's ready to commit — do not commit it.
