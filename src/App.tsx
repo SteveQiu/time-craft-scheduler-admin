@@ -27,6 +27,7 @@ import Notifications from "@/pages/Notifications";
 import Terms from "@/pages/legal/Terms";
 import Privacy from "@/pages/legal/Privacy";
 import Refund from "@/pages/legal/Refund";
+import Help from "@/pages/Help";
 
 import { AppSidebar } from "@/components/AppSidebar";
 import { APP_NAME } from "@/config/app";
@@ -110,6 +111,7 @@ const App = () => {
                         <Route path={ROUTES.terms} element={<Terms />} />
                         <Route path={ROUTES.privacy} element={<Privacy />} />
                         <Route path={ROUTES.refund} element={<Refund />} />
+                        <Route path={ROUTES.help} element={<Help />} />
                         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                         <Route path="*" element={<NotFound />} />
                       </Routes>
@@ -140,6 +142,7 @@ const App = () => {
                   <Route path={ROUTES.terms} element={<Terms />} />
                   <Route path={ROUTES.privacy} element={<Privacy />} />
                   <Route path={ROUTES.refund} element={<Refund />} />
+                  <Route path={ROUTES.help} element={<Help />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>

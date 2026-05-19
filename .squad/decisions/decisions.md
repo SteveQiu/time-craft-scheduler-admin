@@ -280,3 +280,184 @@ Extended `supabase/functions/lemonsqueezy-webhook/index.ts` to support both org-
 No schema changes — `subscriptions` table already exists.
 
 **Files:** `supabase/functions/lemonsqueezy-webhook/index.ts`
+
+---
+
+### 2026-05-16: Workers renamed to Resources
+**By:** SteveQiu (via Ripley)
+
+UI label "Workers" → "Resources" across sidebar nav and Workers page. Internal code, URL path `/workers`, and DB column names unchanged.
+
+**Rationale:** Better fits multi-venue orgs (KTV rooms, salon tables, coworking spaces, staff). Industry standard term.
+
+### 2026-05-16: Payment action audit findings
+**By:** Steve (via Ripley)
+
+Audited `handleSubmitPaymentProof`. Found: no user feedback toasts, audit log failure swallowed silently. Fixed both. Added payment notification config and `usePaymentNotifications` hook for provider/customer.
+
+**Files changed:** `src/hooks/usePaymentProof.ts`, `src/config/notificationConfig.ts`, `src/hooks/usePaymentNotifications.ts` (new), `src/App.tsx`
+
+### 2026-05-17: PaymentMethodType Enum + Centralized Payment Hook
+**By:** Ripley (Frontend Dev) — Steve requested
+
+**Decision 1: PaymentMethodType is now an enum (not string union)**
+
+`src/lib/payment/types.ts` exports string enum:
+
+```ts
+export enum PaymentMethodType {
+  Cash = 'cash',
+  OnsiteDebitCard = 'onsite_debit_card',
+  OnsiteCreditCard = 'onsite_credit_card',
+  PayPal = 'paypal',
+  Venmo = 'venmo',
+  EmailTransfer = 'email_transfer',
+  WeChat = 'wechat',
+}
+```
+
+**Rule:** Never use raw string literals. Always use `PaymentMethodType.Cash`, etc. Prevents typos, enables rename refactors, exhaustive switch checks.
+
+**DB compatibility:** Enum values identical to stored strings — no migration needed.
+
+**Decision 2: `usePaymentMethods.ts` is single source for payment type logic**
+
+Exports:
+- `CARD_PAYMENT_TYPES`, `NOTE_REQUIRED_TYPES`, `ONSITE_PAYMENT_TYPES` — computed sets
+- `isCardPayment(type)`, `requiresPaymentNote(type)`, `isOnsitePayment(type)` — type helpers
+- `getPaymentMethodLabel(type)`, `getAvailablePaymentMethods()` — config retrieval
+
+**Rule:** Do NOT inline type checks. Import + use helpers from `usePaymentMethods.ts`.
+
+**Decision 3: Nav ID for Resources nav item is 'resources'**
+
+`AppSidebar.tsx` orgNavItems Resources entry uses `id: 'resources'`.
+
+### 2026-05-18T19:49:28Z: Media team rule — always align video to audio
+**By:** Steve (via Copilot)
+
+Every Remotion composition must use `calculateMetadata` + `getAudioDuration` to auto-size duration from audio files. Never hardcode `durationInFrames` when audio exists. Split long TTS narration (>20s) into multiple segments to prevent Bark cutoff.
+
+**Rationale:** Prevents audio/video sync drift and TTS cutoff bugs. User directive.
+
+### 2026-05-18: Bark TTS for Demo Video Pipeline
+**By:** Newt (Media & Video Engineer)
+
+**Decision:** Use **Bark** (https://github.com/suno-ai/bark) as primary TTS provider for demo video narration.
+
+**Why Bark:**
+- ✅ Fully offline: No API key, no rate limits, zero ongoing cost after model download
+- ✅ MIT licensed: Commercial use permitted
+- ✅ 9/10 quality: Natural speech, comparable to Google Cloud TTS Neural voices
+- ✅ Reproducible: Same input → same output (deterministic)
+- ✅ Voice control: 10 speaker presets (v2/en_speaker_0-9)
+
+**Tradeoffs:**
+- ❌ First-run download: ~1.5GB models (one-time, cached locally)
+- ❌ Python dependency: Requires `pip install bark scipy`
+- ❌ Slower than cloud TTS: ~30s per scene on CPU (vs ~2s for Google Cloud TTS)
+
+**vs. Alternatives:**
+- **ElevenLabs:** 10/10 quality, but 10k chars/month free tier (7500 chars = full demo)
+- **Google Cloud TTS:** 1M chars/month free, requires API key + internet
+
+**Implementation:**
+- `media/demo/generate-narration.py` — Python script generates scene WAV files
+- `media/demo/audio/` — Audio output folder (WAV files gitignored)
+- `media/public/demo/audio/` — Remotion public folder (script copies WAV here)
+- Modified `DemoVideo.tsx` audio paths: `demo/audio/sceneX.wav`
+
+**Usage:**
+```bash
+pip install bark scipy
+python media/demo/generate-narration.py
+```
+
+**Voice:** `v2/en_speaker_6` (neutral professional) — can override in `generate-narration.py`.
+
+**Team impact:** Python 3.x required, internet for first-run model download, ~2GB disk for cache. No API key coordination needed.
+
+### 2026-05-18: PikAppoint Demo Video — Architecture Decision
+**By:** Newt (Media & Video Engineer)
+
+**Context:** End-to-end booking flow demo video showing provider + customer journeys. Self-documenting, real UI interactions, production-ready.
+
+**Decision:** 4-scene demo video (120s) with screen recording simulation style.
+
+**Architecture:**
+- **Scene structure:** 4 independent scenes (Step1-4), each 30s, self-contained Remotion composition
+- **Timing strategy:** Named frame markers for key interactions (`navClickFrame = 60`, `openDialogFrame = 120`) for precise animation control
+- **Shared components:** ScreenFrame (browser chrome), Caption (overlay), StepIndicator (progress badge), UIElements (Button, Badge, Card)
+- **Dynamic duration:** `calculateMetadata` measures TTS audio files and auto-sizes composition (fallback to 30s per step if audio missing)
+
+**UI Mockup Strategy:**
+- Hand-coded React components (NO screenshots or external assets)
+- Styled to match real app (Tailwind classes, shadcn/ui patterns, PikAppoint branding)
+- Frame-based animations (`useCurrentFrame()` + `interpolate()`) — NO CSS animations (don't work in non-realtime rendering)
+
+**TTS Integration:**
+- Primary: Google Cloud TTS (1M chars/month free, en-US-Neural2-J voice)
+- Fallback: Silent 30s MP3 placeholders (FFmpeg-generated) for preview
+- Scripts: `generate-audio.mjs` (TTS generation), `render-demo.mjs` (programmatic render)
+
+**Video Specs:**
+- Resolution: 1280×720 (720p, web-optimized)
+- FPS: 30
+- Codec: H.264 MP4
+- Duration: 120s (3600 frames)
+- File size: 6.1 MB
+
+**Alternatives considered:**
+1. **Real screen recordings:** Rejected — too brittle (UI changes break recordings), hard to sync with TTS, no animation control
+2. **Static slides:** Rejected — not engaging, doesn't show real interactions
+3. **Playwright-generated screenshots + Ken Burns:** Deferred — adds complexity, mockups sufficient for demo
+
+**Consequences:**
+- ✅ Self-contained, maintainable, flexible timing, reusable patterns, fast iteration
+- ❌ UI mockups must stay in sync (manual effort), TTS dependency, render time ~3 min
+
+**Future enhancements:**
+- Background music (soft corporate BGM at -18dB)
+- Mouse cursor animation
+- Real screenshots overlaid with annotations (hybrid approach)
+- Multi-language versions (Spanish, French)
+- Closing scene with CTA ("Try PikAppoint today" + QR code)
+
+### 2026-05-27: Help Page — Tutorial Video URL & Structure
+**By:** Ripley (Frontend Dev)
+
+**Decision:** Create `/help` route accessible to all users (auth + guest) with video tutorial + feature cards.
+
+**Tutorial Video Location:**
+```
+https://github.com/SteveQiu/time-craft-scheduler-admin/blob/main/media/videos/pikappoint-demo.mp4
+```
+Opens in new tab via external link button.
+
+**Page Structure:**
+
+1. **Video Card** (top)
+   - Title: "📺 Video Tutorial"
+   - Button: "Watch Tutorial" (outline variant + ExternalLink icon)
+   - External link to GitHub video
+
+2. **Feature Cards Grid** (2-col md+, 1-col mobile)
+   - Browse Providers — Search icon
+   - Book an Appointment — Calendar icon
+   - Manage Openings — Clock icon (org feature)
+   - View Reservations — MapPin icon
+   - Your Profile — User icon
+   - Notifications — Bell icon
+
+**Sidebar Link Pattern:**
+Sidebar footer now contains **internal** `/help` route link (not external GitHub video):
+- Icon: `HelpCircle` from lucide-react
+- Label: "Help"
+- Active state highlight via `isActive(ROUTES.help)` check
+- Present in both auth and guest footers
+
+**Rationale:**
+- Internal `/help` page allows future expansion (text guide, FAQ)
+- Keeps user in-app instead of external bounce
+- Video accessible but not the only content
+- Consistent routing pattern (no external links in sidebar nav)

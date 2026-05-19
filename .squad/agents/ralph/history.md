@@ -15,6 +15,25 @@ Agent Ralph initialized and ready for work.
 
 Initial setup complete.
 
+### 2026-05-19 — Vite cache corruption on new route discovery
+**Task:** Help page verification + testing
+
+**Issue:** Blank page on initial `/help` navigation after Ripley created new Help.tsx route. Page rendered in browser but showed white screen; no console errors.
+
+**Root cause:** Vite dev server cache stale — created new file + route, but Vite SSR couldn't auto-discover and hot-reload the new route in component tree. Router config in memory didn't match disk.
+
+**Fix:** Restart `npm run dev` + clear browser cache (Cmd+Shift+R or Ctrl+Shift+R). Forces Vite to rebuild module graph.
+
+**Pattern:** Whenever adding new files (pages, routes, components) to the app:
+1. Create file + wire route
+2. Restart dev server (not just HMR wait)
+3. Clear browser cache before testing
+4. Verify page renders before declaring "no console errors = success"
+
+**Why:** SSR + HMR don't guarantee module graph reload on file additions. Leaf-level changes (function edits) hot-reload fine; tree-level changes (new routes) require full restart.
+
+**Impact:** Ralph's QA checklist now includes dev server restart ritual on new-page PRs. Prevents false "blank page bug" reports from stale cache.
+
 ### 2026-05-18 — full-booking-flow.spec.ts Selector Fix
 
 **Task:** Fix Step 2 selectors based on Ripley's investigation. Flow correct, test had wrong selectors.
@@ -581,3 +600,33 @@ If occupied, kill with `Stop-Process -Id <PID> -Force`.
 
 **Notes:** Auth layer is solid. Need routing fix for profile redirect after browse.
 
+
+### 2026-05-18 21:56 � Help Page QA Verification
+
+**Task:** Verify Ripley's new /help page implementation (Help.tsx + ROUTES.help + sidebar links).
+
+**Initial finding:** Entire app BLANK. Console error:
+`
+The requested module '/src/components/AppSidebar.tsx?t=1779165868727' does not provide an export named 'AppSidebar'
+`
+
+**Root cause:** Vite HMR stale cache. AppSidebar.tsx exports correctly (export function AppSidebar), App.tsx imports correctly (import { AppSidebar }), but Vite cache was corrupted after Ripley's changes.
+
+**Fix:** Cleared .vite cache + restarted dev server. Port changed 8080 ? 8082.
+
+**Verification results:** ? ALL PASS
+1. ? /help loads without authentication (no console errors)
+2. ? "Help & Tutorial" heading visible
+3. ? "Watch Tutorial" button with external GitHub link
+4. ? 4+ feature guide cards visible (Browse, Book, Manage, View Reservations)
+5. ? Mobile viewport renders correctly
+6. ? Guest users can access /help
+
+**Playwright test created:** 	ests/help-page.spec.ts (5 tests, all passing)
+
+**Caveat for future tests:** App.tsx has dual <main> tags (desktop + mobile). Use .first() for desktop tests, .last() for mobile. Strict mode errors occur otherwise.
+
+**Learnings:**
+- After adding routes/components, if app goes blank ? check Vite cache first
+- AppSidebar dual-render (auth/guest) confirmed � Help link appears in both states
+- Help page accessible without login (public route)
