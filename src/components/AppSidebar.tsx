@@ -40,8 +40,8 @@ export function AppSidebar() {
 
   const userNavItems = [
     { id: 'browse', label: 'Browse', icon: Search, path: ROUTES.browse },
-    { id: 'openings', label: 'Opening', icon: CalendarIcon, path: ROUTES.openings },
     { id: 'appointments-user', label: 'Reservations', icon: Clock, path: ROUTES.appointments },
+    { id: 'openings', label: 'Opening', icon: CalendarIcon, path: ROUTES.openings },
   ];
 
   const orgNavItems = [
