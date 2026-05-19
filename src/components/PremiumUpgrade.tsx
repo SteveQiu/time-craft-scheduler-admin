@@ -42,13 +42,13 @@ export function PremiumUpgrade({ orgId, onSuccess }: PremiumUpgradeProps) {
 
       // Get current plan
       const fetchPlan = async () => {
-        const { data } = await supabase
+        const { data } = await (supabase as any)
           .from('orgs')
           .select('plan')
           .eq('id', effectOrgId)
           .single();
 
-        if (data?.plan === 'premium') {
+        if ((data as any)?.plan === 'premium') {
           setIsPremium(true);
         }
       };
