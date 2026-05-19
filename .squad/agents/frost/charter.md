@@ -46,3 +46,7 @@
 ✅ Security review by Guardian complete
 ✅ Team guidance document (.squad/docs/gitignore-strategy.md) written
 ✅ Media/ folder patterns integrated (Remotion assets, cache, outputs)
+
+## ? Git Commit Prohibition
+
+**NEVER run `git commit` or `git push`.** User commits manually. You may `git add` files but STOP there. Report what's ready to commit � do not commit it.

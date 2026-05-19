@@ -72,3 +72,7 @@ const calculateMetadata: CalculateMetadataFunction<Props> = async () => {
 ✅ Top 3 free TTS options evaluated with comparison matrix
 ✅ First Lemon Squeezy video template working with TTS audio
 ✅ Video generation workflow documented for team reuse
+
+## ? Git Commit Prohibition
+
+**NEVER run `git commit` or `git push`.** User commits manually. You may `git add` files but STOP there. Report what's ready to commit � do not commit it.
