@@ -332,6 +332,22 @@ Bishop's cancel UX spec → explicit `AlertDialog` with title/description/button
 2. `AppointmentView` replaced mock data with real Supabase query via React Query.
 
 **AppointmentCard.tsx changes:**
+
+### Help Page & Internal Tutorial Route (2026-05-27)
+
+**Task:** Create `/help` route with tutorial video + feature cards. Replace external tutorial link in sidebar with internal route.
+
+**Files created:**
+- `src/pages/Help.tsx` — Help & Tutorial page. Top card: video tutorial button → GitHub demo video (external). 2-col grid (1-col mobile): 6 feature cards with Lucide icons (Search, Calendar, Clock, MapPin, User, Bell) covering Browse/Book/Manage/Profile/Notifications. Pattern: `p-6 space-y-6` top level, Shadcn Card + Button (variant="outline" + asChild for external link)
+
+**Files modified:**
+- `src/config/routes.ts` — added `help: '/help'`
+- `src/App.tsx` — imported `Help`; added `<Route path={ROUTES.help} element={<Help />} />` to BOTH desktop (line 112) and mobile (line 142) Routes blocks (before `*` catch-all)
+- `src/components/AppSidebar.tsx` — replaced external `<a href="github url">` tutorial links with internal `<Link to={ROUTES.help}>` in both auth (line 234-242) and guest (line 276-284) footer sections. Swapped `PlayCircle` icon for `HelpCircle`. Label: "Tutorial" → "Help".
+
+**Build gate:** `npm run build` → exit 0 (7.19s, 2230 modules)
+
+**Handoff:** Ralph for runtime verification (route loads, video button works, no sidebar regressions)
 - Added `onClick={() => navigate('/appointments/${appointment.id}')}` + `cursor-pointer` class to outer `<Card>`.
 - All interactive children received `e.stopPropagation()`: provider avatar div, provider name div, DropdownMenu trigger button, FileImage/Paid button, both CreditCard buttons, email `<a>`, phone `<a>`, booker name spans in `BookerInfo`.
 - Merged stopPropagation into existing onClick handlers (no wrapper divs added — surgical).
@@ -472,3 +488,16 @@ Exports: `PaymentMethodType` re-export, `CARD_PAYMENT_TYPES`, `NOTE_REQUIRED_TYP
 
 **Notes:** Payment handling now type-safe. Ready for integration.
 
+
+## Tutorial Link in Sidebar (2026-05-08)
+
+**Task:** Add external link to GitHub demo video in AppSidebar footer.
+
+**Changes:**
+- Added PlayCircle to lucide-react imports
+- Added tutorial link for authenticated users (before Sign Out button, after Settings)
+- Added tutorial link for unauthenticated users (after Sign In button)
+- Used <a> tag with target="_blank" + rel="noopener noreferrer" (external URL, not React Router)
+- Matched existing footer link styling (flex, gap, px, py, rounded, hover state)
+
+**Build gate:** npm run build exits 0 clean.

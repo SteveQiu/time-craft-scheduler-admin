@@ -1,4 +1,4 @@
-import { Search, Home, Calendar as CalendarIcon, Users, Clock, Settings, LogIn, LogOut, UserCircle, Shield, Bell } from 'lucide-react';
+import { Search, Home, Calendar as CalendarIcon, Users, Clock, Settings, LogIn, LogOut, UserCircle, Shield, Bell, HelpCircle } from 'lucide-react';
 import { APP_NAME } from '@/config/app';
 import { ROUTES } from '@/config/routes';
 import { useAuth } from '@/hooks/useAuth';
@@ -230,6 +230,19 @@ export function AppSidebar() {
 
             <Separator />
 
+            {/* Help Link */}
+            <Link
+              to={ROUTES.help}
+              className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
+                isActive(ROUTES.help)
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-foreground hover:bg-accent'
+              }`}
+            >
+              <HelpCircle className="h-4 w-4 flex-shrink-0" />
+              <span className="truncate">Help</span>
+            </Link>
+
             {/* View Mode Switcher for Organizations */}
             {isOrganization && !isInternalDev && (
               <div className="flex items-center justify-center">
@@ -253,13 +266,28 @@ export function AppSidebar() {
           </>
         )}
         {!user && (
-          <Button 
-            className="w-full gap-2 justify-start"
-            onClick={() => navigate(ROUTES.auth)}
-          >
-            <LogIn className="h-4 w-4" />
-            <span>Sign In</span>
-          </Button>
+          <>
+            <Button 
+              className="w-full gap-2 justify-start"
+              onClick={() => navigate(ROUTES.auth)}
+            >
+              <LogIn className="h-4 w-4" />
+              <span>Sign In</span>
+            </Button>
+
+            {/* Help Link */}
+            <Link
+              to={ROUTES.help}
+              className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
+                isActive(ROUTES.help)
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-foreground hover:bg-accent'
+              }`}
+            >
+              <HelpCircle className="h-4 w-4 flex-shrink-0" />
+              <span className="truncate">Help</span>
+            </Link>
+          </>
         )}
       </div>
     </div>
