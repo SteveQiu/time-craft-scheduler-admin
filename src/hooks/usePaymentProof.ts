@@ -205,9 +205,18 @@ export function usePaymentProof({
       if (error) throw error;
 
       // Also notify provider via audit event (for their notification feed)
+      const { data: apt } = await supabase
+        .from('appointments')
+        .select('provider_id')
+        .eq('id', paymentProofAppointmentId)
+        .maybeSingle();
+      const recipients = [user.id, apt?.provider_id].filter(Boolean) as string[];
       const { error: auditErr } = await supabase.rpc('log_audit_event', {
         _event_type: 'payment.proof_submitted',
+        _entity_type: 'appointment',
         _entity_id: paymentProofAppointmentId,
+        _actor_id: user.id,
+        _recipient_ids: recipients,
         _metadata: { note: paymentProofNote, customer_name: user.email },
       });
       if (auditErr) console.error('[audit] log_audit_event failed:', auditErr);
