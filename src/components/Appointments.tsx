@@ -49,7 +49,8 @@ export function Appointments() {
 
   const modeParam = searchParams.get('mode');
   const isOrgView = modeParam === 'org' && (isOrganization || isInternalDev);
-  const { data: appointments = [], isLoading } = useAppointments({ userId: user?.id, isOrgView, acceptedWorkers });
+  const acceptedWorkerNames = useMemo(() => acceptedWorkers.map(w => w.worker_name), [acceptedWorkers]);
+  const { data: appointments = [], isLoading } = useAppointments({ userId: user?.id, isOrgView, acceptedWorkers: acceptedWorkerNames });
   const appointmentIds = useMemo(() => appointments.map(a => a.id), [appointments]);
   const { paidAppointmentIds, cashAppointmentIds, cardAppointmentIds } = usePaymentStatus(appointmentIds);
   const { appointmentRateMap } = useAppointmentRates(appointmentIds);

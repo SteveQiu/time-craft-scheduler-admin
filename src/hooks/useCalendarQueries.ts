@@ -8,7 +8,7 @@ interface UseCalendarQueriesParams {
   resetPaymentDetails: () => void;
   paymentFormLabel: string;
   paymentFormType: string;
-  serializePaymentDetails: () => Record<string, unknown>;
+  serializePaymentDetails: () => string | null;
   setShowPaymentDialog: (v: boolean) => void;
   setPaymentFormLabel: (v: string) => void;
   setPaymentFormType: (v: string) => void;
@@ -61,7 +61,7 @@ export function useCalendarQueries({
       const details = serializePaymentDetails();
       const { error } = await supabase
         .from('payment_methods')
-        .insert({ user_id: user.id, label: paymentFormLabel, type: paymentFormType, details });
+        .insert([{ user_id: user.id, label: paymentFormLabel, type: paymentFormType, details: details ?? undefined }]);
       if (error) throw error;
     },
     onSuccess: () => {

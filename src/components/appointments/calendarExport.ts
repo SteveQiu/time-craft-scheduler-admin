@@ -129,8 +129,8 @@ function extractProofStoragePath(photoUrl: string): string {
   return photoUrl; // Already a storage path
 }
 
+export type { DateFilter };
 export {
-  DateFilter,
   formatDateForCalendar,
   toUTCString,
   toGoogleCalendarUrl,
