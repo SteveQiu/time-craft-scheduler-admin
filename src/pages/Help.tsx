@@ -31,6 +31,37 @@ export default function Help() {
         </CardContent>
       </Card>
 
+      {/* App Flow */}
+      <Card>
+        <CardHeader>
+          <CardTitle>How It Works</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <p className="text-sm font-semibold text-foreground mb-1">👤 As a Client</p>
+            <ul className="text-sm text-muted-foreground space-y-1 list-none pl-2">
+              <li>→ <strong>Browse</strong> — find service providers near you</li>
+              <li>→ <strong>Sign in</strong> — create or log into your account</li>
+              <li>→ <strong>Pick a slot</strong> — select an available opening</li>
+              <li>→ <strong>Confirm</strong> — reservation is saved instantly</li>
+              <li>→ <strong>Reservations</strong> — view, track, or cancel bookings</li>
+              <li>→ <strong>Notifications</strong> — get updates on confirmations &amp; changes</li>
+            </ul>
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-foreground mb-1">🏢 As a Provider / Organization</p>
+            <ul className="text-sm text-muted-foreground space-y-1 list-none pl-2">
+              <li>→ <strong>Sign in</strong> — access your organization dashboard</li>
+              <li>→ <strong>Openings</strong> — create available time slots</li>
+              <li>→ <strong>Reservations</strong> — review incoming bookings</li>
+              <li>→ <strong>Approve / Deny</strong> — manage requests individually or in bulk</li>
+              <li>→ <strong>Profile</strong> — share your QR link so clients can find you</li>
+              <li>→ <strong>Settings</strong> — configure location, payment, and preferences</li>
+            </ul>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Feature Guide Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card>
