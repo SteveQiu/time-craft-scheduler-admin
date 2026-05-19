@@ -11,11 +11,40 @@ Agent Ralph initialized and ready for work.
 
 📌 Team initialized on 2026-04-22
 
+## Core Context
+
+**Stack:** time-craft-scheduler-admin — React 18 + TS + Tailwind + Shadcn/ui + Supabase. Dev: http://localhost:8082 (Vite).
+
+**QA patterns:**
+- Always restart dev server (`npm run dev`) after new file additions (routes, pages, components) — Vite SSR cache doesn't auto-reload tree-level changes
+- Clear browser cache (Cmd+Shift+R or Ctrl+Shift+R) after route additions before declaring "working"
+- E2E blockers: auth timeouts (corporate proxy/firewall to Supabase API), infinite useEffect loops, console spam ("Failed to fetch", "Maximum update depth")
+- Playwright selectors: Browse `.grid .shadow-soft`, AlertDialog `[role="alertdialog"]`, Bulk actions require checkbox selection first
+- Desktop/mobile dual render: use `.first()` selector for desktop, `.last()` for mobile (or reverse depending on order)
+
+**Critical files:**
+- `src/components/Appointments.tsx` — Payment proof, cash detection, photo upload flow. Fragile component; all changes need runtime verification
+- `src/pages/Auth.tsx` — Sign in/up forms, Turnstile captcha, legal links
+- `src/components/Calendar.tsx` — Opening management, payment method selection
+
+**Key learnings:**
+- Dallas pattern: "tsc passes" + "build passes" ≠ "works in browser" (blank pages, missing features, silent failures are common)
+- Ralph's duty: independent browser verification before sign-off. Checklist: page not blank, existing features intact, new feature works
+- Appointments.tsx blank-page bug from payment refactor: changing imports without verifying all usages (removed Edit/Trash2 icons during refactor, broke approval flow)
+- Legal pages: Hicks fact-checking required (verify against primary legislation sources, not just company templates). Burke locked out after REJECT; only Hicks corrections unblock
+
+**Verification checklist (per task):**
+1. Build: `npm run build` → exit 0
+2. TypeScript: `npx tsc --noEmit` → zero errors
+3. Browser: page loads 200, not blank, no console errors
+4. Features: new functionality works end-to-end
+5. Regressions: existing buttons/flows untouched
+
 ## Learnings
 
-Initial setup complete.
+### Recent Work
 
-### 2026-05-19 — Vite cache corruption on new route discovery
+#### Help Page Verification + Vite Cache Pattern (2026-05-19)
 **Task:** Help page verification + testing
 
 **Issue:** Blank page on initial `/help` navigation after Ripley created new Help.tsx route. Page rendered in browser but showed white screen; no console errors.
