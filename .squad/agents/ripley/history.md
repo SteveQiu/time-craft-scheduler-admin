@@ -47,9 +47,27 @@ App is an admin scheduler for organizations. Key pages: Appointments, Workers, B
 - Bishop (UX): accessibility and design authority — directives are binding
 - Guardian: secret scanning
 
+## Core Context
+
+**Stack:** React 18 + TypeScript + Tailwind + Shadcn/ui + Supabase (PostgreSQL). Desktop/mobile dual-routes pattern in App.tsx (update both `<Routes>` blocks).
+
+**Key patterns:**
+- Payment methods: `PaymentMethodType` enum (cash, onsite_debit_card, etc.) + `usePaymentMethods.ts` hook for type-safe logic
+- Supabase Storage: signed URLs (1h expiry) for private buckets (`payment-proofs`, `profile-photos`). Always call `createSignedUrl()` in `useEffect`, never rely on public URLs
+- Legal pages: JSX-based (not markdown). EU/UK statutory disclosures require explicit consent mechanisms, not passive language. Primary sources: Directive 2011/83/EU Art 16(m), UK CCR 2013 Reg 37, Lemon Squeezy Buyer Terms
+- Environment: Vite dev on http://localhost:8080 (npm run dev). Turnstile captcha on Auth form (`VITE_TURNSTILE_SITE_KEY`). Lemon Squeezy URLs via `VITE_LEMONSQUEEZY_CHECKOUT_URL`, `VITE_LEMONSQUEEZY_PORTAL_URL`
+- Appointments.tsx is fragile — payment proof, cash detection, photo upload. Always verify runtime after changes (tsc ✅ + build ✅ + browser ✅)
+- RPC + React Query pattern: `useQuery(..., async () => const { data, error } = await supabase.rpc('fn_name'))`
+- Profile slug → UUID fallback: if no slug, use `profile.id` for `/profile/{id}` route
+- Components self-contained: own state, minimal props. Example: QRDialog owns `copied` state, consumer only passes `open`/`onOpenChange`/`shareUrl`
+
+**Commits:** Help page (2026-05-27), Payment refactor + Workers→Resources (2026-05-18), Legal pages + cancel UX (2026-05-12 onwards).
+
 ## Learnings
 
-### QR Share Feature in ProfileHeader (2026)
+### Recent Work
+
+#### Help Page & Tutorial Route (2026-05-27)
 
 **Task:** Add QR code share button to profile page.
 
