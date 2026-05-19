@@ -19,8 +19,8 @@ export function useOrgPlan(orgId: string | null): OrgPlan {
     let channel: ReturnType<typeof supabase.channel> | null = null;
 
     const setup = async () => {
-      // Fetch current plan
-      const { data, error } = await supabase
+      // Fetch current plan ('orgs' table not in typed schema yet; cast to any)
+      const { data, error } = await (supabase as any)
         .from('orgs')
         .select('plan')
         .eq('id', orgId)
@@ -29,10 +29,10 @@ export function useOrgPlan(orgId: string | null): OrgPlan {
       if (error) {
         console.error('Failed to fetch org plan:', error);
       } else if (data) {
-        setPlan(data.plan as 'free' | 'premium');
+        setPlan((data as any).plan as 'free' | 'premium');
       } else {
         // Org record doesn't exist yet, create it
-        const { error: insertError } = await supabase
+        const { error: insertError } = await (supabase as any)
           .from('orgs')
           .insert({ id: orgId, plan: 'free' })
           .select()
