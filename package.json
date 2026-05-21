@@ -23,7 +23,8 @@
     "test:ui": "playwright test --ui",
     "test:headed": "playwright test --headed",
     "test:debug": "playwright test --debug",
-    "test:report": "playwright show-report"
+    "test:report": "playwright show-report",
+    "supabase": "supabase"
   },
   "dependencies": {
     "@hcaptcha/react-hcaptcha": "^2.0.2",

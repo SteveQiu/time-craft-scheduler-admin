@@ -5316,3 +5316,52 @@ ode scripts/snapshot-appointments.cjs
 **Who may not self-certify:** Any frontend agent. Ever.
 
 **Scope:** Applies to Ripley, Moya, and any future frontend agent added to the team.
+
+
+### Restore Anon Browse Access (2026-05-21)
+**Authority:** Ripley
+
+# Ripley Decision â€” Restore anon browse access
+
+## Context
+Anonymous users could no longer load `/browse` after two RLS changes removed safe public access:
+1. `20260415_strengthen_rls_policies.sql` dropped the old openings browse policy.
+2. `20260519015601_4cf4b35b-b27d-4318-8241-0fe5909a9399.sql` revoked anon execute on `get_public_profile_names(uuid[])`.
+
+## Decision
+Add a follow-up migration: `supabase/migrations/20260521000000_fix_anon_browse_access.sql`.
+
+It does two things only:
+- Re-add public read access for future available openings via a new policy name: `Public can browse available openings`.
+- Re-grant anon execute on `public.get_public_profile_names(uuid[])`.
+
+## Why
+These are the safe minimum permissions needed for signed-out Browse page access. We are not granting anon access to `appointments`, because that table contains booker PII and browse already degrades gracefully without the confirmed-slot filter.
+
+## Notes
+Using a new openings policy name avoids conflict with the old `Anyone can browse available openings` policy that was explicitly dropped in `20260415_strengthen_rls_policies.sql`.
+
+
+### Attendance Stats in User Mode (2026-05-21)
+**Authority:** Ripley
+
+# Decision: attendance stats enabled in user mode
+
+**Date:** 2025  
+**Author:** Ripley
+
+## Context
+
+`/appointments` (user mode) providers should see premium features (flag button + attendance stats badge) for appointments where they are the provider.
+
+## Decision
+
+`useAllAttendanceStats` `enabled` guard changed from `isPremium && isOrgView` â†’ `isPremium`.
+
+## Rationale
+
+- `useAppointments` already returns provider appointments in user mode (`.or('user_id.eq.X,provider_id.eq.X')`).
+- `canManage` is already `true` for those appointments (`appointment.provider_id === userId`).
+- The only missing piece was the attendance stats query being skipped in user mode.
+- No query shape changes â€” same hook, just wider `enabled` condition.
+
