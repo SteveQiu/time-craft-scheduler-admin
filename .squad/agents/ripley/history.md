@@ -65,6 +65,27 @@ App is an admin scheduler for organizations. Key pages: Appointments, Workers, B
 
 ## Learnings
 
+### Anon Browse Access Restore (2026-05-21)
+
+**Task:** Restore anonymous Browse page data access after RLS hardening removed the safe public pieces.
+
+**Files created:**
+- `supabase/migrations/20260521000000_fix_anon_browse_access.sql` — re-adds anon/authenticated SELECT policy for future available `openings`; re-grants anon execute on `get_public_profile_names(uuid[])`; intentionally leaves `appointments` locked down to avoid exposing booker PII.
+
+**RLS lesson:** Public browse flows may depend on both table policies and RPC grants. When tightening RLS, verify anon paths end-to-end — losing either the `openings` browse policy or the profile-name RPC breaks `/browse` for signed-out users.
+
+### OpeningView booking email hook (2026-05-21)
+
+**Task:** Wire `OpeningView.tsx` booking confirmation to the `reminder-smtp` Edge Function.
+
+**Files modified:**
+- `src/pages/OpeningView.tsx` — after successful `book_opening` RPC, invoke `supabase.functions.invoke('reminder-smtp', { body: ... })` with `opening` details and wrap it in a non-blocking `try/catch` so email failure only warns.
+
+**Pattern:** Match `BrowseDetail.tsx` exactly for booking emails: send after RPC success, before closing the dialog, include service/provider/date/time/duration/location, and never let email failure block the success toast or query invalidation.
+
+**Build gate:** `npx tsc --noEmit` → 0 errors. `npm run build` → exit 0.
+**Runtime gate:** Ralph ran `node scripts/snapshot-appointments.cjs` and confirmed non-blank `/appointments` render with screenshots in `tmp-snapshots/`.
+
 ### Recent Work
 
 #### Help Page & Tutorial Route (2026-05-27)
