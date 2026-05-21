@@ -14,6 +14,69 @@ export type Database = {
   }
   public: {
     Tables: {
+      appointment_flags: {
+        Row: {
+          appointment_id: string
+          created_at: string | null
+          flagged_by: string
+          id: string
+          reason: string | null
+          user_id: string
+        }
+        Insert: {
+          appointment_id: string
+          created_at?: string | null
+          flagged_by: string
+          id?: string
+          reason?: string | null
+          user_id: string
+        }
+        Update: {
+          appointment_id?: string
+          created_at?: string | null
+          flagged_by?: string
+          id?: string
+          reason?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_flags_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointment_flags_flagged_by_fkey"
+            columns: ["flagged_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointment_flags_flagged_by_fkey"
+            columns: ["flagged_by"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointment_flags_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointment_flags_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       appointments: {
         Row: {
           approved_by: string | null
@@ -865,6 +928,14 @@ export type Database = {
         }[]
       }
       get_unread_notification_count: { Args: never; Returns: number }
+      get_user_attendance_stats: {
+        Args: { p_provider_id: string; p_user_id: string }
+        Returns: {
+          attendance_pct: number
+          flagged_count: number
+          total_count: number
+        }[]
+      }
       get_user_roles: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"][]
