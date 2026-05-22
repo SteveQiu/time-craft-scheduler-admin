@@ -128,6 +128,15 @@ async function injectSession(page, session) {
       console.log(`   URL: ${page.url()}`);
       console.log(`   Text: ${text2 || '(blank)'}`);
 
+      // Workers route
+      console.log('5. Going to /workers...');
+      await page.goto('http://localhost:8080/workers', { waitUntil: 'domcontentloaded' });
+      await page.waitForTimeout(4000);
+      await snap(`${user.label}-workers`);
+      const text3 = await page.evaluate(() => document.body.innerText.trim().substring(0, 600));
+      console.log(`   URL: ${page.url()}`);
+      console.log(`   Text: ${text3 || '(blank)'}`);
+
     } catch (err) {
       await snap(`${user.label}-error`);
       console.error('ERROR:', err.message);

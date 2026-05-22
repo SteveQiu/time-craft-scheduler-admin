@@ -31,9 +31,10 @@ export function Workers() {
 
   const [editForm, setEditForm] = useState({
     worker_name: '',
-    skills: '',
+    skills: [] as string[],
     hourly_rate: 0,
   });
+  const [editSkillInput, setEditSkillInput] = useState('');
 
   // Fetch real opening counts per worker
   const today = new Date().toISOString().split('T')[0];
@@ -81,10 +82,26 @@ export function Workers() {
     setEditingWorker(worker);
     setEditForm({
       worker_name: worker.worker_name,
-      skills: worker.skills.join(', '),
+      skills: worker.skills,
       hourly_rate: worker.hourly_rate,
     });
+    setEditSkillInput('');
     setShowEditDialog(true);
+  };
+
+  const addEditSkill = () => {
+    const trimmed = editSkillInput.trim();
+    if (trimmed && !editForm.skills.includes(trimmed)) {
+      setEditForm((prev) => ({ ...prev, skills: [...prev.skills, trimmed] }));
+      setEditSkillInput('');
+    }
+  };
+
+  const removeEditSkill = (skill: string) => {
+    setEditForm((prev) => ({
+      ...prev,
+      skills: prev.skills.filter((existingSkill) => existingSkill !== skill),
+    }));
   };
 
   const handleSaveEdit = async () => {
@@ -93,7 +110,7 @@ export function Workers() {
       await updateWorker.mutateAsync({
         id: editingWorker.id,
         worker_name: editForm.worker_name,
-        skills: editForm.skills.split(',').map(s => s.trim()).filter(Boolean),
+        skills: editForm.skills,
         hourly_rate: editForm.hourly_rate,
       });
       toast.success('Resource updated!');
@@ -314,14 +331,50 @@ export function Workers() {
                 onChange={(e) => setEditForm({...editForm, worker_name: e.target.value})}
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="skills">Services (comma separated)</Label>
-              <Textarea
-                id="skills"
-                value={editForm.skills}
-                onChange={(e) => setEditForm({...editForm, skills: e.target.value})}
-                placeholder="Hair Cut, Hair Color, Styling"
-              />
+            <div className="space-y-3">
+              <Label htmlFor="skills">Skills</Label>
+              <div className="space-y-3">
+                <div className="flex gap-2">
+                  <Input
+                    id="skills"
+                    value={editSkillInput}
+                    onChange={(e) => setEditSkillInput(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addEditSkill();
+                      }
+                    }}
+                    placeholder="Add a skill (press Enter or click +)"
+                  />
+                  <Button type="button" size="sm" onClick={addEditSkill}>
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+                <div className="space-y-2">
+                  {editForm.skills.map((skill) => (
+                    <div
+                      key={skill}
+                      className="flex items-center justify-between bg-secondary p-3 rounded-md"
+                    >
+                      <span className="text-sm font-medium">{skill}</span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="min-h-11 min-w-11"
+                        onClick={() => removeEditSkill(skill)}
+                        aria-label={`Remove skill: ${skill}`}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+                {editForm.skills.length === 0 && (
+                  <p className="text-sm text-muted-foreground">No skills added yet</p>
+                )}
+              </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="hourlyRate">Hourly Rate ($)</Label>
