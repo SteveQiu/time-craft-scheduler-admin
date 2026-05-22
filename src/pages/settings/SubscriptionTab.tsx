@@ -19,6 +19,7 @@ export function SubscriptionTab() {
     'Flag unreliable bookers to track no-shows',
     'Advanced analytics',
     'Priority support',
+    'Confirmation emails sent to bookers on every booking',
   ];
 
   if (loadingSubscription) {

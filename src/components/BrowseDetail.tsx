@@ -389,20 +389,22 @@ export function BrowseDetail({
                   
                   if (error) throw error;
                   
-                  // Send confirmation email
-                  try {
-                    await supabase.functions.invoke('reminder-smtp', {
-                      body: {
-                        to: user.email,
-                        subject: `Appointment Confirmed! 📅`,
-                        appointmentTime: selectedSlot.date && selectedSlot.start_time
-                          ? `${new Date(selectedSlot.date).toLocaleDateString()} at ${selectedSlot.start_time}`
-                          : undefined,
-                      }
-                    });
-                  } catch (emailError) {
-                    console.warn('Email notification failed:', emailError);
-                    toast.warning('Booking confirmed! Email notification could not be sent.');
+                  // Only send email if provider is premium
+                  if (isPremium) {
+                    try {
+                      await supabase.functions.invoke('reminder-smtp', {
+                        body: {
+                          to: user.email,
+                          subject: `Appointment Confirmed! 📅`,
+                          appointmentTime: selectedSlot.date && selectedSlot.start_time
+                            ? `${new Date(selectedSlot.date).toLocaleDateString()} at ${selectedSlot.start_time}`
+                            : undefined,
+                        }
+                      });
+                    } catch (emailError) {
+                      console.warn('Email notification failed:', emailError);
+                      toast.warning('Booking confirmed! Email notification could not be sent.');
+                    }
                   }
                   
                   setShowBookingDialog(false);
