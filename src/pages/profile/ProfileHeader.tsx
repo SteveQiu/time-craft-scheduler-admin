@@ -83,7 +83,7 @@ export function ProfileHeader({
             </h2>
           )}
           <p className="text-muted-foreground flex items-center gap-1">
-            {profile.email}
+            {isOwnProfile ? (user?.email ?? profile.email) : profile.email}
             {isOwnProfile && editing && (
               <Button
                 variant="ghost"
