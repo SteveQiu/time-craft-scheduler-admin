@@ -5,13 +5,21 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Zap } from 'lucide-react';
+import { Check, Zap } from 'lucide-react';
 import { PremiumUpgrade } from '@/components/PremiumUpgrade';
 
 export function SubscriptionTab() {
   const { user } = useAuth();
   const { isPremium, status, planType, loading: loadingSubscription } = useSubscription();
   const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const premiumBenefits = [
+    'Premium badge on your provider listing',
+    'Up to 10 profile photos (free plan: 3)',
+    'Booker attendance stats — see reliability rates per client',
+    'Flag unreliable bookers to track no-shows',
+    'Advanced analytics',
+    'Priority support',
+  ];
 
   if (loadingSubscription) {
     return (
@@ -55,6 +63,17 @@ export function SubscriptionTab() {
               <p>Plan: <span className="font-medium capitalize">{planType}</span></p>
               <p>Status: <span className="font-medium capitalize">{status}</span></p>
             </div>
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-green-700 dark:text-green-300">Your premium features:</p>
+              <ul className="space-y-1 text-sm text-green-600 dark:text-green-400">
+                {premiumBenefits.map((benefit) => (
+                  <li key={benefit} className="flex items-center gap-2">
+                    <Check className="h-4 w-4 shrink-0" />
+                    {benefit}
+                  </li>
+                ))}
+              </ul>
+            </div>
             <Button
               variant="outline"
               onClick={() => setShowCancelDialog(true)}
@@ -95,6 +114,17 @@ export function SubscriptionTab() {
         <CardDescription>Upgrade to Premium for full access.</CardDescription>
       </CardHeader>
       <CardContent>
+        <div className="mb-4 space-y-2">
+          <p className="text-sm font-medium text-foreground">What you'll get:</p>
+          <ul className="space-y-1 text-sm text-muted-foreground">
+            {premiumBenefits.map((benefit) => (
+              <li key={benefit} className="flex items-center gap-2">
+                <Check className="h-4 w-4 shrink-0 text-green-500" />
+                {benefit}
+              </li>
+            ))}
+          </ul>
+        </div>
         {user && <PremiumUpgrade orgId={user.id} />}
       </CardContent>
     </Card>

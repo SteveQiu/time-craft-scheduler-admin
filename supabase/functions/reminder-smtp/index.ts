@@ -40,15 +40,34 @@ Deno.serve(async (req) => {
       )
     }
 
-    const { to, subject, html, text } = await req.json()
+    const { to, subject, appointmentTime } = await req.json()
 
-    // Validate required fields
     if (!to || !subject || typeof to !== "string" || typeof subject !== "string") {
       return new Response(
         JSON.stringify({ error: "Missing or invalid required fields: to, subject" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       )
     }
+
+    const appointmentLine = typeof appointmentTime === "string" && appointmentTime.trim().length > 0
+      ? `Your appointment is confirmed for <strong>${appointmentTime}</strong>.`
+      : `Your appointment has been booked successfully.`
+
+    const html = `
+<!DOCTYPE html>
+<html>
+<body style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <h2 style="color: #2563eb;">📅 Appointment Confirmation</h2>
+  <p>${appointmentLine}</p>
+  <p>Thank you for booking with us!</p>
+  <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;" />
+  <p style="font-size: 12px; color: #6b7280;">PikAppoint — your scheduling platform</p>
+</body>
+</html>`
+
+    const text = typeof appointmentTime === "string" && appointmentTime.trim().length > 0
+      ? `Your appointment is confirmed for ${appointmentTime}. Thank you for booking with us!`
+      : `Your appointment has been booked successfully. Thank you for booking with us!`
 
     // Get SMTP credentials from environment
     const SMTP_HOST = Deno.env.get("SMTP_HOST")
