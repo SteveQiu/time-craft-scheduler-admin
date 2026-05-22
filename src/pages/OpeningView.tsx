@@ -26,6 +26,7 @@ export function OpeningView() {
   const [showSignIn, setShowSignIn] = useState(false);
   const [isBooking, setIsBooking] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [isPremium, setIsPremium] = useState(false);
 
   // Auto-show booking dialog after sign-in (survives OAuth redirect)
   useEffect(() => {
@@ -81,6 +82,17 @@ export function OpeningView() {
     enabled: !!id,
   });
 
+  useEffect(() => {
+    if (!opening?.user_id) {
+      setIsPremium(false);
+      return;
+    }
+
+    (supabase as any).rpc('is_user_premium', { p_user_id: opening.user_id })
+      .then(({ data }: { data: any }) => setIsPremium(Boolean(data)))
+      .catch(() => setIsPremium(false));
+  }, [opening?.user_id]);
+
   const handleShare = async () => {
     const url = `${window.location.origin}/openings/${id}`;
     try {
@@ -103,20 +115,22 @@ export function OpeningView() {
       });
       if (error) throw error;
 
-      // Send confirmation email
-      try {
-        await supabase.functions.invoke('reminder-smtp', {
-          body: {
-            to: user.email,
-            subject: `Appointment Confirmed! 📅`,
-            appointmentTime: opening.date && opening.start_time
-              ? `${new Date(opening.date).toLocaleDateString()} at ${opening.start_time}`
-              : undefined,
-          }
-        });
-      } catch (emailError) {
-        console.warn('Email notification failed:', emailError);
-        toast.warning('Booking confirmed! Email notification could not be sent.');
+      // Only send email if provider is premium
+      if (isPremium) {
+        try {
+          await supabase.functions.invoke('reminder-smtp', {
+            body: {
+              to: user.email,
+              subject: `Appointment Confirmed! 📅`,
+              appointmentTime: opening.date && opening.start_time
+                ? `${new Date(opening.date).toLocaleDateString()} at ${opening.start_time}`
+                : undefined,
+            }
+          });
+        } catch (emailError) {
+          console.warn('Email notification failed:', emailError);
+          toast.warning('Booking confirmed! Email notification could not be sent.');
+        }
       }
 
       setShowBookingDialog(false);

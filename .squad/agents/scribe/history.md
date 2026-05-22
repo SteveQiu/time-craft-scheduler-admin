@@ -32,3 +32,15 @@ Initial setup complete.
 - Future cash button work needs surgical, minimal changes with runtime verification before commit
 - All `.squad/` file updates (history, decisions, logs) are disk-only — no git commits
 - Dev server runs on http://localhost:8080 via `npm run dev`
+
+### 2026-05-22 — Session: reminder-smtp premium rollout logging
+
+**What happened:**
+- Logged three Ripley orchestration items: email-template ownership, premium benefits copy, premium email gate
+- Wrote session log 2026-05-22T22-33-42Z-reminder-smtp-premium.md
+- Checked .squad/decisions/inbox/ — empty, so no merge needed
+- Updated Ripley and Ralph history with rollout + QA outcome
+
+**Key learnings:**
+- Premium email behavior now tracked in both orchestration log and agent history
+- Empty decision inbox is a valid no-op; record the check, not fake a merge

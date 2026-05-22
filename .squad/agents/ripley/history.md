@@ -592,3 +592,19 @@ Exports: `PaymentMethodType` re-export, `CARD_PAYMENT_TYPES`, `NOTE_REQUIRED_TYP
 **QA gate:** Ralph verified all props threaded, port 8080 up, runtime checks pass.
 
 **Status:** ✅ APPROVED FOR RELEASE
+
+## Reminder SMTP premium rollout (2026-05-22)
+
+**Task:** Move reminder email rendering into eminder-smtp, trim booking callers to ppointmentTime, and gate sends to premium providers only.
+
+**Files modified:**
+- src/components/BookingBrowse.tsx — fetch premium state, send ppointmentTime only, skip email for free providers
+- src/components/BrowseDetail.tsx — same premium gate + slim payload
+- src/pages/OpeningView.tsx — same premium gate + slim payload
+- src/pages/settings/SubscriptionTab.tsx — added Confirmation emails sent to bookers on every booking
+
+**Build gate:** 
+px tsc --noEmit → 0 errors. 
+pm run build → exit 0.
+**Runtime gate:** Ralph ran 
+ode scripts/snapshot-appointments.cjs and confirmed non-blank render.

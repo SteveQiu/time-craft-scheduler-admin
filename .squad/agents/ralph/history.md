@@ -659,3 +659,21 @@ The requested module '/src/components/AppSidebar.tsx?t=1779165868727' does not p
 - After adding routes/components, if app goes blank ? check Vite cache first
 - AppSidebar dual-render (auth/guest) confirmed � Help link appears in both states
 - Help page accessible without login (public route)
+
+### Ripley — reminder-smtp premium gate (APPROVED ✅) (2026-05-22)
+
+**Task:** Verify premium-only reminder email rollout after Ripley moved template ownership to eminder-smtp and slimmed booking payloads.
+
+**Verified:**
+- 
+px tsc --noEmit ✅
+- 
+pm run build ✅
+- 
+ode scripts/snapshot-appointments.cjs ✅
+- Snapshot text non-blank ✅
+- Reminder email benefit copy visible in SubscriptionTab.tsx ✅
+
+**Scope checked:** BookingBrowse.tsx, BrowseDetail.tsx, OpeningView.tsx, SubscriptionTab.tsx.
+
+**Result:** Approved for merge. Premium providers send booking emails; free providers do not.

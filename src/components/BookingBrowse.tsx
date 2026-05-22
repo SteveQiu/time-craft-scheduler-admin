@@ -53,6 +53,7 @@ export function BookingBrowse() {
   const [showBookingDialog, setShowBookingDialog] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<OpeningWithProfile | null>(null);
   const [isBooking, setIsBooking] = useState(false);
+  const [isPremium, setIsPremium] = useState(false);
   const [selectedService, setSelectedService] = useState<string | null>(null);
   const [selectedWorker, setSelectedWorker] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -80,6 +81,17 @@ export function BookingBrowse() {
     const timer = setTimeout(() => setDebouncedSearch(searchTerm), 200);
     return () => clearTimeout(timer);
   }, [searchTerm]);
+
+  // Fetch provider's premium status when a slot is selected
+  useEffect(() => {
+    if (!selectedSlot?.user_id) {
+      setIsPremium(false);
+      return;
+    }
+    (supabase as any).rpc('is_user_premium', { p_user_id: selectedSlot.user_id })
+      .then(({ data }: { data: any }) => setIsPremium(Boolean(data)))
+      .catch(() => setIsPremium(false));
+  }, [selectedSlot?.user_id]);
 
   // Fetch all openings (works for both authenticated and anonymous users)
   const { 
@@ -305,20 +317,22 @@ export function BookingBrowse() {
 
       if (error) throw error;
 
-      // Send confirmation email
-      try {
-        await supabase.functions.invoke('reminder-smtp', {
-          body: {
-            to: user.email,
-            subject: `Appointment Confirmed! 📅`,
-            appointmentTime: selectedSlot.date && selectedSlot.start_time
-              ? `${new Date(selectedSlot.date).toLocaleDateString()} at ${selectedSlot.start_time}`
-              : undefined,
-          }
-        });
-      } catch (emailError) {
-        console.warn('Email notification failed:', emailError);
-        toast.warning('Booking confirmed! Email notification could not be sent.');
+      // Only send email if provider is premium
+      if (isPremium) {
+        try {
+          await supabase.functions.invoke('reminder-smtp', {
+            body: {
+              to: user.email,
+              subject: `Appointment Confirmed! 📅`,
+              appointmentTime: selectedSlot.date && selectedSlot.start_time
+                ? `${new Date(selectedSlot.date).toLocaleDateString()} at ${selectedSlot.start_time}`
+                : undefined,
+            }
+          });
+        } catch (emailError) {
+          console.warn('Email notification failed:', emailError);
+          toast.warning('Booking confirmed! Email notification could not be sent.');
+        }
       }
 
       setShowBookingDialog(false);
