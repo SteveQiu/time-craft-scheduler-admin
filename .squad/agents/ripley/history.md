@@ -88,8 +88,20 @@ App is an admin scheduler for organizations. Key pages: Appointments, Workers, B
 
 ### Recent Work
 
-#### Help Page & Tutorial Route (2026-05-27)
+#### Workers Edit Skill Input (2026-05-22)
 
+**Task:** Match Workers edit-mode skills UI to the add/remove flow already used for profile skills.
+
+**Files modified:**
+- `src/components/Workers.tsx` — replaced comma-separated textarea with add-skill input, plus button, stacked skill rows, and remove action in edit dialog; save path now sends `string[]` directly
+- `scripts/snapshot-appointments.cjs` — added `/workers` route snapshot so Ralph can verify the changed screen at runtime
+
+**Pattern:** Keep worker skills as array state in edit mode too — same shape as create/profile skill flows, no split/join string transform on save.
+
+**Build gate:** `npx tsc --noEmit` → zero errors. `npm run build` → exit 0.
+**Runtime gate:** Ralph ran `node scripts/snapshot-appointments.cjs`, confirmed non-blank render, and saved screenshot output in `tmp-snapshots/`.
+
+#### Help Page & Tutorial Route (2026-05-27)
 **Task:** Add QR code share button to profile page.
 
 **Files created:**
