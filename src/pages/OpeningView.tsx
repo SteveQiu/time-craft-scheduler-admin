@@ -108,25 +108,15 @@ export function OpeningView() {
         await supabase.functions.invoke('reminder-smtp', {
           body: {
             to: user.email,
-            subject: `Your Appointment is Confirmed! 📅`,
-            html: `
-              <h2>Booking Confirmed</h2>
-              <p>Your appointment has been successfully booked!</p>
-              <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
-                <p><strong>Service:</strong> ${opening.service || 'N/A'}</p>
-                <p><strong>Provider:</strong> ${opening.provider_name || 'N/A'}</p>
-                <p><strong>Date:</strong> ${new Date(opening.date).toLocaleDateString()}</p>
-                <p><strong>Time:</strong> ${opening.start_time || 'N/A'}</p>
-                <p><strong>Duration:</strong> ${opening.duration || 'N/A'} hour(s)</p>
-                ${opening.location ? `<p><strong>Location:</strong> ${formatLocation(parseLocation(opening.location))}</p>` : ''}
-              </div>
-              <p>Thank you for booking with us!</p>
-            `,
-            text: `Your appointment on ${opening.date} at ${opening.start_time} is confirmed.`
+            subject: `Appointment Confirmed! 📅`,
+            appointmentTime: opening.date && opening.start_time
+              ? `${new Date(opening.date).toLocaleDateString()} at ${opening.start_time}`
+              : undefined,
           }
         });
       } catch (emailError) {
-        console.warn('Email notification failed but booking succeeded:', emailError);
+        console.warn('Email notification failed:', emailError);
+        toast.warning('Booking confirmed! Email notification could not be sent.');
       }
 
       setShowBookingDialog(false);
