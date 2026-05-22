@@ -620,6 +620,49 @@ Implemented GDPR/CCPA-compliant data rights and consent management APIs for user
 - Frontend Team - Integration needed
 - Legal/Compliance - Review required
 
+## Profile Email: Auth Source of Truth (2026-05-22)
+**Authority:** Ripley (Frontend Dev)
+
+**Decision:**
+Use `user?.email` from Supabase Auth as the source of truth for the signed-in user's own `/profile` header email. Do not write `form.email` back to the `profiles` table from the profile editor.
+
+**Why:**
+`profiles.email` can be stale or user-edited, so showing it on the owner's profile can misrepresent the authenticated identity. Auth email remains authoritative, while public profile visibility controls still govern whether the email is shown to others.
+
+**Impact:**
+- Own profile header prefers auth email with DB fallback only if auth email is missing
+- Other users' profile headers still use `profiles.email`
+- Profile saves no longer mutate `profiles.email`
+
+**Files Changed:**
+- `src/pages/profile/ProfileHeader.tsx`
+- `src/hooks/useProfile.ts`
+
+**Verification:** ✅ tsc + build + runtime snapshot green
+
+---
+
+## RLS Policy Scope: Worker Helpers to Authenticated Only (2026-05-22)
+**Authority:** Ripley (Frontend Dev)
+
+**Context:**
+Anonymous `/browse` was failing with `permission denied for function is_worker_of` even though a public openings policy existed.
+
+**Decision:**
+Any RLS policy that calls `public.is_worker_of(...)` must be scoped with `TO authenticated`.
+
+**Why:**
+Anon no longer has EXECUTE on `is_worker_of` after the May 19 privilege hardening. Leaving those policies role-agnostic makes Postgres evaluate an auth-only helper during anon reads, which breaks unrelated public pages like Browse.
+
+**Applied:**
+- `openings`
+- `appointments`
+- `workplace_addresses`
+- `payment_methods`
+
+**Notes:**
+Do not fix this by re-granting anon execute on `is_worker_of` unless Steve explicitly wants that helper public again.
+
 ### 2026-04-21T18:53:32Z: Use .github as authoritative brain
 
 **By:** qiuyu (via Copilot)

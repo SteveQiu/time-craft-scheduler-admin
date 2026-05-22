@@ -420,6 +420,14 @@ Bishop's cancel UX spec → explicit `AlertDialog` with title/description/button
 
 ## Learnings
 
+### Anon browse broken by worker policy scope (2026-05-22)
+
+**Symptom:** Anonymous `/browse` showed `Error loading providers` + `Something went wrong`.
+
+**Root cause:** The public browse query hits `openings`, but RLS also had worker policies like `Workers can view org openings` without `TO authenticated`. After `20260519015601_4cf4b35b-b27d-4318-8241-0fe5909a9399.sql` revoked anon execute on `is_worker_of(uuid, uuid)`, Postgres still tried to evaluate that helper for anon reads and threw `42501 permission denied for function is_worker_of` before the public browse policy could succeed.
+
+**Fix pattern:** Keep `is_worker_of` private to authenticated users and scope every worker policy that calls it with `TO authenticated` instead of re-granting anon execute. This preserves public browse and avoids reopening helper-function access.
+
 ### 2025 — User mode premium features (flag + attendance stats)
 
 - `useAppointments` in user mode already fetches both customer AND provider appointments via `.or('user_id.eq.X,provider_id.eq.X')`.
@@ -509,6 +517,16 @@ export enum PaymentMethodType {
 - `src/hooks/useCalendarQueries.ts` — reset call on mutation success
 - `src/components/calendar/EditOpeningDialog.tsx` — Add Payment button handler
 - `src/components/calendar/OpeningPaymentSection.tsx` — Add button handler
+
+### Profile email must come from auth user (2026-05-22)
+
+**Task:** Stop `/profile` from trusting `profiles.email` for the signed-in user's own header display and profile save flow.
+
+**Files changed:**
+- `src/pages/profile/ProfileHeader.tsx` — own profile header now renders `user?.email ?? profile.email`; other profiles still show `profile.email`; privacy toggle unchanged.
+- `src/hooks/useProfile.ts` — removed `email` from the `profiles` update payload so profile edits no longer overwrite the DB email field.
+
+**Lesson:** For self-profile identity fields backed by Supabase Auth, auth is the source of truth. UI may fall back to profile data for other users, but edit forms must not persist auth-owned email into the `profiles` table.
 
 ### Task 3: Centralized payment hook
 **File created:** `src/hooks/usePaymentMethods.ts`

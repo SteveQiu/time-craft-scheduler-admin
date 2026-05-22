@@ -194,7 +194,6 @@ export function useProfile({ slug, user, onSaveSuccess }: UseProfileOptions) {
         .from('profiles')
         .update({
           full_name: form.full_name || null,
-          email: form.email || null,
           introduction: form.introduction || null,
           phone: form.phone || null,
           address: formattedAddress || null,
