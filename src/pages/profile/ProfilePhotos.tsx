@@ -33,7 +33,7 @@ export function ProfilePhotos({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadingSlot, setUploadingSlot] = useState(false);
 
-  const maxSlots = isPremium ? 10 : 3;
+  const maxSlots = isPremium ? 100 : 3;
   const canAddMore = profilePhotos.length < maxSlots;
 
   return (
