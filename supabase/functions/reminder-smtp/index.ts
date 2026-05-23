@@ -40,14 +40,16 @@ Deno.serve(async (req) => {
       )
     }
 
-    const { to, subject, appointmentTime } = await req.json()
+    const { to, appointmentTime } = await req.json()
 
-    if (!to || !subject || typeof to !== "string" || typeof subject !== "string") {
+    if (!to || typeof to !== "string") {
       return new Response(
-        JSON.stringify({ error: "Missing or invalid required fields: to, subject" }),
+        JSON.stringify({ error: "Missing or invalid required field: to" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       )
     }
+
+    const subject = "Appointment Confirmed! 📅"
 
     const appointmentLine = typeof appointmentTime === "string" && appointmentTime.trim().length > 0
       ? `Your appointment is confirmed for <strong>${appointmentTime}</strong>.`

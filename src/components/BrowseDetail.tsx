@@ -10,6 +10,7 @@ import { formatLocation, parseLocation } from '@/lib/address';
 import { TIME_FORMATS, LOCALE } from '@/config/formats';
 import { ProfilePhotoStrip } from './ProfilePhotoStrip';
 import { getEffectiveTotal } from '@/lib/utils';
+import { useSendReminder } from '@/hooks/useSendReminder';
 
 interface OpeningWithProfile {
   id: string;
@@ -49,6 +50,7 @@ export function BrowseDetail({
 }){
   const { providerId } = useParams<{ providerId?: string }>();
   const navigate = useNavigate();
+  const { sendReminder } = useSendReminder();
   const [selectedService, setSelectedService] = useState<string | null>(null);
   const [selectedWorker, setSelectedWorker] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -391,20 +393,7 @@ export function BrowseDetail({
                   
                   // Only send email if provider is premium
                   if (isPremium) {
-                    try {
-                      await supabase.functions.invoke('reminder-smtp', {
-                        body: {
-                          to: user.email,
-                          subject: `Appointment Confirmed! 📅`,
-                          appointmentTime: selectedSlot.date && selectedSlot.start_time
-                            ? `${new Date(selectedSlot.date).toLocaleDateString()} at ${selectedSlot.start_time}`
-                            : undefined,
-                        }
-                      });
-                    } catch (emailError) {
-                      console.warn('Email notification failed:', emailError);
-                      toast.warning('Booking confirmed! Email notification could not be sent.');
-                    }
+                    await sendReminder({ to: user.email, date: selectedSlot.date, startTime: selectedSlot.start_time });
                   }
                   
                   setShowBookingDialog(false);

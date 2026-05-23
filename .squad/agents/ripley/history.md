@@ -638,3 +638,20 @@ ode scripts/snapshot-appointments.cjs and confirmed non-blank render.
 
 **Build gate:** `npx tsc --noEmit` → 0 errors. `npm run build` → exit 0.
 **Runtime gate:** Ralph ran `node scripts/snapshot-appointments.cjs`, confirmed non-blank render, and saved screenshot output in `tmp-snapshots/`.
+
+#### Extract useSendReminder Hook (2026-05-29)
+
+**Task:** Extract repetitive reminder-smtp invocation pattern into reusable `useSendReminder` hook.
+
+**Files created:**
+- `src/hooks/useSendReminder.ts` — encapsulates `supabase.functions.invoke('reminder-smtp')` call with date/time formatting, error handling, and toast notification on failure
+
+**Files modified:**
+- `src/components/BookingBrowse.tsx` — replaced 16-line try/catch block with `sendReminder({ to, date, startTime })` one-liner; added hook import + call
+- `src/components/BrowseDetail.tsx` — same pattern replacement
+- `src/pages/OpeningView.tsx` — same pattern replacement
+
+**Pattern:** Hook returns `{ sendReminder }` async function accepting `{ to, date?, startTime? }`. Formats `appointmentTime` as `${new Date(date).toLocaleDateString()} at ${startTime}` when both present. On catch: `console.warn` + `toast.warning('Booking confirmed! Email notification could not be sent.')` — never blocks booking flow.
+
+**Build gate:** `npx tsc --noEmit` → 0 errors. `npm run build` → exit 0 (6.45s).
+**Runtime gate:** Pending Ralph verification.
