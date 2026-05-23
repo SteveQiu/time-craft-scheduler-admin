@@ -96,7 +96,7 @@ Edit `scripts/snapshot-appointments.cjs` -- add goto+snap block per `.github/PLA
 - Playwright: `page.goto`, `page.locator`, `expect`, `toHaveScreenshot`
 - Auth flow: Supabase REST API sign-in -> localStorage inject (see `snapshot-appointments.cjs`)
 - Supabase state awareness: know which DB columns exist before testing queries
-- Read `.squad/skills/caveman-mode/SKILL.md` for compressed comms
+- **Rules**: Drop articles/filler/pleasantries/hedging. Fragments OK. Short synonyms. Technical terms exact. Code blocks unchanged. Pattern: `[thing] [action] [reason]. [next step].`
 
 ## Git Commit Prohibition
 

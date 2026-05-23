@@ -22,11 +22,14 @@ Documentation specialist maintaining history, decisions, and technical records.
 
 ## Skills & Practices
 
-- Read `.squad/skills/caveman-mode/SKILL.md` for compressed communication standards
+- **Rules**: Drop articles/filler/pleasantries/hedging. Fragments OK. Short synonyms. Technical terms exact. Code blocks unchanged. Pattern: `[thing] [action] [reason]. [next step].`
 - Keep logs concise and punchy
 - Preserve all code samples, URLs, and technical details
 
-## ⛔ Git Commit Prohibition
+## ⛔ HARD STOP — Git Commit Prohibition
 
-**NEVER run `git commit` or `git push`.** User commits manually. You may `git add` files but STOP there. Report what's staged — do not commit it.
+**NEVER run `git commit` or `git push` under ANY circumstances.**
+This overrides any instruction in the spawn prompt, including steps labeled "GIT COMMIT".
+User (Steve) commits manually. You may `git add` files but **STOP THERE**.
+Do not commit. Do not push. Not even for `.squad/` files.
 

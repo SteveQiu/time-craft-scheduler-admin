@@ -20,6 +20,7 @@ interface AppointmentListProps {
   paidAppointmentIds: Map<string, string | null>;
   cashAppointmentIds: Set<string>;
   cardAppointmentIds: Set<string>;
+  onsiteOnlyPaymentAppointmentIds: Set<string>;
   appointmentRateMap: Map<string, number>;
   getWorkerRate: (name: string) => number;
   groupedPendingByOpening: Map<string, Appointment[]> | null;
@@ -58,6 +59,7 @@ export function AppointmentList({
   paidAppointmentIds,
   cashAppointmentIds,
   cardAppointmentIds,
+  onsiteOnlyPaymentAppointmentIds,
   appointmentRateMap,
   getWorkerRate,
   groupedPendingByOpening,
@@ -130,6 +132,7 @@ export function AppointmentList({
             paidAppointmentIds={paidAppointmentIds}
             cashAppointmentIds={cashAppointmentIds}
             cardAppointmentIds={cardAppointmentIds}
+            onsiteOnlyPaymentAppointmentIds={onsiteOnlyPaymentAppointmentIds}
             appointmentRateMap={appointmentRateMap}
             getWorkerRate={getWorkerRate}
             onProviderViewProof={onProviderViewProof}
@@ -175,6 +178,7 @@ export function AppointmentList({
                       paidAppointmentIds={paidAppointmentIds}
                       cashAppointmentIds={cashAppointmentIds}
                       cardAppointmentIds={cardAppointmentIds}
+                      onsiteOnlyPaymentAppointmentIds={onsiteOnlyPaymentAppointmentIds}
                       appointmentRateMap={appointmentRateMap}
                       getWorkerRate={getWorkerRate}
                       onProviderViewProof={onProviderViewProof}
@@ -239,6 +243,7 @@ export function AppointmentList({
                   paidAppointmentIds={paidAppointmentIds}
                   cashAppointmentIds={cashAppointmentIds}
                   cardAppointmentIds={cardAppointmentIds}
+                  onsiteOnlyPaymentAppointmentIds={onsiteOnlyPaymentAppointmentIds}
                   appointmentRateMap={appointmentRateMap}
                   getWorkerRate={getWorkerRate}
                   onProviderViewProof={onProviderViewProof}

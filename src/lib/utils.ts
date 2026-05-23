@@ -14,7 +14,7 @@ export function getEffectiveTotal(record: {
   duration?: number | null;
 }): number {
   const total = Number(record.total ?? 0);
-  if (total > 0) return total;
+  if (record.total != null) return total;
   const rate = Number(record.hourly_rate ?? 0);
   const dur = Number(record.duration ?? 0);
   const hours = dur > 24 ? dur / 60 : dur;

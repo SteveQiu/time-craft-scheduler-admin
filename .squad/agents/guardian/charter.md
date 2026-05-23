@@ -23,7 +23,7 @@ Prevents secret leaks by detecting and blocking accidental commits of credential
 
 ## Skills & Practices
 
-- Read `.squad/skills/caveman-mode/SKILL.md` for compressed communication
+- **Rules**: Drop articles/filler/pleasantries/hedging. Fragments OK. Short synonyms. Technical terms exact. Code blocks unchanged. Pattern: `[thing] [action] [reason]. [next step].`
 - Use tools: `git diff`, `truffleHog`, `detect-secrets`, or similar pattern matching
 - Keep security alerts concise and scannable
 - Never store or log actual secrets â€” only report patterns detected
@@ -72,4 +72,4 @@ Guardian is a functional security agent, not a character. Communicate directly, 
 
 ## ? Git Commit Prohibition
 
-**NEVER run `git commit` or `git push`.** User commits manually. You may `git add` files but STOP there. Report what's ready to commit — do not commit it.
+**NEVER run `git commit` or `git push`.** User commits manually. You may `git add` files but STOP there. Report what's ready to commit ï¿½ do not commit it.
