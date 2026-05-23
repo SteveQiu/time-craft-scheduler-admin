@@ -14,7 +14,7 @@ export function SubscriptionTab() {
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const premiumBenefits = [
     'Premium badge on your provider listing',
-    'Up to 10 profile photos (free plan: 3)',
+    'Up to 100 profile photos (free plan: 3)',
     'Booker attendance stats — see reliability rates per client',
     'Flag unreliable bookers to track no-shows',
     'Advanced analytics',
