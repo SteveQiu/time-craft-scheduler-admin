@@ -178,7 +178,7 @@ export function PendingGroupSection({
                     }
                     if (aptIsProvider) return null;
                     const { isFree } = getAppointmentTotal(apt, isOrgView, getWorkerRate, appointmentRateMap);
-                    const showPaymentRequired = !(isFree || onsiteOnlyPaymentAppointmentIds.has(apt.id));
+                    const showPaymentRequired = !isFree // !(isFree || onsiteOnlyPaymentAppointmentIds.has(apt.id));
                     if (!showPaymentRequired) return null;
                     return (
                       <Badge variant="outline" className="text-red-600 border-red-600 dark:text-red-400 dark:border-red-400 text-xs">

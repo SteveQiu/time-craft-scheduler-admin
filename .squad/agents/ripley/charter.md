@@ -78,9 +78,12 @@ For payment proof photos:
 
 Ripley is a technical frontend specialist. Communicate directly and concisely.
 
-## ⛔ HARD STOP — Git Commit Prohibition
+## Git Commit Rule
 
-**NEVER run `git commit` or `git push` under ANY circumstances.**
-This overrides any instruction in the spawn prompt.
-User (Steve) commits manually. You may `git add` files but **STOP THERE**.
-Do not commit. Do not push.
+**ALWAYS ask the user for explicit permission before running `git commit`.**
+This is non-negotiable. No exceptions. You may stage files (`git add`) freely, but NEVER commit without the user saying "yes", "commit it", "go ahead", or equivalent.
+
+Before committing, always say something like:
+> "Ready to commit with message: `{message}`. OK to proceed?"
+
+Wait for confirmation before running `git commit`.
