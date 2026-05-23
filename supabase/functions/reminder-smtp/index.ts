@@ -31,9 +31,8 @@ Deno.serve(async (req) => {
       { global: { headers: { Authorization: authHeader } } }
     )
 
-    const token = authHeader.replace("Bearer ", "")
-    const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token)
-    if (claimsError || !claimsData?.claims) {
+    const { data: userData, error: userError } = await supabase.auth.getUser()
+    if (userError || !userData?.user) {
       return new Response(
         JSON.stringify({ error: "Unauthorized" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -86,28 +85,24 @@ Deno.serve(async (req) => {
       )
     }
 
-    const { SmtpClient } = await import("https://deno.land/x/smtp@v0.16.0/mod.ts")
-    const client = new SmtpClient()
+    const nodemailer = await import("npm:nodemailer@6")
+    const transporter = nodemailer.createTransport({
+      host: SMTP_HOST,
+      port: SMTP_PORT,
+      secure: SMTP_PORT === 465,
+      auth: { user: SMTP_USER, pass: SMTP_PASS },
+    })
 
     try {
-      await client.connectTLS({
-        hostname: SMTP_HOST,
-        port: SMTP_PORT,
-        username: SMTP_USER,
-        password: SMTP_PASS,
-      })
-
-      await client.send({
+      await transporter.sendMail({
         from: SMTP_FROM,
         to: to,
         subject: subject,
-        content: text || html,
+        text: text,
         html: html,
       })
 
-      await client.close()
-
-      console.log(`Email sent successfully to ${to} by user ${claimsData.claims.sub}`)
+      console.log(`Email sent successfully to ${to} by user ${userData.user.id}`)
 
       return new Response(
         JSON.stringify({ success: true, message: "Email sent successfully" }),
@@ -115,7 +110,6 @@ Deno.serve(async (req) => {
       )
     } catch (smtpError) {
       console.error("SMTP Error:", smtpError)
-      try { await client.close() } catch { /* ignore */ }
       throw smtpError
     }
   } catch (error) {
