@@ -14,6 +14,7 @@ import { DATE_FORMATS, LOCALE } from '@/config/formats';
 import { parseLocation, formatLocation } from '@/lib/address';
 import { getEffectiveTotal } from '@/lib/utils';
 import { toast } from 'sonner';
+import { useSendReminder } from '@/hooks/useSendReminder';
 
 const PENDING_BOOKING_KEY = 'pending_booking_opening_id';
 
@@ -22,6 +23,7 @@ export function OpeningView() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { sendReminder } = useSendReminder();
   const [showBookingDialog, setShowBookingDialog] = useState(false);
   const [showSignIn, setShowSignIn] = useState(false);
   const [isBooking, setIsBooking] = useState(false);
@@ -117,20 +119,7 @@ export function OpeningView() {
 
       // Only send email if provider is premium
       if (isPremium) {
-        try {
-          await supabase.functions.invoke('reminder-smtp', {
-            body: {
-              to: user.email,
-              subject: `Appointment Confirmed! 📅`,
-              appointmentTime: opening.date && opening.start_time
-                ? `${new Date(opening.date).toLocaleDateString()} at ${opening.start_time}`
-                : undefined,
-            }
-          });
-        } catch (emailError) {
-          console.warn('Email notification failed:', emailError);
-          toast.warning('Booking confirmed! Email notification could not be sent.');
-        }
+        await sendReminder({ to: user.email, date: opening.date, startTime: opening.start_time });
       }
 
       setShowBookingDialog(false);

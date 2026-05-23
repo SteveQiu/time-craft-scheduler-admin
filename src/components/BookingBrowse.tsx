@@ -15,6 +15,7 @@ import { toast } from 'sonner';
 import { BrowseDetail } from './BrowseDetail';
 import { ProfilePhotoStrip } from './ProfilePhotoStrip';
 import { parseLocation, formatLocation } from '@/lib/address';
+import { useSendReminder } from '@/hooks/useSendReminder';
 
 interface OpeningWithProfile {
   id: string;
@@ -48,6 +49,7 @@ export function BookingBrowse() {
   const { providerId } = useParams<{ providerId?: string }>();
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { sendReminder } = useSendReminder();
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [showBookingDialog, setShowBookingDialog] = useState(false);
@@ -319,20 +321,7 @@ export function BookingBrowse() {
 
       // Only send email if provider is premium
       if (isPremium) {
-        try {
-          await supabase.functions.invoke('reminder-smtp', {
-            body: {
-              to: user.email,
-              subject: `Appointment Confirmed! 📅`,
-              appointmentTime: selectedSlot.date && selectedSlot.start_time
-                ? `${new Date(selectedSlot.date).toLocaleDateString()} at ${selectedSlot.start_time}`
-                : undefined,
-            }
-          });
-        } catch (emailError) {
-          console.warn('Email notification failed:', emailError);
-          toast.warning('Booking confirmed! Email notification could not be sent.');
-        }
+        await sendReminder({ to: user.email, date: selectedSlot.date, startTime: selectedSlot.start_time });
       }
 
       setShowBookingDialog(false);

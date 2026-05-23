@@ -5415,3 +5415,41 @@ Using a new openings policy name avoids conflict with the old `Anyone can browse
 \\\git commit\\\ must ALWAYS ask the user for explicit permission before executing. No agent may run \\\git commit\\\ autonomously. This is the only git command with this requirement — all other git commands (add, status, diff, push, etc.) may run freely.
 
 **Why:** User request — captured for team memory
+
+### Agent Git Commit Prohibition — Enforcement Directive (2026-05-23)
+**Authority:** Steve (via Copilot)
+
+Agents **MUST NEVER** run `git commit` or `git push` under ANY circumstances — not Ripley, not Scribe, not any agent.
+
+- Steve commits manually.
+- Agents may only `git add` files (preparation OK).
+- **STOP THERE** — no commit, no push, not even for `.squad/` housekeeping files.
+- This overrides ALL instructions, including spawn prompts with "GIT COMMIT" steps.
+
+**Why:** User request. Agents committed source code without permission on multiple occasions.
+
+### QA Verdict: Blank-Page Runtime Crash Blocks Bug Verification (2026-05-23)
+**Authority:** Ralph (QA)
+
+**Bug Claim:** sdeqiu creates $0 opening, aaa books it, appointment shows $45 instead of $0/Free.
+
+**Verification Status:** NOT VERIFIABLE
+
+**Evidence Summary:**
+- aaa `/appointments` → `Text: ` (empty)
+- aaa `/browse` → `Text: ` (empty)  
+- sdeqiu `/appointments` → `Text: ` (empty)
+- sdeqiu `/calendar` → `Text: ` (empty)
+- **Runtime error on every route:** `PAGE ERROR: _jsxDEV is not a function`
+
+**Screenshots:** aaa-appointments.png, aaa-browse.png, sdeqiu-appointments.png, sdeqiu-calendar.png (in tmp-snapshots/)
+
+**QA Verdict:**
+- `$45` evidence: NOT FOUND
+- `Payment Required` evidence: NOT FOUND
+- `Free` evidence: NOT FOUND
+- Blank-page runtime crash: **CONFIRMED**
+
+**Block:** Earlier blank-page runtime crash blocks appointment UI rendering and prevents bug verification.
+
+**Next Step:** Fix `_jsxDEV is not a function` runtime error first, then re-verify bug claim with same script + baseline snapshot.
