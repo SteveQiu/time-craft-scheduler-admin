@@ -98,6 +98,12 @@ Edit `scripts/snapshot-appointments.cjs` -- add goto+snap block per `.github/PLA
 - Supabase state awareness: know which DB columns exist before testing queries
 - **Rules**: Drop articles/filler/pleasantries/hedging. Fragments OK. Short synonyms. Technical terms exact. Code blocks unchanged. Pattern: `[thing] [action] [reason]. [next step].`
 
-## Git Commit Prohibition
+## Git Commit Rule
 
-**NEVER run `git commit` or `git push`.** User commits manually. You may `git add` files but STOP there. Report what's ready to commit -- do not commit it.
+**ALWAYS ask the user for explicit permission before running `git commit`.**
+This is non-negotiable. No exceptions. You may stage files (`git add`) freely, but NEVER commit without the user saying "yes", "commit it", "go ahead", or equivalent.
+
+Before committing, always say something like:
+> "Ready to commit with message: `{message}`. OK to proceed?"
+
+Wait for confirmation before running `git commit`.

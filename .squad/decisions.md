@@ -5408,3 +5408,10 @@ Using a new openings policy name avoids conflict with the old `Anyone can browse
 - The only missing piece was the attendance stats query being skipped in user mode.
 - No query shape changes â€” same hook, just wider `enabled` condition.
 
+
+### Git Commit Permission Rule (2026-05-23T15:02:36)
+**Authority:** sdeqiu (via Copilot)
+
+\\\git commit\\\ must ALWAYS ask the user for explicit permission before executing. No agent may run \\\git commit\\\ autonomously. This is the only git command with this requirement — all other git commands (add, status, diff, push, etc.) may run freely.
+
+**Why:** User request — captured for team memory
