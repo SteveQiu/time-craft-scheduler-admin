@@ -28,6 +28,7 @@ import Terms from "@/pages/legal/Terms";
 import Privacy from "@/pages/legal/Privacy";
 import Refund from "@/pages/legal/Refund";
 import Help from "@/pages/Help";
+import TestReminder from "@/pages/dev/TestReminder";
 
 import { AppSidebar } from "@/components/AppSidebar";
 import { APP_NAME } from "@/config/app";
@@ -112,6 +113,7 @@ const App = () => {
                         <Route path={ROUTES.privacy} element={<Privacy />} />
                         <Route path={ROUTES.refund} element={<Refund />} />
                         <Route path={ROUTES.help} element={<Help />} />
+                        {import.meta.env.DEV && <Route path="/test" element={<TestReminder />} />}
                         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                         <Route path="*" element={<NotFound />} />
                       </Routes>
@@ -143,6 +145,7 @@ const App = () => {
                   <Route path={ROUTES.privacy} element={<Privacy />} />
                   <Route path={ROUTES.refund} element={<Refund />} />
                   <Route path={ROUTES.help} element={<Help />} />
+                  {import.meta.env.DEV && <Route path="/test" element={<TestReminder />} />}
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
