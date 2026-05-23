@@ -4,7 +4,7 @@ export const ROUTES = {
   calendar: '/calendar',
   browse: '/browse',
   browseProvider: '/browse/:providerId',
-  workers: '/workers',
+  workers: '/resources',
   appointments: '/appointments',
   appointmentDetail: '/appointments/:id',
   openingDetail: '/openings/:id',
