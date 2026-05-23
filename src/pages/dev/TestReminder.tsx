@@ -11,23 +11,24 @@ const TestReminder = () => {
   }
 
   const [to, setTo] = useState("");
-  const [subject, setSubject] = useState("Appointment Confirmed! 📅");
-  const [appointmentTime, setAppointmentTime] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [rawResponse, setRawResponse] = useState<string | null>(null);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsSubmitting(true);
     setMessage(null);
+    setRawResponse(null);
 
-    const { error } = await supabase.functions.invoke("reminder-smtp", {
+    const { data, error } = await supabase.functions.invoke("reminder-smtp", {
       body: {
         to,
-        subject,
-        appointmentTime: appointmentTime || undefined,
+        appointmentTime: new Date().toLocaleString(),
       },
     });
+
+    setRawResponse(JSON.stringify({ data, error: error ? { message: error.message, context: (error as { context?: unknown }).context } : null }, null, 2));
 
     if (error) {
       setMessage({
@@ -67,28 +68,6 @@ const TestReminder = () => {
             />
           </label>
 
-          <label className="block">
-            <span className="mb-2 block font-mono text-sm text-slate-700">subject</span>
-            <input
-              type="text"
-              required
-              value={subject}
-              onChange={(event) => setSubject(event.target.value)}
-              className="w-full rounded-md border border-slate-300 bg-slate-50 px-3 py-2 font-mono text-sm outline-none transition focus:border-slate-500"
-            />
-          </label>
-
-          <label className="block">
-            <span className="mb-2 block font-mono text-sm text-slate-700">appointmentTime</span>
-            <input
-              type="text"
-              value={appointmentTime}
-              onChange={(event) => setAppointmentTime(event.target.value)}
-              className="w-full rounded-md border border-slate-300 bg-slate-50 px-3 py-2 font-mono text-sm outline-none transition focus:border-slate-500"
-              placeholder="e.g. May 24, 2026 at 10:00 AM"
-            />
-          </label>
-
           <button
             type="submit"
             disabled={isSubmitting}
@@ -108,6 +87,15 @@ const TestReminder = () => {
           >
             {message.text}
           </p>
+        ) : null}
+
+        {rawResponse ? (
+          <div className="mt-4">
+            <p className="mb-1 font-mono text-xs text-slate-500 uppercase tracking-widest">Raw Response</p>
+            <pre className="overflow-auto rounded-md border border-slate-200 bg-slate-950 p-4 font-mono text-xs text-slate-100">
+              {rawResponse}
+            </pre>
+          </div>
         ) : null}
       </div>
     </div>
