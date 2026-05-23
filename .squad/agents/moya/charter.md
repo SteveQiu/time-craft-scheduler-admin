@@ -54,7 +54,7 @@ The `paidAppointmentIds` query must NEVER share a query with supplementary colum
 
 Default: full intensity. ~75% token reduction. Technical substance preserved. Off only on: destructive op warnings, multi-step sequences where fragment order matters.
 
-Read `.squad/skills/caveman-mode/SKILL.md` before communicating.
+- **Rules**: Drop articles/filler/pleasantries/hedging. Fragments OK. Short synonyms. Technical terms exact. Code blocks unchanged. Pattern: `[thing] [action] [reason]. [next step].`
 
 ## Execution Model
 

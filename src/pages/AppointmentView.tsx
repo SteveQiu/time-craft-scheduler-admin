@@ -99,6 +99,7 @@ export function AppointmentView() {
     );
   }
 
+  const isFreeAppointment = appointment.total != null && Number(appointment.total) === 0;
   const totalAmount = appointment.total != null && Number(appointment.total) > 0
     ? Number(appointment.total)
     : null;
@@ -220,11 +221,13 @@ export function AppointmentView() {
                   <p className="text-sm text-muted-foreground">Duration</p>
                   <p className="font-medium text-foreground">{appointment.duration} minutes</p>
                 </div>
-                {totalAmount != null && (
+                {(totalAmount != null || isFreeAppointment) && (
                   <div>
                     <p className="text-sm text-muted-foreground">Total</p>
                     <p className="font-medium text-foreground">
-                      ${totalAmount % 1 === 0 ? totalAmount : totalAmount.toFixed(2)}
+                      {isFreeAppointment
+                        ? 'Free'
+                        : `$${totalAmount! % 1 === 0 ? totalAmount : totalAmount!.toFixed(2)}`}
                     </p>
                   </div>
                 )}

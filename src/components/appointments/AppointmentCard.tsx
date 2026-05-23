@@ -89,6 +89,7 @@ interface AppointmentCardProps {
   paidAppointmentIds: Map<string, string | null>;
   cashAppointmentIds: Set<string>;
   cardAppointmentIds: Set<string>;
+  onsiteOnlyPaymentAppointmentIds: Set<string>;
   appointmentRateMap: Map<string, number>;
   getWorkerRate: (name: string) => number;
   onProviderViewProof: (id: string) => void;
@@ -113,6 +114,7 @@ export function AppointmentCard({
   paidAppointmentIds,
   cashAppointmentIds,
   cardAppointmentIds,
+  onsiteOnlyPaymentAppointmentIds,
   appointmentRateMap,
   getWorkerRate,
   onProviderViewProof,
@@ -128,7 +130,8 @@ export function AppointmentCard({
 
   const getAppointmentTotal = (apt: Appointment): { isFree: boolean; total: number } => {
     // Priority 1: persisted `total` on the appointment (post-20260512 migration)
-    if (apt.total != null && Number(apt.total) > 0) {
+    // Note: total=0 is a valid free appointment — only skip if total is null/undefined
+    if (apt.total != null) {
       const total = Number(apt.total);
       return { isFree: total === 0, total };
     }
@@ -260,7 +263,8 @@ export function AppointmentCard({
                 // "Payment Required" is for customers only — providers don't pay
                 if (canManage) return null;
                 const { isFree } = getAppointmentTotal(appointment);
-                if (isFree) return null;
+                const showPaymentRequired = !isFree && !onsiteOnlyPaymentAppointmentIds.has(appointment.id);
+                if (!showPaymentRequired) return null;
                 return (
                   <Badge variant="outline" className="text-red-600 border-red-600 dark:text-red-400 dark:border-red-400 text-xs">
                     Payment Required

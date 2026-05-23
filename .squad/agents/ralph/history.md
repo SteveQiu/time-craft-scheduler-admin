@@ -677,3 +677,56 @@ ode scripts/snapshot-appointments.cjs ✅
 **Scope checked:** BookingBrowse.tsx, BrowseDetail.tsx, OpeningView.tsx, SubscriptionTab.tsx.
 
 **Result:** Approved for merge. Premium providers send booking emails; free providers do not.
+### 2026-05-23 — AAA free-opening QA run
+**Task:** Check whether booker aaa sees `$45` / `Payment Required` for free openings.
+
+**Auth:** aaa session injected via Supabase REST using `.secret` credentials.
+
+**Direct QA result:**
+- `/appointments` → `Text: (blank)`
+- `/browse` → `Text: (blank)`
+- Screenshots saved:
+  - `tmp-snapshots/aaa-appointments.png`
+  - `tmp-snapshots/aaa-browse.png`
+- Browser/runtime errors:
+  - `PAGE ERROR: _jsxDEV is not a function`
+
+**Fallback snapshot script:** `node scripts/snapshot-appointments.cjs`
+- `sdeqiu` `/appointments` → `Text: (blank)`
+- `sdeqiu` `/appointments?mode=org` → `Text: (blank)`
+- `sdeqiu` `/workers` → `Text: (blank)`
+- `ccc` `/appointments` → `Text: (blank)`
+- `ccc` `/appointments?mode=org` → `Text: (blank)`
+- `ccc` `/workers` → `Text: (blank)`
+- Repeated error: `PAGE ERROR: _jsxDEV is not a function`
+
+**Conclusion:** Specific `$45` / free-opening bug not verifiable in browser because app is failing earlier with blank-page runtime crash.
+
+### 2026-05-23 14:01:44 — Ralph targeted aaa/sdeqiu rerun
+
+**Credential mapping:** `.secret` does not expose `aaa_*` / `sdeqiu_*` keys directly. Used `TESTER1_EMAIL` → aaa, `TESTER3_EMAIL` → sdeqiu. `SUPABASE_Publishable_KEY` present.
+
+**Dev server:** `http://localhost:8080` returned HTTP 200.
+
+**Targeted script:** `tmp-snapshots/test-aaa-bug.cjs`
+- `aaa` `/appointments` → `Text: ` (empty)
+- `aaa` `/browse` → `Text: ` (empty)
+- `sdeqiu` `/appointments` → `Text: ` (empty)
+- `sdeqiu` `/calendar` → `Text: ` (empty)
+- Runtime on every route: `PAGE ERROR: _jsxDEV is not a function`
+- Screenshots:
+  - `tmp-snapshots/aaa-appointments.png`
+  - `tmp-snapshots/aaa-browse.png`
+  - `tmp-snapshots/sdeqiu-appointments.png`
+  - `tmp-snapshots/sdeqiu-calendar.png`
+
+**Baseline snapshot rerun:** `node scripts/snapshot-appointments.cjs`
+- `sdeqiu` `/appointments` → `(blank)`
+- `sdeqiu` `/appointments?mode=org` → `(blank)`
+- `sdeqiu` `/workers` → `(blank)`
+- `ccc` `/appointments` → `(blank)`
+- `ccc` `/appointments?mode=org` → `(blank)`
+- `ccc` `/workers` → `(blank)`
+- Runtime error repeated: `_jsxDEV is not a function`
+
+**QA call:** Blank-page regression blocks bug verification. No `$45`, no `Payment Required`, no `Free` text observed because UI never rendered.

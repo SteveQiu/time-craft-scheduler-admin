@@ -20,6 +20,7 @@ interface PendingGroupSectionProps {
   paidAppointmentIds: Map<string, string | null>;
   cashAppointmentIds: Set<string>;
   cardAppointmentIds: Set<string>;
+  onsiteOnlyPaymentAppointmentIds: Set<string>;
   appointmentRateMap: Map<string, number>;
   getWorkerRate: (name: string) => number;
   onProviderViewProof: (id: string) => void;
@@ -36,7 +37,7 @@ function getAppointmentTotal(
   getWorkerRate: (name: string) => number,
   appointmentRateMap: Map<string, number>,
 ): { isFree: boolean; total: number } {
-  if (apt.total != null && Number(apt.total) > 0) {
+  if (apt.total != null) {
     const total = Number(apt.total);
     return { isFree: total === 0, total };
   }
@@ -64,6 +65,7 @@ export function PendingGroupSection({
   paidAppointmentIds,
   cashAppointmentIds,
   cardAppointmentIds,
+  onsiteOnlyPaymentAppointmentIds,
   appointmentRateMap,
   getWorkerRate,
   onProviderViewProof,
@@ -176,7 +178,8 @@ export function PendingGroupSection({
                     }
                     if (aptIsProvider) return null;
                     const { isFree } = getAppointmentTotal(apt, isOrgView, getWorkerRate, appointmentRateMap);
-                    if (isFree) return null;
+                    const showPaymentRequired = !(isFree || onsiteOnlyPaymentAppointmentIds.has(apt.id));
+                    if (!showPaymentRequired) return null;
                     return (
                       <Badge variant="outline" className="text-red-600 border-red-600 dark:text-red-400 dark:border-red-400 text-xs">
                         Payment Required

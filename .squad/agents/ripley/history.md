@@ -620,3 +620,21 @@ px tsc --noEmit → 0 errors.
 pm run build → exit 0.
 **Runtime gate:** Ralph ran 
 ode scripts/snapshot-appointments.cjs and confirmed non-blank render.
+
+## Payment Required Tag Fix (2026-05-23)
+
+**Task:** Hide the `payment required` badge when an appointment only allows onsite payment methods, while keeping the requirement fetch separate from the paid-proof query.
+
+**Files created:**
+- `src/hooks/useAppointmentPaymentRequirements.ts` — independent hook for appointment payment requirements
+
+**Files modified:**
+- `src/components/Appointments.tsx` — fetches payment requirements and threads them into appointment list rendering
+- `src/components/appointments/AppointmentList.tsx` — forwards payment requirement data to appointment cards and pending groups
+- `src/components/appointments/AppointmentCard.tsx` — suppresses `payment required` badge for onsite-only requirements
+- `src/components/appointments/PendingGroupSection.tsx` — same onsite-only badge suppression for grouped pending cards
+
+**Pattern:** Keep `payment_method_type` requirement lookup in its own hook/query. The badge is cosmetic only and should hide when the allowed methods are onsite-only (cash or in-person card collection), not when remote payment is actually required.
+
+**Build gate:** `npx tsc --noEmit` → 0 errors. `npm run build` → exit 0.
+**Runtime gate:** Ralph ran `node scripts/snapshot-appointments.cjs`, confirmed non-blank render, and saved screenshot output in `tmp-snapshots/`.

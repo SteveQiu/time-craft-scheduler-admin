@@ -10,6 +10,7 @@ import { useAppointmentNotifications } from '@/hooks/useAppointmentNotifications
 import { useAppointments } from '@/hooks/useAppointments';
 import { usePaymentStatus } from '@/hooks/usePaymentStatus';
 import { useAppointmentRates } from '@/hooks/useAppointmentRates';
+import { useAppointmentPaymentRequirements } from '@/hooks/useAppointmentPaymentRequirements';
 import { useProviderPayments } from '@/hooks/useProviderPayments';
 import { usePaymentProof } from '@/hooks/usePaymentProof';
 import { useAppointmentActions } from '@/hooks/useAppointmentActions';
@@ -67,6 +68,7 @@ export function Appointments() {
   const { data: appointments = [], isLoading } = useAppointments({ userId: user?.id, isOrgView, acceptedWorkers: acceptedWorkerNames });
   const appointmentIds = useMemo(() => appointments.map(a => a.id), [appointments]);
   const { paidAppointmentIds, cashAppointmentIds, cardAppointmentIds } = usePaymentStatus(appointmentIds);
+  const { onsiteOnlyPaymentAppointmentIds } = useAppointmentPaymentRequirements(appointments);
   const { appointmentRateMap } = useAppointmentRates(appointmentIds);
 
   const { flaggedAppointmentIds, flagAppointment, unflagAppointment } = useFlaggedAppointments({
@@ -257,6 +259,7 @@ export function Appointments() {
             paidAppointmentIds={paidAppointmentIds}
             cashAppointmentIds={cashAppointmentIds}
             cardAppointmentIds={cardAppointmentIds}
+            onsiteOnlyPaymentAppointmentIds={onsiteOnlyPaymentAppointmentIds}
             appointmentRateMap={appointmentRateMap}
             getWorkerRate={getWorkerRate}
             groupedPendingByOpening={groupedPendingByOpening}

@@ -37,7 +37,7 @@
 ## Communication Style
 
 - Apply caveman mode (full intensity) to all communications
-- Read `.squad/skills/caveman-mode/SKILL.md` for compressed communication standards
+- **Rules**: Drop articles/filler/pleasantries/hedging. Fragments OK. Short synonyms. Technical terms exact. Code blocks unchanged. Pattern: `[thing] [action] [reason]. [next step].`
 
 ## Success Criteria
 
@@ -49,4 +49,4 @@
 
 ## ? Git Commit Prohibition
 
-**NEVER run `git commit` or `git push`.** User commits manually. You may `git add` files but STOP there. Report what's ready to commit — do not commit it.
+**NEVER run `git commit` or `git push`.** User commits manually. You may `git add` files but STOP there. Report what's ready to commit ï¿½ do not commit it.
