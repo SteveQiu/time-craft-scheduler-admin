@@ -14,7 +14,7 @@ import { DATE_FORMATS, LOCALE } from '@/config/formats';
 import { parseLocation, formatLocation } from '@/lib/address';
 import { getEffectiveTotal } from '@/lib/utils';
 import { toast } from 'sonner';
-import { useSendReminder } from '@/hooks/useSendReminder';
+import { usePremiumReminder } from '@/hooks/usePremiumReminder';
 
 const PENDING_BOOKING_KEY = 'pending_booking_opening_id';
 
@@ -23,7 +23,7 @@ export function OpeningView() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user } = useAuth();
-  const { sendReminder } = useSendReminder();
+  const { sendPremiumReminder } = usePremiumReminder();
   const [showBookingDialog, setShowBookingDialog] = useState(false);
   const [showSignIn, setShowSignIn] = useState(false);
   const [isBooking, setIsBooking] = useState(false);
@@ -100,7 +100,7 @@ export function OpeningView() {
     if (!opening || !user) return;
     setIsBooking(true);
     try {
-      const { data, error } = await supabase.rpc('book_opening', {
+      const { error } = await supabase.rpc('book_opening', {
         _opening_id: opening.id,
         _user_id: user.id,
       });
@@ -110,11 +110,12 @@ export function OpeningView() {
       queryClient.invalidateQueries({ queryKey: ['opening', id] });
       queryClient.invalidateQueries({ queryKey: ['browse-openings'] });
       toast.success('Appointment booked successfully!');
-      // Notify provider if premium
-      const { data: isProviderPremium } = await (supabase as any).rpc('is_user_premium', { p_user_id: opening.user_id });
-      if (isProviderPremium && opening.provider_email) {
-        await sendReminder({ to: opening.provider_email, date: opening.date, startTime: opening.start_time });
-      }
+      await sendPremiumReminder({
+        userId: opening.user_id,
+        to: opening.provider_email,
+        date: opening.date,
+        startTime: opening.start_time,
+      });
     } catch (error: any) {
       console.error('Booking failed:', error);
       toast.error(error.message || 'Failed to book appointment');
@@ -148,6 +149,8 @@ export function OpeningView() {
   }
 
   const formattedDate = new Date(opening.date).toLocaleDateString(LOCALE, DATE_FORMATS.long);
+  const workerName = opening.worker || '—';
+  const workerInitials = (opening.worker || '??').substring(0, 2).toUpperCase();
 
   return (
     <div className="p-6 space-y-6">
@@ -190,7 +193,7 @@ export function OpeningView() {
                     <p className="text-sm text-muted-foreground">Worker</p>
                     <div className="flex items-center space-x-2">
                       <User className="h-4 w-4 text-muted-foreground" />
-                      <p className="font-medium text-foreground">{opening.worker || '—'}</p>
+                      <p className="font-medium text-foreground">{workerName}</p>
                     </div>
                   </div>
                   <div>
@@ -276,7 +279,7 @@ export function OpeningView() {
                   className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-lg cursor-pointer hover:ring-2 hover:ring-primary transition-all"
                   onClick={() => navigate(`/profile/${opening.provider_slug || opening.user_id}`)}
                 >
-                  {(opening.worker || '??').substring(0, 2).toUpperCase()}
+                  {workerInitials}
                 </div>
                 <div>
                   <p
@@ -285,7 +288,7 @@ export function OpeningView() {
                   >
                     {opening.provider_name || 'Provider'}
                   </p>
-                  <p className="text-sm text-muted-foreground">{opening.worker || '—'}</p>
+                  <p className="text-sm text-muted-foreground">{workerName}</p>
                 </div>
               </div>
               <ProfilePhotoStrip userId={opening.user_id} />
@@ -313,7 +316,7 @@ export function OpeningView() {
           <div className="space-y-3 py-4">
             <div className="flex justify-between">
               <span className="text-sm font-medium">Worker:</span>
-              <span className="text-sm">{opening.worker}</span>
+              <span className="text-sm">{workerName}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-sm font-medium">Service:</span>
