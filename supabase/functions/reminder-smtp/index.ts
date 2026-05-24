@@ -48,7 +48,7 @@ Deno.serve(async (req) => {
       )
     }
 
-    const subject = "Appointment Confirmed! 📅"
+    const subject = "Appointment Confirmed"
 
     const appointmentLine = typeof appointmentTime === "string" && appointmentTime.trim().length > 0
       ? `Your appointment is confirmed for <strong>${appointmentTime}</strong>.`

@@ -3,6 +3,7 @@ import { QueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Appointment } from '@/components/appointments/types';
+import { useSendReminder } from '@/hooks/useSendReminder';
 
 export function useAppointmentActions({
   user,
@@ -15,6 +16,8 @@ export function useAppointmentActions({
   appointments: Appointment[];
   queryClient: QueryClient;
 }) {
+  const { sendReminder } = useSendReminder();
+
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isBulkActing, setIsBulkActing] = useState(false);
   const [bulkModifyQueue, setBulkModifyQueue] = useState<Appointment[]>([]);
@@ -33,6 +36,13 @@ export function useAppointmentActions({
       });
       if (error) throw error;
       toast.success('Appointment approved! Other pending requests were automatically declined.');
+      const apt = appointments.find(a => a.id === appointmentId);
+      if (apt?.provider_id && apt.booker_email) {
+        const { data: isProviderPremium } = await (supabase as any).rpc('is_user_premium', { p_user_id: apt.provider_id });
+        if (isProviderPremium) {
+          await sendReminder({ to: apt.booker_email, date: apt.date, startTime: apt.start_time });
+        }
+      }
       queryClient.invalidateQueries({ queryKey: ['appointments'] });
       queryClient.invalidateQueries({ queryKey: ['browse-openings'] });
     } catch (error: any) {
@@ -82,7 +92,15 @@ export function useAppointmentActions({
           _appointment_id: apt.id,
           _provider_id: user.id,
         });
-        if (!error) successCount++;
+        if (!error) {
+          successCount++;
+          if (apt.provider_id && apt.booker_email) {
+            const { data: isProviderPremium } = await (supabase as any).rpc('is_user_premium', { p_user_id: apt.provider_id });
+            if (isProviderPremium) {
+              await sendReminder({ to: apt.booker_email, date: apt.date, startTime: apt.start_time });
+            }
+          }
+        }
       } catch {}
     }
     toast.success(`${successCount} appointment(s) approved.`);

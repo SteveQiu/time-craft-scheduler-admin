@@ -2,20 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Input } from './ui/input';
-import { Separator } from './ui/separator';
-
-import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from './ui/alert-dialog';
-import { Calendar as CalendarIcon, Clock, User, MapPin, Search, Filter, Loader2, Share2, ExternalLink, ChevronRight, ArrowLeft, Check, Bookmark } from 'lucide-react';
-import { toast } from 'sonner';
+import { Calendar as CalendarIcon, MapPin, Search, Loader2, ChevronRight, Bookmark } from 'lucide-react';
 import { BrowseDetail } from './BrowseDetail';
 import { ProfilePhotoStrip } from './ProfilePhotoStrip';
-import { parseLocation, formatLocation } from '@/lib/address';
-import { useSendReminder } from '@/hooks/useSendReminder';
+import { parseLocation } from '@/lib/address';
 
 interface OpeningWithProfile {
   id: string;
@@ -47,20 +42,9 @@ interface ProviderAccount {
 export function BookingBrowse() {
   const navigate = useNavigate();
   const { providerId } = useParams<{ providerId?: string }>();
-  const queryClient = useQueryClient();
   const { user } = useAuth();
-  const { sendReminder } = useSendReminder();
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [showBookingDialog, setShowBookingDialog] = useState(false);
-  const [selectedSlot, setSelectedSlot] = useState<OpeningWithProfile | null>(null);
-  const [isBooking, setIsBooking] = useState(false);
-  const [isPremium, setIsPremium] = useState(false);
-  const [selectedService, setSelectedService] = useState<string | null>(null);
-  const [selectedWorker, setSelectedWorker] = useState<string | null>(null);
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const [copiedSlotId, setCopiedSlotId] = useState<string | null>(null);
-  const [calendarMonth, setCalendarMonth] = useState(new Date());
   const [viewMode, setViewMode] = useState<'all' | 'bookmarks'>('all');
   const [locationFilter, setLocationFilter] = useState<{ province: string; country: string } | null>(null);
 
@@ -83,17 +67,6 @@ export function BookingBrowse() {
     const timer = setTimeout(() => setDebouncedSearch(searchTerm), 200);
     return () => clearTimeout(timer);
   }, [searchTerm]);
-
-  // Fetch provider's premium status when a slot is selected
-  useEffect(() => {
-    if (!selectedSlot?.user_id) {
-      setIsPremium(false);
-      return;
-    }
-    (supabase as any).rpc('is_user_premium', { p_user_id: selectedSlot.user_id })
-      .then(({ data }: { data: any }) => setIsPremium(Boolean(data)))
-      .catch(() => setIsPremium(false));
-  }, [selectedSlot?.user_id]);
 
   // Fetch all openings (works for both authenticated and anonymous users)
   const { 
@@ -260,11 +233,6 @@ export function BookingBrowse() {
     },
   });
 
-  // Get openings for selected provider
-  const selectedProviderOpenings = providerId 
-    ? allOpenings.filter(o => o.user_id === providerId)
-    : [];
-
   // Filter providers by search term, exclude current user, and apply location filter
   const filteredProviders = providers.filter(provider => {
     if (provider.user_id === user?.id) return false;
@@ -291,51 +259,6 @@ export function BookingBrowse() {
 
     return true;
   });
-
-  const handleBooking = (slot: OpeningWithProfile) => {
-    if (!user) {
-      // Save booking intent and redirect to auth
-      try {
-        localStorage.setItem('pendingBookingOpeningId', slot.id);
-      } catch {}
-      toast.info('Please sign in to book this appointment.');
-      navigate(`/auth?redirect=/browse/${slot.user_id}`);
-      return;
-    }
-    setSelectedSlot(slot);
-    setShowBookingDialog(true);
-  };
-
-  const confirmBooking = async () => {
-    if (!selectedSlot || !user) return;
-    setIsBooking(true);
-    try {
-      // Use RPC function for atomic booking with immediate opening lock
-      const { data: appointmentId, error } = await supabase
-        .rpc('book_opening', {
-          _opening_id: selectedSlot.id,
-          _user_id: user.id
-        });
-
-      if (error) throw error;
-
-      // Only send email if provider is premium
-      if (isPremium) {
-        await sendReminder({ to: user.email, date: selectedSlot.date, startTime: selectedSlot.start_time });
-      }
-
-      setShowBookingDialog(false);
-      setSelectedSlot(null);
-      queryClient.invalidateQueries({ queryKey: ['browse-openings'] });
-      toast.success('Appointment booked!');
-      navigate('/appointments');
-    } catch (error) {
-      console.error('Booking failed:', error);
-      toast.error('Failed to book appointment. Please try again.');
-    } finally {
-      setIsBooking(false);
-    }
-  };
 
   if (openingsLoading) {
     return (
