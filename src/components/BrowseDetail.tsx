@@ -50,7 +50,6 @@ export function BrowseDetail({
 }){
   const { providerId } = useParams<{ providerId?: string }>();
   const navigate = useNavigate();
-  const { sendReminder } = useSendReminder();
   const [selectedService, setSelectedService] = useState<string | null>(null);
   const [selectedWorker, setSelectedWorker] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -61,6 +60,7 @@ export function BrowseDetail({
   const [isBooking, setIsBooking] = useState(false);
   const [isPremium, setIsPremium] = useState(false);
   const [loadingPremium, setLoadingPremium] = useState(false);
+  const { sendReminder } = useSendReminder();
 
   // Fetch premium status for provider
   useEffect(() => {
@@ -391,15 +391,17 @@ export function BrowseDetail({
                   
                   if (error) throw error;
                   
-                  // Only send email if provider is premium
-                  if (isPremium) {
-                    await sendReminder({ to: user.email, date: selectedSlot.date, startTime: selectedSlot.start_time });
-                  }
-                  
                   setShowBookingDialog(false);
                   setSelectedSlot(null);
                   toast.success('Appointment booked successfully!');
-                  
+                  // Notify provider if premium
+                  if (isPremium && selectedSlot) {
+                    const { data: profiles } = await supabase.rpc('get_public_profile_by_id', { profile_id: selectedSlot.user_id });
+                    const providerEmail = (profiles as any)?.[0]?.email;
+                    if (providerEmail) {
+                      await sendReminder({ to: providerEmail, date: selectedSlot.date, startTime: selectedSlot.start_time });
+                    }
+                  }
                   // Redirect to browse — page reload causes infinite spinner when no slots remain
                   setTimeout(() => navigate('/browse'), 1000);
                 } catch (error) {

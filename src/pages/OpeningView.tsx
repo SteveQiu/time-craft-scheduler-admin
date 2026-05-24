@@ -28,7 +28,6 @@ export function OpeningView() {
   const [showSignIn, setShowSignIn] = useState(false);
   const [isBooking, setIsBooking] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [isPremium, setIsPremium] = useState(false);
 
   // Auto-show booking dialog after sign-in (survives OAuth redirect)
   useEffect(() => {
@@ -78,22 +77,12 @@ export function OpeningView() {
         provider_name: profile?.full_name || null,
         provider_slug: profile?.slug || null,
         provider_avatar: profile?.avatar_url || null,
+        provider_email: profile?.email || null,
         pending_count: pendingCount,
       };
     },
     enabled: !!id,
   });
-
-  useEffect(() => {
-    if (!opening?.user_id) {
-      setIsPremium(false);
-      return;
-    }
-
-    (supabase as any).rpc('is_user_premium', { p_user_id: opening.user_id })
-      .then(({ data }: { data: any }) => setIsPremium(Boolean(data)))
-      .catch(() => setIsPremium(false));
-  }, [opening?.user_id]);
 
   const handleShare = async () => {
     const url = `${window.location.origin}/openings/${id}`;
@@ -117,15 +106,15 @@ export function OpeningView() {
       });
       if (error) throw error;
 
-      // Only send email if provider is premium
-      if (isPremium) {
-        await sendReminder({ to: user.email, date: opening.date, startTime: opening.start_time });
-      }
-
       setShowBookingDialog(false);
       queryClient.invalidateQueries({ queryKey: ['opening', id] });
       queryClient.invalidateQueries({ queryKey: ['browse-openings'] });
       toast.success('Appointment booked successfully!');
+      // Notify provider if premium
+      const { data: isProviderPremium } = await (supabase as any).rpc('is_user_premium', { p_user_id: opening.user_id });
+      if (isProviderPremium && opening.provider_email) {
+        await sendReminder({ to: opening.provider_email, date: opening.date, startTime: opening.start_time });
+      }
     } catch (error: any) {
       console.error('Booking failed:', error);
       toast.error(error.message || 'Failed to book appointment');
@@ -201,7 +190,7 @@ export function OpeningView() {
                     <p className="text-sm text-muted-foreground">Worker</p>
                     <div className="flex items-center space-x-2">
                       <User className="h-4 w-4 text-muted-foreground" />
-                      <p className="font-medium text-foreground">{opening.worker}</p>
+                      <p className="font-medium text-foreground">{opening.worker || '—'}</p>
                     </div>
                   </div>
                   <div>
@@ -287,7 +276,7 @@ export function OpeningView() {
                   className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-lg cursor-pointer hover:ring-2 hover:ring-primary transition-all"
                   onClick={() => navigate(`/profile/${opening.provider_slug || opening.user_id}`)}
                 >
-                  {opening.worker.substring(0, 2).toUpperCase()}
+                  {(opening.worker || '??').substring(0, 2).toUpperCase()}
                 </div>
                 <div>
                   <p
@@ -296,7 +285,7 @@ export function OpeningView() {
                   >
                     {opening.provider_name || 'Provider'}
                   </p>
-                  <p className="text-sm text-muted-foreground">{opening.worker}</p>
+                  <p className="text-sm text-muted-foreground">{opening.worker || '—'}</p>
                 </div>
               </div>
               <ProfilePhotoStrip userId={opening.user_id} />
