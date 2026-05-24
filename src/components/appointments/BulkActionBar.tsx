@@ -68,7 +68,8 @@ export function BulkActionBar({
         {(hasPending || hasConfirmed) && (() => {
           const cancelCount = selectedAppts.filter(a => a.status === 'pending' || a.status === 'confirmed').length;
           const allPending = selectedAppts.every(a => a.status === 'pending');
-          const label = allPending ? 'Reject' : 'Cancel';
+          const isProvider = isOrgView || isProviderOfAny;
+          const label = allPending && isProvider ? 'Reject' : 'Cancel';
           return (
             <Button size="sm" variant="outline" disabled={isBulkActing} onClick={onCancel}>
               <X className="h-3 w-3 mr-1" /> {label} ({cancelCount})

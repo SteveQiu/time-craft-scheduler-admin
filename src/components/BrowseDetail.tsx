@@ -10,7 +10,7 @@ import { formatLocation, parseLocation } from '@/lib/address';
 import { TIME_FORMATS, LOCALE } from '@/config/formats';
 import { ProfilePhotoStrip } from './ProfilePhotoStrip';
 import { getEffectiveTotal } from '@/lib/utils';
-import { useSendReminder } from '@/hooks/useSendReminder';
+import { usePremiumReminder } from '@/hooks/usePremiumReminder';
 
 interface OpeningWithProfile {
   id: string;
@@ -39,6 +39,23 @@ interface ProviderAccount {
   workers: string[];
 }
 
+function NoAppointmentsState({ onBack }: { onBack: () => void }) {
+  return (
+    <div className="p-6 space-y-6">
+      <Button variant="ghost" size="icon" onClick={onBack}>
+        <ArrowLeft className="h-4 w-4" />
+      </Button>
+      <Card className="shadow-soft border-card-border">
+        <CardContent className="text-center py-12">
+          <CalendarIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-foreground mb-2">No appointments available</h3>
+          <p className="text-muted-foreground">Check back later for new availability.</p>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 export function BrowseDetail({ 
   allOpenings, 
   providers,
@@ -59,22 +76,18 @@ export function BrowseDetail({
   const [selectedSlot, setSelectedSlot] = useState<OpeningWithProfile | null>(null);
   const [isBooking, setIsBooking] = useState(false);
   const [isPremium, setIsPremium] = useState(false);
-  const [loadingPremium, setLoadingPremium] = useState(false);
-  const { sendReminder } = useSendReminder();
+  const { sendPremiumReminder } = usePremiumReminder();
 
   // Fetch premium status for provider
   useEffect(() => {
     if (!providerId) return;
 
     const fetchPremiumStatus = async () => {
-      setLoadingPremium(true);
       try {
         const { data } = await (supabase as any).rpc('is_user_premium', { p_user_id: providerId });
         setIsPremium(Boolean(data));
       } catch {
         setIsPremium(false);
-      } finally {
-        setLoadingPremium(false);
       }
     };
 
@@ -164,37 +177,12 @@ export function BrowseDetail({
         </div>
       );
     }
-    return (
-      <div className="p-6 space-y-6">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/browse')}>
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <Card className="shadow-soft border-card-border">
-          <CardContent className="text-center py-12">
-            <CalendarIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-foreground mb-2">No appointments available</h3>
-            <p className="text-muted-foreground">Check back later for new availability.</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
+
+    return <NoAppointmentsState onBack={() => navigate('/browse')} />;
   }
 
   if (selectedProviderOpenings.length === 0) {
-    return (
-      <div className="p-6 space-y-6">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/browse')}>
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <Card className="shadow-soft border-card-border">
-          <CardContent className="text-center py-12">
-            <CalendarIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-foreground mb-2">No appointments available</h3>
-            <p className="text-muted-foreground">Check back later for new availability.</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
+    return <NoAppointmentsState onBack={() => navigate('/browse')} />;
   }
 
   return (
@@ -384,7 +372,7 @@ export function BrowseDetail({
                   }
                   
                   // Call the book_opening RPC function
-                  const { data, error } = await supabase.rpc('book_opening', {
+                  const { error } = await supabase.rpc('book_opening', {
                     _opening_id: selectedSlot.id,
                     _user_id: user.id
                   });
@@ -394,14 +382,14 @@ export function BrowseDetail({
                   setShowBookingDialog(false);
                   setSelectedSlot(null);
                   toast.success('Appointment booked successfully!');
-                  // Notify provider if premium
-                  if (isPremium && selectedSlot) {
-                    const { data: profiles } = await supabase.rpc('get_public_profile_by_id', { profile_id: selectedSlot.user_id });
-                    const providerEmail = (profiles as any)?.[0]?.email;
-                    if (providerEmail) {
-                      await sendReminder({ to: providerEmail, date: selectedSlot.date, startTime: selectedSlot.start_time });
-                    }
-                  }
+                  const { data: profiles } = await supabase.rpc('get_public_profile_by_id', { profile_id: selectedSlot.user_id });
+                  const to = (profiles as any)?.[0]?.email;
+                  await sendPremiumReminder({
+                    userId: selectedSlot.user_id,
+                    to,
+                    date: selectedSlot.date,
+                    startTime: selectedSlot.start_time,
+                  });
                   // Redirect to browse — page reload causes infinite spinner when no slots remain
                   setTimeout(() => navigate('/browse'), 1000);
                 } catch (error) {

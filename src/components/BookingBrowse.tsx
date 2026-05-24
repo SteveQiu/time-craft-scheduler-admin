@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Card, CardContent, CardHeader } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Input } from './ui/input';
@@ -37,6 +37,89 @@ interface ProviderAccount {
   opening_count: number;
   services: string[];
   workers: string[];
+}
+
+function getUniqueValues(values: string[]) {
+  return [...new Set(values)];
+}
+
+function buildProviderAccount({
+  userId,
+  providerName,
+  providerSlug,
+  openings,
+}: {
+  userId: string;
+  providerName: string;
+  providerSlug?: string | null;
+  openings: OpeningWithProfile[];
+}): ProviderAccount {
+  return {
+    user_id: userId,
+    provider_name: providerName,
+    provider_slug: providerSlug || null,
+    opening_count: openings.length,
+    services: getUniqueValues(openings.map(opening => opening.service)),
+    workers: getUniqueValues(openings.map(opening => opening.worker)),
+  };
+}
+
+function ProviderBrowseCard({
+  provider,
+  onOpen,
+}: {
+  provider: ProviderAccount;
+  onOpen: (providerId: string) => void;
+}) {
+  return (
+    <Card
+      className="shadow-soft border-card-border hover:shadow-lg transition-all cursor-pointer"
+      onClick={() => onOpen(provider.user_id)}
+    >
+      <CardHeader>
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-3 flex-1">
+            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium">
+              {provider.provider_name.substring(0, 2).toUpperCase()}
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-foreground truncate hover:underline">
+                {provider.provider_name}
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                {provider.opening_count} available slots
+              </p>
+            </div>
+          </div>
+          <ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div>
+          <p className="text-xs font-medium text-muted-foreground mb-2">Services</p>
+          <div className="flex flex-wrap gap-1">
+            {provider.services.slice(0, 3).map(service => (
+              <Badge key={service} variant="secondary" className="text-xs">
+                {service}
+              </Badge>
+            ))}
+            {provider.services.length > 3 && (
+              <Badge variant="secondary" className="text-xs">
+                +{provider.services.length - 3}
+              </Badge>
+            )}
+          </div>
+        </div>
+        <div>
+          <p className="text-xs font-medium text-muted-foreground mb-2">Workers</p>
+          <p className="text-sm text-foreground truncate">{provider.workers.join(', ')}</p>
+        </div>
+        <div onClick={e => e.stopPropagation()}>
+          <ProfilePhotoStrip userId={provider.user_id} thumbClass="w-14 h-14" />
+        </div>
+      </CardContent>
+    </Card>
+  );
 }
 
 export function BookingBrowse() {
@@ -137,37 +220,31 @@ export function BookingBrowse() {
     },
   });
 
-  // Group openings by provider
-  const providers: ProviderAccount[] = React.useMemo(() => {
-    const providerMap = new Map<string, ProviderAccount>();
-    
+  const providerOpeningsMap = React.useMemo(() => {
+    const map = new Map<string, OpeningWithProfile[]>();
+
     allOpenings.forEach(opening => {
-      if (!providerMap.has(opening.user_id)) {
-        providerMap.set(opening.user_id, {
-          user_id: opening.user_id,
-          provider_name: opening.provider_name || 'Organization',
-          provider_slug: opening.provider_slug || null,
-          opening_count: 0,
-          services: [],
-          workers: [],
-        });
+      if (!map.has(opening.user_id)) {
+        map.set(opening.user_id, []);
       }
-      
-      const provider = providerMap.get(opening.user_id)!;
-      provider.opening_count += 1;
-      
-      if (!provider.services.includes(opening.service)) {
-        provider.services.push(opening.service);
-      }
-      if (!provider.workers.includes(opening.worker)) {
-        provider.workers.push(opening.worker);
-      }
+
+      map.get(opening.user_id)!.push(opening);
     });
 
-    return Array.from(providerMap.values()).sort((a, b) => 
-      b.opening_count - a.opening_count
-    );
+    return map;
   }, [allOpenings]);
+
+  // Group openings by provider
+  const providers: ProviderAccount[] = React.useMemo(() => {
+    return Array.from(providerOpeningsMap.entries())
+      .map(([userId, openings]) => buildProviderAccount({
+        userId,
+        providerName: openings[0]?.provider_name || 'Organization',
+        providerSlug: openings[0]?.provider_slug,
+        openings,
+      }))
+      .sort((a, b) => b.opening_count - a.opening_count);
+  }, [providerOpeningsMap]);
 
   // Fetch bookmarks with provider details
   const { data: bookmarkedProviders = [] } = useQuery({
@@ -186,45 +263,27 @@ export function BookingBrowse() {
         }
         
         if (!bookmarks || bookmarks.length === 0) {
-          console.log('No bookmarks found');
           return [];
         }
-        
-        console.log('Bookmarks found:', bookmarks);
-        
+
         const bookmarkedIds = bookmarks.map((b: any) => b.bookmarked_user_id);
-        
+
         // Get provider details for bookmarked users via PII-safe RPC
         const { data: profiles, error: profilesError } = await supabase
           .rpc('get_public_profile_names', { profile_ids: bookmarkedIds });
-        
+
         if (profilesError) {
           console.error('Profiles fetch error:', profilesError);
           throw profilesError;
         }
-        
-        console.log('Bookmarked profiles:', profiles);
-        
+
         if (!profiles) return [];
-        
-        // Map to ProviderAccount format
-        return profiles.map((profile: any) => ({
-          user_id: profile.id,
-          provider_name: profile.full_name || 'Unknown',
-          provider_slug: profile.slug || null,
-          opening_count: allOpenings.filter((o: any) => o.user_id === profile.id).length,
-          services: allOpenings
-            .filter((o: any) => o.user_id === profile.id)
-            .reduce((acc: string[], o: any) => {
-              if (!acc.includes(o.service)) acc.push(o.service);
-              return acc;
-            }, []),
-          workers: allOpenings
-            .filter((o: any) => o.user_id === profile.id)
-            .reduce((acc: string[], o: any) => {
-              if (!acc.includes(o.worker)) acc.push(o.worker);
-              return acc;
-            }, []),
+
+        return profiles.map((profile: any) => buildProviderAccount({
+          userId: profile.id,
+          providerName: profile.full_name || 'Unknown',
+          providerSlug: profile.slug || null,
+          openings: providerOpeningsMap.get(profile.id) || [],
         }));
       } catch (err) {
         console.error('Bookmarks query error:', err);
@@ -236,29 +295,29 @@ export function BookingBrowse() {
   // Filter providers by search term, exclude current user, and apply location filter
   const filteredProviders = providers.filter(provider => {
     if (provider.user_id === user?.id) return false;
-    
+
     const terms = debouncedSearch.toLowerCase().split(/\s+/).filter(Boolean);
     const matchesSearch = terms.length === 0 || terms.every(term =>
       provider.provider_name.toLowerCase().includes(term) ||
       provider.services.some(s => s.toLowerCase().includes(term)) ||
       provider.workers.some(w => w.toLowerCase().includes(term))
     );
-    
+
     if (!matchesSearch) return false;
 
-    // Apply location filter
     if (locationFilter && locationFilter.province && locationFilter.country) {
-      const providerOpenings = allOpenings.filter(o => o.user_id === provider.user_id);
-      const hasMatchingLocation = providerOpenings.some(opening => {
+      const providerOpenings = providerOpeningsMap.get(provider.user_id) || [];
+      return providerOpenings.some(opening => {
         const loc = parseLocation(opening.location);
         return loc.province.toLowerCase() === locationFilter.province.toLowerCase() &&
-               loc.country.toLowerCase() === locationFilter.country.toLowerCase();
+          loc.country.toLowerCase() === locationFilter.country.toLowerCase();
       });
-      return hasMatchingLocation;
     }
 
     return true;
   });
+
+  const visibleProviders = viewMode === 'bookmarks' ? bookmarkedProviders : filteredProviders;
 
   if (openingsLoading) {
     return (
@@ -371,149 +430,37 @@ export function BookingBrowse() {
           </CardContent>
         </Card>
 
-        {/* Bookmarks View */}
-        {viewMode === 'bookmarks' && (
-          <>
-            {bookmarkedProviders.length === 0 ? (
-              <Card className="shadow-soft border-card-border">
-                <CardContent className="text-center py-12">
-                  <Bookmark className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-foreground mb-2">No bookmarks yet</h3>
-                  <p className="text-muted-foreground mb-4">Click the bookmark icon on any provider to save them.</p>
-                  <Button variant="outline" onClick={() => setViewMode('all')}>Browse All</Button>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {bookmarkedProviders.map((provider) => (
-                  <Card 
-                    key={provider.user_id} 
-                    className="shadow-soft border-card-border hover:shadow-lg transition-all cursor-pointer"
-                    onClick={() => navigate(`/browse/${provider.user_id}`)}
-                  >
-                    <CardHeader>
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex items-center gap-3 flex-1">
-                          <div
-                            className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium"
-                          >
-                            {provider.provider_name.substring(0, 2).toUpperCase()}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h3 className="font-semibold text-foreground truncate hover:underline">
-                              {provider.provider_name}
-                            </h3>
-                            <p className="text-sm text-muted-foreground">
-                              {provider.opening_count} available slots
-                            </p>
-                          </div>
-                        </div>
-                        <ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-                      </div>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      <div>
-                        <p className="text-xs font-medium text-muted-foreground mb-2">Services</p>
-                        <div className="flex flex-wrap gap-1">
-                          {provider.services.slice(0, 3).map(service => (
-                            <Badge key={service} variant="secondary" className="text-xs">
-                              {service}
-                            </Badge>
-                          ))}
-                          {provider.services.length > 3 && (
-                            <Badge variant="secondary" className="text-xs">
-                              +{provider.services.length - 3}
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                      <div>
-                        <p className="text-xs font-medium text-muted-foreground mb-2">Workers</p>
-                        <p className="text-sm text-foreground truncate">
-                          {provider.workers.join(', ')}
-                        </p>
-                      </div>
-                      <div onClick={e => e.stopPropagation()}>
-                        <ProfilePhotoStrip userId={provider.user_id} thumbClass="w-14 h-14" />
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </>
+        {viewMode === 'bookmarks' && bookmarkedProviders.length === 0 && (
+          <Card className="shadow-soft border-card-border">
+            <CardContent className="text-center py-12">
+              <Bookmark className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-foreground mb-2">No bookmarks yet</h3>
+              <p className="text-muted-foreground mb-4">Click the bookmark icon on any provider to save them.</p>
+              <Button variant="outline" onClick={() => setViewMode('all')}>Browse All</Button>
+            </CardContent>
+          </Card>
         )}
 
-        {/* All View */}
-        {viewMode === 'all' && (
-          <>
-            {filteredProviders.length === 0 ? (
-              <Card className="shadow-soft border-card-border">
-                <CardContent className="text-center py-12">
-                  <CalendarIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-foreground mb-2">No providers found</h3>
-                  <p className="text-muted-foreground">Try adjusting your search or check back later.</p>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredProviders.map((provider) => (
-                  <Card 
-                    key={provider.user_id} 
-                    className="shadow-soft border-card-border hover:shadow-lg transition-all cursor-pointer"
-                    onClick={() => navigate(`/browse/${provider.user_id}`)}
-                  >
-                    <CardHeader>
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex items-center gap-3 flex-1">
-                          <div
-                            className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium"
-                          >
-                            {provider.provider_name.substring(0, 2).toUpperCase()}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h3 className="font-semibold text-foreground truncate hover:underline">
-                              {provider.provider_name}
-                            </h3>
-                            <p className="text-sm text-muted-foreground">
-                              {provider.opening_count} available slots
-                            </p>
-                          </div>
-                        </div>
-                        <ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-                      </div>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      <div>
-                        <p className="text-xs font-medium text-muted-foreground mb-2">Services</p>
-                        <div className="flex flex-wrap gap-1">
-                          {provider.services.slice(0, 3).map(service => (
-                            <Badge key={service} variant="secondary" className="text-xs">
-                              {service}
-                            </Badge>
-                          ))}
-                          {provider.services.length > 3 && (
-                            <Badge variant="secondary" className="text-xs">
-                              +{provider.services.length - 3}
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                      <div>
-                        <p className="text-xs font-medium text-muted-foreground mb-2">Workers</p>
-                        <p className="text-sm text-foreground truncate">
-                          {provider.workers.join(', ')}
-                        </p>
-                      </div>
-                      <div onClick={e => e.stopPropagation()}>
-                        <ProfilePhotoStrip userId={provider.user_id} thumbClass="w-14 h-14" />
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </>
+        {viewMode === 'all' && filteredProviders.length === 0 && (
+          <Card className="shadow-soft border-card-border">
+            <CardContent className="text-center py-12">
+              <CalendarIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-foreground mb-2">No providers found</h3>
+              <p className="text-muted-foreground">Try adjusting your search or check back later.</p>
+            </CardContent>
+          </Card>
+        )}
+
+        {visibleProviders.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {visibleProviders.map((provider) => (
+              <ProviderBrowseCard
+                key={provider.user_id}
+                provider={provider}
+                onOpen={(selectedProviderId) => navigate(`/browse/${selectedProviderId}`)}
+              />
+            ))}
+          </div>
         )}
       </div>
     );

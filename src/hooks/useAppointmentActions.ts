@@ -3,7 +3,7 @@ import { QueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Appointment } from '@/components/appointments/types';
-import { useSendReminder } from '@/hooks/useSendReminder';
+import { usePremiumReminder } from '@/hooks/usePremiumReminder';
 
 export function useAppointmentActions({
   user,
@@ -16,7 +16,7 @@ export function useAppointmentActions({
   appointments: Appointment[];
   queryClient: QueryClient;
 }) {
-  const { sendReminder } = useSendReminder();
+  const { sendPremiumReminder } = usePremiumReminder();
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isBulkActing, setIsBulkActing] = useState(false);
@@ -26,6 +26,11 @@ export function useAppointmentActions({
   const [bulkModifyAvailableOpenings, setBulkModifyAvailableOpenings] = useState<any[]>([]);
   const [bulkModifyLoadingOpenings, setBulkModifyLoadingOpenings] = useState(false);
   const [bulkModifyModifying, setBulkModifyModifying] = useState<string | null>(null);
+
+  const invalidateAppointmentQueries = () => {
+    queryClient.invalidateQueries({ queryKey: ['appointments'] });
+    queryClient.invalidateQueries({ queryKey: ['browse-openings'] });
+  };
 
   const handleApprove = async (appointmentId: string) => {
     if (!user) return;
@@ -37,14 +42,13 @@ export function useAppointmentActions({
       if (error) throw error;
       toast.success('Appointment approved! Other pending requests were automatically declined.');
       const apt = appointments.find(a => a.id === appointmentId);
-      if (apt?.provider_id && apt.booker_email) {
-        const { data: isProviderPremium } = await (supabase as any).rpc('is_user_premium', { p_user_id: apt.provider_id });
-        if (isProviderPremium) {
-          await sendReminder({ to: apt.booker_email, date: apt.date, startTime: apt.start_time });
-        }
-      }
-      queryClient.invalidateQueries({ queryKey: ['appointments'] });
-      queryClient.invalidateQueries({ queryKey: ['browse-openings'] });
+      await sendPremiumReminder({
+        userId: apt?.provider_id,
+        to: apt?.booker_email,
+        date: apt?.date,
+        startTime: apt?.start_time,
+      });
+      invalidateAppointmentQueries();
     } catch (error: any) {
       toast.error(error.message || 'Failed to approve');
     }
@@ -59,8 +63,7 @@ export function useAppointmentActions({
       });
       if (error) throw error;
       toast.success('Appointment cancelled.');
-      queryClient.invalidateQueries({ queryKey: ['appointments'] });
-      queryClient.invalidateQueries({ queryKey: ['browse-openings'] });
+      invalidateAppointmentQueries();
     } catch (error: any) {
       toast.error(error.message || 'Failed to cancel');
     }
@@ -94,19 +97,18 @@ export function useAppointmentActions({
         });
         if (!error) {
           successCount++;
-          if (apt.provider_id && apt.booker_email) {
-            const { data: isProviderPremium } = await (supabase as any).rpc('is_user_premium', { p_user_id: apt.provider_id });
-            if (isProviderPremium) {
-              await sendReminder({ to: apt.booker_email, date: apt.date, startTime: apt.start_time });
-            }
-          }
+          await sendPremiumReminder({
+            userId: apt.provider_id,
+            to: apt.booker_email,
+            date: apt.date,
+            startTime: apt.start_time,
+          });
         }
       } catch {}
     }
     toast.success(`${successCount} appointment(s) approved.`);
     setSelectedIds(new Set());
-    queryClient.invalidateQueries({ queryKey: ['appointments'] });
-    queryClient.invalidateQueries({ queryKey: ['browse-openings'] });
+    invalidateAppointmentQueries();
     setIsBulkActing(false);
   };
 
@@ -128,8 +130,7 @@ export function useAppointmentActions({
     }
     toast.success(`${successCount} appointment(s) cancelled.`);
     setSelectedIds(new Set());
-    queryClient.invalidateQueries({ queryKey: ['appointments'] });
-    queryClient.invalidateQueries({ queryKey: ['browse-openings'] });
+    invalidateAppointmentQueries();
     setIsBulkActing(false);
   };
 
@@ -151,8 +152,7 @@ export function useAppointmentActions({
     }
     toast.success(`${successCount} appointment(s) denied.`);
     setSelectedIds(new Set());
-    queryClient.invalidateQueries({ queryKey: ['appointments'] });
-    queryClient.invalidateQueries({ queryKey: ['browse-openings'] });
+    invalidateAppointmentQueries();
     setIsBulkActing(false);
   };
 
@@ -237,8 +237,7 @@ export function useAppointmentActions({
       });
       if (error) throw error;
       toast.success(`Appointment modified (${bulkModifyIndex + 1}/${bulkModifyQueue.length})`);
-      queryClient.invalidateQueries({ queryKey: ['appointments'] });
-      queryClient.invalidateQueries({ queryKey: ['browse-openings'] });
+      invalidateAppointmentQueries();
     } catch (error: any) {
       toast.error(error.message || 'Failed to modify');
     } finally {
