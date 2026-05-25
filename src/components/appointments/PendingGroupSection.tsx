@@ -25,6 +25,7 @@ interface PendingGroupSectionProps {
   getWorkerRate: (name: string) => number;
   onProviderViewProof: (id: string) => void;
   onApprove: (id: string) => void;
+  onReject: (id: string) => void;
   onCancel: (id: string) => void;
   navigate: (path: string) => void;
   isPremium: boolean;
@@ -70,6 +71,7 @@ export function PendingGroupSection({
   getWorkerRate,
   onProviderViewProof,
   onApprove,
+  onReject,
   onCancel,
   navigate,
   isPremium,
@@ -178,7 +180,7 @@ export function PendingGroupSection({
                     }
                     if (aptIsProvider) return null;
                     const { isFree } = getAppointmentTotal(apt, isOrgView, getWorkerRate, appointmentRateMap);
-                    const showPaymentRequired = !isFree // !(isFree || onsiteOnlyPaymentAppointmentIds.has(apt.id));
+                    const showPaymentRequired = !isFree && !onsiteOnlyPaymentAppointmentIds.has(apt.id);
                     if (!showPaymentRequired) return null;
                     return (
                       <Badge variant="outline" className="text-red-600 border-red-600 dark:text-red-400 dark:border-red-400 text-xs">
@@ -192,7 +194,7 @@ export function PendingGroupSection({
                         <Check className="h-3 w-3 mr-1" />
                         Approve
                       </Button>
-                      <Button variant="outline" size="sm" onClick={() => onCancel(apt.id)}>
+                      <Button variant="outline" size="sm" onClick={() => onReject(apt.id)}>
                         <X className="h-3 w-3 mr-1" />
                         Reject
                       </Button>

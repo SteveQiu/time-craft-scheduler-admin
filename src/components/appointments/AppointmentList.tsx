@@ -30,6 +30,7 @@ interface AppointmentListProps {
   onProviderViewProof: (id: string) => void;
   onPaymentInfo: (providerId: string, providerName: string, openingId: string, appointmentId: string) => void;
   onApprove: (id: string) => void;
+  onReject: (id: string) => void;
   onCancel: (id: string) => void;
   navigate: (path: string) => void;
   isBulkActing: boolean;
@@ -69,6 +70,7 @@ export function AppointmentList({
   onProviderViewProof,
   onPaymentInfo,
   onApprove,
+  onReject,
   onCancel,
   navigate,
   isBulkActing,
@@ -137,6 +139,7 @@ export function AppointmentList({
             getWorkerRate={getWorkerRate}
             onProviderViewProof={onProviderViewProof}
             onApprove={onApprove}
+            onReject={onReject}
             onCancel={onCancel}
             navigate={navigate}
             isPremium={isPremium}

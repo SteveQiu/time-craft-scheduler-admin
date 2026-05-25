@@ -20,12 +20,15 @@ export function useAppointmentPaymentRequirements(appointments: Appointment[]) {
     queryKey: ['appointment-provider-payment-methods', providerIds],
     enabled: providerIds.length > 0,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('payment_methods')
-        .select('id, type, user_id')
-        .in('user_id', providerIds);
+      const { data, error } = await supabase.rpc('get_appointment_provider_payment_methods', {
+        provider_ids: providerIds,
+      });
 
-      if (error) throw error;
+      if (error) {
+        console.error('[useAppointmentPaymentRequirements] query error:', error);
+        throw error;
+      }
+
       return (data ?? []) as PaymentMethodSummary[];
     },
   });
