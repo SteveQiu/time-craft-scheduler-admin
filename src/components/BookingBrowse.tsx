@@ -11,33 +11,7 @@ import { Calendar as CalendarIcon, MapPin, Search, Loader2, ChevronRight, Bookma
 import { BrowseDetail } from './BrowseDetail';
 import { ProfilePhotoStrip } from './ProfilePhotoStrip';
 import { parseLocation } from '@/lib/address';
-
-interface OpeningWithProfile {
-  id: string;
-  user_id: string;
-  date: string;
-  start_time: string;
-  end_time: string;
-  duration: number;
-  service: string;
-  worker: string;
-  is_available: boolean;
-  location: string | null;
-  hourly_rate: number;
-  total: number;
-  provider_name: string | null;
-  provider_email: string | null;
-  provider_slug: string | null;
-}
-
-interface ProviderAccount {
-  user_id: string;
-  provider_name: string;
-  provider_slug: string | null;
-  opening_count: number;
-  services: string[];
-  workers: string[];
-}
+import { OpeningWithProfile, ProviderAccount } from '@/types/browse';
 
 function getUniqueValues(values: string[]) {
   return [...new Set(values)];

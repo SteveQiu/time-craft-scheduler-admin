@@ -838,6 +838,14 @@ export type Database = {
           phone: string
         }[]
       }
+      get_appointment_provider_payment_methods: {
+        Args: { provider_ids: string[] }
+        Returns: {
+          id: string
+          type: string
+          user_id: string
+        }[]
+      }
       get_appointment_rates: {
         Args: { _appointment_ids: string[] }
         Returns: {

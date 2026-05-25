@@ -27,9 +27,18 @@ export function useAppointmentActions({
   const [bulkModifyLoadingOpenings, setBulkModifyLoadingOpenings] = useState(false);
   const [bulkModifyModifying, setBulkModifyModifying] = useState<string | null>(null);
 
-  const invalidateAppointmentQueries = () => {
-    queryClient.invalidateQueries({ queryKey: ['appointments'] });
-    queryClient.invalidateQueries({ queryKey: ['browse-openings'] });
+  const invalidateAppointmentQueries = async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ['appointments'] }),
+      queryClient.invalidateQueries({ queryKey: ['browse-openings'] }),
+    ]);
+  };
+
+  const updateAppointmentsCache = (updater: (current: Appointment[]) => Appointment[]) => {
+    queryClient.setQueriesData<Appointment[]>({ queryKey: ['appointments'] }, current => {
+      if (!current) return current;
+      return updater(current);
+    });
   };
 
   const handleApprove = async (appointmentId: string) => {
@@ -40,17 +49,58 @@ export function useAppointmentActions({
         _provider_id: user.id,
       });
       if (error) throw error;
-      toast.success('Appointment approved! Other pending requests were automatically declined.');
+
       const apt = appointments.find(a => a.id === appointmentId);
-      await sendPremiumReminder({
-        userId: apt?.provider_id,
-        to: apt?.booker_email,
-        date: apt?.date,
-        startTime: apt?.start_time,
-      });
-      invalidateAppointmentQueries();
+      if (apt) {
+        updateAppointmentsCache(current =>
+          current.map(item => {
+            if (item.id === appointmentId) {
+              return { ...item, status: 'confirmed', approved_by: user.id };
+            }
+            if (item.opening_id === apt.opening_id && item.status === 'pending') {
+              return { ...item, status: 'cancelled' };
+            }
+            return item;
+          })
+        );
+      }
+
+      toast.success('Appointment approved! Other pending requests were automatically declined.');
+
+      try {
+        await sendPremiumReminder({
+          userId: apt?.provider_id,
+          to: apt?.booker_email,
+          date: apt?.date,
+          startTime: apt?.start_time,
+        });
+      } catch (reminderError) {
+        console.error('Premium reminder failed after appointment approval:', reminderError);
+      }
+
+      await invalidateAppointmentQueries();
     } catch (error: any) {
       toast.error(error.message || 'Failed to approve');
+    }
+  };
+
+  const handleReject = async (appointmentId: string) => {
+    if (!user) return;
+    try {
+      const { error } = await supabase.rpc('reject_appointment', {
+        _appointment_id: appointmentId,
+        _provider_id: user.id,
+      });
+      if (error) throw error;
+
+      updateAppointmentsCache(current =>
+        current.map(item => (item.id === appointmentId ? { ...item, status: 'cancelled', approved_by: user.id } : item))
+      );
+
+      toast.success('Appointment rejected.');
+      await invalidateAppointmentQueries();
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to reject');
     }
   };
 
@@ -62,8 +112,13 @@ export function useAppointmentActions({
         _caller_id: user.id,
       });
       if (error) throw error;
+
+      updateAppointmentsCache(current =>
+        current.map(item => (item.id === appointmentId ? { ...item, status: 'cancelled' } : item))
+      );
+
       toast.success('Appointment cancelled.');
-      invalidateAppointmentQueries();
+      await invalidateAppointmentQueries();
     } catch (error: any) {
       toast.error(error.message || 'Failed to cancel');
     }
@@ -260,6 +315,7 @@ export function useAppointmentActions({
     bulkModifyLoadingOpenings,
     bulkModifyModifying,
     handleApprove,
+    handleReject,
     handleCancel,
     handleComplete,
     handleBulkApprove,

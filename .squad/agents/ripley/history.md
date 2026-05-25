@@ -655,3 +655,13 @@ ode scripts/snapshot-appointments.cjs and confirmed non-blank render.
 
 **Build gate:** `npx tsc --noEmit` → 0 errors. `npm run build` → exit 0 (6.45s).
 **Runtime gate:** Pending Ralph verification.
+#### Booking dialog payment methods (2026-05-24)
+
+**Task:** Show each opening's available payment methods inside the booking confirmation dialog.
+
+**Files modified:**
+- `src/components/BrowseDetail.tsx` — added `accepted_payment_method_ids` typing, wired `useProviderPayments`, rendered payment methods after Total, and kept loading state active until provider, org, and opening payment data all finish loading
+- `src/components/BookingBrowse.tsx` — added `accepted_payment_method_ids` typing to `OpeningWithProfile`
+
+**Build gate:** `npx tsc --noEmit` → 0 errors. `npm run build` → exit 0.
+**Runtime gate:** Ralph ran `node scripts/snapshot-appointments.cjs`, confirmed non-blank render, and verified screenshot output in `tmp-snapshots/`.

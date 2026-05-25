@@ -11,33 +11,9 @@ import { TIME_FORMATS, LOCALE } from '@/config/formats';
 import { ProfilePhotoStrip } from './ProfilePhotoStrip';
 import { getEffectiveTotal } from '@/lib/utils';
 import { usePremiumReminder } from '@/hooks/usePremiumReminder';
-
-interface OpeningWithProfile {
-  id: string;
-  user_id: string;
-  date: string;
-  start_time: string;
-  end_time: string;
-  duration: number;
-  service: string;
-  worker: string;
-  is_available: boolean;
-  location: string | null;
-  hourly_rate: number;
-  total: number;
-  provider_name: string | null;
-  provider_email: string | null;
-  provider_slug: string | null;
-}
-
-interface ProviderAccount {
-  user_id: string;
-  provider_name: string;
-  provider_slug: string | null;
-  opening_count: number;
-  services: string[];
-  workers: string[];
-}
+import { useProviderPayments } from '@/hooks/useProviderPayments';
+import { getMethodLabel } from '@/lib/payment/methods';
+import { OpeningWithProfile, ProviderAccount } from '@/types/browse';
 
 function NoAppointmentsState({ onBack }: { onBack: () => void }) {
   return (
@@ -77,6 +53,16 @@ export function BrowseDetail({
   const [isBooking, setIsBooking] = useState(false);
   const [isPremium, setIsPremium] = useState(false);
   const { sendPremiumReminder } = usePremiumReminder();
+  const {
+    allAvailableMethods,
+    loadingOrgPayments,
+    loadingProviderPayments,
+    loadingPaymentInfoOpening,
+  } = useProviderPayments({
+    providerId: selectedSlot?.user_id ?? null,
+    openingId: selectedSlot?.id ?? null,
+    selectedPaymentTabId: null,
+  });
 
   // Fetch premium status for provider
   useEffect(() => {
@@ -352,6 +338,11 @@ export function BrowseDetail({
                       </div>
                     );
                   })()}
+                  {(loadingOrgPayments || loadingProviderPayments || loadingPaymentInfoOpening) ? (
+                    <div className="flex items-center gap-1"><Loader2 className="h-3 w-3 animate-spin" /><span className="text-xs text-muted-foreground">Loading payment info...</span></div>
+                  ) : allAvailableMethods.length > 0 ? (
+                    <div><strong>Payment:</strong>{' '}{allAvailableMethods.map(m => m.label || getMethodLabel(m.type)).join(' · ')}</div>
+                  ) : null}
                 </div>
               )}
             </AlertDialogDescription>

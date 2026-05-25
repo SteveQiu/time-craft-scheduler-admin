@@ -145,6 +145,7 @@ export function Appointments() {
     bulkModifyLoadingOpenings,
     bulkModifyModifying,
     handleApprove,
+    handleReject,
     handleCancel,
     handleBulkApprove,
     handleBulkDeny,
@@ -275,6 +276,7 @@ export function Appointments() {
               setProofSubmitted(false);
             }}
             onApprove={handleApprove}
+            onReject={handleReject}
             onCancel={handleCancel}
             navigate={navigate}
             isBulkActing={isBulkActing}
