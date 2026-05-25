@@ -51,12 +51,24 @@ export function Calendar() {
   });
   const [isEditSaving, setIsEditSaving] = useState(false);
 
-  const [newOpening, setNewOpening] = useState<NewOpeningForm>({
-    startTime: '09:00', endTime: '', duration: 1, worker: '', service: '',
+  const [newOpening, setNewOpening] = useState<NewOpeningForm>(() => {
+    let startTime = '09:00';
+    let endTime = '';
+    try {
+      const cached = localStorage.getItem('pikappoint_opening_times');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (parsed.startTime) startTime = parsed.startTime;
+        if (parsed.endTime) endTime = parsed.endTime;
+      }
+    } catch {}
+    return {
+    startTime, endTime: endTime, duration: 1, worker: '', service: '',
     locationFields: { address_line_1: '', address_line_2: '', city: '', province: '', country: '', zip: '' },
     multipleSlots: false, interval: 1, isFree: false, rateMode: 'default', customTotal: 0, multipleDates: false,
     dateRangeStart: '', dateRangeEnd: '', weekdays: new Set([0, 1, 2, 3, 4, 5, 6]),
     acceptedPaymentMethodIds: [],
+    };
   });
 
   const { openings, setOpenings, loading, setLoading, confirmedOpeningIds, loadOpeningsForMonth } = useCalendarOpenings({ user, isOrgMode });
