@@ -8,6 +8,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { parseLocation, formatLocation } from '@/lib/address';
 import { toGoogleCalendarUrl, toOutlookUrl, downloadICS } from './calendarExport';
+import { getAppointmentTotal, isAppointmentFree } from '@/lib/appointment/utils';
 import { Appointment } from './types';
 
 const getStatusColor = (status: string) => {
@@ -127,28 +128,7 @@ export function AppointmentCard({
   attendanceStats,
 }: AppointmentCardProps) {
   const canManage = isOrgView || appointment.provider_id === userId;
-
-  const getAppointmentTotal = (apt: Appointment): { isFree: boolean; total: number } => {
-    // Priority 1: persisted `total` on the appointment (post-20260512 migration)
-    // Note: total=0 is a valid free appointment — only skip if total is null/undefined
-    if (apt.total != null) {
-      const total = Number(apt.total);
-      return { isFree: total === 0, total };
-    }
-    // Legacy fallback: derive from rate × duration
-    let rate: number;
-    if (apt.hourly_rate != null && Number(apt.hourly_rate) > 0) {
-      rate = Number(apt.hourly_rate);
-    } else if (isOrgView) {
-      rate = getWorkerRate(apt.worker) || appointmentRateMap.get(apt.id) || 0;
-    } else {
-      rate = appointmentRateMap.get(apt.id) || 0;
-    }
-    const isFree = rate === 0;
-    const durationHours = apt.duration > 24 ? apt.duration / 60 : apt.duration;
-    const total = isFree ? 0 : rate * durationHours;
-    return { isFree, total };
-  };
+  const pricingContext = { isOrgView, getWorkerRate, appointmentRateMap };
 
   return (
     <Card
@@ -234,10 +214,10 @@ export function AppointmentCard({
                 {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
               </Badge>
               {(() => {
-                const { isFree, total } = getAppointmentTotal(appointment);
+                const total = getAppointmentTotal(appointment, pricingContext);
                 return (
                   <span className="text-sm font-medium text-muted-foreground">
-                    {isFree ? 'Free' : `$${total % 1 === 0 ? total : total.toFixed(2)}`}
+                    {isAppointmentFree(appointment, pricingContext) ? 'Free' : `$${total % 1 === 0 ? total : total.toFixed(2)}`}
                   </span>
                 );
               })()}
@@ -262,8 +242,7 @@ export function AppointmentCard({
                 }
                 // "Payment Required" is for customers only — providers don't pay
                 if (canManage) return null;
-                const { isFree } = getAppointmentTotal(appointment);
-                const showPaymentRequired = !isFree && !onsiteOnlyPaymentAppointmentIds.has(appointment.id);
+                const showPaymentRequired = !isAppointmentFree(appointment, pricingContext) && !onsiteOnlyPaymentAppointmentIds.has(appointment.id);
                 if (!showPaymentRequired) return null;
                 return (
                   <Badge variant="outline" className="text-red-600 border-red-600 dark:text-red-400 dark:border-red-400 text-xs">

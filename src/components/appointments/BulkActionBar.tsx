@@ -15,7 +15,6 @@ interface BulkActionBarProps {
   onComplete: () => void;
   onModify: () => void;
   onCancel: () => void;
-  onExport: () => void;
   onClear: () => void;
 }
 
@@ -34,12 +33,18 @@ export function BulkActionBar({
 }: BulkActionBarProps) {
   if (selectedIds.size === 0) return null;
 
-  const selectedAppts = [...appointments].filter(a => selectedIds.has(a.id));
-  const hasPending = selectedAppts.some(a => a.status === 'pending');
+  const selectedAppts = appointments.filter(a => selectedIds.has(a.id));
+  const pendingAppts = selectedAppts.filter(a => a.status === 'pending');
+  const confirmedAppts = selectedAppts.filter(a => a.status === 'confirmed');
+  const actionableAppts = [...pendingAppts, ...confirmedAppts];
+  const providerPendingAppts = pendingAppts.filter(a => a.provider_id === userId);
+  const manageableConfirmedAppts = confirmedAppts.filter(a => isOrgView || a.provider_id === userId);
+  const modifiableAppts = actionableAppts.filter(a => isOrgView || a.provider_id === userId || a.user_id === userId);
+  const hasPending = pendingAppts.length > 0;
   const isProviderOfAny = selectedAppts.some(a => a.provider_id === userId);
-  const hasConfirmed = selectedAppts.some(a => a.status === 'confirmed');
-  const canManageAny = selectedAppts.some(a => isOrgView || a.provider_id === userId);
-  const canModifyAny = selectedAppts.some(a => isOrgView || a.provider_id === userId || a.user_id === userId);
+  const hasConfirmed = confirmedAppts.length > 0;
+  const canManageAny = manageableConfirmedAppts.length > 0;
+  const canModifyAny = modifiableAppts.length > 0;
 
   return (
     <div className="sticky top-4 z-10 bg-card border border-border rounded-lg shadow-lg p-3 flex flex-wrap items-center gap-3">
@@ -47,26 +52,26 @@ export function BulkActionBar({
       <div className="flex flex-wrap gap-2 ml-auto">
         {hasPending && isProviderOfAny && (
           <Button size="sm" variant="default" disabled={isBulkActing} onClick={onApprove}>
-            <Check className="h-3 w-3 mr-1" /> Approve ({selectedAppts.filter(a => a.status === 'pending' && a.provider_id === userId).length})
+            <Check className="h-3 w-3 mr-1" /> Approve ({providerPendingAppts.length})
           </Button>
         )}
         {hasPending && isProviderOfAny && (
           <Button size="sm" variant="destructive" disabled={isBulkActing} onClick={onDeny}>
-            <X className="h-3 w-3 mr-1" /> Deny ({selectedAppts.filter(a => a.status === 'pending' && a.provider_id === userId).length})
+            <X className="h-3 w-3 mr-1" /> Deny ({providerPendingAppts.length})
           </Button>
         )}
         {hasConfirmed && canManageAny && (
           <Button size="sm" variant="default" disabled={isBulkActing} onClick={onComplete}>
-            <CheckCircle className="h-3 w-3 mr-1" /> Complete ({selectedAppts.filter(a => a.status === 'confirmed' && (isOrgView || a.provider_id === userId)).length})
+            <CheckCircle className="h-3 w-3 mr-1" /> Complete ({manageableConfirmedAppts.length})
           </Button>
         )}
         {canModifyAny && (hasPending || hasConfirmed) && (
           <Button size="sm" variant="outline" disabled={isBulkActing} onClick={onModify}>
-            <ArrowRightLeft className="h-3 w-3 mr-1" /> Modify ({selectedAppts.filter(a => (a.status === 'pending' || a.status === 'confirmed') && (isOrgView || a.provider_id === userId || a.user_id === userId)).length})
+            <ArrowRightLeft className="h-3 w-3 mr-1" /> Modify ({modifiableAppts.length})
           </Button>
         )}
         {(hasPending || hasConfirmed) && (() => {
-          const cancelCount = selectedAppts.filter(a => a.status === 'pending' || a.status === 'confirmed').length;
+          const cancelCount = actionableAppts.length;
           const allPending = selectedAppts.every(a => a.status === 'pending');
           const isProvider = isOrgView || isProviderOfAny;
           const label = allPending && isProvider ? 'Reject' : 'Cancel';

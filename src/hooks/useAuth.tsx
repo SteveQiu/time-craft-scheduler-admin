@@ -47,8 +47,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        console.log('Auth state changed:', event, session);
+      (_event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
@@ -57,7 +56,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('Initial session check:', session);
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
@@ -68,12 +66,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signInWithGoogle = async () => {
     try {
-      console.log('Attempting Google sign-in...');
       const dynamicRedirectUri = window.location.origin;
-      console.log('Dynamic redirect URI:', dynamicRedirectUri);
       // Clear any existing session first
       await supabase.auth.signOut();
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: dynamicRedirectUri,
@@ -83,9 +79,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           },
         }
       });
-      console.log('Sign-in response:', { data, error });
       if (error) {
-        console.error('Error signing in:', error);
         throw error;
       }
     } catch (error) {

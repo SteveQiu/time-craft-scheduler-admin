@@ -92,7 +92,6 @@ export function usePaymentProof({
           if (error) {
             console.error('[payment-method-type] backfill error:', error);
           } else {
-            console.log('[payment-method-type] backfilled:', paymentProofAppointmentId, activePaymentMethod.type);
             queryClient.invalidateQueries({ queryKey: ['payment-methods-bulk'] });
           }
         });

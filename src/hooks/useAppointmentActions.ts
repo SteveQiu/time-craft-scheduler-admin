@@ -41,6 +41,27 @@ export function useAppointmentActions({
     });
   };
 
+  const handleMutationSuccess = async ({
+    updater,
+    message,
+    invalidate = invalidateAppointmentQueries,
+    afterToast,
+  }: {
+    updater?: (current: Appointment[]) => Appointment[];
+    message: string;
+    invalidate?: () => Promise<unknown>;
+    afterToast?: () => Promise<void> | void;
+  }) => {
+    if (updater) {
+      updateAppointmentsCache(updater);
+    }
+    toast.success(message);
+    if (afterToast) {
+      await afterToast();
+    }
+    await invalidate();
+  };
+
   const handleApprove = async (appointmentId: string) => {
     if (!user) return;
     try {
@@ -51,34 +72,34 @@ export function useAppointmentActions({
       if (error) throw error;
 
       const apt = appointments.find(a => a.id === appointmentId);
-      if (apt) {
-        updateAppointmentsCache(current =>
-          current.map(item => {
-            if (item.id === appointmentId) {
-              return { ...item, status: 'confirmed', approved_by: user.id };
-            }
-            if (item.opening_id === apt.opening_id && item.status === 'pending') {
-              return { ...item, status: 'cancelled' };
-            }
-            return item;
-          })
-        );
-      }
 
-      toast.success('Appointment approved! Other pending requests were automatically declined.');
-
-      try {
-        await sendPremiumReminder({
-          userId: apt?.provider_id,
-          to: apt?.booker_email,
-          date: apt?.date,
-          startTime: apt?.start_time,
-        });
-      } catch (reminderError) {
-        console.error('Premium reminder failed after appointment approval:', reminderError);
-      }
-
-      await invalidateAppointmentQueries();
+      await handleMutationSuccess({
+        updater: apt
+          ? current =>
+              current.map(item => {
+                if (item.id === appointmentId) {
+                  return { ...item, status: 'confirmed', approved_by: user.id };
+                }
+                if (item.opening_id === apt.opening_id && item.status === 'pending') {
+                  return { ...item, status: 'cancelled' };
+                }
+                return item;
+              })
+          : undefined,
+        message: 'Appointment approved! Other pending requests were automatically declined.',
+        afterToast: async () => {
+          try {
+            await sendPremiumReminder({
+              userId: apt?.provider_id,
+              to: apt?.booker_email,
+              date: apt?.date,
+              startTime: apt?.start_time,
+            });
+          } catch (reminderError) {
+            console.error('Premium reminder failed after appointment approval:', reminderError);
+          }
+        },
+      });
     } catch (error: any) {
       toast.error(error.message || 'Failed to approve');
     }
@@ -93,12 +114,11 @@ export function useAppointmentActions({
       });
       if (error) throw error;
 
-      updateAppointmentsCache(current =>
-        current.map(item => (item.id === appointmentId ? { ...item, status: 'cancelled', approved_by: user.id } : item))
-      );
-
-      toast.success('Appointment rejected.');
-      await invalidateAppointmentQueries();
+      await handleMutationSuccess({
+        updater: current =>
+          current.map(item => (item.id === appointmentId ? { ...item, status: 'cancelled', approved_by: user.id } : item)),
+        message: 'Appointment rejected.',
+      });
     } catch (error: any) {
       toast.error(error.message || 'Failed to reject');
     }
@@ -113,27 +133,13 @@ export function useAppointmentActions({
       });
       if (error) throw error;
 
-      updateAppointmentsCache(current =>
-        current.map(item => (item.id === appointmentId ? { ...item, status: 'cancelled' } : item))
-      );
-
-      toast.success('Appointment cancelled.');
-      await invalidateAppointmentQueries();
+      await handleMutationSuccess({
+        updater: current =>
+          current.map(item => (item.id === appointmentId ? { ...item, status: 'cancelled' } : item)),
+        message: 'Appointment cancelled.',
+      });
     } catch (error: any) {
       toast.error(error.message || 'Failed to cancel');
-    }
-  };
-
-  const handleComplete = async (appointmentId: string) => {
-    const { error } = await supabase
-      .from('appointments')
-      .update({ status: 'completed' })
-      .eq('id', appointmentId);
-    if (error) {
-      toast.error('Failed to complete');
-    } else {
-      toast.success('Appointment completed.');
-      queryClient.invalidateQueries({ queryKey: ['appointments'] });
     }
   };
 
@@ -161,9 +167,10 @@ export function useAppointmentActions({
         }
       } catch {}
     }
-    toast.success(`${successCount} appointment(s) approved.`);
     setSelectedIds(new Set());
-    invalidateAppointmentQueries();
+    await handleMutationSuccess({
+      message: `${successCount} appointment(s) approved.`,
+    });
     setIsBulkActing(false);
   };
 
@@ -183,9 +190,10 @@ export function useAppointmentActions({
         if (!error) successCount++;
       } catch {}
     }
-    toast.success(`${successCount} appointment(s) cancelled.`);
     setSelectedIds(new Set());
-    invalidateAppointmentQueries();
+    await handleMutationSuccess({
+      message: `${successCount} appointment(s) cancelled.`,
+    });
     setIsBulkActing(false);
   };
 
@@ -205,9 +213,10 @@ export function useAppointmentActions({
         if (!error) successCount++;
       } catch {}
     }
-    toast.success(`${successCount} appointment(s) denied.`);
     setSelectedIds(new Set());
-    invalidateAppointmentQueries();
+    await handleMutationSuccess({
+      message: `${successCount} appointment(s) denied.`,
+    });
     setIsBulkActing(false);
   };
 
@@ -230,9 +239,11 @@ export function useAppointmentActions({
         if (!error) successCount++;
       } catch {}
     }
-    toast.success(`${successCount} appointment(s) completed.`);
     setSelectedIds(new Set());
-    queryClient.invalidateQueries({ queryKey: ['appointments'] });
+    await handleMutationSuccess({
+      message: `${successCount} appointment(s) completed.`,
+      invalidate: () => queryClient.invalidateQueries({ queryKey: ['appointments'] }),
+    });
     setIsBulkActing(false);
   };
 
@@ -291,8 +302,9 @@ export function useAppointmentActions({
         _caller_id: user.id,
       });
       if (error) throw error;
-      toast.success(`Appointment modified (${bulkModifyIndex + 1}/${bulkModifyQueue.length})`);
-      invalidateAppointmentQueries();
+      await handleMutationSuccess({
+        message: `Appointment modified (${bulkModifyIndex + 1}/${bulkModifyQueue.length})`,
+      });
     } catch (error: any) {
       toast.error(error.message || 'Failed to modify');
     } finally {
@@ -317,7 +329,6 @@ export function useAppointmentActions({
     handleApprove,
     handleReject,
     handleCancel,
-    handleComplete,
     handleBulkApprove,
     handleBulkDeny,
     handleBulkCancel,

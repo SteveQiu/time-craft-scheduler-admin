@@ -24,7 +24,6 @@ export function useAppointmentPaymentRequirements(appointments: Appointment[]) {
       });
 
       if (error) {
-        console.error('[useAppointmentPaymentRequirements] query error:', error);
         throw error;
       }
 

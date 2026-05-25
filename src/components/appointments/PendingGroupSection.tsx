@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { parseLocation, formatLocation } from '@/lib/address';
+import { getAppointmentTotal, isAppointmentFree } from '@/lib/appointment/utils';
 import { toGoogleCalendarUrl, toOutlookUrl, downloadICS } from './calendarExport';
 import { Appointment } from './types';
 import { BookerInfo } from './AppointmentCard';
@@ -32,30 +33,6 @@ interface PendingGroupSectionProps {
   attendanceStatsMap: Map<string, { totalCount: number; flaggedCount: number; attendancePct: number }>;
 }
 
-function getAppointmentTotal(
-  apt: Appointment,
-  isOrgView: boolean,
-  getWorkerRate: (name: string) => number,
-  appointmentRateMap: Map<string, number>,
-): { isFree: boolean; total: number } {
-  if (apt.total != null) {
-    const total = Number(apt.total);
-    return { isFree: total === 0, total };
-  }
-  let rate: number;
-  if (apt.hourly_rate != null && Number(apt.hourly_rate) > 0) {
-    rate = Number(apt.hourly_rate);
-  } else if (isOrgView) {
-    rate = getWorkerRate(apt.worker) || appointmentRateMap.get(apt.id) || 0;
-  } else {
-    rate = appointmentRateMap.get(apt.id) || 0;
-  }
-  const isFree = rate === 0;
-  const durationHours = apt.duration > 24 ? apt.duration / 60 : apt.duration;
-  const total = isFree ? 0 : rate * durationHours;
-  return { isFree, total };
-}
-
 export function PendingGroupSection({
   openingId,
   appts,
@@ -79,6 +56,7 @@ export function PendingGroupSection({
 }: PendingGroupSectionProps) {
   const first = appts[0];
   const isProvider = first.provider_id === userId;
+  const pricingContext = { isOrgView, getWorkerRate, appointmentRateMap };
 
   return (
     <Card className="shadow-soft border-card-border hover:shadow-lg transition-shadow border-l-4 border-l-yellow-400">
@@ -155,10 +133,10 @@ export function PendingGroupSection({
                 </div>
                 <div className="flex items-center space-x-2">
                   {(() => {
-                    const { isFree, total } = getAppointmentTotal(apt, isOrgView, getWorkerRate, appointmentRateMap);
+                    const total = getAppointmentTotal(apt, pricingContext);
                     return (
                       <span className="text-sm font-medium text-muted-foreground">
-                        {isFree ? 'Free' : `$${total % 1 === 0 ? total : total.toFixed(2)}`}
+                        {isAppointmentFree(apt, pricingContext) ? 'Free' : `$${total % 1 === 0 ? total : total.toFixed(2)}`}
                       </span>
                     );
                   })()}
@@ -179,8 +157,7 @@ export function PendingGroupSection({
                       );
                     }
                     if (aptIsProvider) return null;
-                    const { isFree } = getAppointmentTotal(apt, isOrgView, getWorkerRate, appointmentRateMap);
-                    const showPaymentRequired = !isFree && !onsiteOnlyPaymentAppointmentIds.has(apt.id);
+                    const showPaymentRequired = !isAppointmentFree(apt, pricingContext) && !onsiteOnlyPaymentAppointmentIds.has(apt.id);
                     if (!showPaymentRequired) return null;
                     return (
                       <Badge variant="outline" className="text-red-600 border-red-600 dark:text-red-400 dark:border-red-400 text-xs">

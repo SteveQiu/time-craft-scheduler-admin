@@ -50,7 +50,7 @@ export default function Auth() {
     if (!loading && user && !isResetMode) {
       navigate(returnTo);
     }
-  }, [user, loading, isResetMode, navigate]);
+  }, [user, loading, isResetMode, navigate, returnTo]);
 
   const handleSignIn = async (e?: React.FormEvent | React.MouseEvent) => {
     e?.preventDefault();
@@ -176,8 +176,6 @@ export default function Auth() {
         ? import.meta.env.VITE_APP_URL
         : window.location.origin;
       const redirectUrl = `${appOrigin}/auth?mode=reset`;
-
-      console.log('Password reset redirect URL:', redirectUrl);
 
       const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
         redirectTo: redirectUrl,

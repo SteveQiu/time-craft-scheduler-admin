@@ -3,7 +3,7 @@ import { Calendar, ChevronDown, ChevronUp } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { downloadICS, getWeekStartSunday, formatWeekLabel, DateFilter } from './calendarExport';
+import { getWeekStartSunday, formatWeekLabel, DateFilter } from './calendarExport';
 import { Appointment } from './types';
 import { AppointmentCard } from './AppointmentCard';
 import { BulkActionBar } from './BulkActionBar';
@@ -40,7 +40,6 @@ interface AppointmentListProps {
   onBulkCancel: () => void;
   onBulkComplete: () => void;
   onStartBulkModify: () => void;
-  onExport: () => void;
   appointments: Appointment[];
   flaggedAppointmentIds: Set<string>;
   onFlag: (appointmentId: string, bookerUserId: string, bookerName: string) => void;
@@ -87,7 +86,7 @@ export function AppointmentList({
   attendanceStatsMap,
 }: AppointmentListProps) {
   return (
-    <>
+    <div className="space-y-6">
       {/* Active */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
@@ -117,7 +116,6 @@ export function AppointmentList({
           onComplete={onBulkComplete}
           onModify={onStartBulkModify}
           onCancel={onBulkCancel}
-          onExport={() => downloadICS(appointments.filter(a => selectedIds.has(a.id)))}
           onClear={() => setSelectedIds(new Set())}
         />
 
@@ -273,7 +271,7 @@ export function AppointmentList({
           )
         )}
       </div>
-    </>
+    </div>
   );
 }
 

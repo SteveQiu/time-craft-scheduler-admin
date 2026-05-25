@@ -286,7 +286,6 @@ export function Appointments() {
             onBulkCancel={handleBulkCancel}
             onBulkComplete={handleBulkComplete}
             onStartBulkModify={handleStartBulkModify}
-            onExport={() => {}}
             appointments={appointments}
             flaggedAppointmentIds={flaggedAppointmentIds}
             onFlag={handleFlag}
