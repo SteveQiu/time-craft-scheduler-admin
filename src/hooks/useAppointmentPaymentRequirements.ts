@@ -4,24 +4,23 @@ import { supabase } from '@/integrations/supabase/client';
 import { Appointment } from '@/components/appointments/types';
 import { isOnsitePayment } from '@/hooks/usePaymentMethods';
 
-interface PaymentMethodSummary {
-  id: string;
+interface AppointmentPaymentMethodType {
+  appointment_id: string;
   type: string;
-  user_id: string;
 }
 
 export function useAppointmentPaymentRequirements(appointments: Appointment[]) {
-  const providerIds = useMemo(
-    () => Array.from(new Set(appointments.map((appointment) => appointment.provider_id).filter(Boolean))),
+  const appointmentIds = useMemo(
+    () => appointments.map((a) => a.id).filter(Boolean),
     [appointments]
   );
 
-  const { data: paymentMethods = [] } = useQuery({
-    queryKey: ['appointment-provider-payment-methods', providerIds],
-    enabled: providerIds.length > 0,
+  const { data: paymentMethodTypes = [] } = useQuery({
+    queryKey: ['appointment-accepted-payment-method-types', appointmentIds],
+    enabled: appointmentIds.length > 0,
     queryFn: async () => {
-      const { data, error } = await supabase.rpc('get_appointment_provider_payment_methods', {
-        provider_ids: providerIds,
+      const { data, error } = await supabase.rpc('get_appointment_accepted_payment_method_types', {
+        p_appointment_ids: appointmentIds,
       });
 
       if (error) {
@@ -29,30 +28,29 @@ export function useAppointmentPaymentRequirements(appointments: Appointment[]) {
         throw error;
       }
 
-      return (data ?? []) as PaymentMethodSummary[];
+      return (data ?? []) as AppointmentPaymentMethodType[];
     },
   });
 
   const onsiteOnlyPaymentAppointmentIds = useMemo(() => {
-    const paymentMethodsByProvider = paymentMethods.reduce((map, paymentMethod) => {
-      const providerPaymentMethods = map.get(paymentMethod.user_id) ?? [];
-      providerPaymentMethods.push(paymentMethod.type);
-      map.set(paymentMethod.user_id, providerPaymentMethods);
+    const typesByAppointment = paymentMethodTypes.reduce((map, row) => {
+      const types = map.get(row.appointment_id) ?? [];
+      types.push(row.type);
+      map.set(row.appointment_id, types);
       return map;
     }, new Map<string, string[]>());
 
     return new Set(
       appointments
         .filter((appointment) => {
-          const providerPaymentMethodTypes = paymentMethodsByProvider.get(appointment.provider_id) ?? [];
-
-          if (providerPaymentMethodTypes.length === 0) return false;
-
-          return providerPaymentMethodTypes.every((paymentMethodType) => isOnsitePayment(paymentMethodType));
+          const types = typesByAppointment.get(appointment.id) ?? [];
+          if (types.length === 0) return false;
+          return types.every((type) => isOnsitePayment(type));
         })
         .map((appointment) => appointment.id)
     );
-  }, [appointments, paymentMethods]);
+  }, [appointments, paymentMethodTypes]);
 
   return { onsiteOnlyPaymentAppointmentIds };
 }
+
