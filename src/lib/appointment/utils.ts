@@ -15,10 +15,10 @@ function getAppointmentRate(
   }
 
   if (isOrgView) {
-    return getWorkerRate?.(appointment.worker) || appointmentRateMap?.get(appointment.id) || 0;
+    return getWorkerRate?.(appointment.worker) ?? appointmentRateMap?.get(appointment.id) ?? 0;
   }
 
-  return appointmentRateMap?.get(appointment.id) || 0;
+  return appointmentRateMap?.get(appointment.id) ?? 0;
 }
 
 export function getAppointmentTotal(
