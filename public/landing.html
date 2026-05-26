@@ -1,211 +1,1476 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="PikAppoint — Smart appointment scheduling that connects service providers with customers. Easy booking, payments, and provider management in one place." />
-  <meta name="keywords" content="appointment scheduling, booking software, service providers, online booking, PikAppoint" />
-  <meta property="og:title" content="PikAppoint — Smart Appointment Scheduling" />
-  <meta property="og:description" content="Connect your services with customers through effortless online booking." />
-  <meta property="og:type" content="website" />
-  <title>PikAppoint — Smart Appointment Scheduling</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            brand: {
-              50:  '#eef2ff',
-              100: '#e0e7ff',
-              200: '#c7d2fe',
-              300: '#a5b4fc',
-              400: '#818cf8',
-              500: '#6366f1',
-              600: '#4f46e5',
-              700: '#4338ca',
-              800: '#3730a3',
-              900: '#312e81',
-            }
-          },
-          fontFamily: {
-            sans: ['Inter', 'system-ui', 'sans-serif'],
-          }
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PikAppoint — Online Appointment Scheduling for Service Professionals</title>
+  <meta name="description"
+    content="PikAppoint: Free online booking software for barbers, trainers, stylists & all service pros. Automatic reminders, built-in payments. No credit card required.">
+  <meta name="keywords"
+    content="appointment scheduling software, online booking system, service business booking, automatic reminders, barber scheduling, salon booking, personal trainer scheduling">
+  <link rel="canonical" href="https://pikappoint.com/">
+  <meta property="og:title" content="PikAppoint — Online Appointment Scheduling for Service Professionals">
+  <meta property="og:description"
+    content="Free online booking for service professionals. Automatic reminders, built-in payments, real-time scheduling.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://pikappoint.com/">
+  <meta property="og:image" content="https://pikappoint.com/pikappoint-icon.svg">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="PikAppoint — Free Appointment Scheduling Software">
+  <meta name="twitter:description"
+    content="Stop managing bookings manually. PikAppoint handles scheduling, reminders, and payments automatically.">
+  <!-- <meta name="google-adsense-account" content="ca-pub-XXXXXXXXXXXXXXXX"> -->
+  <link rel="icon" type="image/svg+xml" href="/calendar-icon.svg">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "PikAppoint",
+    "applicationCategory": "BusinessApplication",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "description": "Free online appointment scheduling software for service professionals. Automatic reminders, built-in payments, real-time availability.",
+    "url": "https://pikappoint.com/",
+    "operatingSystem": "Web"
+  }
+  </script>
+  <style>
+    :root {
+      --bg: #000;
+      --bg-soft: #050505;
+      --bg-softest: #0a0a0a;
+      --amber: #f59e0b;
+      --amber-dark: #d97706;
+      --text: #ffffff;
+      --text-soft: rgba(255, 255, 255, 0.6);
+      --text-muted: rgba(255, 255, 255, 0.4);
+      --border: rgba(255, 255, 255, 0.08);
+      --shadow: 0 20px 60px rgba(0, 0, 0, 0.28);
+      --white-border: #e5e7eb;
+      --page-max: 1200px;
+      --content-max: 1100px;
+      --radius-lg: 24px;
+      --radius-md: 20px;
+      --radius-sm: 16px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    a {
+      color: inherit;
+    }
+
+    .page-shell {
+      overflow-x: hidden;
+    }
+
+    .container {
+      width: min(var(--page-max), calc(100% - 64px));
+      margin: 0 auto;
+    }
+
+    .content-container {
+      width: min(var(--content-max), calc(100% - 64px));
+      margin: 0 auto;
+    }
+
+    .landing-nav {
+      position: fixed;
+      inset: 0 0 auto;
+      z-index: 100;
+      padding: 0 32px;
+      transition: all 0.4s ease;
+      background: transparent;
+      border-bottom: 1px solid transparent;
+    }
+
+    .landing-nav.scrolled {
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(20px) saturate(180%);
+      border-bottom-color: var(--border);
+    }
+
+    .nav-inner {
+      max-width: var(--page-max);
+      margin: 0 auto;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .brand {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      text-decoration: none;
+    }
+
+    .brand span {
+      color: var(--amber);
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nav-link {
+      color: rgba(255, 255, 255, 0.7);
+      text-decoration: none;
+      font-size: 15px;
+      font-weight: 500;
+      padding: 8px 16px;
+      border-radius: 8px;
+    }
+
+    .nav-cta,
+    .btn-primary,
+    .pricing-button-primary,
+    .final-cta-button {
+      background: var(--amber);
+      color: #000;
+      text-decoration: none;
+      font-weight: 800;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 0;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    }
+
+    .nav-cta {
+      font-size: 14px;
+      padding: 9px 20px;
+      border-radius: 10px;
+    }
+
+    .btn-primary:hover,
+    .pricing-button-primary:hover,
+    .final-cta-button:hover,
+    .nav-cta:hover {
+      transform: translateY(-1px);
+    }
+
+    .hero {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+      background: var(--bg);
+    }
+
+    .hero-bg {
+      position: absolute;
+      inset: -20%;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% 40%, rgba(245, 158, 11, 0.18) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 80% at 20% 70%, rgba(139, 92, 246, 0.12) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 60% at 80% 20%, rgba(59, 130, 246, 0.08) 0%, transparent 60%),
+        var(--bg-soft);
+      will-change: transform;
+      pointer-events: none;
+    }
+
+    .hero-noise {
+      position: absolute;
+      inset: 0;
+      opacity: 0.4;
+      pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    }
+
+    .hero-inner {
+      position: relative;
+      z-index: 2;
+      width: min(var(--page-max), calc(100% - 64px));
+      margin: 0 auto;
+      padding: 120px 0 80px;
+      text-align: center;
+    }
+
+    .hero-badge-wrap,
+    .hero-title,
+    .hero-copy,
+    .hero-actions,
+    .social-proof {
+      opacity: 0;
+      animation: fadeUp 0.8s ease forwards;
+    }
+
+    .hero-badge-wrap {
+      animation-delay: 0.1s;
+      margin-bottom: 28px;
+    }
+
+    .hero-title {
+      animation-delay: 0.2s;
+    }
+
+    .hero-copy {
+      animation-delay: 0.35s;
+    }
+
+    .hero-actions {
+      animation-delay: 0.5s;
+    }
+
+    .social-proof {
+      animation-delay: 0.65s;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: rgba(245, 158, 11, 0.12);
+      color: var(--amber-dark);
+    }
+
+    .hero-title {
+      margin: 0 0 32px;
+      font-size: clamp(48px, 8vw, 100px);
+      font-weight: 800;
+      line-height: 1.05;
+      letter-spacing: -3px;
+    }
+
+    .hero-title span {
+      color: var(--amber);
+    }
+
+    .hero-copy {
+      max-width: 600px;
+      margin: 0 auto 48px;
+      font-size: clamp(18px, 2.5vw, 22px);
+      line-height: 1.7;
+      color: var(--text-soft);
+    }
+
+    .hero-actions {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .btn-primary,
+    .btn-secondary {
+      padding: 16px 36px;
+      border-radius: 14px;
+      font-size: 17px;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn-primary {
+      box-shadow: 0 0 40px rgba(245, 158, 11, 0.4);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.07);
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(8px);
+      font-weight: 600;
+    }
+
+    .social-proof {
+      margin-top: 72px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 40px;
+      flex-wrap: wrap;
+    }
+
+    .proof-item {
+      text-align: center;
+    }
+
+    .proof-value {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      color: #fff;
+    }
+
+    .proof-label {
+      margin-top: 4px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .hero-fade {
+      position: absolute;
+      inset: auto 0 0;
+      height: 200px;
+      background: linear-gradient(transparent, var(--bg-soft));
+    }
+
+    .section-dark {
+      background: var(--bg-soft);
+      padding: 100px 0;
+    }
+
+    .section-darker {
+      background: var(--bg-softest);
+      padding: 120px 0;
+    }
+
+    .section-light {
+      background: #fff;
+      padding: 120px 0;
+      color: #111;
+    }
+
+    .section-muted {
+      background: #f9fafb;
+      padding: 100px 0;
+      color: #111;
+    }
+
+    .section-muted-large {
+      background: #f9fafb;
+      padding: 120px 0;
+      color: #111;
+    }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: 64px;
+    }
+
+    .section-header-large {
+      text-align: center;
+      margin-bottom: 72px;
+    }
+
+    .section-title-dark,
+    .section-title-light {
+      margin: 20px 0 0;
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -2px;
+    }
+
+    .section-title-dark {
+      color: #fff;
+      font-size: clamp(36px, 5vw, 58px);
+    }
+
+    .section-title-light {
+      color: #111;
+      font-size: clamp(36px, 5vw, 58px);
+    }
+
+    .section-subtitle {
+      max-width: 540px;
+      margin: 20px auto 0;
+      font-size: 20px;
+      line-height: 1.7;
+      color: #6b7280;
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(48px);
+      transition: opacity 0.75s ease, transform 0.75s ease;
+      transition-delay: var(--reveal-delay, 0ms);
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .pain-grid,
+    .feature-grid,
+    .testimonial-grid,
+    .pricing-grid,
+    .steps-grid {
+      display: grid;
+      gap: 20px;
+    }
+
+    .pain-grid {
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    }
+
+    .feature-grid,
+    .testimonial-grid {
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    }
+
+    .pricing-grid {
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+    }
+
+    .steps-grid {
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 40px;
+      margin-top: 72px;
+    }
+
+    .pain-card {
+      padding: 24px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: 16px;
+      height: 100%;
+    }
+
+    .pain-card .emoji {
+      font-size: 28px;
+      margin-bottom: 12px;
+    }
+
+    .pain-card .quote {
+      color: #fff;
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .pain-card .fix {
+      color: rgba(255, 255, 255, 0.4);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .solution-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 64px;
+      align-items: center;
+      margin-bottom: 100px;
+    }
+
+    .solution-row.reverse {
+      direction: rtl;
+    }
+
+    .solution-copy,
+    .solution-visual {
+      direction: ltr;
+    }
+
+    .solution-icon {
+      font-size: 52px;
+      margin-bottom: 24px;
+    }
+
+    .solution-title {
+      margin: 0 0 16px;
+      font-size: 32px;
+      font-weight: 800;
+      line-height: 1.2;
+      letter-spacing: -1px;
+      color: #111;
+    }
+
+    .solution-body {
+      margin: 0;
+      font-size: 18px;
+      line-height: 1.75;
+      color: #6b7280;
+    }
+
+    .solution-visual {
+      aspect-ratio: 4 / 3;
+      border-radius: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 100px;
+    }
+
+    .feature-card {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      padding: 28px;
+      backdrop-filter: blur(12px);
+      transition: all 0.3s ease;
+      height: 100%;
+    }
+
+    .feature-card:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(245, 158, 11, 0.3);
+      transform: translateY(-4px);
+    }
+
+    .feature-icon {
+      font-size: 40px;
+      margin-bottom: 16px;
+    }
+
+    .feature-title {
+      margin: 0 0 8px;
+      color: #fff;
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .feature-body {
+      margin: 0;
+      color: rgba(255, 255, 255, 0.55);
+      font-size: 15px;
+      line-height: 1.7;
+    }
+
+    .steps-wrap {
+      max-width: 900px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .step-card {
+      text-align: center;
+    }
+
+    .step-icon {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 20px;
+      border-radius: 50%;
+      background: var(--amber);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      font-weight: 800;
+      box-shadow: 0 8px 32px rgba(245, 158, 11, 0.3);
+    }
+
+    .step-number {
+      margin-bottom: 12px;
+      color: var(--amber-dark);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+    }
+
+    .step-title {
+      margin: 0 0 12px;
+      color: #111;
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+    .step-body {
+      margin: 0;
+      color: #6b7280;
+      font-size: 15px;
+      line-height: 1.7;
+    }
+
+    .tag-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      justify-content: center;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #fff;
+      border: 1px solid var(--white-border);
+      border-radius: 999px;
+      padding: 10px 20px;
+      color: #374151;
+      font-size: 15px;
+      font-weight: 500;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .testimonial-card {
+      background: #fff;
+      border: 1px solid #f3f4f6;
+      border-radius: 20px;
+      padding: 32px;
+      box-shadow: 0 4px 40px rgba(0, 0, 0, 0.08);
+      height: 100%;
+    }
+
+    .stars {
+      font-size: 30px;
+      margin-bottom: 16px;
+      color: #111827;
+    }
+
+    .testimonial-quote {
+      margin: 0 0 24px;
+      color: #374151;
+      font-size: 16px;
+      line-height: 1.75;
+    }
+
+    .testimonial-person {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .testimonial-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      background: linear-gradient(135deg, #fde68a, var(--amber));
+      flex: 0 0 auto;
+    }
+
+    .testimonial-name {
+      font-weight: 600;
+      color: #111827;
+    }
+
+    .testimonial-role {
+      color: #9ca3af;
+      font-size: 13px;
+      margin-top: 2px;
+    }
+
+    .pricing-card {
+      position: relative;
+      height: 100%;
+      border-radius: 24px;
+      padding: 36px 32px;
+      background: #fff;
+      border: 1px solid var(--white-border);
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .pricing-card.highlighted {
+      background: linear-gradient(135deg, #1c1c1e, #2d2d2f);
+      border: 1.5px solid rgba(245, 158, 11, 0.5);
+      box-shadow: 0 20px 60px rgba(245, 158, 11, 0.15);
+    }
+
+    .pricing-badge {
+      position: absolute;
+      top: -14px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--amber);
+      color: #000;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 16px;
+      border-radius: 999px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .pricing-plan {
+      margin-bottom: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #6b7280;
+    }
+
+    .pricing-card.highlighted .pricing-plan {
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    .pricing-price-wrap {
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+      margin-bottom: 4px;
+    }
+
+    .pricing-price {
+      font-size: 48px;
+      font-weight: 800;
+      letter-spacing: -2px;
+      color: #111827;
+    }
+
+    .pricing-card.highlighted .pricing-price {
+      color: #fff;
+    }
+
+    .pricing-period {
+      color: #9ca3af;
+      font-size: 14px;
+    }
+
+    .pricing-card.highlighted .pricing-period {
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    .pricing-list {
+      list-style: none;
+      margin: 24px 0;
+      padding: 0;
+      flex: 1 1 auto;
+    }
+
+    .pricing-list li {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      padding: 7px 0;
+      color: #374151;
+      font-size: 14px;
+      border-bottom: 1px solid #f3f4f6;
+    }
+
+    .pricing-list li:last-child {
+      border-bottom: 0;
+    }
+
+    .pricing-card.highlighted .pricing-list li {
+      color: rgba(255, 255, 255, 0.8);
+      border-bottom-color: rgba(255, 255, 255, 0.08);
+    }
+
+    .pricing-check {
+      color: var(--amber);
+      font-size: 16px;
+    }
+
+    .pricing-button-primary,
+    .pricing-button-secondary {
+      width: 100%;
+      padding: 14px 0;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 700;
+      text-align: center;
+      text-decoration: none;
+    }
+
+    .pricing-button-secondary {
+      display: block;
+      color: var(--amber);
+      border: 1.5px solid var(--amber);
+      background: transparent;
+    }
+
+    .final-cta {
+      position: relative;
+      overflow: hidden;
+      background: #000;
+      padding: 140px 0;
+    }
+
+    .final-cta::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 70% 60% at 50% 50%, rgba(245, 158, 11, 0.15) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .final-cta-inner {
+      position: relative;
+      z-index: 1;
+      max-width: 700px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .final-emoji {
+      font-size: 80px;
+      margin-bottom: 24px;
+    }
+
+    .final-title {
+      margin: 0 0 24px;
+      font-size: clamp(40px, 6vw, 72px);
+      font-weight: 800;
+      line-height: 1.05;
+      letter-spacing: -3px;
+      color: #fff;
+    }
+
+    .final-title span {
+      color: var(--amber);
+    }
+
+    .final-copy {
+      margin: 0 0 48px;
+      font-size: 20px;
+      line-height: 1.7;
+      color: rgba(255, 255, 255, 0.55);
+    }
+
+    .final-cta-button {
+      padding: 18px 48px;
+      border-radius: 16px;
+      font-size: 18px;
+      box-shadow: 0 0 60px rgba(245, 158, 11, 0.5);
+    }
+
+    .final-meta {
+      margin-top: 24px;
+      color: rgba(255, 255, 255, 0.35);
+      font-size: 14px;
+    }
+
+    .footer {
+      background: var(--bg-soft);
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      padding: 60px 0;
+    }
+
+    .footer-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 40px;
+      margin-bottom: 48px;
+    }
+
+    .footer-brand {
+      font-size: 20px;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 12px;
+    }
+
+    .footer-brand span {
+      color: var(--amber);
+    }
+
+    .footer-copy {
+      margin: 0;
+      color: rgba(255, 255, 255, 0.35);
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .footer-heading {
+      margin-bottom: 16px;
+      color: rgba(255, 255, 255, 0.5);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .footer-links {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .footer-links li {
+      margin-bottom: 10px;
+    }
+
+    .footer-links a {
+      color: rgba(255, 255, 255, 0.5);
+      font-size: 14px;
+      text-decoration: none;
+      transition: color 0.2s ease;
+    }
+
+    .footer-links a:hover,
+    .nav-link:hover {
+      color: #fff;
+    }
+
+    .footer-bottom {
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      padding-top: 32px;
+      color: rgba(255, 255, 255, 0.25);
+      font-size: 13px;
+      text-align: center;
+    }
+
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(32px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
       }
     }
-  </script>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+    @media (max-width: 900px) {
+
+      .solution-row,
+      .solution-row.reverse {
+        grid-template-columns: 1fr;
+        gap: 32px;
+        direction: ltr;
+      }
+    }
+
+    @media (max-width: 768px) {
+
+      .container,
+      .content-container,
+      .hero-inner {
+        width: min(var(--page-max), calc(100% - 32px));
+      }
+
+      .landing-nav {
+        padding: 0 16px;
+      }
+
+      .nav-link {
+        display: none;
+      }
+
+      .hero-title {
+        letter-spacing: -2px;
+      }
+
+      .hero-copy,
+      .section-subtitle,
+      .solution-body,
+      .final-copy {
+        font-size: 17px;
+      }
+
+      .social-proof {
+        gap: 24px;
+      }
+
+      .section-dark,
+      .section-darker,
+      .section-light,
+      .section-muted,
+      .section-muted-large,
+      .final-cta,
+      .footer {
+        padding-top: 88px;
+        padding-bottom: 88px;
+      }
+
+      .pricing-card,
+      .testimonial-card,
+      .feature-card {
+        padding: 28px 24px;
+      }
+
+      .final-cta-button,
+      .btn-primary,
+      .btn-secondary {
+        width: 100%;
+      }
+    }
+  </style>
 </head>
-<body class="font-sans bg-white text-gray-900 antialiased">
 
-  <!-- NAV -->
-  <nav class="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-gray-100">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
-      <span class="text-xl font-bold text-brand-700 tracking-tight">PikAppoint</span>
-      <a href="/"
-         class="inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors">
-        Sign In
-      </a>
-    </div>
-  </nav>
-
-  <!-- HERO -->
-  <section class="relative overflow-hidden bg-gradient-to-br from-brand-900 via-brand-800 to-brand-600 text-white">
-    <!-- subtle grid overlay -->
-    <div class="absolute inset-0 opacity-10"
-         style="background-image: url(&quot;data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M0 40L40 0H20L0 20M40 40V20L20 40'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E&quot;)">
-    </div>
-    <div class="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-24 sm:py-32 text-center">
-      <!-- badge -->
-      <span class="inline-block mb-6 bg-brand-500/30 border border-brand-400/40 text-brand-200 text-xs font-semibold uppercase tracking-widest px-4 py-1.5 rounded-full">
-        Appointment Scheduling Platform
-      </span>
-      <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight mb-6">
-        Book smarter with<br class="hidden sm:block" />
-        <span class="text-brand-300">PikAppoint</span>
-      </h1>
-      <p class="max-w-2xl mx-auto text-lg sm:text-xl text-brand-100 mb-10">
-        The all-in-one scheduling platform that connects service providers with their customers — seamless booking, payments, and management in one place.
-      </p>
-      <div class="flex flex-col sm:flex-row gap-4 justify-center">
-        <a href="/"
-           class="inline-flex items-center justify-center gap-2 bg-white text-brand-700 hover:bg-brand-50 font-bold text-base px-8 py-4 rounded-xl shadow-lg transition-colors">
-          <!-- arrow icon -->
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-          Get Started Free
-        </a>
-        <a href="/"
-           class="inline-flex items-center justify-center gap-2 border border-brand-300/50 text-white hover:bg-brand-700/40 font-semibold text-base px-8 py-4 rounded-xl transition-colors">
-          Sign In
-        </a>
+<body>
+  <div class="page-shell">
+    <nav class="landing-nav" id="landing-nav">
+      <div class="nav-inner">
+        <a class="brand" href="/landing.html">Pik<span>Appoint</span></a>
+        <div class="nav-actions">
+          <a class="nav-link" href="/browse">Browse</a>
+          <a class="nav-cta" href="/auth">Get Started Free</a>
+        </div>
       </div>
-      <!-- social proof -->
-      <p class="mt-10 text-brand-300 text-sm">Trusted by service providers across industries &nbsp;·&nbsp; No credit card required</p>
-    </div>
-  </section>
+    </nav>
 
-  <!-- FEATURES -->
-  <section class="py-20 sm:py-28 bg-white">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="text-center mb-16">
-        <h2 class="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-4">Everything you need to run your bookings</h2>
-        <p class="text-gray-500 text-lg max-w-xl mx-auto">Powerful tools built for providers who want to spend less time on admin and more time on what they do best.</p>
+    <main>
+      <section class="hero">
+        <div class="hero-bg" id="hero-bg"></div>
+        <div class="hero-noise"></div>
+        <div class="hero-inner">
+          <div class="hero-badge-wrap">
+            <span class="badge">✦ Built for service professionals</span>
+          </div>
+
+          <h1 class="hero-title">
+            Your calendar.<br>
+            <span>Their booking.</span><br>
+            Your income.
+          </h1>
+
+          <p class="hero-copy">
+            PikAppoint turns chaotic scheduling into a smooth, professional experience — online booking, automatic
+            reminders, and built-in payments. Free forever to start.
+          </p>
+
+          <div class="hero-actions">
+            <a class="btn-primary" href="/auth">Start for free →</a>
+            <a class="btn-secondary" href="/browse">See it live</a>
+          </div>
+
+          <div class="social-proof">
+            <div class="proof-item">
+              <div class="proof-value">Free</div>
+              <div class="proof-label">to get started</div>
+            </div>
+            <div class="proof-item">
+              <div class="proof-value">0%</div>
+              <div class="proof-label">booking fees</div>
+            </div>
+            <div class="proof-item">
+              <div class="proof-value">2 min</div>
+              <div class="proof-label">setup time</div>
+            </div>
+            <div class="proof-item">
+              <div class="proof-value">24/7</div>
+              <div class="proof-label">self-booking</div>
+            </div>
+          </div>
+        </div>
+        <div class="hero-fade"></div>
+      </section>
+
+      <section class="section-dark">
+        <div class="content-container">
+          <div class="section-header reveal">
+            <span class="badge">The problem</span>
+            <h2 class="section-title-dark">Sound familiar?</h2>
+          </div>
+
+          <div class="pain-grid">
+            <div class="pain-card reveal" style="--reveal-delay: 0ms;">
+              <div class="emoji">📱</div>
+              <div class="quote">"Can I book you next Tuesday?"</div>
+              <div class="fix">Clients text instead of booking.</div>
+            </div>
+            <div class="pain-card reveal" style="--reveal-delay: 60ms;">
+              <div class="emoji">😤</div>
+              <div class="quote">"They just didn't show up."</div>
+              <div class="fix">No-shows cost you real money.</div>
+            </div>
+            <div class="pain-card reveal" style="--reveal-delay: 120ms;">
+              <div class="emoji">📋</div>
+              <div class="quote">"I wrote it in my notebook..."</div>
+              <div class="fix">You're running your business from sticky notes.</div>
+            </div>
+            <div class="pain-card reveal" style="--reveal-delay: 180ms;">
+              <div class="emoji">💸</div>
+              <div class="quote">"Cash only, sorry!"</div>
+              <div class="fix">Payment collection is awkward and slow.</div>
+            </div>
+            <div class="pain-card reveal" style="--reveal-delay: 240ms;">
+              <div class="emoji">😓</div>
+              <div class="quote">"Wait, I double-booked again?"</div>
+              <div class="fix">Manual calendars create conflicts.</div>
+            </div>
+            <div class="pain-card reveal" style="--reveal-delay: 300ms;">
+              <div class="emoji">📞</div>
+              <div class="quote">"Can you remind them for me?"</div>
+              <div class="fix">You're the reminder. That's a full-time job.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section-light">
+        <div class="content-container">
+          <div class="section-header reveal">
+            <span class="badge">The solution</span>
+            <h2 class="section-title-light">One app.<br>Everything handled.</h2>
+            <p class="section-subtitle">PikAppoint is the command center for service professionals. Set your hours, let
+              clients book, get paid — automatically.</p>
+          </div>
+
+          <div class="solution-row reveal" style="--reveal-delay: 0ms;">
+            <div class="solution-copy">
+              <div class="solution-icon">📅</div>
+              <h3 class="solution-title">Your booking page, live in minutes</h3>
+              <p class="solution-body">Share your personal PikAppoint link and clients can see your real-time
+                availability and book themselves — no back-and-forth texts, no phone tags. Works on every device.</p>
+            </div>
+            <div class="solution-visual" style="background: #fef3c7;">📅</div>
+          </div>
+
+          <div class="solution-row reverse reveal" style="--reveal-delay: 80ms;">
+            <div class="solution-copy">
+              <div class="solution-icon">💬</div>
+              <h3 class="solution-title">Reminders that run themselves</h3>
+              <p class="solution-body">Automatic email reminders go out before every appointment. Clients show up. You
+                stop chasing. Your no-show rate drops to near zero — without you lifting a finger.</p>
+            </div>
+            <div class="solution-visual" style="background: #f0fdf4;">💬</div>
+          </div>
+
+          <div class="solution-row reveal" style="--reveal-delay: 160ms; margin-bottom: 0;">
+            <div class="solution-copy">
+              <div class="solution-icon">💳</div>
+              <h3 class="solution-title">Get paid before they arrive</h3>
+              <p class="solution-body">Collect deposits or full payment at booking time. No awkward cash exchanges. No
+                &quot;I forgot my wallet.&quot; Money in your account before the appointment even starts.</p>
+            </div>
+            <div class="solution-visual" style="background: #eff6ff;">💳</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section-darker">
+        <div class="content-container">
+          <div class="section-header-large reveal">
+            <span class="badge">Everything included</span>
+            <h2 class="section-title-dark">Every tool you need.<br>Nothing you don't.</h2>
+          </div>
+
+          <div class="feature-grid">
+            <div class="feature-card reveal" style="--reveal-delay: 0ms;">
+              <div class="feature-icon">🗓️</div>
+              <h3 class="feature-title">Real-Time Availability</h3>
+              <p class="feature-body">Your calendar syncs instantly. Clients only see open slots — no double-bookings,
+                no conflicts, ever.</p>
+            </div>
+            <div class="feature-card reveal" style="--reveal-delay: 60ms;">
+              <div class="feature-icon">📲</div>
+              <h3 class="feature-title">Automatic Reminders</h3>
+              <p class="feature-body">Email reminders fire automatically before every appointment. Your no-show rate
+                drops without you doing a thing.</p>
+            </div>
+            <div class="feature-card reveal" style="--reveal-delay: 120ms;">
+              <div class="feature-icon">💳</div>
+              <h3 class="feature-title">Built-in Payments</h3>
+              <p class="feature-body">Accept cards, collect deposits, charge at booking. Multiple payment methods, zero
+                awkwardness.</p>
+            </div>
+            <div class="feature-card reveal" style="--reveal-delay: 180ms;">
+              <div class="feature-icon">🔗</div>
+              <h3 class="feature-title">Shareable Booking Link</h3>
+              <p class="feature-body">One link. Share it anywhere — Instagram bio, Google Business, text message.
+                Clients book instantly.</p>
+            </div>
+            <div class="feature-card reveal" style="--reveal-delay: 240ms;">
+              <div class="feature-icon">👥</div>
+              <h3 class="feature-title">Team Management</h3>
+              <p class="feature-body">Running a team? Add workers, set their schedules, and manage everyone from one
+                dashboard.</p>
+            </div>
+            <div class="feature-card reveal" style="--reveal-delay: 300ms;">
+              <div class="feature-icon">📊</div>
+              <h3 class="feature-title">Reports &amp; Insights</h3>
+              <p class="feature-body">See your busiest days, top clients, revenue trends, and more. Know your business
+                like never before.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section-light">
+        <div class="steps-wrap">
+          <div class="reveal">
+            <span class="badge">Super simple</span>
+            <h2 class="section-title-light">Up and running<br>in under 2 minutes</h2>
+          </div>
+
+          <div class="steps-grid">
+            <div class="step-card reveal" style="--reveal-delay: 0ms;">
+              <div class="step-icon">✍️</div>
+              <div class="step-number">STEP 01</div>
+              <h3 class="step-title">Create your profile</h3>
+              <p class="step-body">Set up your services, rates, and availability. Takes two minutes, no credit card
+                needed.</p>
+            </div>
+            <div class="step-card reveal" style="--reveal-delay: 100ms;">
+              <div class="step-icon">🔗</div>
+              <div class="step-number">STEP 02</div>
+              <h3 class="step-title">Share your link</h3>
+              <p class="step-body">Drop your PikAppoint link in your bio, website, or send it directly to clients.</p>
+            </div>
+            <div class="step-card reveal" style="--reveal-delay: 200ms;">
+              <div class="step-icon">🤑</div>
+              <div class="step-number">STEP 03</div>
+              <h3 class="step-title">Get booked &amp; paid</h3>
+              <p class="step-body">Clients book themselves. Reminders go out automatically. Money lands in your account.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section-muted">
+        <div class="content-container">
+          <div class="section-header reveal" style="margin-bottom: 60px;">
+            <h2 class="section-title-light"
+              style="font-size: clamp(30px, 4vw, 48px); letter-spacing: -1.5px; margin-top: 0;">Built for every service
+              pro</h2>
+          </div>
+          <div class="tag-grid">
+            <span class="tag reveal">💈 Barbers</span>
+            <span class="tag reveal">💅 Nail techs</span>
+            <span class="tag reveal">💆 Massage therapists</span>
+            <span class="tag reveal">🎸 Music teachers</span>
+            <span class="tag reveal">🐕 Dog groomers</span>
+            <span class="tag reveal">🧘 Yoga instructors</span>
+            <span class="tag reveal">📸 Photographers</span>
+            <span class="tag reveal">🔧 Repair techs</span>
+            <span class="tag reveal">🏃 Personal trainers</span>
+            <span class="tag reveal">✂️ Hair stylists</span>
+            <span class="tag reveal">🩺 Wellness coaches</span>
+            <span class="tag reveal">🎨 Tattoo artists</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="section-light">
+        <div class="content-container">
+          <div class="section-header-large reveal">
+            <span class="badge">Real stories</span>
+            <h2 class="section-title-light">They stopped using sticky notes.</h2>
+          </div>
+
+          <div class="testimonial-grid" style="gap: 24px;">
+            <article class="testimonial-card reveal" style="--reveal-delay: 0ms;">
+              <div class="stars">★★★★★</div>
+              <p class="testimonial-quote">"I used to lose $200 a week to no-shows. Now I barely get any — the reminders
+                just work. I set it up on a Sunday afternoon and it was live by dinner."</p>
+              <div class="testimonial-person">
+                <div class="testimonial-avatar">🏋️</div>
+                <div>
+                  <div class="testimonial-name">Marcus T.</div>
+                  <div class="testimonial-role">Personal Trainer</div>
+                </div>
+              </div>
+            </article>
+            <article class="testimonial-card reveal" style="--reveal-delay: 80ms;">
+              <div class="stars">★★★★★</div>
+              <p class="testimonial-quote">"My clients always say 'the booking thing is so easy!' I have a 5-star rating
+                on Google now. PikAppoint is a huge part of that."</p>
+              <div class="testimonial-person">
+                <div class="testimonial-avatar">✂️</div>
+                <div>
+                  <div class="testimonial-name">Sara K.</div>
+                  <div class="testimonial-role">Hair Stylist</div>
+                </div>
+              </div>
+            </article>
+            <article class="testimonial-card reveal" style="--reveal-delay: 160ms;">
+              <div class="stars">★★★★★</div>
+              <p class="testimonial-quote">"I manage 4 workers. Before this, I had a whiteboard that was always wrong.
+                Now everything is in one place and my team actually likes using it."</p>
+              <div class="testimonial-person">
+                <div class="testimonial-avatar">💈</div>
+                <div>
+                  <div class="testimonial-name">David R.</div>
+                  <div class="testimonial-role">Barbershop Owner</div>
+                </div>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section-muted-large" id="pricing">
+        <div class="content-container">
+          <div class="section-header-large reveal">
+            <span class="badge">Transparent pricing</span>
+            <h2 class="section-title-light">Start free.<br>Scale when you're ready.</h2>
+            <p class="section-subtitle" style="font-size: 18px; margin-top: 16px;">No contracts. Cancel anytime.</p>
+          </div>
+
+          <div class="pricing-grid">
+            <div class="pricing-card reveal" style="--reveal-delay: 0ms;">
+              <div class="pricing-plan">Free</div>
+              <div class="pricing-price-wrap">
+                <span class="pricing-price">$0</span>
+                <span class="pricing-period">/ month</span>
+              </div>
+              <ul class="pricing-list">
+                <li><span class="pricing-check">✓</span>1 provider</li>
+                <li><span class="pricing-check">✓</span>Unlimited bookings</li>
+                <li><span class="pricing-check">✓</span>Public booking page</li>
+                <li><span class="pricing-check">✓</span>Email reminders</li>
+                <li><span class="pricing-check">✓</span>Basic payments</li>
+              </ul>
+              <a class="pricing-button-secondary" href="/auth">Start free</a>
+            </div>
+
+            <div class="pricing-card highlighted reveal" style="--reveal-delay: 80ms;">
+              <div class="pricing-badge">Most Popular</div>
+              <div class="pricing-plan">Pro</div>
+              <div class="pricing-price-wrap">
+                <span class="pricing-price">$19</span>
+                <span class="pricing-period">/ month</span>
+              </div>
+              <ul class="pricing-list">
+                <li><span class="pricing-check">✓</span>Up to 5 providers</li>
+                <li><span class="pricing-check">✓</span>Priority support</li>
+                <li><span class="pricing-check">✓</span>Custom branding</li>
+                <li><span class="pricing-check">✓</span>Advanced analytics</li>
+                <li><span class="pricing-check">✓</span>Deposit collection</li>
+                <li><span class="pricing-check">✓</span>SMS reminders</li>
+              </ul>
+              <a class="pricing-button-primary" href="/auth">Get Pro</a>
+            </div>
+
+            <div class="pricing-card reveal" style="--reveal-delay: 160ms;">
+              <div class="pricing-plan">Business</div>
+              <div class="pricing-price-wrap">
+                <span class="pricing-price">$49</span>
+                <span class="pricing-period">/ month</span>
+              </div>
+              <ul class="pricing-list">
+                <li><span class="pricing-check">✓</span>Unlimited providers</li>
+                <li><span class="pricing-check">✓</span>Team management</li>
+                <li><span class="pricing-check">✓</span>White-label option</li>
+                <li><span class="pricing-check">✓</span>API access</li>
+                <li><span class="pricing-check">✓</span>Dedicated onboarding</li>
+                <li><span class="pricing-check">✓</span>Everything in Pro</li>
+              </ul>
+              <a class="pricing-button-secondary" href="/auth">Contact us</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="final-cta">
+        <div class="content-container">
+          <div class="final-cta-inner reveal">
+            <div class="final-emoji">📅</div>
+            <h2 class="final-title">Your clients are ready to book.<br><span>Are you?</span></h2>
+            <p class="final-copy">Join thousands of service professionals who stopped running their business from a
+              notes app. Setup takes 2 minutes. No credit card required.</p>
+            <a class="final-cta-button" href="/auth">Create your free account →</a>
+            <div class="final-meta">Free forever · No credit card · 2-minute setup</div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="content-container">
+        <div class="footer-grid">
+          <div>
+            <div class="footer-brand">Pik<span>Appoint</span></div>
+            <p class="footer-copy">Scheduling that works as hard as you do.</p>
+          </div>
+          <div>
+            <div class="footer-heading">Product</div>
+            <ul class="footer-links">
+              <li><a href="/browse">Browse Providers</a></li>
+              <li><a href="/auth">Sign Up</a></li>
+              <li><a href="/help">Help</a></li>
+            </ul>
+          </div>
+          <div>
+            <div class="footer-heading">Legal</div>
+            <ul class="footer-links">
+              <li><a href="/terms">Terms</a></li>
+              <li><a href="/privacy">Privacy</a></li>
+              <li><a href="/refund">Refund Policy</a></li>
+            </ul>
+          </div>
+        </div>
+        <div class="footer-bottom">© <span id="year"></span> PikAppoint. All rights reserved.</div>
       </div>
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-
-        <!-- Feature 1 -->
-        <div class="group p-7 bg-brand-50 rounded-2xl border border-brand-100 hover:shadow-md transition-shadow">
-          <div class="w-12 h-12 bg-brand-600 rounded-xl flex items-center justify-center mb-5 shadow">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/><path d="m9 16 2 2 4-4"/></svg>
-          </div>
-          <h3 class="font-bold text-lg text-gray-900 mb-2">Easy Booking</h3>
-          <p class="text-gray-500 text-sm leading-relaxed">Customers book directly from your profile in seconds. No back-and-forth, no friction.</p>
-        </div>
-
-        <!-- Feature 2 -->
-        <div class="group p-7 bg-brand-50 rounded-2xl border border-brand-100 hover:shadow-md transition-shadow">
-          <div class="w-12 h-12 bg-brand-600 rounded-xl flex items-center justify-center mb-5 shadow">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
-          </div>
-          <h3 class="font-bold text-lg text-gray-900 mb-2">Payment Handling</h3>
-          <p class="text-gray-500 text-sm leading-relaxed">Collect payment proofs, track paid appointments, and keep your financials organized automatically.</p>
-        </div>
-
-        <!-- Feature 3 -->
-        <div class="group p-7 bg-brand-50 rounded-2xl border border-brand-100 hover:shadow-md transition-shadow">
-          <div class="w-12 h-12 bg-brand-600 rounded-xl flex items-center justify-center mb-5 shadow">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-          </div>
-          <h3 class="font-bold text-lg text-gray-900 mb-2">Provider Management</h3>
-          <p class="text-gray-500 text-sm leading-relaxed">Manage your team of workers, set their schedules, and coordinate appointments with ease.</p>
-        </div>
-
-        <!-- Feature 4 -->
-        <div class="group p-7 bg-brand-50 rounded-2xl border border-brand-100 hover:shadow-md transition-shadow">
-          <div class="w-12 h-12 bg-brand-600 rounded-xl flex items-center justify-center mb-5 shadow">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          </div>
-          <h3 class="font-bold text-lg text-gray-900 mb-2">Real-Time Scheduling</h3>
-          <p class="text-gray-500 text-sm leading-relaxed">Live calendar updates prevent double-bookings and show customers accurate availability instantly.</p>
-        </div>
-
-      </div>
-    </div>
-  </section>
-
-  <!-- HOW IT WORKS -->
-  <section class="py-20 sm:py-28 bg-gray-50">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="text-center mb-16">
-        <h2 class="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-4">Up and running in minutes</h2>
-        <p class="text-gray-500 text-lg max-w-xl mx-auto">Three simple steps to start accepting appointments.</p>
-      </div>
-      <div class="relative grid grid-cols-1 md:grid-cols-3 gap-10">
-
-        <!-- connector line (desktop only) -->
-        <div class="hidden md:block absolute top-10 left-1/4 right-1/4 h-0.5 bg-brand-200" aria-hidden="true"></div>
-
-        <!-- Step 1 -->
-        <div class="flex flex-col items-center text-center">
-          <div class="relative w-20 h-20 bg-brand-600 rounded-full flex items-center justify-center mb-6 shadow-lg z-10">
-            <span class="text-white text-2xl font-extrabold">1</span>
-          </div>
-          <h3 class="font-bold text-xl text-gray-900 mb-3">Provider Sets Up</h3>
-          <p class="text-gray-500 leading-relaxed">Create your provider profile, add your services, set your availability windows, and invite your workers.</p>
-        </div>
-
-        <!-- Step 2 -->
-        <div class="flex flex-col items-center text-center">
-          <div class="relative w-20 h-20 bg-brand-600 rounded-full flex items-center justify-center mb-6 shadow-lg z-10">
-            <span class="text-white text-2xl font-extrabold">2</span>
-          </div>
-          <h3 class="font-bold text-xl text-gray-900 mb-3">Customers Book</h3>
-          <p class="text-gray-500 leading-relaxed">Share your booking link. Customers browse available slots and confirm appointments in a few taps — no account required.</p>
-        </div>
-
-        <!-- Step 3 -->
-        <div class="flex flex-col items-center text-center">
-          <div class="relative w-20 h-20 bg-brand-700 rounded-full flex items-center justify-center mb-6 shadow-lg z-10">
-            <!-- checkmark -->
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-9 h-9 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
-          </div>
-          <h3 class="font-bold text-xl text-gray-900 mb-3">You're Done</h3>
-          <p class="text-gray-500 leading-relaxed">Sit back. PikAppoint sends reminders, tracks payments, and keeps your dashboard organized automatically.</p>
-        </div>
-
-      </div>
-    </div>
-  </section>
-
-  <!-- CTA BANNER -->
-  <section class="py-20 bg-gradient-to-r from-brand-700 to-brand-500 text-white">
-    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-      <h2 class="text-3xl sm:text-4xl font-extrabold mb-4">Ready to fill your calendar?</h2>
-      <p class="text-brand-100 text-lg mb-8">Join service providers already using PikAppoint to streamline their bookings.</p>
-      <a href="/"
-         class="inline-flex items-center justify-center gap-2 bg-white text-brand-700 hover:bg-brand-50 font-bold text-base px-10 py-4 rounded-xl shadow-lg transition-colors">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-        Get Started Free
-      </a>
-    </div>
-  </section>
-
-  <!-- FOOTER -->
-  <footer class="bg-gray-900 text-gray-400 py-10">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-      <span class="text-white font-bold text-lg tracking-tight">PikAppoint</span>
-      <p class="text-sm text-center sm:text-right">
-        &copy; <span id="year"></span> PikAppoint. All rights reserved.
-        &nbsp;·&nbsp;
-        <a href="mailto:support@pikappoint.com" class="hover:text-white transition-colors">support@pikappoint.com</a>
-      </p>
-    </div>
-  </footer>
+    </footer>
+  </div>
 
   <script>
-    document.getElementById('year').textContent = new Date().getFullYear();
+    (function () {
+      var nav = document.getElementById('landing-nav');
+      var heroBg = document.getElementById('hero-bg');
+      var year = document.getElementById('year');
+      var reveals = document.querySelectorAll('.reveal');
+
+      if (year) {
+        year.textContent = String(new Date().getFullYear());
+      }
+
+      function updateScrollEffects() {
+        var scrollY = window.scrollY || window.pageYOffset || 0;
+        if (nav) {
+          if (scrollY > 20) {
+            nav.classList.add('scrolled');
+          } else {
+            nav.classList.remove('scrolled');
+          }
+        }
+        if (heroBg) {
+          heroBg.style.transform = 'translateY(' + (scrollY * 0.35) + 'px)';
+        }
+      }
+
+      updateScrollEffects();
+      window.addEventListener('scroll', updateScrollEffects, { passive: true });
+
+      if ('IntersectionObserver' in window) {
+        var observer = new IntersectionObserver(function (entries) {
+          entries.forEach(function (entry) {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('visible');
+              observer.unobserve(entry.target);
+            }
+          });
+        }, { threshold: 0.15 });
+
+        reveals.forEach(function (element) {
+          observer.observe(element);
+        });
+      } else {
+        reveals.forEach(function (element) {
+          element.classList.add('visible');
+        });
+      }
+    })();
+  </script>
+
+  <!-- Auth redirect: signed-in users skip the landing and go straight to the app -->
+  <script>
+    (function () {
+      var SUPABASE_URL = 'https://dbabjfydcllqbjpolhym.supabase.co';
+      var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRiYWJqZnlkY2xscWJqcG9saHltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMwMzk1OTYsImV4cCI6MjA2ODYxNTU5Nn0.SyYn3n9-sA9A2gwoIgY06oHHRg8Lfw1p3XNjV7Dadys';
+      try {
+        var raw = localStorage.getItem('sb-dbabjfydcllqbjpolhym-auth-token');
+        if (!raw) return;
+        var session = JSON.parse(raw);
+        var accessToken = session && (session.access_token || (session.currentSession && session.currentSession.access_token));
+        if (!accessToken) return;
+        // Quick expiry check without a full JWT decode
+        var parts = accessToken.split('.');
+        if (parts.length === 3) {
+          var payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+          if (payload.exp && Date.now() / 1000 < payload.exp) {
+            window.location.replace('/appointments');
+          }
+        }
+      } catch (e) { /* no-op — stay on landing */ }
+    })();
   </script>
 </body>
+
 </html>

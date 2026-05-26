@@ -65,6 +65,10 @@ App is an admin scheduler for organizations. Key pages: Appointments, Workers, B
 
 ## Learnings
 
+### Static landing page migration (2026-05-25)
+
+- `landing.html` is now the canonical static landing page.
+
 ### Anon Browse Access Restore (2026-05-21)
 
 **Task:** Restore anonymous Browse page data access after RLS hardening removed the safe public pieces.
@@ -607,7 +611,8 @@ Exports: `PaymentMethodType` re-export, `CARD_PAYMENT_TYPES`, `NOTE_REQUIRED_TYP
 
 ## Reminder SMTP premium rollout (2026-05-22)
 
-**Task:** Move reminder email rendering into eminder-smtp, trim booking callers to ppointmentTime, and gate sends to premium providers only.
+**Task:** Move reminder email rendering into 
+eminder-smtp, trim booking callers to ppointmentTime, and gate sends to premium providers only.
 
 **Files modified:**
 - src/components/BookingBrowse.tsx — fetch premium state, send ppointmentTime only, skip email for free providers
