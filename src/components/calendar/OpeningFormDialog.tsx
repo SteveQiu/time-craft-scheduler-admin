@@ -1,4 +1,5 @@
 import React from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Button } from '../ui/button';
 import { Label } from '../ui/label';
@@ -7,6 +8,7 @@ import { Switch } from '../ui/switch';
 import { Input } from '../ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { AddressInput } from '@/components/ui/AddressInput';
+import { Plus } from 'lucide-react';
 import {
   generateTimeOptions,
 } from './calendarUtils';
@@ -15,6 +17,8 @@ import type { LocationFields } from '@/lib/address';
 import { OpeningTimeSlotsSection } from './OpeningTimeSlotsSection';
 import { OpeningDateRangeSection } from './OpeningDateRangeSection';
 import { OpeningPaymentSection } from './OpeningPaymentSection';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 function addressMatchesSaved(fields: LocationFields, savedAddresses: any[]): boolean {
   const norm = (s: string) => (s || '').trim().toLowerCase();
@@ -95,8 +99,40 @@ export function OpeningFormDialog({
   onSaveCustomAddress,
 }: OpeningFormDialogProps) {
   const workerNameForRate = isOrgMode ? newOpening.worker : selfWorkerName;
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   const [saveAsCustom, setSaveAsCustom] = React.useState(false);
+  const [showAddService, setShowAddService] = React.useState(false);
+  const [newServiceInput, setNewServiceInput] = React.useState('');
+  const [savingService, setSavingService] = React.useState(false);
+
+  const handleAddService = async () => {
+    const trimmed = newServiceInput.trim();
+    if (!trimmed || !user) return;
+    setSavingService(true);
+    try {
+      const currentSkills = getWorkerSkills(workerNameForRate);
+      if (currentSkills.includes(trimmed)) {
+        toast({ title: 'Service already exists', variant: 'destructive' });
+        return;
+      }
+      const { error } = await supabase
+        .from('profiles')
+        .update({ skills: [...currentSkills, trimmed] } as any)
+        .eq('id', user.id);
+      if (error) throw error;
+      await queryClient.invalidateQueries({ queryKey: ['own-profile-for-openings', user.id] });
+      setNewOpening({ ...newOpening, service: trimmed });
+      setNewServiceInput('');
+      setShowAddService(false);
+      toast({ title: 'Service added' });
+    } catch (err: any) {
+      toast({ title: 'Failed to add service', description: err.message, variant: 'destructive' });
+    } finally {
+      setSavingService(false);
+    }
+  };
 
   const isAddressFilled = !!(newOpening.locationFields.address_line_1 && newOpening.locationFields.city && newOpening.locationFields.country);
   const addressAlreadySaved = isAddressFilled && addressMatchesSaved(newOpening.locationFields, savedAddresses);
@@ -199,22 +235,50 @@ export function OpeningFormDialog({
 
           <div className="space-y-2">
             <Label htmlFor="service">Service</Label>
-            <Select
-              value={newOpening.service}
-              onValueChange={(value) => {
-                setNewOpening({ ...newOpening, service: value });
-                setErrors(prev => ({ ...prev, service: '' }));
-              }}
-            >
-              <SelectTrigger className={errors.service ? 'border-destructive' : ''}>
-                <SelectValue placeholder="Select service" />
-              </SelectTrigger>
-              <SelectContent>
-                {getWorkerSkills(workerNameForRate).map((skill) => (
-                  <SelectItem key={skill} value={skill}>{skill}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {!showAddService && (
+              <Select
+                value={newOpening.service}
+                onValueChange={(value) => {
+                  if (value === '__add_new__') {
+                    setShowAddService(true);
+                    return;
+                  }
+                  setNewOpening({ ...newOpening, service: value });
+                  setErrors(prev => ({ ...prev, service: '' }));
+                }}
+              >
+                <SelectTrigger className={errors.service ? 'border-destructive' : ''}>
+                  <SelectValue placeholder="Select service" />
+                </SelectTrigger>
+                <SelectContent>
+                  {getWorkerSkills(workerNameForRate).map((skill) => (
+                    <SelectItem key={skill} value={skill}>{skill}</SelectItem>
+                  ))}
+                  <SelectItem value="__add_new__">
+                    <span className="flex items-center gap-1 text-muted-foreground">
+                      <Plus className="h-3 w-3" /> Add Service
+                    </span>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+            {showAddService && (
+              <div className="flex gap-2">
+                <Input
+                  value={newServiceInput}
+                  onChange={(e) => setNewServiceInput(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddService(); } }}
+                  placeholder="e.g. Haircut, Massage..."
+                  autoFocus
+                />
+                <Button size="sm" onClick={handleAddService} disabled={savingService || !newServiceInput.trim()}>
+                  {savingService ? '…' : 'Add'}
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => { setShowAddService(false); setNewServiceInput(''); }}>
+                  Cancel
+                </Button>
+              </div>
+            )}
             {errors.service && <p className="text-sm text-destructive">{errors.service}</p>}
           </div>
 

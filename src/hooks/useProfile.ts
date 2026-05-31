@@ -263,6 +263,7 @@ export function useProfile({ slug, user, onSaveSuccess }: UseProfileOptions) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile', slug, user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['own-profile-for-openings', user?.id] });
       toast({ title: 'Profile updated' });
       onSaveSuccess?.();
     },
