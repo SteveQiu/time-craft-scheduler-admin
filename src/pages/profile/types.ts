@@ -1,3 +1,12 @@
+export interface SocialLinks {
+  twitter?: string;
+  instagram?: string;
+  linkedin?: string;
+  facebook?: string;
+  tiktok?: string;
+  youtube?: string;
+}
+
 export interface ProfileData {
   id: string;
   full_name: string | null;
@@ -15,6 +24,7 @@ export interface ProfileData {
   hourly_rate_public?: boolean;
   skills_public?: boolean;
   profile_url?: string | null;
+  social_links?: SocialLinks | null;
 }
 
 export interface AddressData {
@@ -44,6 +54,7 @@ export interface FormState {
   skills: string[];
   hourly_rate: number;
   profile_url: string;
+  social_links: SocialLinks;
 }
 
 export interface PrivacySettings {

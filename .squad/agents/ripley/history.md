@@ -65,6 +65,18 @@ App is an admin scheduler for organizations. Key pages: Appointments, Workers, B
 
 ## Learnings
 
+### Profile address select-only edit mode (2026-05-31)
+
+**Task:** Remove free-form profile address entry in edit mode. Profile now uses saved workplace addresses only.
+
+**Files modified:**
+- `src/pages/profile/ProfileAddress.tsx` — removed `AddressInput` path; when no saved addresses, show Settings CTA to `/settings?tab=addresses`; when saved addresses exist, show only the Select dropdown; Select now reflects the current saved-address match so trigger shows selected label.
+
+**Pattern:** Settings address management is the source of truth for profile address edits. Link users to `?tab=addresses` instead of reintroducing ad-hoc profile address fields.
+
+**Build gate:** `npx tsc --noEmit` → zero errors. `npm run build` → exit 0.
+**Runtime gate:** Ralph ran `node scripts/snapshot-appointments.cjs`, verified non-blank text, and captured `tmp-snapshots\\sdeqiu-profile-edit.png` for `/profile`.
+
 ### Static landing page migration (2026-05-25)
 
 - `landing.html` is now the canonical static landing page.

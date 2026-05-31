@@ -7,11 +7,13 @@ import { Card, CardContent, CardHeader } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Input } from './ui/input';
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Calendar as CalendarIcon, MapPin, Search, Loader2, ChevronRight, Bookmark } from 'lucide-react';
 import { BrowseDetail } from './BrowseDetail';
 import { ProfilePhotoStrip } from './ProfilePhotoStrip';
 import { parseLocation } from '@/lib/address';
 import { OpeningWithProfile, ProviderAccount } from '@/types/browse';
+import { useLocalBookmarks, getLocalBookmarkIds } from '@/hooks/useLocalBookmarks';
 
 function getUniqueValues(values: string[]) {
   return [...new Set(values)];
@@ -21,17 +23,20 @@ function buildProviderAccount({
   userId,
   providerName,
   providerSlug,
+  avatarUrl,
   openings,
 }: {
   userId: string;
   providerName: string;
   providerSlug?: string | null;
+  avatarUrl?: string | null;
   openings: OpeningWithProfile[];
 }): ProviderAccount {
   return {
     user_id: userId,
     provider_name: providerName,
     provider_slug: providerSlug || null,
+    avatar_url: avatarUrl ?? openings[0]?.avatar_url ?? null,
     opening_count: openings.length,
     services: getUniqueValues(openings.map(opening => opening.service)),
     workers: getUniqueValues(openings.map(opening => opening.worker)),
@@ -53,9 +58,12 @@ function ProviderBrowseCard({
       <CardHeader>
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3 flex-1">
-            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium">
-              {provider.provider_name.substring(0, 2).toUpperCase()}
-            </div>
+            <Avatar className="h-12 w-12 shrink-0">
+              <AvatarImage src={provider.avatar_url ?? undefined} alt={provider.provider_name} />
+              <AvatarFallback className="bg-primary/10 text-primary font-semibold text-sm">
+                {provider.provider_name.substring(0, 2).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
             <div className="flex-1 min-w-0">
               <h3 className="font-semibold text-foreground truncate hover:underline">
                 {provider.provider_name}
@@ -104,6 +112,7 @@ export function BookingBrowse() {
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [viewMode, setViewMode] = useState<'all' | 'bookmarks'>('all');
   const [locationFilter, setLocationFilter] = useState<{ province: string; country: string } | null>(null);
+  const localBookmarks = useLocalBookmarks();
 
   const today = new Date().toISOString().split('T')[0];
 
@@ -162,6 +171,7 @@ export function BookingBrowse() {
       const providerIds = [...new Set(availableData.map((o: any) => o.user_id))];
       let nameMap = new Map<string, string>();
       let slugMap = new Map<string, string>();
+      let avatarMap = new Map<string, string>();
       if (providerIds.length > 0) {
         const { data: profiles, error: rpcError } = await supabase
           .rpc('get_public_profile_names', { profile_ids: providerIds });
@@ -171,6 +181,7 @@ export function BookingBrowse() {
         } else if (profiles) {
           nameMap = new Map((profiles || []).map((p: any) => [p.id, p.full_name]));
           slugMap = new Map((profiles || []).filter((p: any) => p.slug).map((p: any) => [p.id, p.slug]));
+          avatarMap = new Map((profiles || []).filter((p: any) => p.avatar_url).map((p: any) => [p.id, p.avatar_url]));
         }
       }
 
@@ -190,6 +201,7 @@ export function BookingBrowse() {
         provider_name: nameMap.get(opening.user_id) || 'Organization',
         provider_email: null,
         provider_slug: slugMap.get(opening.user_id) || null,
+        avatar_url: avatarMap.get(opening.user_id) || null,
       }));
     },
   });
@@ -215,6 +227,7 @@ export function BookingBrowse() {
         userId,
         providerName: openings[0]?.provider_name || 'Organization',
         providerSlug: openings[0]?.provider_slug,
+        avatarUrl: openings[0]?.avatar_url || null,
         openings,
       }))
       .sort((a, b) => b.opening_count - a.opening_count);
@@ -257,6 +270,7 @@ export function BookingBrowse() {
           userId: profile.id,
           providerName: profile.full_name || 'Unknown',
           providerSlug: profile.slug || null,
+          avatarUrl: profile.avatar_url || null,
           openings: providerOpeningsMap.get(profile.id) || [],
         }));
       } catch (err) {
@@ -265,6 +279,40 @@ export function BookingBrowse() {
       }
     },
   });
+
+  // Fetch localStorage bookmarked provider details
+  const { data: localBookmarkedProviders = [] } = useQuery({
+    queryKey: ['local-bookmarks-details', localBookmarks.localBookmarkIds],
+    enabled: localBookmarks.localBookmarkIds.length > 0,
+    queryFn: async () => {
+      try {
+        const { data: profiles, error } = await supabase
+          .rpc('get_public_profile_names', { profile_ids: localBookmarks.localBookmarkIds });
+        if (error) {
+          console.error('Local bookmarks profiles fetch error:', error);
+          return [];
+        }
+        if (!profiles) return [];
+        return profiles.map((profile: any) => buildProviderAccount({
+          userId: profile.id,
+          providerName: profile.full_name || 'Unknown',
+          providerSlug: profile.slug || null,
+          avatarUrl: profile.avatar_url || null,
+          openings: providerOpeningsMap.get(profile.id) || [],
+        }));
+      } catch (err) {
+        console.error('Local bookmarks query error:', err);
+        return [];
+      }
+    },
+  });
+
+  // Merge DB and localStorage bookmarks (dedup by user_id)
+  const mergedBookmarks = React.useMemo(() => {
+    const dbIds = new Set(bookmarkedProviders.map(p => p.user_id));
+    const extra = localBookmarkedProviders.filter(p => !dbIds.has(p.user_id));
+    return [...bookmarkedProviders, ...extra];
+  }, [bookmarkedProviders, localBookmarkedProviders]);
 
   // Filter providers by search term, exclude current user, and apply location filter
   const filteredProviders = providers.filter(provider => {
@@ -291,7 +339,7 @@ export function BookingBrowse() {
     return true;
   });
 
-  const visibleProviders = viewMode === 'bookmarks' ? bookmarkedProviders : filteredProviders;
+  const visibleProviders = viewMode === 'bookmarks' ? mergedBookmarks : filteredProviders;
 
   if (openingsLoading) {
     return (
@@ -338,7 +386,7 @@ export function BookingBrowse() {
           <Card className="shadow-soft border-card-border bg-primary/5">
             <CardContent className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 py-4">
               <p className="text-sm text-foreground">
-                Sign in to bookmark providers and book appointments.
+                Sign in to sync your bookmarks across devices.
               </p>
               <Button onClick={() => navigate('/auth?redirect=/browse')}>
                 Sign in
@@ -368,26 +416,24 @@ export function BookingBrowse() {
           </Card>
         )}
 
-        {/* Tab buttons (bookmarks only available when signed in) */}
-        {user && (
-          <div className="flex gap-2">
-            <Button
-              variant={viewMode === 'all' ? 'default' : 'outline'}
-              onClick={() => setViewMode('all')}
-              className="flex items-center gap-2"
-            >
-              All
-            </Button>
-            <Button
-              variant={viewMode === 'bookmarks' ? 'default' : 'outline'}
-              onClick={() => setViewMode('bookmarks')}
-              className="flex items-center gap-2"
-            >
-              <Bookmark className="h-4 w-4 text-muted-foreground" />
-              Bookmarks ({bookmarkedProviders.length})
-            </Button>
-          </div>
-        )}
+        {/* Tab buttons (bookmarks available to all users) */}
+        <div className="flex gap-2">
+          <Button
+            variant={viewMode === 'all' ? 'default' : 'outline'}
+            onClick={() => setViewMode('all')}
+            className="flex items-center gap-2"
+          >
+            All
+          </Button>
+          <Button
+            variant={viewMode === 'bookmarks' ? 'default' : 'outline'}
+            onClick={() => setViewMode('bookmarks')}
+            className="flex items-center gap-2"
+          >
+            <Bookmark className="h-4 w-4 text-muted-foreground" />
+            Bookmarks ({mergedBookmarks.length})
+          </Button>
+        </div>
 
         {/* Search */}
         <Card className="shadow-soft border-card-border">
@@ -404,7 +450,7 @@ export function BookingBrowse() {
           </CardContent>
         </Card>
 
-        {viewMode === 'bookmarks' && bookmarkedProviders.length === 0 && (
+        {viewMode === 'bookmarks' && mergedBookmarks.length === 0 && (
           <Card className="shadow-soft border-card-border">
             <CardContent className="text-center py-12">
               <Bookmark className="h-12 w-12 text-muted-foreground mx-auto mb-4" />

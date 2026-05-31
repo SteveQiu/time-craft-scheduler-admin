@@ -15,12 +15,14 @@ export interface OpeningWithProfile {
   provider_name: string | null;
   provider_email: string | null;
   provider_slug: string | null;
+  avatar_url?: string | null;
 }
 
 export interface ProviderAccount {
   user_id: string;
   provider_name: string;
   provider_slug: string | null;
+  avatar_url?: string | null;
   opening_count: number;
   services: string[];
   workers: string[];

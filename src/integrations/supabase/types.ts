@@ -519,6 +519,7 @@ export type Database = {
           phone: string | null
           phone_public: boolean | null
           profile_url: string | null
+          social_links: Json | null
           skills: string[]
           skills_public: boolean | null
           slug: string | null
@@ -539,6 +540,7 @@ export type Database = {
           phone?: string | null
           phone_public?: boolean | null
           profile_url?: string | null
+          social_links?: Json | null
           skills?: string[]
           skills_public?: boolean | null
           slug?: string | null
@@ -559,6 +561,7 @@ export type Database = {
           phone?: string | null
           phone_public?: boolean | null
           profile_url?: string | null
+          social_links?: Json | null
           skills?: string[]
           skills_public?: boolean | null
           slug?: string | null
@@ -904,6 +907,7 @@ export type Database = {
           introduction: string
           phone: string
           profile_url: string
+          social_links: Json
           skills: string[]
           slug: string
         }[]
@@ -921,6 +925,7 @@ export type Database = {
           introduction: string
           phone: string
           profile_url: string
+          social_links: Json
           skills: string[]
           slug: string
         }[]
@@ -928,6 +933,7 @@ export type Database = {
       get_public_profile_names: {
         Args: { profile_ids: string[] }
         Returns: {
+          avatar_url: string
           full_name: string
           id: string
           slug: string

@@ -1,33 +1,11 @@
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ROUTES } from '@/config/routes';
 import { MapPin, Eye, EyeOff } from 'lucide-react';
-import { AddressInput } from '@/components/ui/AddressInput';
-import { LocationFields } from '@/lib/address';
-import { WorkplaceAddress } from '@/pages/settings/types';
+import type { WorkplaceAddress } from '@/pages/settings/types';
 import { parseAddress } from '@/pages/settings/settingsUtils';
 import type { AddressData, PrivacySettings } from './types';
-
-function toLocationFields(a: AddressData): LocationFields {
-  return {
-    address_line_1: a.address_line_1,
-    address_line_2: a.address_line_2,
-    city: a.city,
-    province: a.province_state,
-    country: a.country,
-    zip: a.postal_code,
-  };
-}
-
-function fromLocationFields(f: LocationFields): AddressData {
-  return {
-    address_line_1: f.address_line_1,
-    address_line_2: f.address_line_2,
-    city: f.city,
-    province_state: f.province,
-    country: f.country,
-    postal_code: f.zip,
-  };
-}
 
 interface ProfileAddressProps {
   editing: boolean;
@@ -46,42 +24,59 @@ export function ProfileAddress({
   onPrivacyChange,
   savedAddresses = [],
 }: ProfileAddressProps) {
+  const selectedSavedAddress = savedAddresses.find((savedAddress) => {
+    const parsed = parseAddress(savedAddress.address);
+    return (
+      parsed.address_line_1 === address.address_line_1 &&
+      parsed.address_line_2 === address.address_line_2 &&
+      parsed.city === address.city &&
+      parsed.province === address.province_state &&
+      parsed.country === address.country &&
+      parsed.zip === address.postal_code
+    );
+  });
+
   if (editing) {
+    if (savedAddresses.length === 0) {
+      return (
+        <div className="space-y-2 rounded-md border border-dashed p-4">
+          <p className="text-sm text-muted-foreground">No saved addresses. Add one in Settings.</p>
+          <Button asChild variant="link" className="h-auto justify-start p-0">
+            <Link to={`${ROUTES.settings}?tab=addresses`}>Go to Settings</Link>
+          </Button>
+        </div>
+      );
+    }
+
     return (
       <div className="space-y-3">
-        {savedAddresses.length > 0 && (
-          <Select
-            value=""
-            onValueChange={(value) => {
-              try {
-                const parsed = parseAddress(value);
-                onAddressChange({
-                  address_line_1: parsed.address_line_1,
-                  address_line_2: parsed.address_line_2,
-                  city: parsed.city,
-                  province_state: parsed.province,
-                  country: parsed.country,
-                  postal_code: parsed.zip,
-                });
-              } catch {}
-            }}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Use saved address" />
-            </SelectTrigger>
-            <SelectContent>
-              {savedAddresses.map((addr) => (
-                <SelectItem key={addr.id} value={addr.address}>
-                  {addr.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
-        <AddressInput
-          value={toLocationFields(address)}
-          onChange={(fields) => onAddressChange(fromLocationFields(fields))}
-        />
+        <Select
+          value={selectedSavedAddress?.address}
+          onValueChange={(value) => {
+            try {
+              const parsed = parseAddress(value);
+              onAddressChange({
+                address_line_1: parsed.address_line_1,
+                address_line_2: parsed.address_line_2,
+                city: parsed.city,
+                province_state: parsed.province,
+                country: parsed.country,
+                postal_code: parsed.zip,
+              });
+            } catch {}
+          }}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Use saved address" />
+          </SelectTrigger>
+          <SelectContent>
+            {savedAddresses.map((addr) => (
+              <SelectItem key={addr.id} value={addr.address}>
+                {addr.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
     );
   }

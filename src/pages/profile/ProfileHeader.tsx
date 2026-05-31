@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Star, Share2, Calendar, Bookmark, Flag, Edit, Save, X, Eye, EyeOff } from 'lucide-react';
+import { Star, Share2, Calendar, Bookmark, Flag, Edit, Save, X, Camera } from 'lucide-react';
 import type { ProfileData, FormState, PrivacySettings } from './types';
 import type { User } from '@supabase/supabase-js';
 import { ProfileQRDialog } from './ProfileQRDialog';
@@ -28,6 +28,7 @@ interface ProfileHeaderProps {
   onReport: () => void;
   onBrowse: () => void;
   onNavigateAuth: () => void;
+  onAvatarUpload?: (file: File) => void;
 }
 
 export function ProfileHeader({
@@ -51,6 +52,7 @@ export function ProfileHeader({
   onReport,
   onBrowse,
   onNavigateAuth,
+  onAvatarUpload,
 }: ProfileHeaderProps) {
   const [qrOpen, setQrOpen] = useState(false);
 
@@ -64,11 +66,34 @@ export function ProfileHeader({
   return (
     <div className="flex flex-wrap gap-4 items-start sm:items-center justify-between">
       <div className="flex items-center space-x-4">
-        <Avatar className="h-20 w-20">
-          <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
-            {initials}
-          </AvatarFallback>
-        </Avatar>
+        <input
+          type="file"
+          accept="image/*"
+          className="hidden"
+          id="avatar-upload"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file && onAvatarUpload) onAvatarUpload(file);
+            e.target.value = '';
+          }}
+        />
+        <div className="relative">
+          <Avatar className="h-20 w-20">
+            <AvatarImage src={profile.avatar_url ?? undefined} alt={profile.full_name ?? 'Avatar'} />
+            <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
+              {initials}
+            </AvatarFallback>
+          </Avatar>
+          {isOwnProfile && editing && onAvatarUpload && (
+            <label
+              htmlFor="avatar-upload"
+              className="absolute bottom-0 right-0 bg-primary text-primary-foreground rounded-full p-1 cursor-pointer hover:bg-primary/90 transition-colors"
+              aria-label="Upload profile picture"
+            >
+              <Camera className="h-3.5 w-3.5" />
+            </label>
+          )}
+        </div>
         <div>
           {editing ? (
             <Input
@@ -82,29 +107,8 @@ export function ProfileHeader({
               {profile.full_name || 'No name set'}
             </h2>
           )}
-          <p className="text-muted-foreground flex items-center gap-1">
+          <p className="text-muted-foreground">
             {isOwnProfile ? (user?.email ?? profile.email) : profile.email}
-            {isOwnProfile && editing && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6"
-                onClick={() =>
-                  onPrivacyChange({ ...privacySettings, email_public: !privacySettings.email_public })
-                }
-                aria-label={
-                  privacySettings.email_public
-                    ? 'Hide email from public profile'
-                    : 'Show email on public profile'
-                }
-              >
-                {privacySettings.email_public ? (
-                  <Eye className="h-3.5 w-3.5" />
-                ) : (
-                  <EyeOff className="h-3.5 w-3.5" />
-                )}
-              </Button>
-            )}
           </p>
           {avgRating && (
             <div className="flex items-center space-x-1 mt-1">
@@ -134,7 +138,7 @@ export function ProfileHeader({
             <Button
               variant={isBookmarked ? 'default' : 'outline'}
               size="sm"
-              onClick={user ? onToggleBookmark : onNavigateAuth}
+              onClick={onToggleBookmark}
               aria-label={
                 isBookmarked ? 'Remove bookmark from this profile' : 'Bookmark this profile'
               }

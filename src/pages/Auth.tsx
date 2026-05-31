@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -13,7 +13,9 @@ import { useToast } from '@/hooks/use-toast';
 import { Calendar } from 'lucide-react';
 import { ResetPasswordFlow } from '@/components/ResetPasswordFlow';
 import { APP_NAME } from '@/config/app';
+import { ROUTES } from '@/config/routes';
 import HCaptcha from '@hcaptcha/react-hcaptcha';
+import { flushLocalBookmarksToDb } from '@/hooks/useLocalBookmarks';
 
 type AppRole = 'USER' | 'ORGANIZATION';
 
@@ -32,6 +34,7 @@ export default function Auth() {
   const [signInEmail, setSignInEmail] = useState('');
   const [signInPassword, setSignInPassword] = useState('');
   const [signInCaptchaToken, setSignInCaptchaToken] = useState<string | null>(null);
+  const signInCaptchaRef = useRef<any>(null);
 
   // Sign up state
   const [signUpEmail, setSignUpEmail] = useState('');
@@ -40,6 +43,7 @@ export default function Auth() {
   const [signUpRole, setSignUpRole] = useState<AppRole>('USER');
   const [agreeToTerms, setAgreeToTerms] = useState(false);
   const [signUpCaptchaToken, setSignUpCaptchaToken] = useState<string | null>(null);
+  const signUpCaptchaRef = useRef<any>(null);
 
   // Password reset state
   const [resetEmail, setResetEmail] = useState('');
@@ -73,10 +77,17 @@ export default function Auth() {
 
       if (error) throw error;
 
+      const { data: userData } = await supabase.auth.getUser();
+      if (userData?.user?.id) {
+        flushLocalBookmarksToDb(supabase, userData.user.id).catch(console.error);
+      }
+
       toast({
         title: 'Success!',
         description: 'You have been signed in.',
       });
+      setSignInCaptchaToken(null);
+      signInCaptchaRef.current?.resetCaptcha();
       navigate(returnTo);
     } catch (error: any) {
       toast({
@@ -119,6 +130,8 @@ export default function Auth() {
     try {
       const redirectUrl = `${window.location.origin}/`;
 
+      const submittedEmail = signUpEmail;
+
       const { data, error } = await supabase.auth.signUp({
         email: signUpEmail,
         password: signUpPassword,
@@ -150,6 +163,14 @@ export default function Auth() {
         title: 'Success!',
         description: 'Account created successfully. Please check your email to confirm.',
       });
+      setSignUpEmail('');
+      setSignUpPassword('');
+      setSignUpFullName('');
+      setSignUpRole('USER');
+      setAgreeToTerms(false);
+      setSignUpCaptchaToken(null);
+      signUpCaptchaRef.current?.resetCaptcha();
+      navigate(`${ROUTES.authConfirm}?email=${encodeURIComponent(submittedEmail)}`);
     } catch (error: any) {
       toast({
         title: 'Error',
@@ -277,6 +298,7 @@ export default function Auth() {
                   </div>
                   <div className="space-y-2">
                     <HCaptcha
+                      ref={signInCaptchaRef}
                       sitekey={import.meta.env.VITE_HCAPTCHA_SITE_KEY}
                       onVerify={(token) => setSignInCaptchaToken(token)}
                       onError={() => setSignInCaptchaToken(null)}
@@ -382,6 +404,7 @@ export default function Auth() {
                   </div>
                   <div className="space-y-2">
                     <HCaptcha
+                      ref={signUpCaptchaRef}
                       sitekey={import.meta.env.VITE_HCAPTCHA_SITE_KEY}
                       onVerify={(token) => setSignUpCaptchaToken(token)}
                       onError={() => setSignUpCaptchaToken(null)}

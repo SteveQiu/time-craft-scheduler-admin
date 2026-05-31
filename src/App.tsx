@@ -16,27 +16,28 @@ import { RootRedirect } from "./pages/RootRedirect";
 import Auth from "@/pages/Auth";
 import { Dashboard } from "@/components/Dashboard";
 import { AppSidebar } from "@/components/AppSidebar";
-import { APP_NAME } from "@/config/app";
 import { ROUTES } from "@/config/routes";
+import { PageTitleProvider, usePageTitle } from "@/context/PageTitleContext";
 import { useAuth } from "@/hooks/useAuth";
 import { usePaymentNotifications } from "@/hooks/usePaymentNotifications";
 
 // Lazy — loaded on first navigation
-const Calendar       = lazy(() => import("@/components/Calendar").then(m => ({ default: m.Calendar })));
-const BookingBrowse  = lazy(() => import("@/components/BookingBrowse").then(m => ({ default: m.BookingBrowse })));
-const Workers        = lazy(() => import("@/components/Workers").then(m => ({ default: m.Workers })));
-const Appointments   = lazy(() => import("@/components/Appointments").then(m => ({ default: m.Appointments })));
+const Calendar = lazy(() => import("@/components/Calendar").then(m => ({ default: m.Calendar })));
+const BookingBrowse = lazy(() => import("@/components/BookingBrowse").then(m => ({ default: m.BookingBrowse })));
+const Workers = lazy(() => import("@/components/Workers").then(m => ({ default: m.Workers })));
+const Appointments = lazy(() => import("@/components/Appointments").then(m => ({ default: m.Appointments })));
 const AppointmentView = lazy(() => import("@/pages/AppointmentView").then(m => ({ default: m.AppointmentView })));
-const OpeningView    = lazy(() => import("@/pages/OpeningView").then(m => ({ default: m.OpeningView })));
-const Settings       = lazy(() => import("@/pages/Settings"));
-const Profile        = lazy(() => import("@/pages/Profile"));
-const AdminReports   = lazy(() => import("@/pages/AdminReports"));
-const Notifications  = lazy(() => import("@/pages/Notifications"));
-const Terms          = lazy(() => import("@/pages/legal/Terms"));
-const Privacy        = lazy(() => import("@/pages/legal/Privacy"));
-const Refund         = lazy(() => import("@/pages/legal/Refund"));
-const Help           = lazy(() => import("@/pages/Help"));
-const TestReminder   = lazy(() => import("@/pages/dev/TestReminder"));
+const OpeningView = lazy(() => import("@/pages/OpeningView").then(m => ({ default: m.OpeningView })));
+const Settings = lazy(() => import("@/pages/Settings"));
+const Profile = lazy(() => import("@/pages/Profile"));
+const AdminReports = lazy(() => import("@/pages/AdminReports"));
+const Notifications = lazy(() => import("@/pages/Notifications"));
+const Terms = lazy(() => import("@/pages/legal/Terms"));
+const Privacy = lazy(() => import("@/pages/legal/Privacy"));
+const Refund = lazy(() => import("@/pages/legal/Refund"));
+const Help = lazy(() => import("@/pages/Help"));
+const TestReminder = lazy(() => import("@/pages/dev/TestReminder"));
+const SignUpConfirmation = lazy(() => import("@/pages/auth/SignUpConfirmation"));
 
 const queryClient = new QueryClient();
 
@@ -65,6 +66,7 @@ function AppRoutes() {
         <Route path={ROUTES.appointmentDetail} element={<AppointmentView />} />
         <Route path={ROUTES.openingDetail} element={<OpeningView />} />
         <Route path={ROUTES.auth} element={<Auth />} />
+        <Route path={ROUTES.authConfirm} element={<SignUpConfirmation />} />
         <Route path={ROUTES.settings} element={<Settings />} />
         <Route path={ROUTES.profile} element={<Profile />} />
         <Route path={ROUTES.profileSlug} element={<Profile />} />
@@ -82,63 +84,68 @@ function AppRoutes() {
   );
 }
 
-const App = () => {
+function AppContent() {
   const [sheetOpen, setSheetOpen] = useState(false);
+  const { title } = usePageTitle();
 
+  return (
+    <BrowserRouter>
+      <PaymentNotificationWatcher />
+      <div className="w-full h-screen flex flex-col">
+        <header className="md:hidden sticky top-0 z-50 bg-background border-b">
+          <div className="flex items-center justify-between px-4 h-14">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setSheetOpen(true)}
+              aria-label="Open navigation menu"
+            >
+              <Menu className="h-6 w-6" />
+            </Button>
+            <h1 className="font-bold">{title}</h1>
+            <div className="w-10" />
+          </div>
+        </header>
+
+        <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+          <SheetContent side="left" className="p-0 w-[280px]">
+            <AppSidebar />
+          </SheetContent>
+        </Sheet>
+
+        <div className="hidden md:flex flex-1 overflow-hidden">
+          <PanelGroup direction="horizontal" className="w-full h-full">
+            <Panel defaultSize={20} minSize={10} maxSize={40} className="overflow-hidden">
+              <AppSidebar />
+            </Panel>
+            <PanelResizeHandle className="w-1 bg-border hover:bg-primary/50 transition-colors cursor-col-resize active:bg-primary" />
+            <Panel defaultSize={80} className="flex flex-col overflow-hidden">
+              <main className="flex-1 overflow-auto w-full">
+                <AppRoutes />
+              </main>
+            </Panel>
+          </PanelGroup>
+        </div>
+
+        <main className="md:hidden flex-1 overflow-auto w-full">
+          <AppRoutes />
+        </main>
+      </div>
+    </BrowserRouter>
+  );
+}
+
+const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <PaymentNotificationWatcher />
-            <div className="w-full h-screen flex flex-col">
-              {/* Mobile header (hidden on desktop) */}
-              <header className="md:hidden sticky top-0 z-50 bg-background border-b">
-                <div className="flex items-center justify-between px-4 h-14">
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    onClick={() => setSheetOpen(true)}
-                    aria-label="Open navigation menu"
-                  >
-                    <Menu className="h-6 w-6" />
-                  </Button>
-                  <h1 className="font-bold">{APP_NAME}</h1>
-                  <div className="w-10" /> {/* Spacer for centering */}
-                </div>
-              </header>
-
-              {/* Mobile sidebar (Sheet) */}
-              <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-                <SheetContent side="left" className="p-0 w-[280px]">
-                  <AppSidebar />
-                </SheetContent>
-              </Sheet>
-
-              {/* Desktop layout */}
-              <div className="hidden md:flex flex-1 overflow-hidden">
-                <PanelGroup direction="horizontal" className="w-full h-full">
-                  <Panel defaultSize={20} minSize={10} maxSize={40} className="overflow-hidden">
-                    <AppSidebar />
-                  </Panel>
-                  <PanelResizeHandle className="w-1 bg-border hover:bg-primary/50 transition-colors cursor-col-resize active:bg-primary" />
-                  <Panel defaultSize={80} className="flex flex-col overflow-hidden">
-                    <main className="flex-1 overflow-auto w-full">
-                      <AppRoutes />
-                    </main>
-                  </Panel>
-                </PanelGroup>
-              </div>
-
-              {/* Mobile content */}
-              <main className="md:hidden flex-1 overflow-auto w-full">
-                <AppRoutes />
-              </main>
-            </div>
-          </BrowserRouter>
-        </TooltipProvider>
+        <PageTitleProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <AppContent />
+          </TooltipProvider>
+        </PageTitleProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

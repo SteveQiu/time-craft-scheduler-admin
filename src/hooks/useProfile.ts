@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import type { User } from '@supabase/supabase-js';
 import type { ProfileData, SaveProfileVariables } from '@/pages/profile/types';
+import { useLocalBookmarks } from '@/hooks/useLocalBookmarks';
 
 interface UseProfileOptions {
   slug: string | undefined;
@@ -15,6 +16,7 @@ export function useProfile({ slug, user, onSaveSuccess }: UseProfileOptions) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isBookmarked, setIsBookmarked] = useState(false);
+  const localBookmarks = useLocalBookmarks();
 
   const isOwnProfile = !slug;
   const isUuid = slug
@@ -51,9 +53,16 @@ export function useProfile({ slug, user, onSaveSuccess }: UseProfileOptions) {
   });
 
   useQuery({
-    queryKey: ['bookmark-status', profile?.id, user?.id],
+    queryKey: ['bookmark-status', profile?.id, user?.id, localBookmarks.localBookmarkIds],
     queryFn: async () => {
-      if (!user || !profile || isOwnProfile) return null;
+      if (isOwnProfile) return null;
+      if (!user) {
+        if (profile?.id) {
+          setIsBookmarked(localBookmarks.hasLocalBookmark(profile.id));
+        }
+        return null;
+      }
+      if (!profile) return null;
       const { data, error } = await (supabase as any)
         .from('bookmarks')
         .select('id')
@@ -67,7 +76,7 @@ export function useProfile({ slug, user, onSaveSuccess }: UseProfileOptions) {
       }
       return data;
     },
-    enabled: !!user && !!profile && !isOwnProfile,
+    enabled: !!profile && !isOwnProfile,
   });
 
   const { data: avgRating } = useQuery({
@@ -177,6 +186,47 @@ export function useProfile({ slug, user, onSaveSuccess }: UseProfileOptions) {
     refetchPhotos();
   };
 
+  const handleAvatarUpload = async (file: File) => {
+    if (!user || !profile) return;
+
+    try {
+      const compressed = await compressImage(file);
+      const path = `${user.id}/avatar-${Date.now()}.jpg`;
+      const { error: uploadError } = await supabase.storage
+        .from('profile-photos')
+        .upload(path, compressed);
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage.from('profile-photos').getPublicUrl(path);
+      const publicUrl = urlData.publicUrl;
+
+      if (profile.avatar_url) {
+        const oldPath = profile.avatar_url.split('/profile-photos/')[1];
+        if (oldPath) {
+          supabase.storage.from('profile-photos').remove([oldPath]).catch(() => {});
+        }
+      }
+
+      const { error: dbError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: publicUrl } as any)
+        .eq('id', user.id);
+
+      if (dbError) {
+        await supabase.storage.from('profile-photos').remove([path]);
+        throw dbError;
+      }
+
+      queryClient.invalidateQueries({ queryKey: ['profile', slug, user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['browse-openings'] });
+      queryClient.invalidateQueries({ queryKey: ['bookmarks-with-details'] });
+      toast({ title: 'Profile picture updated' });
+    } catch (err: any) {
+      toast({ title: 'Upload failed', description: err.message, variant: 'destructive' });
+    }
+  };
+
   const saveMutation = useMutation({
     mutationFn: async ({ form, address, privacySettings }: SaveProfileVariables) => {
       if (!user) throw new Error('Not authenticated');
@@ -201,6 +251,7 @@ export function useProfile({ slug, user, onSaveSuccess }: UseProfileOptions) {
           skills: form.skills,
           hourly_rate: form.hourly_rate,
           profile_url: form.profile_url || null,
+          social_links: form.social_links || {},
           address_public: privacySettings.address_public,
           phone_public: privacySettings.phone_public,
           email_public: privacySettings.email_public,
@@ -221,7 +272,24 @@ export function useProfile({ slug, user, onSaveSuccess }: UseProfileOptions) {
   });
 
   const handleToggleBookmark = async () => {
-    if (!user || !profile || isOwnProfile) return;
+    if (!profile || isOwnProfile) return;
+    
+    if (!user) {
+      if (localBookmarks.hasLocalBookmark(profile.id)) {
+        localBookmarks.removeLocalBookmark(profile.id);
+        setIsBookmarked(false);
+        toast({ title: 'Removed from local bookmarks' });
+      } else {
+        localBookmarks.addLocalBookmark(profile.id);
+        setIsBookmarked(true);
+        toast({
+          title: 'Saved to your bookmark list',
+          description: 'Sign in to save to your account.',
+        });
+      }
+      return;
+    }
+
     try {
       if (isBookmarked) {
         const { error } = await (supabase as any)
@@ -269,6 +337,7 @@ export function useProfile({ slug, user, onSaveSuccess }: UseProfileOptions) {
     isOwnProfile,
     handlePhotoUpload,
     handlePhotoDelete,
+    handleAvatarUpload,
     saveMutation,
     handleToggleBookmark,
     shareUrl,

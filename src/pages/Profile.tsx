@@ -8,20 +8,29 @@ import { ReportDialog } from '@/components/ReportDialog';
 import { PhotoLightbox } from '@/components/PhotoLightbox';
 import { ArrowLeft, Camera } from 'lucide-react';
 import { useSubscription } from '@/hooks/useSubscription';
+import { usePageTitle } from '@/context/PageTitleContext';
 import { useProfile } from '@/hooks/useProfile';
 import { useWorkplaceAddresses } from '@/hooks/useWorkplaceAddresses';
 import { ProfileHeader } from './profile/ProfileHeader';
 import { ProfileAbout } from './profile/ProfileAbout';
+import { ProfileSocialLinks } from './profile/ProfileSocialLinks';
 import { ProfileSkillsRate } from './profile/ProfileSkillsRate';
 import { ProfileAddress, ProfileAddressHeaderActions } from './profile/ProfileAddress';
 import { ProfilePhotos } from './profile/ProfilePhotos';
-import type { AddressData, AddressVisibility, FormState, PrivacySettings } from './profile/types';
+import type {
+  AddressData,
+  AddressVisibility,
+  FormState,
+  PrivacySettings,
+  SocialLinks,
+} from './profile/types';
 
 export default function Profile() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { isPremium } = useSubscription();
+  const { setTitle, resetTitle } = usePageTitle();
 
   const [editing, setEditing] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
@@ -54,6 +63,7 @@ export default function Profile() {
     skills: [],
     hourly_rate: 0,
     profile_url: '',
+    social_links: {},
   });
   const [privacySettings, setPrivacySettings] = useState<PrivacySettings>({
     address_public: false,
@@ -73,6 +83,7 @@ export default function Profile() {
     isOwnProfile,
     handlePhotoUpload,
     handlePhotoDelete,
+    handleAvatarUpload,
     saveMutation,
     handleToggleBookmark,
     shareUrl,
@@ -92,6 +103,7 @@ export default function Profile() {
         skills: profile.skills || [],
         hourly_rate: profile.hourly_rate || 0,
         profile_url: profile.profile_url || '',
+        social_links: profile.social_links || {},
       });
       setPrivacySettings({
         address_public: profile.address_public ?? false,
@@ -109,6 +121,16 @@ export default function Profile() {
       if (savedVisibility) setAddressVisibility(JSON.parse(savedVisibility));
     }
   }, [profile]);
+
+  useEffect(() => {
+    if (profile?.full_name) {
+      setTitle(profile.full_name);
+    } else {
+      resetTitle();
+    }
+
+    return () => resetTitle();
+  }, [profile?.full_name, resetTitle, setTitle]);
 
   if (isLoading) {
     return (
@@ -131,6 +153,8 @@ export default function Profile() {
       </div>
     );
   }
+
+  const hasSocialLinks = Object.values((profile.social_links || {}) as SocialLinks).some(Boolean);
 
   return (
     <div className="p-6 space-y-6 max-w-3xl mx-auto">
@@ -166,6 +190,7 @@ export default function Profile() {
             onNavigateAuth={() =>
               navigate(`/auth?returnTo=${encodeURIComponent(window.location.pathname)}`)
             }
+            onAvatarUpload={handleAvatarUpload}
           />
         </CardContent>
       </Card>
@@ -209,6 +234,22 @@ export default function Profile() {
           />
         </CardContent>
       </Card>
+
+      {(editing || hasSocialLinks) && (
+        <Card className="shadow-soft border-card-border">
+          <CardHeader>
+            <CardTitle className="text-lg">Social Media</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <ProfileSocialLinks
+              profile={profile}
+              editing={editing}
+              form={form}
+              onFormChange={setForm}
+            />
+          </CardContent>
+        </Card>
+      )}
 
       <Card className="shadow-soft border-card-border">
         <CardHeader>

@@ -9,6 +9,7 @@ export const ROUTES = {
   appointmentDetail: '/appointments/:id',
   openingDetail: '/openings/:id',
   auth: '/auth',
+  authConfirm: '/auth/confirm',
   settings: '/settings',
   profile: '/profile',
   profileSlug: '/profile/:slug',
