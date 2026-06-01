@@ -1,3 +1,4 @@
+import { addMonths } from 'date-fns';
 import type { NewOpeningForm } from './types';
 import { serializeLocation } from '@/lib/address';
 
@@ -99,6 +100,7 @@ export const validateOpeningForm = (
   newOpening: NewOpeningForm,
   isOrgMode: boolean,
   selectedDate: Date,
+  isPremium: boolean,
 ): { [key: string]: string } => {
   const newErrors: { [key: string]: string } = {};
 
@@ -152,8 +154,11 @@ export const validateOpeningForm = (
   if (newOpening.multipleDates && newOpening.dateRangeStart && newOpening.dateRangeEnd) {
     const startDate = new Date(newOpening.dateRangeStart);
     const endDate = new Date(newOpening.dateRangeEnd);
+    const maxEndDate = addMonths(today, isPremium ? 3 : 1);
     if (startDate > endDate) {
       newErrors.dateRangeEnd = 'End date must be after start date';
+    } else if (endDate > maxEndDate) {
+      newErrors.dateRangeEnd = `End date cannot be later than ${isPremium ? '3 months' : '1 month'} from today`;
     }
   }
 

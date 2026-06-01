@@ -112,7 +112,7 @@ export function Calendar() {
     editForm, editingOpening, setEditingOpening, setEditForm, openings, setOpenings,
     selectedOpeningIds, setSelectedOpeningIds, setLoading, setIsEditSaving,
     loadOpeningsForMonth, getWorkerRate, selfWorkerName, providerPaymentMethods,
-    workerData, ownProfile, getOrgWorkerSkills, acceptedWorkers, setErrors, setShowAddOpening,
+    workerData, ownProfile, isPremium, getOrgWorkerSkills, acceptedWorkers, setErrors, setShowAddOpening,
   });
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -252,6 +252,7 @@ export function Calendar() {
         loading={loading}
         user={user}
         isOrgMode={isOrgMode}
+        isPremium={isPremium}
         acceptedWorkers={acceptedWorkers}
         selfWorkerName={selfWorkerName}
         getWorkerSkills={getWorkerSkills}

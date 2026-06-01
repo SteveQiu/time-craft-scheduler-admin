@@ -21,6 +21,7 @@ export function SubscriptionTab() {
     'Priority support',
     'Confirmation emails sent to bookers on every booking',
     'Custom Inquiry — open your store for direct contact requests (email, phone, social links)',
+    'Custom Inquiry — listed in the browse page for everyday advertisement',
   ];
 
   if (loadingSubscription) {

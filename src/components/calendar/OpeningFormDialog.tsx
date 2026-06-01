@@ -60,6 +60,7 @@ interface OpeningFormDialogProps {
   loading: boolean;
   user: { id: string } | null | undefined;
   isOrgMode: boolean;
+  isPremium: boolean;
   acceptedWorkers: AcceptedWorker[];
   selfWorkerName: string;
   getWorkerSkills: (name: string) => string[];
@@ -85,6 +86,7 @@ export function OpeningFormDialog({
   loading,
   user,
   isOrgMode,
+  isPremium,
   acceptedWorkers,
   selfWorkerName,
   getWorkerSkills,
@@ -201,6 +203,7 @@ export function OpeningFormDialog({
               setNewOpening={setNewOpening}
               errors={errors}
               setErrors={setErrors}
+              isPremium={isPremium}
             />
           )}
 

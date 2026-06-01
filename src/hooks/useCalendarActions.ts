@@ -30,6 +30,7 @@ interface UseCalendarActionsParams {
   providerPaymentMethods: { id: string; label: string; type: string }[];
   workerData: OrgWorker[];
   ownProfile: { full_name: string | null; skills: string[]; hourly_rate: number } | undefined;
+  isPremium: boolean;
   getOrgWorkerSkills: (name: string) => string[];
   acceptedWorkers: OrgWorker[];
   setErrors: React.Dispatch<React.SetStateAction<{ [key: string]: string }>>;
@@ -60,6 +61,7 @@ export function useCalendarActions({
   providerPaymentMethods,
   workerData,
   ownProfile,
+  isPremium,
   getOrgWorkerSkills,
   acceptedWorkers,
   setErrors,
@@ -139,7 +141,7 @@ export function useCalendarActions({
   };
 
   const validateForm = () => {
-    const newErrors = validateOpeningForm(newOpening, isOrgMode, selectedDate);
+    const newErrors = validateOpeningForm(newOpening, isOrgMode, selectedDate, isPremium);
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };

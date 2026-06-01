@@ -1,4 +1,5 @@
 import React from 'react';
+import { addMonths, format } from 'date-fns';
 import { Label } from '../ui/label';
 import { Input } from '../ui/input';
 import type { NewOpeningForm } from './types';
@@ -8,12 +9,7 @@ interface OpeningDateRangeSectionProps {
   setNewOpening: React.Dispatch<React.SetStateAction<NewOpeningForm>>;
   errors: { [key: string]: string };
   setErrors: React.Dispatch<React.SetStateAction<{ [key: string]: string }>>;
-}
-
-function twoMonthsFromNow(): string {
-  const d = new Date();
-  d.setMonth(d.getMonth() + 2);
-  return d.toISOString().split('T')[0];
+  isPremium: boolean;
 }
 
 export function OpeningDateRangeSection({
@@ -21,9 +17,11 @@ export function OpeningDateRangeSection({
   setNewOpening,
   errors,
   setErrors,
+  isPremium,
 }: OpeningDateRangeSectionProps) {
-  const maxDate = twoMonthsFromNow();
-  const today = new Date().toISOString().split('T')[0];
+  const today = format(new Date(), 'yyyy-MM-dd');
+  const maxStartDate = format(addMonths(new Date(), 1), 'yyyy-MM-dd');
+  const maxEndDate = format(addMonths(new Date(), isPremium ? 3 : 1), 'yyyy-MM-dd');
 
   return (
     <>
@@ -33,7 +31,7 @@ export function OpeningDateRangeSection({
           type="date"
           value={newOpening.dateRangeStart}
           min={today}
-          max={maxDate}
+          max={maxStartDate}
           onChange={(e) => {
             setNewOpening({ ...newOpening, dateRangeStart: e.target.value });
             setErrors(prev => ({ ...prev, dateRangeStart: '' }));
@@ -48,7 +46,7 @@ export function OpeningDateRangeSection({
           type="date"
           value={newOpening.dateRangeEnd}
           min={newOpening.dateRangeStart || today}
-          max={maxDate}
+          max={maxEndDate}
           onChange={(e) => {
             setNewOpening({ ...newOpening, dateRangeEnd: e.target.value });
             setErrors(prev => ({ ...prev, dateRangeEnd: '' }));
