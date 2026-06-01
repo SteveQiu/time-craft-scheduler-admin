@@ -29,6 +29,9 @@ interface PendingGroupSectionProps {
   onReject: (id: string) => void;
   onCancel: (id: string) => void;
   navigate: (path: string) => void;
+  flaggedCustomerIds: Map<string, { reason: string; notes: string | null }>;
+  onFlagCustomer: (userId: string, name: string, appointmentId: string) => void;
+  onUnflagCustomer: (userId: string, name: string) => void;
   isPremium: boolean;
   attendanceStatsMap: Map<string, { totalCount: number; flaggedCount: number; attendancePct: number }>;
 }
@@ -51,6 +54,9 @@ export function PendingGroupSection({
   onReject,
   onCancel,
   navigate,
+  flaggedCustomerIds,
+  onFlagCustomer,
+  onUnflagCustomer,
   isPremium,
   attendanceStatsMap,
 }: PendingGroupSectionProps) {
@@ -128,6 +134,10 @@ export function PendingGroupSection({
                     appointment={apt} 
                     navigate={navigate} 
                     isPremium={isPremium} 
+                    canManage={isOrgView || apt.provider_id === userId}
+                    flaggedCustomerIds={flaggedCustomerIds}
+                    onFlagCustomer={onFlagCustomer}
+                    onUnflagCustomer={onUnflagCustomer}
                     attendanceStats={apt.user_id ? attendanceStatsMap.get(apt.user_id) : undefined} 
                   />
                 </div>

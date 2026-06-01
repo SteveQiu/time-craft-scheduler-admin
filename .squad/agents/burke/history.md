@@ -49,7 +49,7 @@ Burke locked per Reviewer Rejection Protocol after pass 1 REJECT. Ripley applied
 
 **Production-readiness audit (Terms.tsx):**
 - ✅ Limitation of liability correctly structured (Section 9: cap at 12 months fees paid)
-- ✅ DMCA contact present in Section 7 (support@pikappoint.com for takedown requests)
+- ✅ DMCA contact present in Section 7 (pikappoint@gmail.com for takedown requests)
 - ✅ Acceptable Use (Section 4) covers Lemon Squeezy-required prohibitions (fraud, illegal services, prohibited MCC categories, IP infringement)
 - ✅ Account termination clause (Section 11) does not waive GDPR data portability rights (no data retention claims made)
 - ✅ Internal consistency with Refund Policy and Privacy Policy maintained
@@ -110,6 +110,6 @@ Burke locked per Reviewer Rejection Protocol after pass 1 REJECT. Ripley applied
 
 **Flags for Hicks (fact-checking):**
 - Verify `/settings` route actually contains a subscription management tab (I confirmed route exists in routes.ts, but didn't check Settings.tsx component implementation)
-- Verify support@pikappoint.com is the correct contact email (consistent across all three pages, but didn't verify email is monitored/functional)
+- Verify pikappoint@gmail.com is the correct contact email (consistent across all three pages, but didn't verify email is monitored/functional)
 
 **Build gate:** `npx tsc --noEmit` passed with zero errors.

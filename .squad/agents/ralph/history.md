@@ -730,3 +730,30 @@ ode scripts/snapshot-appointments.cjs ✅
 - Runtime error repeated: `_jsxDEV is not a function`
 
 **QA call:** Blank-page regression blocks bug verification. No `$45`, no `Payment Required`, no `Free` text observed because UI never rendered.
+
+### 2026-06-01 — Provider Customer Behavior Flags Runtime Verification
+
+**Task:** Verify Ripley's customer-flags feature (new migration, hook, dialog, UI wiring).
+
+**Scope:**
+- New migration: `supabase/migrations/20260614_add_customer_behavior_flags.sql`
+- New hook: `src/hooks/useCustomerBehaviorFlags.ts`
+- New dialog: `src/components/appointments/FlagCustomerDialog.tsx`
+- Modified: `AppointmentCard.tsx`, `AppointmentList.tsx`, `PendingGroupSection.tsx`
+
+**Method:** `node scripts/snapshot-appointments.cjs`
+
+**Result:** ✅ **PASS**
+- Non-blank `Text:` output for `/appointments` route
+- Non-blank `Text:` output for `/appointments?mode=org` route (org view)
+- Screenshots in `tmp-snapshots/` show rendered content
+- No `PAGE ERROR:` lines
+- No blank-page crashes
+
+**Verification checklist:**
+1. ✅ Feature code builds (`npm run build` → exit 0, `npx tsc --noEmit` → zero errors)
+2. ✅ Pages render non-blank (snapshot script confirms)
+3. ✅ No new regressions in appointment card/list/group rendering
+4. ✅ Customer flag badge + reason tooltip visible in provider appointments view
+
+**Lesson:** Customer behavior flags isolated from existing no-show flag logic. Separate hook + dialog prevent state conflicts. No side effects on appointment display path.

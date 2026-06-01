@@ -47,7 +47,7 @@ Dallas retired due to repeated critical failures (banned from Appointments.tsx, 
 
 **Build:** tsc passes, zero errors
 
-**Flags for Hicks:** Settings → Subscription route exists but NO cancel button implemented; support@pikappoint.com monitoring unverified
+**Flags for Hicks:** Settings → Subscription route exists but NO cancel button implemented; pikappoint@gmail.com monitoring unverified
 
 ### 2026-05-12: Legal fact-check report
 **By:** Hicks (Legal Fact-Checker)  
@@ -63,7 +63,7 @@ Dallas retired due to repeated critical failures (banned from Appointments.tsx, 
 2. **Refund.tsx Section 3 — cancellation UX mismatch** (line 58)
    - Text: "To cancel, navigate to: Settings → Subscription"
    - Reality: SubscriptionTab exists but has NO cancel button
-   - Options: (a) add cancel button to SubscriptionTab, (b) link to Lemon Squeezy portal, (c) route through support@pikappoint.com
+   - Options: (a) add cancel button to SubscriptionTab, (b) link to Lemon Squeezy portal, (c) route through pikappoint@gmail.com
    - Recommendation: (b) or (c) safest until UX built
 
 3. **Terms.tsx Section 5 — contradicts Lemon Squeezy Buyer Terms** (line 67)
@@ -76,7 +76,7 @@ Dallas retired due to repeated critical failures (banned from Appointments.tsx, 
 - Terms.tsx liability cap vague (payment disputes = Lemon Squeezy responsibility, clarify split)
 - Privacy.tsx children's age: GDPR default 16 vs US COPPA 13 (clarify market)
 
-**Unverifiable:** support@pikappoint.com staffing/monitoring
+**Unverifiable:** pikappoint@gmail.com staffing/monitoring
 
 **Sources:** Directive 2011/83/EU Article 16(m), UK CCR 2013 Regulation 37, ACL s 54-56/60 (verified accurate), Lemon Squeezy Buyer Terms, GDPR Articles 12/15-21
 
@@ -86,7 +86,7 @@ Dallas retired due to repeated critical failures (banned from Appointments.tsx, 
 **By:** Ripley  
 **Scope:** Terms.tsx, Privacy.tsx, Refund.tsx created + routes wired
 
-**Structure:** Shadcn Card, ~600-1000 words/page, GDPR-aware, subscription model (7-day refund first-time only, no proration), Supabase + Lemon Squeezy disclosures, contact: support@pikappoint.com
+**Structure:** Shadcn Card, ~600-1000 words/page, GDPR-aware, subscription model (7-day refund first-time only, no proration), Supabase + Lemon Squeezy disclosures, contact: pikappoint@gmail.com
 
 **Files:** 3 new legal pages, routes.ts + App.tsx + Auth.tsx modified
 
@@ -181,7 +181,7 @@ Subscriptions are per-user only. No org-level plan column. `subscriptions` table
 ### 2026-05-12: Lemon Squeezy customer portal URL pattern
 **By:** Ripley (decision, Hicks approved)
 
-**Pattern:** `VITE_LEMONSQUEEZY_PORTAL_URL` env var → LS customer portal URL (e.g. `https://[store-slug].lemonsqueezy.com/billing`). When set, Cancel button opens portal. When absent, button disabled, helper text "contact support@pikappoint.com". No API call from frontend; state change via LS webhook `subscription_cancelled` event (same as upgrade flow via VITE_LEMONSQUEEZY_CHECKOUT_URL).
+**Pattern:** `VITE_LEMONSQUEEZY_PORTAL_URL` env var → LS customer portal URL (e.g. `https://[store-slug].lemonsqueezy.com/billing`). When set, Cancel button opens portal. When absent, button disabled, helper text "contact pikappoint@gmail.com". No API call from frontend; state change via LS webhook `subscription_cancelled` event (same as upgrade flow via VITE_LEMONSQUEEZY_CHECKOUT_URL).
 
 **Rationale:** Graceful degradation; LS handles self-service portal; no need for custom cancel UI. Parallels existing checkout URL pattern.
 
@@ -461,3 +461,40 @@ Sidebar footer now contains **internal** `/help` route link (not external GitHub
 - Keeps user in-app instead of external bounce
 - Video accessible but not the only content
 - Consistent routing pattern (no external links in sidebar nav)
+
+### 2026-06-01: Customer behavior flags — provider-owned, rendering strategy
+**By:** Ripley (Frontend Dev)
+
+**Decision:** Render provider-owned customer behavior flags from single `(flagged_by, user_id)` source, surface in both `AppointmentCard` and `PendingGroupSection` booker info.
+
+**Why:** Providers encounter same customer across normal cards + grouped pending requests. Showing consistent flag state in both avoids split-brain UX. Customer-level flags separate from existing per-appointment no-show reporting.
+
+**Files:**
+- New: `src/hooks/useCustomerBehaviorFlags.ts` (returns `flaggedCustomerIds` map + flag/unflag mutations)
+- New: `src/components/appointments/FlagCustomerDialog.tsx` (reason select + notes textarea)
+- Modified: `AppointmentCard.tsx`, `AppointmentList.tsx`, `PendingGroupSection.tsx`
+
+### 2026-06-01: Profile address edits — single source of truth
+**By:** Ripley (Frontend Dev)
+
+**Decision:** Settings addresses = only edit source. Profile edit mode uses saved-address Select only.
+
+**Rules:**
+- If saved addresses exist: show Select dropdown only
+- If none exist: show CTA to `/settings?tab=addresses`
+- Do NOT offer ad-hoc profile-only address entry
+
+**Rationale:** One source of truth. Less conflicting state. Clear path for users to add/manage addresses.
+
+**Files:** `src/pages/profile/ProfileAddress.tsx`
+
+### 2026-06-01: Static landing page canonical source
+**By:** Ripley (Frontend Dev)
+
+**Decision:** `public/landing.html` is canonical marketing landing page for signed-out traffic.
+
+**Why:** Static HTML renders immediately, SEO-crawlable, safer for ad scripts. Unauthenticated `/` redirects to `/landing.html` via `window.location.replace()`.
+
+**Keep:** `src/pages/Landing.tsx` as reference/fallback source copy.
+
+**Files:** `public/landing.html`, `src/App.tsx`

@@ -86,7 +86,7 @@ export default function Terms() {
               You retain ownership of any content or data you submit to {APP_NAME} (such as profile information, appointment details, or photos). By submitting content, you grant us a worldwide, non-exclusive license to use, display, and process your content to provide and improve our services. You are solely responsible for the accuracy and legality of your content.
             </p>
             <p className="mt-2">
-              If you believe content on {APP_NAME} infringes your intellectual property rights (including copyrighted profile photos or service descriptions), please submit a takedown request to support@pikappoint.com with details of the infringing material and your ownership claim.
+              If you believe content on {APP_NAME} infringes your intellectual property rights (including copyrighted profile photos or service descriptions), please submit a takedown request to pikappoint@gmail.com with details of the infringing material and your ownership claim.
             </p>
           </section>
 
@@ -136,7 +136,7 @@ export default function Terms() {
           <section>
             <h2 className="text-xl font-semibold mt-6 mb-2">14. Contact</h2>
             <p>
-              If you have questions about these Terms of Service, please contact us at support@pikappoint.com.
+              If you have questions about these Terms of Service, please contact us at pikappoint@gmail.com.
             </p>
           </section>
 

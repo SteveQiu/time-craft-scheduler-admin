@@ -1,5 +1,6 @@
 ﻿import React from 'react';
 import { Calendar, ChevronDown, ChevronUp } from 'lucide-react';
+import { toast } from 'sonner';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -7,7 +8,9 @@ import { getWeekStartSunday, formatWeekLabel, DateFilter } from './calendarExpor
 import { Appointment } from './types';
 import { AppointmentCard } from './AppointmentCard';
 import { BulkActionBar } from './BulkActionBar';
+import { FlagCustomerDialog } from './FlagCustomerDialog';
 import { PendingGroupSection } from './PendingGroupSection';
+import { useCustomerBehaviorFlags } from '@/hooks/useCustomerBehaviorFlags';
 
 interface AppointmentListProps {
   activeAppointments: Appointment[];
@@ -85,6 +88,51 @@ export function AppointmentList({
   isPremium,
   attendanceStatsMap,
 }: AppointmentListProps) {
+  const { flaggedCustomerIds, flagCustomer, unflagCustomer } = useCustomerBehaviorFlags({ userId });
+  const [flagCustomerDialog, setFlagCustomerDialog] = React.useState({
+    open: false,
+    customerId: '',
+    customerName: '',
+    appointmentId: '',
+  });
+
+  const handleOpenFlagCustomer = (customerId: string, customerName: string, appointmentId: string) => {
+    setFlagCustomerDialog({
+      open: true,
+      customerId,
+      customerName,
+      appointmentId,
+    });
+  };
+
+  const handleCloseFlagCustomer = (open: boolean) => {
+    setFlagCustomerDialog((current) => ({
+      ...current,
+      open,
+    }));
+  };
+
+  const handleFlagCustomer = async (customerId: string, reason: string, notes: string, appointmentId?: string) => {
+    try {
+      await flagCustomer(customerId, reason, notes, appointmentId);
+      toast.success('Customer flagged');
+    } catch (error) {
+      console.error('Failed to flag customer', error);
+      toast.error('Failed to flag customer');
+      throw error;
+    }
+  };
+
+  const handleUnflagCustomer = async (customerId: string, customerName: string) => {
+    try {
+      await unflagCustomer(customerId);
+      toast.success(`${customerName} unflagged`);
+    } catch (error) {
+      console.error('Failed to unflag customer', error);
+      toast.error('Failed to unflag customer');
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Active */}
@@ -140,6 +188,9 @@ export function AppointmentList({
             onReject={onReject}
             onCancel={onCancel}
             navigate={navigate}
+            flaggedCustomerIds={flaggedCustomerIds}
+            onFlagCustomer={handleOpenFlagCustomer}
+            onUnflagCustomer={handleUnflagCustomer}
             isPremium={isPremium}
             attendanceStatsMap={attendanceStatsMap}
           />
@@ -190,6 +241,9 @@ export function AppointmentList({
                       flaggedAppointmentIds={flaggedAppointmentIds}
                       onFlag={onFlag}
                       onUnflag={onUnflag}
+                      flaggedCustomerIds={flaggedCustomerIds}
+                      onFlagCustomer={handleOpenFlagCustomer}
+                      onUnflagCustomer={handleUnflagCustomer}
                       isPremium={isPremium}
                       attendanceStats={apt.user_id ? attendanceStatsMap.get(apt.user_id) : undefined}
                     />
@@ -255,6 +309,9 @@ export function AppointmentList({
                   flaggedAppointmentIds={flaggedAppointmentIds}
                   onFlag={onFlag}
                   onUnflag={onUnflag}
+                  flaggedCustomerIds={flaggedCustomerIds}
+                  onFlagCustomer={handleOpenFlagCustomer}
+                  onUnflagCustomer={handleUnflagCustomer}
                   isPremium={isPremium}
                   attendanceStats={a.user_id ? attendanceStatsMap.get(a.user_id) : undefined}
                 />
@@ -271,6 +328,15 @@ export function AppointmentList({
           )
         )}
       </div>
+
+      <FlagCustomerDialog
+        open={flagCustomerDialog.open}
+        onOpenChange={handleCloseFlagCustomer}
+        customerName={flagCustomerDialog.customerName}
+        customerId={flagCustomerDialog.customerId}
+        appointmentId={flagCustomerDialog.appointmentId || undefined}
+        onFlag={handleFlagCustomer}
+      />
     </div>
   );
 }

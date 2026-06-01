@@ -20,8 +20,8 @@ export function SubscriptionTab() {
     'Advanced analytics',
     'Priority support',
     'Confirmation emails sent to bookers on every booking',
-    'Custom Inquiry — open your store for direct contact requests (email, phone, social links)',
-    'Custom Inquiry — listed in the browse page for everyday advertisement',
+    'Active Listing — open your store for direct contact requests (email, phone, social links)',
+    'Active Listing — listed in the browse page for everyday advertisement',
   ];
 
   if (loadingSubscription) {
@@ -82,7 +82,7 @@ export function SubscriptionTab() {
               onClick={() => setShowCancelDialog(true)}
               disabled={!portalUrl}
             >
-              {portalUrl ? 'Cancel Subscription' : 'Cancellation portal coming soon — contact support@pikappoint.com'}
+              {portalUrl ? 'Cancel Subscription' : 'Cancellation portal coming soon — contact pikappoint@gmail.com'}
             </Button>
           </CardContent>
         </Card>

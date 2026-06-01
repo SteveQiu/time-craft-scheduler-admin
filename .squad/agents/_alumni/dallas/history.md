@@ -781,7 +781,7 @@ Built public/landing.html — standalone marketing page for PikAppoint.
 **Stack:** HTML + Tailwind CDN (no build tools)
 **Sections:** Nav, Hero, Features (4), How It Works (3 steps), CTA banner, Footer
 **Design:** Deep indigo/purple (rand-600–rand-900), white bg, Inter font, mobile-first responsive
-**Tech:** Inline SVG icons, SEO meta tags (og:title, description, viewport), support@pikappoint.com in footer
+**Tech:** Inline SVG icons, SEO meta tags (og:title, description, viewport), pikappoint@gmail.com in footer
 
 ## Learnings
 

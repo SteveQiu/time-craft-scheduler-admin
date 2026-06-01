@@ -111,7 +111,7 @@ export default function Privacy() {
               <li><strong>Withdrawal of Consent:</strong> Withdraw consent for data processing where consent was the legal basis</li>
             </ul>
             <p className="mt-2">
-              To exercise these rights, contact us at support@pikappoint.com. We will respond within 30 days.
+              To exercise these rights, contact us at pikappoint@gmail.com. We will respond within 30 days.
             </p>
           </section>
 
@@ -142,7 +142,7 @@ export default function Privacy() {
               If you have questions or concerns about this Privacy Policy or how we handle your data, please contact us at:
             </p>
             <p className="mt-2">
-              Email: support@pikappoint.com
+              Email: pikappoint@gmail.com
             </p>
           </section>
 

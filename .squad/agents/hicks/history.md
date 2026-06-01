@@ -62,7 +62,7 @@ Hicks is the gate between Burke's confident-sounding copy and the production lis
 
 **Accurate (✅):** ACL s60 services guarantee, Lemon Squeezy merchant role, DMCA contact, GDPR data subject rights, Supabase disclosure, cookie consent code matches Privacy claims, Settings route exists, prohibited business categories match Lemon Squeezy Terms, 30-day GDPR response timeline
 
-**Unverifiable (❓):** support@pikappoint.com monitoring (recommend Steve confirm)
+**Unverifiable (❓):** pikappoint@gmail.com monitoring (recommend Steve confirm)
 
 **Primary sources fetched:** EU CRD 2011/83/EU Article 16(m), UK CCR 2013 Regulation 37, ACL s54-56/60, GDPR Articles 8/12/15-21, CCPA (CA AG site), Lemon Squeezy Terms + Buyer Terms
 

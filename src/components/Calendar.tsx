@@ -184,7 +184,7 @@ export function Calendar() {
           {user && (
             <Button
               variant={ownProfile?.custom_inquiry_open ? 'default' : 'outline'}
-              className={`flex items-center space-x-2 ${ownProfile?.custom_inquiry_open ? 'bg-amber-500 hover:bg-amber-600 text-white' : ''}`}
+              className={`flex items-center space-x-2 ${ownProfile?.custom_inquiry_open ? 'bg-green-500 hover:bg-green-600 text-white' : ''}`}
               onClick={handleToggleInquiry}
               disabled={isTogglingInquiry}
             >
@@ -197,8 +197,8 @@ export function Calendar() {
               )}
               <span>
                 {ownProfile?.custom_inquiry_open
-                  ? 'Keep Store Closed for Custom Inquiry'
-                  : 'Keep Store Open for Custom Inquiry'}
+                  ? 'Active Listing & Custom time'
+                  : 'Deactivate Listing & Custom time'}
               </span>
             </Button>
           )}

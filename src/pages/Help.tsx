@@ -8,7 +8,9 @@ export default function Help() {
     <div className="p-6 space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-foreground">Help & Tutorial</h1>
-        <p className="text-muted-foreground mt-2">Learn how to use PikAppoint</p>
+        <p className="text-muted-foreground mt-2">
+          Learn how to use PikAppoint. Support local providers, celebrate every person's skills and profession, and help our community thrive together.
+        </p>
       </div>
 
       {/* Video Card */}

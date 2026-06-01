@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar, Clock, MapPin, Mail, Phone, User, FileImage, CalendarPlus, CreditCard, Flag, FlagOff } from 'lucide-react';
+import { Calendar, Clock, MapPin, Mail, Phone, User, FileImage, CalendarPlus, CreditCard, Flag, FlagOff, ShieldAlert, ShieldCheck } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -21,15 +21,41 @@ const getStatusColor = (status: string) => {
   }
 };
 
+const customerFlagReasonLabels: Record<string, string> = {
+  harassment: 'Harassment',
+  inappropriate_language: 'Inappropriate Language',
+  property_damage: 'Property Damage',
+  threats: 'Threats / Threatening Behaviour',
+  no_show_repeated: 'Repeated No-Shows',
+  other: 'Other',
+};
+
+const formatCustomerFlagReason = (reason: string) => customerFlagReasonLabels[reason] ?? reason;
+
 interface BookerInfoProps {
   appointment: Appointment;
   navigate: (path: string) => void;
   isPremium: boolean;
+  canManage: boolean;
+  flaggedCustomerIds: Map<string, { reason: string; notes: string | null }>;
+  onFlagCustomer: (userId: string, name: string, appointmentId: string) => void;
+  onUnflagCustomer: (userId: string, name: string) => void;
   attendanceStats?: { totalCount: number; flaggedCount: number; attendancePct: number };
 }
 
-export function BookerInfo({ appointment, navigate, isPremium, attendanceStats }: BookerInfoProps) {
+export function BookerInfo({
+  appointment,
+  navigate,
+  isPremium,
+  canManage,
+  flaggedCustomerIds,
+  onFlagCustomer,
+  onUnflagCustomer,
+  attendanceStats,
+}: BookerInfoProps) {
   const bookerSlug = appointment.booker_slug;
+  const customerFlag = appointment.user_id ? flaggedCustomerIds.get(appointment.user_id) : undefined;
+
   return (
     <div className="flex flex-col gap-2">
       <div className="flex flex-col sm:flex-row sm:items-center gap-2">
@@ -50,6 +76,18 @@ export function BookerInfo({ appointment, navigate, isPremium, attendanceStats }
               {appointment.booker_name || 'Unknown'}
             </span>
           )}
+          {customerFlag && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="inline-flex items-center rounded-full bg-red-100 px-1.5 py-0.5 text-[10px] font-semibold text-red-600 dark:bg-red-900/30 dark:text-red-400">
+                    ⚑
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>{formatCustomerFlagReason(customerFlag.reason)}</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
         </div>
         {(appointment.booker_email || appointment.booker_phone) && (
           <div className="flex items-center gap-3 text-sm text-muted-foreground">
@@ -69,11 +107,31 @@ export function BookerInfo({ appointment, navigate, isPremium, attendanceStats }
           </div>
         )}
       </div>
-      {isPremium && attendanceStats && (
-        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-          <span className={attendanceStats.attendancePct >= 90 ? 'text-green-600' : attendanceStats.attendancePct >= 70 ? 'text-yellow-600' : 'text-red-500'}>
-            {attendanceStats.attendancePct}% attended
-          </span>
+      {((isPremium && attendanceStats) || (canManage && appointment.user_id)) && (
+        <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+          {isPremium && attendanceStats && (
+            <span className={attendanceStats.attendancePct >= 90 ? 'text-green-600' : attendanceStats.attendancePct >= 70 ? 'text-yellow-600' : 'text-red-500'}>
+              {attendanceStats.attendancePct}% attended
+            </span>
+          )}
+          {canManage && appointment.user_id && (
+            <Button
+              variant="outline"
+              size="sm"
+              className={customerFlag ? 'border-orange-500 text-orange-600 hover:bg-orange-50' : ''}
+              onClick={(event) => {
+                event.stopPropagation();
+                if (customerFlag) {
+                  onUnflagCustomer(appointment.user_id!, appointment.booker_name || 'this user');
+                } else {
+                  onFlagCustomer(appointment.user_id!, appointment.booker_name || 'this user', appointment.id);
+                }
+              }}
+            >
+              {customerFlag ? <ShieldCheck className="mr-1 h-4 w-4" /> : <ShieldAlert className="mr-1 h-4 w-4" />}
+              {customerFlag ? 'Unflag User' : 'Flag User'}
+            </Button>
+          )}
         </div>
       )}
     </div>
@@ -101,6 +159,9 @@ interface AppointmentCardProps {
   flaggedAppointmentIds: Set<string>;
   onFlag: (appointmentId: string, bookerUserId: string, bookerName: string) => void;
   onUnflag: (appointmentId: string, bookerName: string) => void;
+  flaggedCustomerIds: Map<string, { reason: string; notes: string | null }>;
+  onFlagCustomer: (userId: string, name: string, appointmentId: string) => void;
+  onUnflagCustomer: (userId: string, name: string) => void;
   isPremium: boolean;
   attendanceStats?: { totalCount: number; flaggedCount: number; attendancePct: number };
 }
@@ -124,6 +185,9 @@ export function AppointmentCard({
   flaggedAppointmentIds,
   onFlag,
   onUnflag,
+  flaggedCustomerIds,
+  onFlagCustomer,
+  onUnflagCustomer,
   isPremium,
   attendanceStats,
 }: AppointmentCardProps) {
@@ -333,7 +397,16 @@ export function AppointmentCard({
         {/* Customer info for provider */}
         {canManage && appointment.booker_name && (
           <div className="border-t border-border pt-3">
-            <BookerInfo appointment={appointment} navigate={navigate} isPremium={isPremium} attendanceStats={attendanceStats} />
+            <BookerInfo
+              appointment={appointment}
+              navigate={navigate}
+              isPremium={isPremium}
+              canManage={canManage}
+              flaggedCustomerIds={flaggedCustomerIds}
+              onFlagCustomer={onFlagCustomer}
+              onUnflagCustomer={onUnflagCustomer}
+              attendanceStats={attendanceStats}
+            />
           </div>
         )}
 

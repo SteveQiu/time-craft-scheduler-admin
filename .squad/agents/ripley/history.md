@@ -75,6 +75,34 @@ App is an admin scheduler for organizations. Key pages: Appointments, Workers, B
 
 ## Learnings
 
+### Custom inquiry toggle rename + green active state (2026-06-01)
+
+**Task:** Rename Openings custom inquiry toggle labels and swap active state styling from amber to green.
+
+**Files modified:**
+- `src/components/Calendar.tsx` — active label now `Active Listing & Custom time`; inactive label now `Deactivate Listing & Custom time`; active button styling changed from `bg-amber-500 hover:bg-amber-600` to `bg-green-500 hover:bg-green-600`.
+
+**Pattern:** Openings page custom inquiry toggle lives in `Calendar.tsx`; active visual state comes from the `custom_inquiry_open` branch on the top-right action button.
+
+### Provider customer behavior flags (2026-06-01)
+
+**Task:** Let providers flag customers for improper behaviour across all provider-customer interactions, separate from per-appointment no-show flags.
+
+**Files created:**
+- `supabase/migrations/20260614_add_customer_behavior_flags.sql` — adds provider-owned `customer_behavior_flags` table, RLS policy, and lookup indexes
+- `src/hooks/useCustomerBehaviorFlags.ts` — provider-scoped React Query hook returning `flaggedCustomerIds` map plus flag/unflag mutations with graceful query fallback
+- `src/components/appointments/FlagCustomerDialog.tsx` — shadcn dialog with reason select + optional notes textarea
+
+**Files modified:**
+- `src/components/appointments/AppointmentCard.tsx` — shows customer flag badge/reason tooltip and provider flag/unflag action in `BookerInfo`
+- `src/components/appointments/AppointmentList.tsx` — wires hook, dialog state, toast-backed flag/unflag handlers, and threads customer flag props to cards
+- `src/components/appointments/PendingGroupSection.tsx` — passes the same customer flag props into grouped pending request rows
+
+**Pattern:** Customer behavior flags are scoped by `(flagged_by, user_id)` and rendered from a provider-owned map, so the same flagged state appears in both normal appointment cards and grouped pending rows without touching `appointment_flags`.
+
+**Build gate:** `npx tsc --noEmit` → zero errors. `npm run build` → exit 0.
+**Runtime gate:** Ralph ran `node scripts/snapshot-appointments.cjs`, confirmed non-blank `Text:` output for `/appointments` and `/appointments?mode=org`, and verified screenshots in `tmp-snapshots\`.
+
 ### Profile address select-only edit mode (2026-05-31)
 
 **Task:** Remove free-form profile address entry in edit mode. Profile now uses saved workplace addresses only.
@@ -628,8 +656,20 @@ Exports: `PaymentMethodType` re-export, `CARD_PAYMENT_TYPES`, `NOTE_REQUIRED_TYP
 
 **Build gate:** `npx tsc --noEmit` → 0 errors.
 **QA gate:** Ralph verified all props threaded, port 8080 up, runtime checks pass.
-
+ 
 **Status:** ✅ APPROVED FOR RELEASE
+
+### Subscription settings Active Listing copy (2026-06-01)
+
+**Task:** Rename subscription benefit copy in Settings from `Custom Inquiry` to `Active Listing` while keeping the existing descriptions.
+
+**Files modified:**
+- `src/pages/settings/SubscriptionTab.tsx` — updated the two premium benefit strings to `Active Listing — open your store for direct contact requests (email, phone, social links)` and `Active Listing — listed in the browse page for everyday advertisement`.
+
+**Pattern:** Subscription marketing copy for premium benefits lives in `SubscriptionTab.tsx` as plain strings inside `premiumBenefits`; change only those entries, not unrelated `Custom Inquiry` labels elsewhere.
+
+**Build gate:** `node .\\node_modules\\typescript\\bin\\tsc --noEmit` → 0 errors. `npm.cmd run build` → exit 0.
+**Runtime gate:** Ralph ran `node scripts\\snapshot-appointments.cjs`, confirmed non-blank `Text:` output for `/appointments` and `/appointments?mode=org`, no `PAGE ERROR:` lines, and verified screenshots in `tmp-snapshots\\`.
 
 ## Reminder SMTP premium rollout (2026-05-22)
 

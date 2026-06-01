@@ -1,8 +1,8 @@
 export const APP_CONFIG = {
   name: 'PikAppoint',
-  supportEmail: 'support@pikappoint.com',
-  privacyEmail: 'privacy@pikappoint.com',
-  legalEmail: 'legal@pikappoint.com',
+  supportEmail: 'pikappoint@gmail.com',
+  privacyEmail: 'pikappoint@gmail.com',
+  legalEmail: 'pikappoint@gmail.com',
 } as const;
 
 export const APP_NAME = APP_CONFIG.name;

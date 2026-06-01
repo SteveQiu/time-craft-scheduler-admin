@@ -42,7 +42,7 @@ export default function Refund() {
               <li><strong>Australia:</strong> Non-excludable guarantees under the Australian Consumer Law, including rights to refund for major failures in service quality.</li>
             </ul>
             <p className="mt-2">
-              If you believe you have a statutory right to a refund under local consumer protection law, please contact us at support@pikappoint.com with details of your jurisdiction and the legal basis for your claim.
+              If you believe you have a statutory right to a refund under local consumer protection law, please contact us at pikappoint@gmail.com with details of your jurisdiction and the legal basis for your claim.
             </p>
           </section>
 
@@ -63,7 +63,7 @@ export default function Refund() {
             <h2 className="text-xl font-semibold mt-6 mb-2">4. Billing Disputes and Payment Errors</h2>
             {/* Burke 2026-05-12: Kept billing error clause, clarified Lemon Squeezy merchant-of-record role */}
             <p>
-              If you believe you have been charged in error (e.g., duplicate charges, charges after cancellation, or unauthorized transactions), please contact us immediately at support@pikappoint.com. We will investigate and work with our payment processor to resolve legitimate billing errors.
+              If you believe you have been charged in error (e.g., duplicate charges, charges after cancellation, or unauthorized transactions), please contact us immediately at pikappoint@gmail.com. We will investigate and work with our payment processor to resolve legitimate billing errors.
             </p>
             <p className="mt-2">
               All payments are processed by <strong>Lemon Squeezy</strong>, our merchant of record. Lemon Squeezy handles payment data, transaction processing, and dispute resolution. For payment-specific disputes, you may also contact Lemon Squeezy directly through their support channels.
@@ -90,7 +90,7 @@ export default function Refund() {
               If you have questions about this Refund Policy or believe you have a legitimate refund claim, please contact us at:
             </p>
             <p className="mt-2">
-              Email: <strong>support@pikappoint.com</strong>
+              Email: <strong>pikappoint@gmail.com</strong>
             </p>
           </section>
 
