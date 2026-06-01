@@ -2,11 +2,13 @@ import { Search, Home, Calendar as CalendarIcon, Users, Clock, Settings, LogIn, 
 import { APP_NAME } from '@/config/app';
 import { ROUTES } from '@/config/routes';
 import { useAuth } from '@/hooks/useAuth';
+import { useProfileBranding } from '@/context/ProfileBrandingContext';
 import { useUserRoles } from '@/hooks/useUserRoles';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -17,6 +19,8 @@ export function AppSidebar() {
   const { isUser, isOrganization, isInternalDev, loading: rolesLoading } = useUserRoles();
   const location = useLocation();
   const navigate = useNavigate();
+  const { avatarUrl, providerName } = useProfileBranding();
+  const isWhiteLabel = !!providerName;
   const [viewMode, setViewMode] = useState<'user' | 'org'>('user');
   const [profileName, setProfileName] = useState<string | null>(null);
 
@@ -75,9 +79,33 @@ export function AppSidebar() {
   return (
     <div className="flex flex-col h-full bg-sidebar border-r border-border overflow-hidden">
       {/* Logo */}
-      <div className="flex items-center space-x-2 px-4 py-3 border-b border-border">
-        <CalendarIcon className="h-8 w-8 text-primary flex-shrink-0" />
-        <h1 className="text-lg font-bold text-foreground truncate">{APP_NAME}</h1>
+      <div className="flex items-center space-x-3 px-4 py-3 border-b border-border min-h-[64px]">
+        {isWhiteLabel ? (
+          <>
+            <Avatar className="h-12 w-12 flex-shrink-0">
+              <AvatarImage src={avatarUrl ?? undefined} alt={providerName ?? 'Provider'} />
+              <AvatarFallback className="text-sm bg-primary text-primary-foreground">
+                {(providerName || '?').split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex min-w-0 flex-col">
+              <h1 className="truncate text-2xl font-bold leading-tight text-foreground">{providerName}</h1>
+              <a
+                href="https://pikappoint.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-1 text-[10px] leading-tight text-muted-foreground underline-offset-2 hover:underline"
+              >
+                Powered by {APP_NAME}
+              </a>
+            </div>
+          </>
+        ) : (
+          <>
+            <CalendarIcon className="h-8 w-8 text-primary flex-shrink-0" />
+            <h1 className="text-lg font-bold text-foreground truncate">{APP_NAME}</h1>
+          </>
+        )}
       </div>
 
       {/* Navigation */}

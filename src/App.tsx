@@ -18,6 +18,7 @@ import { Dashboard } from "@/components/Dashboard";
 import { AppSidebar } from "@/components/AppSidebar";
 import { ROUTES } from "@/config/routes";
 import { PageTitleProvider, usePageTitle } from "@/context/PageTitleContext";
+import { ProfileBrandingProvider } from "@/context/ProfileBrandingContext";
 import { useAuth } from "@/hooks/useAuth";
 import { usePaymentNotifications } from "@/hooks/usePaymentNotifications";
 
@@ -140,11 +141,13 @@ const App = () => {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <PageTitleProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <AppContent />
-          </TooltipProvider>
+          <ProfileBrandingProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <AppContent />
+            </TooltipProvider>
+          </ProfileBrandingProvider>
         </PageTitleProvider>
       </AuthProvider>
     </QueryClientProvider>

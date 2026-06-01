@@ -4,16 +4,17 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader } from './ui/card';
 import { Button } from './ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from './ui/alert-dialog';
-import { Calendar as CalendarIcon, Loader2, Share2, ExternalLink, ArrowLeft, Check, Crown, User } from 'lucide-react';
+import { Calendar as CalendarIcon, Loader2, Share2, ExternalLink, ArrowLeft, Check, Crown, User, MessageSquare } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatLocation, parseLocation } from '@/lib/address';
 import { TIME_FORMATS, LOCALE } from '@/config/formats';
 import { ProfilePhotoStrip } from './ProfilePhotoStrip';
+import { CustomInquiryDialog } from './browse/CustomInquiryDialog';
 import { getEffectiveTotal } from '@/lib/utils';
 import { usePremiumReminder } from '@/hooks/usePremiumReminder';
 import { useProviderPayments } from '@/hooks/useProviderPayments';
 import { getMethodLabel } from '@/lib/payment/methods';
-import { OpeningWithProfile, ProviderAccount } from '@/types/browse';
+import type { OpeningWithProfile, ProviderAccount } from '@/types/browse';
 
 function NoAppointmentsState({ onBack }: { onBack: () => void }) {
   return (
@@ -49,6 +50,7 @@ export function BrowseDetail({
   const [copiedSlotId, setCopiedSlotId] = useState<string | null>(null);
   const [calendarMonth, setCalendarMonth] = useState(new Date());
   const [showBookingDialog, setShowBookingDialog] = useState(false);
+  const [showInquiryDialog, setShowInquiryDialog] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<OpeningWithProfile | null>(null);
   const [isBooking, setIsBooking] = useState(false);
   const [isPremium, setIsPremium] = useState(false);
@@ -167,7 +169,7 @@ export function BrowseDetail({
     return <NoAppointmentsState onBack={() => navigate('/browse')} />;
   }
 
-  if (selectedProviderOpenings.length === 0) {
+  if (selectedProviderOpenings.length === 0 && !currentProvider?.is_custom_inquiry) {
     return <NoAppointmentsState onBack={() => navigate('/browse')} />;
   }
 
@@ -188,7 +190,13 @@ export function BrowseDetail({
                 </div>
               )}
             </div>
-            <p className="text-sm text-muted-foreground">{selectedProviderOpenings.length} available appointments</p>
+            <p className="text-sm text-muted-foreground">
+              {currentProvider?.is_custom_inquiry
+                ? selectedProviderOpenings.length > 0
+                  ? `${selectedProviderOpenings.length} available appointments`
+                  : 'Open for custom inquiry'
+                : `${selectedProviderOpenings.length} available appointments`}
+            </p>
           </div>
         </div>
         <Button 
@@ -207,6 +215,20 @@ export function BrowseDetail({
         {/* Services */}
         <div className="space-y-3">
           <h3 className="font-semibold text-foreground">Services</h3>
+          {currentProvider?.is_custom_inquiry && currentProvider.custom_inquiry_info && (
+            <Card
+              className="cursor-pointer hover:bg-muted/50 transition-colors"
+              onClick={() => setShowInquiryDialog(true)}
+            >
+              <CardContent className="p-4 flex items-center gap-3">
+                <MessageSquare className="h-5 w-5 text-muted-foreground" />
+                <div>
+                  <p className="font-medium text-sm">Custom Time Inquiry</p>
+                  <p className="text-xs text-muted-foreground">Contact provider directly</p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
           {Array.from(serviceMap.keys()).map(service => (
             <Card key={service} className={`cursor-pointer transition-colors ${selectedService === service ? 'border-primary bg-primary/10 shadow-sm' : 'hover:border-primary/60 hover:bg-accent/50'}`} onClick={() => { setSelectedService(selectedService === service ? null : service); setSelectedWorker(null); setSelectedDate(null); }}>
               <CardContent className="p-4">
@@ -308,6 +330,16 @@ export function BrowseDetail({
       </div>
 
       {/* Booking Confirmation Dialog */}
+      {currentProvider?.is_custom_inquiry && currentProvider.custom_inquiry_info && (
+        <CustomInquiryDialog
+          open={showInquiryDialog}
+          onClose={() => setShowInquiryDialog(false)}
+          providerName={currentProvider.provider_name}
+          providerId={currentProvider.user_id}
+          info={currentProvider.custom_inquiry_info}
+        />
+      )}
+
       <AlertDialog open={showBookingDialog} onOpenChange={setShowBookingDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>

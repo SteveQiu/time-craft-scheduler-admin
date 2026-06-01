@@ -7,6 +7,16 @@
 **Joined:** 2026-05-08 (replaced Dallas)
 **Requested by:** SteveQiu
 
+## White-label Sidebar Branding Refresh (2026-06-01)
+
+**Task:** Update `AppSidebar.tsx` white-label branding block for larger provider identity and clickable PikAppoint attribution.
+
+**Files modified:**
+- `src/components/AppSidebar.tsx` — increased white-label avatar from `h-9 w-9` to `h-12 w-12`; increased provider name sizing to `text-base font-bold`; changed attribution to external link (`https://pikappoint.com`) with muted hover underline; bumped header row spacing/min-height to fit larger brand block.
+
+**Build gate:** `node node_modules\\typescript\\bin\\tsc --noEmit` → 0 errors. `npm run build` → exit 0.
+**Runtime gate:** Ralph ran `node scripts\\snapshot-appointments.cjs`, confirmed non-blank `Text:` output for `/appointments`, no `PAGE ERROR:` lines, and verified `tmp-snapshots\\sdeqiu-appointments.png` shows rendered content.
+
 ## LemonSqueezy Webhook Infrastructure (2026-05-08)
 
 **Task:** Add plan billing support via LemonSqueezy webhooks.

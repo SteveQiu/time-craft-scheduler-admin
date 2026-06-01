@@ -57,6 +57,12 @@
 - Performance-critical paths requiring benchmarking
 - Changes requiring cross-team discussion
 
+## Global Communication Standard
+
+**All agents use caveman mode (full intensity) by default.**
+Read `.agents/skills/caveman/SKILL.md` for full rules. Short: drop articles/filler/hedging, fragments OK, technical terms exact.
+Exception: Burke's legal artifact content stays formal — caveman applies to Burke's team communications only.
+
 ## Project Context
 
 - **Project:** time-craft-scheduler-admin

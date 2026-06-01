@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { Button } from './ui/button';
-import { Plus } from 'lucide-react';
+import { Plus, Crown, Store, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRoles } from '@/hooks/useUserRoles';
 import { usePaymentMethod } from '@/hooks/usePaymentMethod';
@@ -12,6 +15,7 @@ import { useCalendarOpenings } from '@/hooks/useCalendarOpenings';
 import { useCalendarActions } from '@/hooks/useCalendarActions';
 import { useCalendarQueries } from '@/hooks/useCalendarQueries';
 import { useWorkplaceAddresses } from '@/hooks/useWorkplaceAddresses';
+import { useSubscription } from '@/hooks/useSubscription';
 import type { LocationFields } from '@/lib/address';
 import { CalendarGrid } from './calendar/CalendarGrid';
 import { DaySlotsPanel } from './calendar/DaySlotsPanel';
@@ -23,8 +27,12 @@ import type { Opening, NewOpeningForm, EditOpeningForm } from './calendar/types'
 
 export function Calendar() {
   const [searchParams] = useSearchParams();
+  const [isTogglingInquiry, setIsTogglingInquiry] = useState(false);
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { isOrganization, isInternalDev } = useUserRoles();
+  const { isPremium } = useSubscription();
+  const queryClient = useQueryClient();
   const modeParam = searchParams.get('mode');
   const isOrgMode = modeParam === 'org' && (isOrganization || isInternalDev);
   const { workers: workerData, acceptedWorkers, getWorkerRate: getOrgWorkerRate, getWorkerSkills: getOrgWorkerSkills } = useOrgWorkers();
@@ -136,6 +144,35 @@ export function Calendar() {
     }
   }, [providerPaymentMethods]);
 
+  const handleToggleInquiry = async () => {
+    if (!isPremium) {
+      toast('Custom Inquiry is a premium feature', {
+        description: 'Upgrade to premium to enable custom inquiry for your store.',
+        action: {
+          label: 'Upgrade',
+          onClick: () => navigate('/settings?tab=subscription'),
+        },
+      });
+      return;
+    }
+    if (!user || !ownProfile) return;
+    setIsTogglingInquiry(true);
+    try {
+      const newValue = !ownProfile.custom_inquiry_open;
+      const { error } = await supabase
+        .from('profiles')
+        .update({ custom_inquiry_open: newValue })
+        .eq('id', user.id);
+      if (error) throw error;
+      await queryClient.invalidateQueries({ queryKey: ['own-profile-for-openings', user?.id] });
+      toast(newValue ? 'Store opened for custom inquiry' : 'Store closed for custom inquiry');
+    } catch {
+      toast.error('Failed to update custom inquiry setting');
+    } finally {
+      setIsTogglingInquiry(false);
+    }
+  };
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -144,6 +181,27 @@ export function Calendar() {
           <Button onClick={() => setCurrentDate(new Date())} variant="outline" className="flex items-center space-x-2">
             <span>Today</span>
           </Button>
+          {user && (
+            <Button
+              variant={ownProfile?.custom_inquiry_open ? 'default' : 'outline'}
+              className={`flex items-center space-x-2 ${ownProfile?.custom_inquiry_open ? 'bg-amber-500 hover:bg-amber-600 text-white' : ''}`}
+              onClick={handleToggleInquiry}
+              disabled={isTogglingInquiry}
+            >
+              {isTogglingInquiry ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : isPremium ? (
+                <Store className="h-4 w-4" />
+              ) : (
+                <Crown className="h-4 w-4" />
+              )}
+              <span>
+                {ownProfile?.custom_inquiry_open
+                  ? 'Keep Store Closed for Custom Inquiry'
+                  : 'Keep Store Open for Custom Inquiry'}
+              </span>
+            </Button>
+          )}
           <Button onClick={() => setShowAddOpening(true)} className="flex items-center space-x-2" disabled={!user}>
             <Plus className="h-4 w-4" />
             <span>Add Opening</span>

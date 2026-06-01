@@ -18,6 +18,13 @@ export interface OpeningWithProfile {
   avatar_url?: string | null;
 }
 
+export interface CustomInquiryInfo {
+  email?: string | null;
+  phone?: string | null;
+  social_links?: Record<string, string> | null;
+  profile_url?: string | null;
+}
+
 export interface ProviderAccount {
   user_id: string;
   provider_name: string;
@@ -26,4 +33,6 @@ export interface ProviderAccount {
   opening_count: number;
   services: string[];
   workers: string[];
+  is_custom_inquiry?: boolean;
+  custom_inquiry_info?: CustomInquiryInfo | null;
 }

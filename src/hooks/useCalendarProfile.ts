@@ -19,11 +19,11 @@ export function useCalendarProfile({
     queryFn: async () => {
       const { data, error } = await supabase
         .from('profiles')
-        .select('full_name, skills, hourly_rate')
+        .select('full_name, skills, hourly_rate, custom_inquiry_open')
         .eq('id', user!.id)
         .single();
       if (error) throw error;
-      return data as { full_name: string | null; skills: string[]; hourly_rate: number };
+      return data as { full_name: string | null; skills: string[]; hourly_rate: number; custom_inquiry_open: boolean };
     },
     enabled: !!user && !isOrgMode,
   });

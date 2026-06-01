@@ -12,7 +12,7 @@ import { Calendar as CalendarIcon, MapPin, Search, Loader2, ChevronRight, Bookma
 import { BrowseDetail } from './BrowseDetail';
 import { ProfilePhotoStrip } from './ProfilePhotoStrip';
 import { parseLocation } from '@/lib/address';
-import { OpeningWithProfile, ProviderAccount } from '@/types/browse';
+import type { OpeningWithProfile, ProviderAccount, CustomInquiryInfo } from '@/types/browse';
 import { useLocalBookmarks, getLocalBookmarkIds } from '@/hooks/useLocalBookmarks';
 
 function getUniqueValues(values: string[]) {
@@ -25,12 +25,16 @@ function buildProviderAccount({
   providerSlug,
   avatarUrl,
   openings,
+  isCustomInquiry = false,
+  customInquiryInfo = null,
 }: {
   userId: string;
   providerName: string;
   providerSlug?: string | null;
   avatarUrl?: string | null;
   openings: OpeningWithProfile[];
+  isCustomInquiry?: boolean;
+  customInquiryInfo?: CustomInquiryInfo | null;
 }): ProviderAccount {
   return {
     user_id: userId,
@@ -40,6 +44,8 @@ function buildProviderAccount({
     opening_count: openings.length,
     services: getUniqueValues(openings.map(opening => opening.service)),
     workers: getUniqueValues(openings.map(opening => opening.worker)),
+    is_custom_inquiry: isCustomInquiry,
+    custom_inquiry_info: customInquiryInfo,
   };
 }
 
@@ -220,6 +226,27 @@ export function BookingBrowse() {
     return map;
   }, [allOpenings]);
 
+  const { data: inquiryProviders = [] } = useQuery({
+    queryKey: ['premium-inquiry-providers'],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any).rpc('get_premium_inquiry_providers');
+      if (error) {
+        console.error('inquiry providers fetch error:', error);
+        return [];
+      }
+      return (data ?? []) as Array<{
+        id: string;
+        full_name: string;
+        slug: string;
+        avatar_url: string;
+        email: string;
+        phone: string;
+        social_links: Record<string, string>;
+        profile_url: string;
+      }>;
+    },
+  });
+
   // Group openings by provider
   const providers: ProviderAccount[] = React.useMemo(() => {
     return Array.from(providerOpeningsMap.entries())
@@ -232,6 +259,47 @@ export function BookingBrowse() {
       }))
       .sort((a, b) => b.opening_count - a.opening_count);
   }, [providerOpeningsMap]);
+
+  // Merge inquiry providers with regular providers — inquiry providers float to top
+  const allProviders: ProviderAccount[] = React.useMemo(() => {
+    const existingIds = new Set(providers.map(p => p.user_id));
+    const taggedProviders = providers.map(p => {
+      const inquiryInfo = inquiryProviders.find(ip => ip.id === p.user_id);
+      if (!inquiryInfo) return p;
+      return {
+        ...p,
+        is_custom_inquiry: true,
+        custom_inquiry_info: {
+          email: inquiryInfo.email,
+          phone: inquiryInfo.phone,
+          social_links: inquiryInfo.social_links,
+          profile_url: inquiryInfo.profile_url,
+        },
+      };
+    });
+    const inquiryOnly = inquiryProviders
+      .filter(ip => !existingIds.has(ip.id))
+      .map(ip => buildProviderAccount({
+        userId: ip.id,
+        providerName: ip.full_name || 'Unknown',
+        providerSlug: ip.slug || null,
+        avatarUrl: ip.avatar_url || null,
+        openings: [],
+        isCustomInquiry: true,
+        customInquiryInfo: {
+          email: ip.email,
+          phone: ip.phone,
+          social_links: ip.social_links,
+          profile_url: ip.profile_url,
+        },
+      }));
+    return [...taggedProviders, ...inquiryOnly]
+      .sort((a, b) => {
+        if (a.is_custom_inquiry && !b.is_custom_inquiry) return -1;
+        if (!a.is_custom_inquiry && b.is_custom_inquiry) return 1;
+        return b.opening_count - a.opening_count;
+      });
+  }, [providers, inquiryProviders]);
 
   // Fetch bookmarks with provider details
   const { data: bookmarkedProviders = [] } = useQuery({
@@ -315,7 +383,7 @@ export function BookingBrowse() {
   }, [bookmarkedProviders, localBookmarkedProviders]);
 
   // Filter providers by search term, exclude current user, and apply location filter
-  const filteredProviders = providers.filter(provider => {
+  const filteredProviders = allProviders.filter(provider => {
     if (provider.user_id === user?.id) return false;
 
     const terms = debouncedSearch.toLowerCase().split(/\s+/).filter(Boolean);
@@ -368,7 +436,7 @@ export function BookingBrowse() {
 
   // If provider detail view, render BrowseDetail component
   if (providerId) {
-    return <BrowseDetail allOpenings={allOpenings} providers={providers} isLoading={openingsLoading} />;
+    return <BrowseDetail allOpenings={allOpenings} providers={allProviders} isLoading={openingsLoading} />;
   }
 
   // Provider List View
@@ -377,7 +445,7 @@ export function BookingBrowse() {
         <div className="flex items-center justify-between">
           <h2 className="text-3xl font-bold text-foreground">Browse & Book</h2>
           <div className="text-sm text-muted-foreground">
-            {providers.length} provider{providers.length !== 1 ? 's' : ''}
+            {allProviders.length} provider{allProviders.length !== 1 ? 's' : ''}
           </div>
         </div>
 

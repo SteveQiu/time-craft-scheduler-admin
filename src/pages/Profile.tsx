@@ -9,6 +9,7 @@ import { PhotoLightbox } from '@/components/PhotoLightbox';
 import { ArrowLeft, Camera } from 'lucide-react';
 import { useSubscription } from '@/hooks/useSubscription';
 import { usePageTitle } from '@/context/PageTitleContext';
+import { useProfileBranding } from '@/context/ProfileBrandingContext';
 import { useProfile } from '@/hooks/useProfile';
 import { useWorkplaceAddresses } from '@/hooks/useWorkplaceAddresses';
 import { ProfileHeader } from './profile/ProfileHeader';
@@ -31,6 +32,8 @@ export default function Profile() {
   const { user } = useAuth();
   const { isPremium } = useSubscription();
   const { setTitle, resetTitle } = usePageTitle();
+  const { setBranding, clearBranding } = useProfileBranding();
+  const isOwnProfile = !slug;
 
   const [editing, setEditing] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
@@ -80,7 +83,6 @@ export default function Profile() {
     profilePhotos,
     getPhotoUrl,
     isBookmarked,
-    isOwnProfile,
     handlePhotoUpload,
     handlePhotoDelete,
     handleAvatarUpload,
@@ -91,6 +93,15 @@ export default function Profile() {
   } = useProfile({ slug, user, onSaveSuccess: () => setEditing(false) });
 
   const { addresses: savedAddresses } = useWorkplaceAddresses(user?.id);
+
+  useEffect(() => {
+    if (!isOwnProfile && profile) {
+      setBranding(profile.avatar_url ?? null, profile.full_name ?? null);
+    }
+    return () => {
+      clearBranding();
+    };
+  }, [isOwnProfile, profile?.avatar_url, profile?.full_name, setBranding, clearBranding]);
 
   useEffect(() => {
     if (profile) {
@@ -158,7 +169,7 @@ export default function Profile() {
 
   return (
     <div className="p-6 space-y-6 max-w-3xl mx-auto">
-      {window.history.length > 1 && (
+      {isOwnProfile && window.history.length > 1 && (
         <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="mb-2">
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back

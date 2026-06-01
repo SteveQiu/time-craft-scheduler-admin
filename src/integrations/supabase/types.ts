@@ -512,6 +512,7 @@ export type Database = {
           email: string | null
           email_public: boolean | null
           full_name: string | null
+          custom_inquiry_open: boolean | null
           hourly_rate: number
           hourly_rate_public: boolean | null
           id: string
@@ -533,6 +534,7 @@ export type Database = {
           email?: string | null
           email_public?: boolean | null
           full_name?: string | null
+          custom_inquiry_open?: boolean | null
           hourly_rate?: number
           hourly_rate_public?: boolean | null
           id: string
@@ -554,6 +556,7 @@ export type Database = {
           email?: string | null
           email_public?: boolean | null
           full_name?: string | null
+          custom_inquiry_open?: boolean | null
           hourly_rate?: number
           hourly_rate_public?: boolean | null
           id?: string
@@ -937,6 +940,19 @@ export type Database = {
           full_name: string
           id: string
           slug: string
+        }[]
+      }
+      get_premium_inquiry_providers: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          avatar_url: string
+          email: string
+          full_name: string
+          id: string
+          phone: string
+          profile_url: string
+          slug: string
+          social_links: Json
         }[]
       }
       get_subscription_status: {
