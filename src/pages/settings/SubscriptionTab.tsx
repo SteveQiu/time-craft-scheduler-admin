@@ -42,13 +42,13 @@ export function SubscriptionTab() {
     const portalUrl = import.meta.env.VITE_LEMONSQUEEZY_PORTAL_URL;
     if (portalUrl) {
       window.open(portalUrl, '_blank');
+    } else {
+      window.location.href = `mailto:pikappoint@gmail.com?subject=Cancel%20Subscription&body=Hi%2C%20I%20would%20like%20to%20cancel%20my%20PikAppoint%20premium%20subscription.%0A%0AAccount%20email%3A%20${encodeURIComponent(user?.email ?? '')}`;
     }
     setShowCancelDialog(false);
   };
 
   if (isPremium) {
-    const portalUrl = import.meta.env.VITE_LEMONSQUEEZY_PORTAL_URL;
-    
     return (
       <>
         <Card className="border-green-500 bg-green-50 dark:bg-green-950">
@@ -79,10 +79,10 @@ export function SubscriptionTab() {
             </div>
             <Button
               variant="outline"
+              className="text-destructive hover:text-destructive"
               onClick={() => setShowCancelDialog(true)}
-              disabled={!portalUrl}
             >
-              {portalUrl ? 'Cancel Subscription' : 'Cancellation portal coming soon — contact pikappoint@gmail.com'}
+              Cancel Subscription
             </Button>
           </CardContent>
         </Card>
@@ -111,14 +111,14 @@ export function SubscriptionTab() {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Zap className="h-5 w-5 text-muted-foreground" />
-          Free Plan
+          <Zap className="h-5 w-5 text-yellow-500" />
+          Upgrade to Premium
         </CardTitle>
-        <CardDescription>Upgrade to Premium for full access.</CardDescription>
+        <CardDescription>Unlock all premium features and grow your business.</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="mb-4 space-y-2">
-          <p className="text-sm font-medium text-foreground">What you'll get:</p>
+          <p className="text-sm font-medium text-foreground">Premium Features</p>
           <ul className="space-y-1 text-sm text-muted-foreground">
             {premiumBenefits.map((benefit) => (
               <li key={benefit} className="flex items-center gap-2">

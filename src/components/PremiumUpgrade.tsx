@@ -9,6 +9,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from './ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from './ui/alert-dialog';
 import { Crown, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -20,17 +30,20 @@ interface PremiumUpgradeProps {
 declare global {
   interface Window {
     LemonSqueezy?: {
-      Checkout?: {
-        open: (config: { url: string }) => void;
+      Setup: (config: { eventHandler: (event: { event: string; data: unknown }) => void }) => void;
+      Url?: {
+        Open: (url: string) => void;
       };
     };
   }
 }
 
 export function PremiumUpgrade({ orgId, onSuccess }: PremiumUpgradeProps) {
+  const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [isPremium, setIsPremium] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
 
   // Subscribe to org plan changes
   useEffect(() => {
@@ -97,26 +110,27 @@ export function PremiumUpgrade({ orgId, onSuccess }: PremiumUpgradeProps) {
       return;
     }
 
-    const storeId = import.meta.env.VITE_LEMON_SQ_STORE_ID;
-    const variantId = import.meta.env.VITE_LEMON_SQ_PRODUCT_ID;
-    
-    if (!storeId || !variantId) {
-      toast.error('Premium plan not available. Please try again later.');
-      console.error('Lemon Squeezy not configured:', { storeId, variantId });
-      return;
-    }
-
     try {
       setLoading(true);
-      if (!window.LemonSqueezy?.Checkout?.open) {
-        toast.error('Payment system not ready. Please reload the page.');
+
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: { orgId, userEmail: user?.email },
+      });
+
+      if (error || !data?.url) {
+        console.error('create-checkout error:', error, data);
+        toast.error('Failed to create checkout. Please try again.');
         return;
       }
 
-      const customData = JSON.stringify({ org_id: orgId });
-      const checkoutUrl = `https://${storeId}.lemonsqueezy.com/checkout/buy/${variantId}?checkout[custom][org_id]=${encodeURIComponent(orgId)}`;
-      
-      window.LemonSqueezy.Checkout.open({ url: checkoutUrl });
+      const checkoutUrl: string = data.url + (data.url.includes('?') ? '&' : '?') + 'embed=1';
+
+      if (window.LemonSqueezy) {
+        window.LemonSqueezy.Setup({ eventHandler: () => {} });
+        window.LemonSqueezy.Url?.Open(checkoutUrl);
+      } else {
+        window.open(checkoutUrl, '_blank');
+      }
     } catch (error) {
       console.error('Checkout error:', error);
       toast.error('Failed to open payment modal');
@@ -125,17 +139,26 @@ export function PremiumUpgrade({ orgId, onSuccess }: PremiumUpgradeProps) {
     }
   };
 
+  const handleCancelConfirm = () => {
+    const portalUrl = import.meta.env.VITE_LEMONSQUEEZY_PORTAL_URL;
+    if (portalUrl) {
+      window.open(portalUrl, '_blank');
+    } else {
+      window.location.href = `mailto:pikappoint@gmail.com?subject=Cancel%20Subscription&body=Hi%2C%20I%20would%20like%20to%20cancel%20my%20PikAppoint%20premium%20subscription.%0A%0AAccount%20email%3A%20${encodeURIComponent(user?.email ?? '')}`;
+    }
+    setShowCancelDialog(false);
+  };
+
   return (
     <>
       <Button
-        onClick={() => setOpen(true)}
-        disabled={isPremium}
+        onClick={() => isPremium ? setShowCancelDialog(true) : setOpen(true)}
         variant={isPremium ? 'outline' : 'default'}
         size="sm"
-        className="gap-2"
+        className={isPremium ? 'gap-2 border-red-300 text-red-600 hover:bg-red-50' : 'gap-2'}
       >
         <Crown className="h-4 w-4" />
-        {isPremium ? 'Premium' : 'Go Premium'}
+        {isPremium ? 'Cancel Subscription' : 'Go Premium'}
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
@@ -176,6 +199,25 @@ export function PremiumUpgrade({ orgId, onSuccess }: PremiumUpgradeProps) {
           </div>
         </DialogContent>
       </Dialog>
+      <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancel Premium Subscription?</AlertDialogTitle>
+            <AlertDialogDescription>
+              You'll lose access to premium features at end of billing period. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Keep Premium</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleCancelConfirm}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              Yes, cancel
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
