@@ -10,10 +10,11 @@ import {
 } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 
-interface ProfileQRDialogProps {
+export interface ShareDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   shareUrl: string;
+  title?: string;
   displayName?: string;
 }
 
@@ -53,7 +54,31 @@ function PlatformIcon({ children }: { children: ReactNode }) {
   );
 }
 
-export function ProfileQRDialog({ open, onOpenChange, shareUrl, displayName }: ProfileQRDialogProps) {
+function getXShareText(title: string, displayName?: string) {
+  const shareTarget = title.replace(/^share\s*/i, '').trim().toLowerCase();
+
+  if (displayName && shareTarget === 'profile') {
+    return `Check out ${displayName}'s profile on PikAppoint`;
+  }
+
+  if (displayName) {
+    return `Check out ${displayName} on PikAppoint`;
+  }
+
+  if (shareTarget) {
+    return `Check out this ${shareTarget} on PikAppoint`;
+  }
+
+  return 'Check this out on PikAppoint';
+}
+
+export function ShareDialog({
+  open,
+  onOpenChange,
+  shareUrl,
+  title = 'Share',
+  displayName,
+}: ShareDialogProps) {
   const [copied, setCopied] = useState<CopiedState>(null);
   const timeoutRef = useRef<number | null>(null);
   const qrRef = useRef<HTMLDivElement | null>(null);
@@ -92,7 +117,7 @@ export function ProfileQRDialog({ open, onOpenChange, shareUrl, displayName }: P
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-sm">
         <DialogHeader>
-          <DialogTitle>{displayName ? `Share — ${displayName}` : 'Share Profile'}</DialogTitle>
+          <DialogTitle>{displayName ? `${title} — ${displayName}` : title}</DialogTitle>
         </DialogHeader>
         <div className="flex flex-col gap-4 py-2">
           <div ref={qrRef} className="flex flex-col items-center gap-3 rounded-xl border bg-muted/10 px-4 py-4">
@@ -105,7 +130,7 @@ export function ProfileQRDialog({ open, onOpenChange, shareUrl, displayName }: P
           <div className="grid grid-cols-2 gap-2">
             <ShareButton
               label={copied === 'copy' ? 'Copied!' : 'Copy Link'}
-              status={copied === 'copy' ? "Paste from clipboard" : undefined}
+              status={copied === 'copy' ? 'Paste from clipboard' : undefined}
               active={copied === 'copy'}
               onClick={() => void handleCopy('copy')}
               icon={
@@ -139,7 +164,7 @@ export function ProfileQRDialog({ open, onOpenChange, shareUrl, displayName }: P
               label="Post on X"
               onClick={() =>
                 handleOpenShare(
-                  `https://x.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=Check%20out%20${displayName ? encodeURIComponent(displayName) + '%27s%20' : ''}profile%20on%20PikAppoint`
+                  `https://x.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(getXShareText(title, displayName))}`
                 )
               }
               icon={

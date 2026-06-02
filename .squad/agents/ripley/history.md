@@ -7,6 +7,38 @@
 **Joined:** 2026-05-08 (replaced Dallas)
 **Requested by:** SteveQiu
 
+## OpeningView ShareDialog adoption (2026-06-02)
+
+**Task:** Replace `OpeningView.tsx` copy-only share button with reusable `ShareDialog`.
+
+**Files modified:**
+- `src/pages/OpeningView.tsx` — replaced local copy-state/share handler with `shareDialogOpen` state, imported `ShareDialog`, wired top-right Share button to open dialog, and rendered `ShareDialog` with opening URL + service display name.
+- `.squad/agents/ripley/history.md` — logged OpeningView adoption of shared dialog.
+
+**Pattern:** `OpeningView.tsx` now uses canonical `ShareDialog` from `@/components/ShareDialog` instead of inline clipboard logic; keep `toast` import because booking flow still uses it.
+
+**Build gate:** `node node_modules\\typescript\\bin\\tsc --noEmit` → 0 errors. `npm run build` → exit 0.
+**Runtime gate:** Ralph must run `node scripts\\snapshot-appointments.cjs`, confirm non-blank `Text:` output, no `PAGE ERROR:` lines, and verify screenshot evidence before closing.
+
+## ShareDialog share refactor (2026-06-02)
+
+**Task:** Extract profile share QR dialog into reusable `ShareDialog` for any shareable URL.
+
+**Files created:**
+- `src/components/ShareDialog.tsx` — canonical share dialog with props `{ open, onOpenChange, shareUrl, title?, displayName? }`, QR block, copy state, and social-share actions.
+
+**Files modified:**
+- `src/pages/profile/ProfileHeader.tsx` — now imports `ShareDialog` from `@/components/ShareDialog`, passes `title="Share Profile"`, preserves existing `shareUrl` + `displayName` wiring.
+- `.squad/agents/ripley/history.md` — logged reusable dialog location and props.
+
+**Files removed:**
+- `src/pages/profile/ProfileQRDialog.tsx` — replaced by reusable dialog.
+
+**Pattern:** Reuse `ShareDialog` from `@/components/ShareDialog` for profiles, openings, appointments, or any future link-share surface; set page-specific header with `title`, optional suffix with `displayName`.
+
+**Build gate:** `node node_modules\\typescript\\bin\\tsc --noEmit` → 0 errors. `npm run build` → exit 0.
+**Runtime gate:** Ralph ran `node scripts\\snapshot-appointments.cjs`, confirmed non-blank `Text:` output, no `PAGE ERROR:` lines, and verified `tmp-snapshots\\ralph-profile-share-dialog.png` for `/profile` share dialog.
+
 ## White-label Sidebar Branding Refresh (2026-06-01)
 
 **Task:** Update `AppSidebar.tsx` white-label branding block for larger provider identity and clickable PikAppoint attribution.

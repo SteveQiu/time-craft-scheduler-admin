@@ -9,12 +9,13 @@ import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { SignInDialog } from '@/components/SignInDialog';
 import { ProfilePhotoStrip } from '@/components/ProfilePhotoStrip';
-import { ArrowLeft, Calendar, Clock, User, MapPin, Share2, Check, Loader2 } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, User, MapPin, Share2, Loader2 } from 'lucide-react';
 import { DATE_FORMATS, LOCALE } from '@/config/formats';
 import { parseLocation, formatLocation } from '@/lib/address';
 import { getEffectiveTotal } from '@/lib/utils';
 import { toast } from 'sonner';
 import { usePremiumReminder } from '@/hooks/usePremiumReminder';
+import { ShareDialog } from '@/components/ShareDialog';
 
 const PENDING_BOOKING_KEY = 'pending_booking_opening_id';
 
@@ -27,7 +28,7 @@ export function OpeningView() {
   const [showBookingDialog, setShowBookingDialog] = useState(false);
   const [showSignIn, setShowSignIn] = useState(false);
   const [isBooking, setIsBooking] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
 
   // Auto-show booking dialog after sign-in (survives OAuth redirect)
   useEffect(() => {
@@ -83,18 +84,6 @@ export function OpeningView() {
     },
     enabled: !!id,
   });
-
-  const handleShare = async () => {
-    const url = `${window.location.origin}/openings/${id}`;
-    try {
-      await navigator.clipboard.writeText(url);
-      setCopied(true);
-      toast.success('Link copied to clipboard!');
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      toast.error('Failed to copy link');
-    }
-  };
 
   const confirmBooking = async () => {
     if (!opening || !user) return;
@@ -159,9 +148,8 @@ export function OpeningView() {
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back
         </Button>
-        <Button variant="outline" onClick={handleShare}>
-          {copied ? <Check className="h-4 w-4 mr-2" /> : <Share2 className="h-4 w-4 mr-2" />}
-          {copied ? 'Copied!' : 'Share Link'}
+        <Button variant="outline" onClick={() => setShareDialogOpen(true)}>
+          <Share2 className="h-4 w-4 mr-2" /> Share
         </Button>
       </div>
 
@@ -347,6 +335,14 @@ export function OpeningView() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <ShareDialog
+        open={shareDialogOpen}
+        onOpenChange={setShareDialogOpen}
+        shareUrl={`${window.location.origin}/openings/${id}`}
+        title="Share Opening"
+        displayName={opening?.service || undefined}
+      />
 
       <SignInDialog open={showSignIn} onOpenChange={(open) => {
         setShowSignIn(open);

@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Star, Share2, Calendar, Bookmark, Flag, Edit, Save, X, Camera } from 'lucide-react';
 import type { ProfileData, FormState, PrivacySettings } from './types';
 import type { User } from '@supabase/supabase-js';
-import { ProfileQRDialog } from './ProfileQRDialog';
+import { ShareDialog } from '@/components/ShareDialog';
 
 interface ProfileHeaderProps {
   profile: ProfileData;
@@ -126,7 +126,13 @@ export function ProfileHeader({
               <Share2 className="h-4 w-4 mr-1" />
               Share
             </Button>
-            <ProfileQRDialog open={qrOpen} onOpenChange={setQrOpen} shareUrl={shareUrl} displayName={profile.slug || profile.full_name || undefined} />
+            <ShareDialog
+              open={qrOpen}
+              onOpenChange={setQrOpen}
+              shareUrl={shareUrl}
+              title="Share Profile"
+              displayName={profile.slug || profile.full_name || undefined}
+            />
           </>
         )}
         {!isOwnProfile && (
