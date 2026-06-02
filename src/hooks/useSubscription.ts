@@ -6,6 +6,7 @@ interface SubscriptionResult {
   isPremium: boolean;
   status: string | null;
   planType: string | null;
+  expiresAt: string | null;
   loading: boolean;
   refetch: () => void;
 }
@@ -28,12 +29,13 @@ export function useSubscription(): SubscriptionResult {
   });
 
   if (!user) {
-    return { isPremium: false, status: null, planType: null, loading: false, refetch: () => {} };
+    return { isPremium: false, status: null, planType: null, expiresAt: null, loading: false, refetch: () => {} };
   }
 
   const planType = data?.plan_type ?? null;
   const status = data?.status ?? null;
   const isPremium = Boolean(data?.is_active);
+  const expiresAt = data?.expires_at ?? null;
 
-  return { isPremium, status, planType, loading: isLoading, refetch };
+  return { isPremium, status, planType, expiresAt, loading: isLoading, refetch };
 }

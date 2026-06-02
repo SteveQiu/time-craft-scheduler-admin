@@ -10,7 +10,7 @@ import { PremiumUpgrade } from '@/components/PremiumUpgrade';
 
 export function SubscriptionTab() {
   const { user } = useAuth();
-  const { isPremium, status, planType, loading: loadingSubscription } = useSubscription();
+  const { isPremium, status, planType, expiresAt, loading: loadingSubscription } = useSubscription();
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const premiumBenefits = [
     'Premium badge on your provider listing',
@@ -65,6 +65,14 @@ export function SubscriptionTab() {
             <div className="space-y-1 text-sm text-green-700 dark:text-green-300">
               <p>Plan: <span className="font-medium capitalize">{planType}</span></p>
               <p>Status: <span className="font-medium capitalize">{status}</span></p>
+              {expiresAt && (
+                <p>
+                  {status === 'cancelled' ? 'Access ends' : 'Renews'}:{' '}
+                  <span className="font-medium">
+                    {new Date(expiresAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
+                  </span>
+                </p>
+              )}
             </div>
             <div className="space-y-2">
               <p className="text-sm font-medium text-green-700 dark:text-green-300">Your premium features:</p>
