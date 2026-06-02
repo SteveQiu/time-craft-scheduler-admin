@@ -113,9 +113,8 @@ export function PremiumUpgrade({ orgId, onSuccess }: PremiumUpgradeProps) {
     try {
       setLoading(true);
 
-      const isTest = window.location.hostname === 'localhost';
       const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: { orgId, userEmail: user?.email, userId: user?.id, isTest },
+        body: { orgId },
       });
 
       if (error || !data?.url) {

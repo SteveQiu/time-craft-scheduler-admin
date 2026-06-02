@@ -1,25 +1,56 @@
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const APP_URL = Deno.env.get("APP_URL") ?? "https://pikappoint.lovable.app";
+// Server-side only: test mode derived from ENVIRONMENT env var, never from client
+const IS_TEST_ENV = (Deno.env.get("ENVIRONMENT") ?? "production") !== "production";
+
+// M1: Lock CORS to APP_URL, not wildcard
 const CORS = {
-  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Origin": APP_URL,
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Vary": "Origin",
 };
 
-Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: CORS });
-  }
+function json(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...CORS, "Content-Type": "application/json" },
+  });
+}
 
-  if (req.method !== "POST") {
-    return new Response("Method Not Allowed", { status: 405, headers: CORS });
-  }
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
+  if (req.method !== "POST") return new Response("Method Not Allowed", { status: 405, headers: CORS });
 
   try {
-    const rawBody = await req.text();
-    const reqBody = JSON.parse(rawBody);
-    const orgId: string = reqBody?.orgId;
-    const userId: string | undefined = reqBody?.userId;
-    const userEmail: string | undefined = reqBody?.userEmail;
-    const isTest: boolean = reqBody?.isTest === true;
+    // C2: Verify JWT — reject anonymous/unauthenticated calls
+    const authHeader = req.headers.get("Authorization") ?? "";
+    const token = authHeader.replace(/^Bearer\s+/i, "").trim();
+    if (!token) return json({ error: "Unauthorized" }, 401);
 
+    const supaUser = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      { global: { headers: { Authorization: `Bearer ${token}` } } },
+    );
+    const { data: { user }, error: authErr } = await supaUser.auth.getUser(token);
+    if (authErr || !user) return json({ error: "Unauthorized" }, 401);
+
+    // Parse body
+    let reqBody: Record<string, unknown>;
+    try {
+      reqBody = await req.json();
+    } catch {
+      return json({ error: "Invalid request body" }, 400);
+    }
+    const orgId = reqBody?.orgId as string | undefined;
+    if (!orgId) return json({ error: "orgId required" }, 400);
+
+    // C2: Authorize — orgs.id === auth.users.id (1:1 mapping), caller must own org
+    if (orgId !== user.id) return json({ error: "Forbidden" }, 403);
+
+    // C1: Test mode derived server-side only (never trust client-supplied isTest)
+    const isTest = IS_TEST_ENV;
     const liveApiKey = Deno.env.get("LEMON_SQUEEZY_API_KEY");
     const testApiKey = Deno.env.get("LEMON_SQ_TEST_API_KEY") ?? liveApiKey;
     const apiKey = isTest ? testApiKey : liveApiKey;
@@ -27,36 +58,28 @@ Deno.serve(async (req) => {
     const prodVariantId = Deno.env.get("LEMON_SQ_VARIANT_ID");
     const testVariantId = Deno.env.get("LEMON_SQ_TEST_VARIANT_ID");
 
-    const variantId = (isTest && testVariantId) ? testVariantId : prodVariantId;
-
-    if (!apiKey || !storeId || !prodVariantId) {
-      return new Response(JSON.stringify({ error: "Server misconfigured", missing: { apiKey: !apiKey, storeId: !storeId, variantId: !prodVariantId } }), {
-        status: 500,
-        headers: { ...CORS, "Content-Type": "application/json" },
-      });
+    // M2: Hard-fail if test mode active but test variant not configured
+    if (isTest && !testVariantId) {
+      console.error("LEMON_SQ_TEST_VARIANT_ID not set but ENVIRONMENT !== production");
+      return json({ error: "Server misconfigured" }, 500);
     }
 
-    if (!orgId) {
-      return new Response(JSON.stringify({ error: "orgId required" }), {
-        status: 400,
-        headers: { ...CORS, "Content-Type": "application/json" },
-      });
+    const variantId = isTest ? testVariantId : prodVariantId;
+    if (!apiKey || !storeId || !variantId) {
+      console.error("Missing required env vars", { hasApiKey: !!apiKey, hasStoreId: !!storeId, hasVariantId: !!variantId });
+      return json({ error: "Server misconfigured" }, 500);
     }
 
+    // L3: userId and userEmail always from verified JWT, never from request body
     const payload = {
       data: {
         type: "checkouts",
         attributes: {
           checkout_data: {
-            ...(userEmail ? { email: userEmail } : {}),
-            custom: {
-              org_id: orgId,
-              ...(userId ? { user_id: userId } : {}),
-            },
+            email: user.email,
+            custom: { org_id: orgId, user_id: user.id },
           },
-          product_options: {
-            redirect_url: Deno.env.get("APP_URL") ?? "https://pikappoint.lovable.app",
-          },
+          product_options: { redirect_url: APP_URL },
         },
         relationships: {
           store: { data: { type: "stores", id: storeId } },
@@ -76,12 +99,10 @@ Deno.serve(async (req) => {
     });
 
     if (!lsResp.ok) {
-      const err = await lsResp.text();
-      console.error("LemonSqueezy error:", err);
-      return new Response(JSON.stringify({ error: "Checkout creation failed", detail: err }), {
-        status: 502,
-        headers: { ...CORS, "Content-Type": "application/json" },
-      });
+      const errText = await lsResp.text();
+      console.error("LemonSqueezy checkout error:", errText);
+      // L1: never leak raw LS error to client
+      return json({ error: "Checkout creation failed" }, 502);
     }
 
     // deno-lint-ignore no-explicit-any
@@ -89,21 +110,14 @@ Deno.serve(async (req) => {
     const url = lsData?.data?.attributes?.url as string | undefined;
 
     if (!url) {
-      return new Response(JSON.stringify({ error: "No URL in response", lsData }), {
-        status: 502,
-        headers: { ...CORS, "Content-Type": "application/json" },
-      });
+      console.error("No URL in LemonSqueezy response:", JSON.stringify(lsData));
+      // L2: never leak lsData to client
+      return json({ error: "Checkout creation failed" }, 502);
     }
 
-    return new Response(JSON.stringify({ url }), {
-      status: 200,
-      headers: { ...CORS, "Content-Type": "application/json" },
-    });
+    return json({ url });
   } catch (err) {
     console.error("create-checkout unhandled:", err);
-    return new Response(JSON.stringify({ error: "Unhandled exception", message: String(err) }), {
-      status: 500,
-      headers: { ...CORS, "Content-Type": "application/json" },
-    });
+    return json({ error: "Internal server error" }, 500);
   }
 });
