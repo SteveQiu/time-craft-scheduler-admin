@@ -5453,3 +5453,51 @@ Agents **MUST NEVER** run `git commit` or `git push` under ANY circumstances —
 **Block:** Earlier blank-page runtime crash blocks appointment UI rendering and prevents bug verification.
 
 **Next Step:** Fix `_jsxDEV is not a function` runtime error first, then re-verify bug claim with same script + baseline snapshot.
+
+## Deployment & Infrastructure
+
+### Edge Function Secret Loading Requires Redeploy (2026-05-14)
+**Authority:** Frost (DevOps Specialist)  
+**Status:** IMPLEMENTED
+
+**Context:** Local test checkout failing — "failed to create checkout" error when testing payment flow on localhost.
+
+**Root Cause:** Supabase edge functions do NOT auto-reload secrets after `supabase secrets set`. Environment variables load when function container starts. Setting a secret updates Supabase's key-value store, but doesn't trigger function restart.
+
+**Solution:** Always redeploy edge function after setting/updating secrets.
+
+**Team Rule:** After setting/updating any Supabase secret, MUST redeploy affected edge functions:
+```bash
+supabase secrets set KEY=value --project-ref {ref}
+supabase functions deploy {function-name} --project-ref {ref}
+```
+
+**Applies to:**
+- `create-checkout` edge function
+- `send-email` edge function
+- Any future edge functions using secrets
+
+**Test Mode Flow Verification:**
+- Frontend (PremiumUpgrade.tsx line 116): `const isTest = window.location.hostname === 'localhost'`
+- Edge function (create-checkout/index.ts line 34): `const variantId = (isTest && testVariantId) ? testVariantId : prodVariantId`
+- **Critical:** `supabase.functions.invoke()` on localhost calls DEPLOYED edge function, not local. Secrets must be in Supabase project, not local .env.
+
+**Variant IDs:**
+- Test: `1735539` (LEMON_SQ_TEST_VARIANT_ID)
+- Prod: `1652523` (LEMON_SQ_VARIANT_ID)
+
+**PowerShell Workaround:** Execution policy blocks direct npm bin scripts. Always use `cmd /c "cd {path} && node_modules\.bin\supabase.cmd {command} 2>&1"`.
+
+**Commands:**
+```bash
+# List secrets (verify set in project)
+cmd /c "cd {project-root} && node_modules\.bin\supabase.cmd secrets list --project-ref dbabjfydcllqbjpolhym 2>&1"
+
+# Set + redeploy
+cmd /c "cd {project-root} && node_modules\.bin\supabase.cmd secrets set KEY=value --project-ref dbabjfydcllqbjpolhym 2>&1"
+cmd /c "cd {project-root} && node_modules\.bin\supabase.cmd functions deploy {function-name} --project-ref dbabjfydcllqbjpolhym 2>&1"
+```
+
+**Verification:** After fix, frontend checkout → LemonSqueezy test mode payment page (test variant 1735539).
+
+**Tags:** `#supabase` `#edge-functions` `#secrets-management` `#deployment` `#lemonsqueezy` `#test-mode`

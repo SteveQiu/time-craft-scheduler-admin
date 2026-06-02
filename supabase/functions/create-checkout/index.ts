@@ -13,21 +13,28 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const apiKey = Deno.env.get("LEMON_SQUEEZY_API_KEY");
-    const storeId = Deno.env.get("LEMON_SQ_STORE_ID");
-    const variantId = Deno.env.get("LEMON_SQ_VARIANT_ID");
+    const rawBody = await req.text();
+    const reqBody = JSON.parse(rawBody);
+    const orgId: string = reqBody?.orgId;
+    const userId: string | undefined = reqBody?.userId;
+    const userEmail: string | undefined = reqBody?.userEmail;
+    const isTest: boolean = reqBody?.isTest === true;
 
-    if (!apiKey || !storeId || !variantId) {
-      return new Response(JSON.stringify({ error: "Server misconfigured", missing: { apiKey: !apiKey, storeId: !storeId, variantId: !variantId } }), {
+    const liveApiKey = Deno.env.get("LEMON_SQUEEZY_API_KEY");
+    const testApiKey = Deno.env.get("LEMON_SQ_TEST_API_KEY") ?? liveApiKey;
+    const apiKey = isTest ? testApiKey : liveApiKey;
+    const storeId = Deno.env.get("LEMON_SQ_STORE_ID");
+    const prodVariantId = Deno.env.get("LEMON_SQ_VARIANT_ID");
+    const testVariantId = Deno.env.get("LEMON_SQ_TEST_VARIANT_ID");
+
+    const variantId = (isTest && testVariantId) ? testVariantId : prodVariantId;
+
+    if (!apiKey || !storeId || !prodVariantId) {
+      return new Response(JSON.stringify({ error: "Server misconfigured", missing: { apiKey: !apiKey, storeId: !storeId, variantId: !prodVariantId } }), {
         status: 500,
         headers: { ...CORS, "Content-Type": "application/json" },
       });
     }
-
-    const rawBody = await req.text();
-    const reqBody = JSON.parse(rawBody);
-    const orgId: string = reqBody?.orgId;
-    const userEmail: string | undefined = reqBody?.userEmail;
 
     if (!orgId) {
       return new Response(JSON.stringify({ error: "orgId required" }), {
@@ -42,7 +49,10 @@ Deno.serve(async (req) => {
         attributes: {
           checkout_data: {
             ...(userEmail ? { email: userEmail } : {}),
-            custom: { org_id: orgId },
+            custom: {
+              org_id: orgId,
+              ...(userId ? { user_id: userId } : {}),
+            },
           },
           product_options: {
             redirect_url: Deno.env.get("APP_URL") ?? "https://pikappoint.lovable.app",

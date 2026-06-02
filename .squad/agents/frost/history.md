@@ -150,3 +150,34 @@ media/assets/cache/   — Asset processing cache
 
 **Next Steps:** Guardian review → approval → merge `.gitignore` → commit decision
 
+### 2026-05 — Checkout test mode fix
+
+**Problem:** Local test checkout failing — "failed to create checkout" error.
+
+**Investigation:**
+- Checked Supabase secrets: `LEMON_SQ_TEST_VARIANT_ID` WAS set (value: `1735539`)
+- Edge function code correct: line 34 `(isTest && testVariantId) ? testVariantId : prodVariantId`
+- Validation line 21 only checks `!prodVariantId` — doesn't fail on missing test variant
+
+**Root cause:** Edge functions don't auto-reload secrets after `supabase secrets set`. Need manual redeploy.
+
+**Fix:** Redeployed `create-checkout` edge function:
+```
+supabase functions deploy create-checkout --project-ref dbabjfydcllqbjpolhym
+```
+
+**Key technical detail:** When frontend on localhost calls `supabase.functions.invoke()`, it hits DEPLOYED edge function on Supabase (not local). So:
+- Secrets must be set in Supabase project (not local .env) ✅
+- Edge function must be redeployed after secrets change ✅
+
+**Verification flow:**
+1. Frontend detects `window.location.hostname === 'localhost'` → sets `isTest: true`
+2. Edge function receives `isTest: true` → uses `LEMON_SQ_TEST_VARIANT_ID` (1735539)
+3. LemonSqueezy creates test checkout → redirects to test mode payment
+
+**Commands verified:**
+- `supabase secrets list --project-ref dbabjfydcllqbjpolhym` — shows all project secrets (names only)
+- `supabase functions deploy {name} --project-ref {ref}` — redeploys edge function
+
+**PowerShell workaround:** Always use `cmd /c "cd {path} && node_modules\.bin\supabase.cmd {command} 2>&1"` due to execution policy blocks.
+
