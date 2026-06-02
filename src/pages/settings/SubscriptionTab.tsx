@@ -77,13 +77,18 @@ export function SubscriptionTab() {
                 ))}
               </ul>
             </div>
-            <Button
-              variant="outline"
-              className="text-destructive hover:text-destructive"
-              onClick={() => setShowCancelDialog(true)}
-            >
-              Cancel Subscription
-            </Button>
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">
+                To cancel, open the billing email from LemonSqueezy and click <span className="font-medium">Manage Subscription</span>.
+              </p>
+              <Button
+                variant="outline"
+                className="text-destructive hover:text-destructive border-destructive"
+                onClick={() => setShowCancelDialog(true)}
+              >
+                Email to Cancel Subscription
+              </Button>
+            </div>
           </CardContent>
         </Card>
 
