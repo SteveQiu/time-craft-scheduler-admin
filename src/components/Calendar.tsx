@@ -195,11 +195,7 @@ export function Calendar() {
               ) : (
                 <Crown className="h-4 w-4" />
               )}
-              <span>
-                {ownProfile?.custom_inquiry_open
-                  ? 'Active Listing & Custom time'
-                  : 'Deactivate Listing & Custom time'}
-              </span>
+              <span>Active Listing &amp; Custom Time</span>
             </Button>
           )}
           <Button onClick={() => setShowAddOpening(true)} className="flex items-center space-x-2" disabled={!user}>

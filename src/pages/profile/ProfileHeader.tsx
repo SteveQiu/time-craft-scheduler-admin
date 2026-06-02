@@ -126,7 +126,7 @@ export function ProfileHeader({
               <Share2 className="h-4 w-4 mr-1" />
               Share
             </Button>
-            <ProfileQRDialog open={qrOpen} onOpenChange={setQrOpen} shareUrl={shareUrl} />
+            <ProfileQRDialog open={qrOpen} onOpenChange={setQrOpen} shareUrl={shareUrl} displayName={profile.slug || profile.full_name || undefined} />
           </>
         )}
         {!isOwnProfile && (
