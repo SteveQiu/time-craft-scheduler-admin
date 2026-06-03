@@ -33,19 +33,18 @@ Deno.serve(async (req) => {
     return new Response("OK", { status: 200 });
   }
 
-  // 3. Extract org_id and user_id from custom_data
+  // 3. Extract user_id from custom_data
   const customData = event.meta?.custom_data ?? {};
-  const orgId: string | undefined = customData.org_id;
-  const userId: string | undefined = customData.user_id;
+  const userId: string | undefined = customData.org_id ?? customData.user_id;
 
-  if (!orgId) {
-    console.warn("Webhook missing org_id in custom_data", { eventName });
-    return new Response("Missing org_id in custom_data", { status: 400 });
+  if (!userId) {
+    console.warn("Webhook missing user_id/org_id in custom_data", { eventName });
+    return new Response("Missing user identifier in custom_data", { status: 400 });
   }
 
-  // C3: Verify consistency — orgs.id === auth.users.id (1:1 mapping)
-  if (userId && userId !== orgId) {
-    console.warn("custom_data mismatch: org_id !== user_id — possible tampering", { orgId, userId, eventName });
+  // Verify consistency if both fields present (org_id === user_id, 1:1 mapping)
+  if (customData.org_id && customData.user_id && customData.org_id !== customData.user_id) {
+    console.warn("custom_data mismatch: org_id !== user_id — possible tampering", { userId, eventName });
     return new Response("Forbidden", { status: 403 });
   }
 
@@ -109,8 +108,8 @@ Deno.serve(async (req) => {
   const planExpiresAt: string | undefined = attrs.renews_at ?? attrs.ends_at ?? undefined;
   const eventUpdatedAt: string | undefined = attrs.updated_at;
 
-  // orgId === userId in this app (1:1 mapping); use as subscription user_id
-  const subUserId = orgId;
+  // orgId === userId in this app (1:1 mapping)
+  const subUserId = userId;
 
   // H2: Out-of-order rejection — skip if we've already applied a newer event
   if (eventUpdatedAt) {

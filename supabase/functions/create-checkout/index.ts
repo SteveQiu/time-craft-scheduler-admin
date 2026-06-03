@@ -46,7 +46,7 @@ Deno.serve(async (req) => {
     const orgId = reqBody?.orgId as string | undefined;
     if (!orgId) return json({ error: "orgId required" }, 400);
 
-    // C2: Authorize — orgs.id === auth.users.id (1:1 mapping), caller must own org
+    // C2: Authorize — caller must own this account (1:1 mapping)
     if (orgId !== user.id) return json({ error: "Forbidden" }, 403);
 
     // C1: Test mode derived server-side only (never trust client-supplied isTest)
