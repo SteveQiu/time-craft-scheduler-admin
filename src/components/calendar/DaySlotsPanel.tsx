@@ -114,7 +114,7 @@ export function DaySlotsPanel({
                         >
                           {!confirmedOpeningIds.has(opening.id) && (
                             <div
-                              className="flex-shrink-0 flex items-center self-stretch px-2 cursor-pointer"
+                              className="flex-shrink-0 flex items-center justify-center self-stretch min-w-[44px] min-h-[44px] px-2 cursor-pointer"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setSelectedOpeningIds(prev => {
@@ -127,6 +127,7 @@ export function DaySlotsPanel({
                             >
                               <Checkbox
                                 checked={selectedOpeningIds.has(opening.id)}
+                                onClick={(e) => e.stopPropagation()}
                                 onCheckedChange={(checked) => {
                                   setSelectedOpeningIds(prev => {
                                     const next = new Set(prev);
