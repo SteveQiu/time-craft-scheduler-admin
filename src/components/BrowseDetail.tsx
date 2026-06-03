@@ -242,7 +242,7 @@ export function BrowseDetail({
         <div>
           {selectedService && (
             <div className="space-y-3">
-              <h3 className="font-semibold text-foreground">Workers</h3>
+              <h3 className="font-semibold text-foreground">Service Providers</h3>
               {workersForService.map(worker => (
                 <Card key={worker} className={`cursor-pointer transition-colors ${selectedWorker === worker ? 'border-primary bg-primary/10 shadow-sm' : 'hover:border-primary/60 hover:bg-accent/50'}`} onClick={() => { setSelectedWorker(selectedWorker === worker ? null : worker); setSelectedDate(null); }}>
                   <CardContent className="p-4">
