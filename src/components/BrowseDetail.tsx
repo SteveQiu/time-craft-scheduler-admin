@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader } from './ui/card';
 import { Button } from './ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from './ui/alert-dialog';
-import { Calendar as CalendarIcon, Loader2, Share2, ExternalLink, ArrowLeft, Check, Crown, User, MessageSquare } from 'lucide-react';
+import { Calendar as CalendarIcon, Loader2, Share2, ExternalLink, ArrowLeft, Check, User, MessageSquare } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatLocation, parseLocation } from '@/lib/address';
 import { TIME_FORMATS, LOCALE } from '@/config/formats';
@@ -54,7 +54,6 @@ export function BrowseDetail({
   const [showInquiryDialog, setShowInquiryDialog] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<OpeningWithProfile | null>(null);
   const [isBooking, setIsBooking] = useState(false);
-  const [isPremium, setIsPremium] = useState(false);
   const { sendPremiumReminder } = usePremiumReminder();
   const { user: currentUser } = useAuth();
   const isOwnProfile = currentUser?.id === providerId;
@@ -68,22 +67,6 @@ export function BrowseDetail({
     openingId: selectedSlot?.id ?? null,
     selectedPaymentTabId: null,
   });
-
-  // Fetch premium status for provider
-  useEffect(() => {
-    if (!providerId) return;
-
-    const fetchPremiumStatus = async () => {
-      try {
-        const { data } = await (supabase as any).rpc('is_user_premium', { p_user_id: providerId });
-        setIsPremium(Boolean(data));
-      } catch {
-        setIsPremium(false);
-      }
-    };
-
-    fetchPremiumStatus();
-  }, [providerId]);
 
   // Get provider
   const currentProvider = providers.find(p => p.user_id === providerId);
@@ -184,15 +167,7 @@ export function BrowseDetail({
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div className="flex-1">
-            <div className="flex items-center gap-2">
               <h2 className="text-3xl font-bold text-foreground">{currentProvider.provider_name}</h2>
-              {isPremium && (
-                <div className="flex items-center gap-1 bg-amber-100 text-amber-800 px-2 py-1 rounded">
-                  <Crown className="h-4 w-4" />
-                  <span className="text-xs font-semibold">Premium</span>
-                </div>
-              )}
-            </div>
             <p className="text-sm text-muted-foreground">
               {currentProvider?.is_custom_inquiry
                 ? selectedProviderOpenings.length > 0
