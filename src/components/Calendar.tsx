@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { Button } from './ui/button';
-import { Plus, Crown, Store, Loader2 } from 'lucide-react';
+import { Plus, Crown, Store, Loader2, List } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -175,9 +175,13 @@ export function Calendar() {
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <h2 className="text-3xl font-bold text-foreground">Opening</h2>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <Button onClick={() => navigate('/openings/list')} variant="outline" className="flex items-center space-x-2">
+            <List className="h-4 w-4" />
+            <span>List View</span>
+          </Button>
           <Button onClick={() => setCurrentDate(new Date())} variant="outline" className="flex items-center space-x-2">
             <span>Today</span>
           </Button>

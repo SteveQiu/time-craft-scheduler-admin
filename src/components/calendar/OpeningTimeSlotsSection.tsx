@@ -18,7 +18,6 @@ export function OpeningTimeSlotsSection({
   setErrors,
 }: OpeningTimeSlotsSectionProps) {
   const durationOptions = useMemo(() => generateDurationOptions(), []);
-  console.log('[OpeningTimeSlotsSection] duration:', newOpening.duration, 'type:', typeof newOpening.duration, 'stringified:', String(newOpening.duration));
   if (newOpening.multipleSlots) {
     return (
       <>

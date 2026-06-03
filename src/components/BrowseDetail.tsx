@@ -13,6 +13,7 @@ import { CustomInquiryDialog } from './browse/CustomInquiryDialog';
 import { getEffectiveTotal } from '@/lib/utils';
 import { usePremiumReminder } from '@/hooks/usePremiumReminder';
 import { useProviderPayments } from '@/hooks/useProviderPayments';
+import { useAuth } from '@/hooks/useAuth';
 import { getMethodLabel } from '@/lib/payment/methods';
 import type { OpeningWithProfile, ProviderAccount } from '@/types/browse';
 
@@ -55,6 +56,8 @@ export function BrowseDetail({
   const [isBooking, setIsBooking] = useState(false);
   const [isPremium, setIsPremium] = useState(false);
   const { sendPremiumReminder } = usePremiumReminder();
+  const { user: currentUser } = useAuth();
+  const isOwnProfile = currentUser?.id === providerId;
   const {
     allAvailableMethods,
     loadingOrgPayments,
@@ -215,7 +218,7 @@ export function BrowseDetail({
         {/* Services */}
         <div className="space-y-3">
           <h3 className="font-semibold text-foreground">Services</h3>
-          {currentProvider?.is_custom_inquiry && currentProvider.custom_inquiry_info && (
+          {currentProvider?.is_custom_inquiry && currentProvider.custom_inquiry_info && !isOwnProfile && (
             <Card
               className="cursor-pointer hover:bg-muted/50 transition-colors"
               onClick={() => setShowInquiryDialog(true)}
@@ -306,7 +309,7 @@ export function BrowseDetail({
                       <div className="font-semibold text-sm">{new Date(`1970-01-01T${slot.start_time}`).toLocaleTimeString(LOCALE, TIME_FORMATS.time24)}</div>
                       <div className="text-xs text-muted-foreground">{slot.duration}h</div>
                     </div>
-                    <Button size="sm" onClick={async () => {
+                    <Button size="sm" disabled={isOwnProfile} onClick={async () => {
                       const { data: { user } } = await supabase.auth.getUser();
                       if (!user) {
                         try { localStorage.setItem('pendingBookingOpeningId', slot.id); } catch {}
@@ -316,7 +319,7 @@ export function BrowseDetail({
                       }
                       setSelectedSlot(slot);
                       setShowBookingDialog(true);
-                    }} className="w-full">Book</Button>
+                    }} className="w-full">{isOwnProfile ? 'Your Opening' : 'Book'}</Button>
                     <div className="flex gap-2">
                       <Button variant="outline" size="icon" className="flex-1 h-8" onClick={() => window.open(`/openings/${slot.id}`)}><ExternalLink className="h-4 w-4" /></Button>
                       <Button variant="outline" size="icon" className="flex-1 h-8" onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/openings/${slot.id}`); setCopiedSlotId(slot.id); toast.success('Link copied!'); setTimeout(() => setCopiedSlotId(null), 1000); }}>{copiedSlotId === slot.id ? <Check className="h-4 w-4 text-green-600" /> : <Share2 className="h-4 w-4" />}</Button>

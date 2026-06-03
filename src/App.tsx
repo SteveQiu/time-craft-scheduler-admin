@@ -39,6 +39,7 @@ const Refund = lazy(() => import("@/pages/legal/Refund"));
 const Help = lazy(() => import("@/pages/Help"));
 const TestReminder = lazy(() => import("@/pages/dev/TestReminder"));
 const SignUpConfirmation = lazy(() => import("@/pages/auth/SignUpConfirmation"));
+const OpeningsListPage = lazy(() => import("@/pages/OpeningsListPage"));
 
 const queryClient = new QueryClient();
 
@@ -59,6 +60,7 @@ function AppRoutes() {
         <Route path="/" element={<RootRedirect />} />
         <Route path={ROUTES.dashboard} element={<Dashboard />} />
         <Route path={ROUTES.openings} element={<Calendar />} />
+        <Route path={ROUTES.openingsList} element={<OpeningsListPage />} />
         <Route path={ROUTES.calendar} element={<Navigate to={ROUTES.openings} replace />} />
         <Route path={ROUTES.browse} element={<BookingBrowse />} />
         <Route path={ROUTES.browseProvider} element={<BookingBrowse />} />

@@ -382,9 +382,8 @@ export function BookingBrowse() {
     return [...bookmarkedProviders, ...extra];
   }, [bookmarkedProviders, localBookmarkedProviders]);
 
-  // Filter providers by search term, exclude current user, and apply location filter
+  // Filter providers by search term and apply location filter
   const filteredProviders = allProviders.filter(provider => {
-    if (provider.user_id === user?.id) return false;
 
     const terms = debouncedSearch.toLowerCase().split(/\s+/).filter(Boolean);
     const matchesSearch = terms.length === 0 || terms.every(term =>
