@@ -104,7 +104,7 @@ export function AppSidebar() {
           </>
         ) : (
           <>
-            <CalendarIcon className="h-8 w-8 text-primary flex-shrink-0" />
+            <CalendarIcon className={`h-8 w-8 flex-shrink-0 ${ownPremium ? 'text-[#a16207]' : 'text-primary'}`} />
             <h1 className={`text-lg font-bold truncate ${ownPremium ? 'bg-gradient-to-r from-[#a16207] via-[#ca8a04] to-[#a16207] bg-clip-text text-transparent' : 'text-foreground'}`}>{APP_NAME}</h1>
           </>
         )}
