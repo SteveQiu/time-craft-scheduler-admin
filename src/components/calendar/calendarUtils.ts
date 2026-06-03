@@ -90,8 +90,10 @@ export const generateEndTimeOptions = (startTime: string): string[] => {
 
 export const generateDurationOptions = (): { value: number; label: string }[] => {
   const options = [];
-  for (let i = 1; i <= 24; i++) {
-    options.push({ value: i, label: `${i} hour${i > 1 ? 's' : ''}` });
+  for (let i = 1; i <= 48; i++) {
+    const hours = i * 0.5;
+    const label = hours === 0.5 ? '30 min' : Number.isInteger(hours) ? `${hours} hour${hours > 1 ? 's' : ''}` : `${Math.floor(hours)}h 30min`;
+    options.push({ value: hours, label });
   }
   return options;
 };

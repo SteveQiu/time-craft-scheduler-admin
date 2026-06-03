@@ -46,7 +46,7 @@ export function OpeningTimeSlotsSection({
           <Select
             value={newOpening.interval.toString()}
             onValueChange={(value) => {
-              setNewOpening({ ...newOpening, interval: parseInt(value) });
+              setNewOpening({ ...newOpening, interval: parseFloat(value) });
               setErrors(prev => ({ ...prev, interval: '' }));
             }}
           >
@@ -71,7 +71,7 @@ export function OpeningTimeSlotsSection({
       <Select
         value={newOpening.duration.toString()}
         onValueChange={(value) => {
-          setNewOpening({ ...newOpening, duration: parseInt(value) });
+          setNewOpening({ ...newOpening, duration: parseFloat(value) });
           setErrors(prev => ({ ...prev, duration: '' }));
         }}
       >
