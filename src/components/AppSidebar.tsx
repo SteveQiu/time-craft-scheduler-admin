@@ -1,4 +1,4 @@
-import { Search, Home, Calendar as CalendarIcon, Users, Clock, Settings, LogIn, LogOut, UserCircle, Shield, Bell, HelpCircle } from 'lucide-react';
+import { Search, Home, Calendar as CalendarIcon, Users, Clock, Settings, LogIn, LogOut, UserCircle, Shield, Bell, HelpCircle, Crown } from 'lucide-react';
 import { APP_NAME } from '@/config/app';
 import { ROUTES } from '@/config/routes';
 import { useAuth } from '@/hooks/useAuth';
@@ -103,10 +103,18 @@ export function AppSidebar() {
             </div>
           </>
         ) : (
-          <>
-            <CalendarIcon className={`h-8 w-8 flex-shrink-0 ${ownPremium ? 'text-[#a16207]' : 'text-primary'}`} />
-            <h1 className={`text-lg font-bold truncate ${ownPremium ? 'bg-gradient-to-r from-[#a16207] via-[#ca8a04] to-[#a16207] bg-clip-text text-transparent' : 'text-foreground'}`}>{APP_NAME}</h1>
-          </>
+          <div className="flex flex-col">
+            <div className="flex items-center space-x-3">
+              <CalendarIcon className={`h-8 w-8 flex-shrink-0 ${ownPremium ? 'text-[#a16207]' : 'text-primary'}`} />
+              <h1 className={`text-lg font-bold truncate ${ownPremium ? 'bg-gradient-to-r from-[#a16207] via-[#ca8a04] to-[#a16207] bg-clip-text text-transparent' : 'text-foreground'}`}>{APP_NAME}</h1>
+            </div>
+            {ownPremium && (
+              <div className="flex items-center gap-1.5 mt-2 ml-11 border border-[#a16207]/30 rounded-lg px-2 py-0.5 w-fit">
+                <Crown className="h-3.5 w-3.5 text-[#a16207]" />
+                <span className="text-xs font-semibold text-[#a16207]">Premium</span>
+              </div>
+            )}
+          </div>
         )}
       </div>
 
