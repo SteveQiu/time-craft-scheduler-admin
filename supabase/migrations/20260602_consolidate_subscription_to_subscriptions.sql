@@ -21,3 +21,5 @@ WHERE o.id = s.user_id
 
 -- Ensure subscriptions table is in realtime publication
 ALTER PUBLICATION supabase_realtime ADD TABLE public.subscriptions;
+
+DROP TABLE IF EXISTS public.orgs;
