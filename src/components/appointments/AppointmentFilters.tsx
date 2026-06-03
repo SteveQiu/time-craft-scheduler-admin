@@ -67,11 +67,11 @@ export function AppointmentFilters({
               <SelectTrigger className="w-full sm:w-48">
                 <div className="flex items-center space-x-2">
                   <User className="h-4 w-4" />
-                  <SelectValue placeholder="Filter by worker" />
+                  <SelectValue placeholder="Filter by service provider" />
                 </div>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Workers</SelectItem>
+                <SelectItem value="all">All Service Providers</SelectItem>
                 {workers.map(w => (
                   <SelectItem key={w.id} value={w.worker_name}>{w.worker_name}</SelectItem>
                 ))}

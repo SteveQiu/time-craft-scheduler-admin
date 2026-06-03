@@ -216,7 +216,7 @@ export function BrowseDetail({
           ))}
         </div>
 
-        {/* Workers & Calendar */}
+        {/* Service Providers & Calendar */}
         <div>
           {selectedService && (
             <div className="space-y-3">

@@ -166,7 +166,7 @@ export function Workers() {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
             <Input
-              placeholder="Search workers by name or skills..."
+              placeholder="Search service providers by name or skills..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
@@ -175,7 +175,7 @@ export function Workers() {
         </CardContent>
       </Card>
 
-      {/* Workers Grid */}
+      {/* Service Providers Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredWorkers.map((worker) => (
           <Card key={worker.id} className="shadow-soft border-card-border hover:shadow-medium transition-shadow">
@@ -243,8 +243,8 @@ export function Workers() {
           <CardContent className="text-center py-12">
             <div className="text-muted-foreground">
               <Search className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p className="text-lg">No workers found</p>
-              <p className="text-sm">Invite workers to get started</p>
+              <p className="text-lg">No service providers found</p>
+              <p className="text-sm">Invite service providers to get started</p>
             </div>
           </CardContent>
         </Card>

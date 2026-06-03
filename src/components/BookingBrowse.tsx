@@ -99,7 +99,7 @@ function ProviderBrowseCard({
           </div>
         </div>
         <div>
-          <p className="text-xs font-medium text-muted-foreground mb-2">Workers</p>
+          <p className="text-xs font-medium text-muted-foreground mb-2">Service Providers</p>
           <p className="text-sm text-foreground truncate">{provider.workers.join(', ')}</p>
         </div>
         <div onClick={e => e.stopPropagation()}>
@@ -508,7 +508,7 @@ export function BookingBrowse() {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search providers, services, workers..."
+                placeholder="Search providers, services..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
