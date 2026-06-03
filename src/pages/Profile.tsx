@@ -8,6 +8,7 @@ import { ReportDialog } from '@/components/ReportDialog';
 import { PhotoLightbox } from '@/components/PhotoLightbox';
 import { ArrowLeft, Camera } from 'lucide-react';
 import { useSubscription } from '@/hooks/useSubscription';
+import { useIsPremium } from '@/hooks/useIsPremium';
 import { usePageTitle } from '@/context/PageTitleContext';
 import { useProfileBranding } from '@/context/ProfileBrandingContext';
 import { useProfile } from '@/hooks/useProfile';
@@ -93,15 +94,16 @@ export default function Profile() {
   } = useProfile({ slug, user, onSaveSuccess: () => setEditing(false) });
 
   const { addresses: savedAddresses } = useWorkplaceAddresses(user?.id);
+  const { isPremium: viewedProfilePremium } = useIsPremium({ userId: profile?.id });
 
   useEffect(() => {
     if (!isOwnProfile && profile) {
-      setBranding(profile.avatar_url ?? null, profile.full_name ?? null);
+      setBranding(profile.avatar_url ?? null, profile.full_name ?? null, viewedProfilePremium);
     }
     return () => {
       clearBranding();
     };
-  }, [isOwnProfile, profile?.avatar_url, profile?.full_name, setBranding, clearBranding]);
+  }, [isOwnProfile, profile?.avatar_url, profile?.full_name, viewedProfilePremium, setBranding, clearBranding]);
 
   useEffect(() => {
     if (profile) {

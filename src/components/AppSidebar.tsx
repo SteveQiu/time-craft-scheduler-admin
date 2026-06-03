@@ -4,6 +4,7 @@ import { ROUTES } from '@/config/routes';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfileBranding } from '@/context/ProfileBrandingContext';
 import { useUserRoles } from '@/hooks/useUserRoles';
+import { useIsPremium } from '@/hooks/useIsPremium';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -19,8 +20,9 @@ export function AppSidebar() {
   const { isUser, isOrganization, isInternalDev, loading: rolesLoading } = useUserRoles();
   const location = useLocation();
   const navigate = useNavigate();
-  const { avatarUrl, providerName } = useProfileBranding();
+  const { avatarUrl, providerName, isPremium: viewedPremium } = useProfileBranding();
   const isWhiteLabel = !!providerName;
+  const { isPremium: ownPremium } = useIsPremium({ userId: user?.id });
   const [viewMode, setViewMode] = useState<'user' | 'org'>('user');
   const [profileName, setProfileName] = useState<string | null>(null);
 
@@ -89,7 +91,7 @@ export function AppSidebar() {
               </AvatarFallback>
             </Avatar>
             <div className="flex min-w-0 flex-col">
-              <h1 className="truncate text-2xl font-bold leading-tight text-foreground">{providerName}</h1>
+              <h1 className={`truncate text-2xl font-bold leading-tight ${viewedPremium ? 'bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 bg-clip-text text-transparent' : 'text-foreground'}`}>{providerName}</h1>
               <a
                 href="https://pikappoint.com"
                 target="_blank"
@@ -103,7 +105,7 @@ export function AppSidebar() {
         ) : (
           <>
             <CalendarIcon className="h-8 w-8 text-primary flex-shrink-0" />
-            <h1 className="text-lg font-bold text-foreground truncate">{APP_NAME}</h1>
+            <h1 className={`text-lg font-bold truncate ${ownPremium ? 'bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 bg-clip-text text-transparent' : 'text-foreground'}`}>{APP_NAME}</h1>
           </>
         )}
       </div>
