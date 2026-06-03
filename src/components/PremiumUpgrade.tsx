@@ -45,7 +45,7 @@ export function PremiumUpgrade({ orgId, onSuccess }: PremiumUpgradeProps) {
   const [loading, setLoading] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
 
-  // Subscribe to org plan changes
+  // Subscribe to subscription plan changes
   useEffect(() => {
     let effectOrgId = orgId;
     let unsubscribe: (() => void) | null = null;
@@ -53,39 +53,49 @@ export function PremiumUpgrade({ orgId, onSuccess }: PremiumUpgradeProps) {
     const setup = async () => {
       if (!effectOrgId) return;
 
-      // Get current plan
+      // Get current plan from subscriptions
       const fetchPlan = async () => {
         const { data } = await (supabase as any)
-          .from('orgs')
-          .select('plan')
-          .eq('id', effectOrgId)
-          .single();
+          .from('subscriptions')
+          .select('plan_type, status, expires_at')
+          .eq('user_id', effectOrgId)
+          .maybeSingle();
 
-        if ((data as any)?.plan === 'premium') {
-          setIsPremium(true);
+        if (data) {
+          const premium =
+            ['premium', 'pro'].includes(data.plan_type) &&
+            data.status === 'active' &&
+            (!data.expires_at || new Date(data.expires_at) > new Date());
+          setIsPremium(premium);
         }
       };
 
       await fetchPlan();
 
-      // Subscribe to real-time updates
+      // Subscribe to real-time updates (INSERT for first checkout, UPDATE for changes)
       const channel = supabase
-        .channel(`org-${effectOrgId}`)
+        .channel(`subscription-upgrade-${effectOrgId}`)
         .on(
           'postgres_changes',
           {
-            event: 'UPDATE',
+            event: '*',
             schema: 'public',
-            table: 'orgs',
-            filter: `id=eq.${effectOrgId}`,
+            table: 'subscriptions',
+            filter: `user_id=eq.${effectOrgId}`,
           },
           (payload) => {
-            if (payload.new?.plan === 'premium') {
+            const row = payload.new as any;
+            if (!row) return;
+            const premium =
+              ['premium', 'pro'].includes(row.plan_type) &&
+              row.status === 'active' &&
+              (!row.expires_at || new Date(row.expires_at) > new Date());
+            if (premium) {
               setIsPremium(true);
               setOpen(false);
               toast.success('✨ Welcome to Premium!');
               onSuccess?.();
-            } else if (payload.new?.plan === 'free') {
+            } else {
               setIsPremium(false);
             }
           }

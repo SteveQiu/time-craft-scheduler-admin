@@ -19,46 +19,43 @@ export function useOrgPlan(orgId: string | null): OrgPlan {
     let channel: ReturnType<typeof supabase.channel> | null = null;
 
     const setup = async () => {
-      // Fetch current plan ('orgs' table not in typed schema yet; cast to any)
       const { data, error } = await (supabase as any)
-        .from('orgs')
-        .select('plan')
-        .eq('id', orgId)
+        .from('subscriptions')
+        .select('plan_type, status, expires_at')
+        .eq('user_id', orgId)
         .maybeSingle();
 
       if (error) {
-        console.error('Failed to fetch org plan:', error);
+        console.error('Failed to fetch subscription plan:', error);
       } else if (data) {
-        setPlan((data as any).plan as 'free' | 'premium');
-      } else {
-        // Org record doesn't exist yet, create it
-        const { error: insertError } = await (supabase as any)
-          .from('orgs')
-          .insert({ id: orgId, plan: 'free' })
-          .select()
-          .maybeSingle();
-
-        if (insertError) {
-          console.error('Failed to create org record:', insertError);
-        }
+        const isPremium =
+          ['premium', 'pro'].includes(data.plan_type) &&
+          data.status === 'active' &&
+          (!data.expires_at || new Date(data.expires_at) > new Date());
+        setPlan(isPremium ? 'premium' : 'free');
       }
 
       setLoading(false);
 
-      // Subscribe to real-time updates
+      // Subscribe to real-time updates (both INSERT and UPDATE)
       channel = supabase
-        .channel(`org-plan-${orgId}`)
+        .channel(`subscription-plan-${orgId}`)
         .on(
           'postgres_changes',
           {
-            event: 'UPDATE',
+            event: '*',
             schema: 'public',
-            table: 'orgs',
-            filter: `id=eq.${orgId}`,
+            table: 'subscriptions',
+            filter: `user_id=eq.${orgId}`,
           },
           (payload) => {
-            if (payload.new?.plan) {
-              setPlan(payload.new.plan as 'free' | 'premium');
+            const row = payload.new as any;
+            if (row) {
+              const isPremium =
+                ['premium', 'pro'].includes(row.plan_type) &&
+                row.status === 'active' &&
+                (!row.expires_at || new Date(row.expires_at) > new Date());
+              setPlan(isPremium ? 'premium' : 'free');
             }
           }
         )

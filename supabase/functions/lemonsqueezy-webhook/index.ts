@@ -109,66 +109,49 @@ Deno.serve(async (req) => {
   const planExpiresAt: string | undefined = attrs.renews_at ?? attrs.ends_at ?? undefined;
   const eventUpdatedAt: string | undefined = attrs.updated_at;
 
-  // 6. Update org plan + subscription metadata
-  const orgUpdate: Record<string, unknown> = {
-    plan: planType,
-    plan_status: planStatus,
-    ...(lsSubscriptionId ? { ls_subscription_id: lsSubscriptionId } : {}),
-    ...(lsCustomerId ? { ls_customer_id: lsCustomerId } : {}),
-    ...(planStartedAt ? { plan_started_at: planStartedAt } : {}),
-    ...(planExpiresAt ? { plan_expires_at: planExpiresAt } : {}),
-  };
+  // orgId === userId in this app (1:1 mapping); use as subscription user_id
+  const subUserId = orgId;
 
   // H2: Out-of-order rejection — skip if we've already applied a newer event
   if (eventUpdatedAt) {
-    const { data: existingOrg } = await supabase
-      .from("orgs")
+    const { data: existingSub } = await supabase
+      .from("subscriptions")
       .select("ls_event_at")
-      .eq("id", orgId)
+      .eq("user_id", subUserId)
       .maybeSingle();
-    if (existingOrg?.ls_event_at && existingOrg.ls_event_at >= eventUpdatedAt) {
+    if (existingSub?.ls_event_at && existingSub.ls_event_at >= eventUpdatedAt) {
       console.log("Stale webhook ignored — existing event is newer", {
         webhookId, eventName,
-        existing: existingOrg.ls_event_at,
+        existing: existingSub.ls_event_at,
         incoming: eventUpdatedAt,
       });
       return new Response("OK", { status: 200 });
     }
-    orgUpdate.ls_event_at = eventUpdatedAt;
   }
 
-  const { error: orgError } = await supabase
-    .from("orgs")
-    .update(orgUpdate)
-    .eq("id", orgId);
+  // 6. Upsert subscriptions table (single source of truth)
+  const subUpsert: Record<string, unknown> = {
+    user_id: subUserId,
+    plan_type: planType,
+    status: planStatus === "active" ? "active" : planStatus === "cancelled" ? "cancelled" : "inactive",
+    ...(planStartedAt ? { started_at: planStartedAt } : {}),
+    ...(planExpiresAt ? { expires_at: planExpiresAt } : {}),
+    ...(lsSubscriptionId ? { ls_subscription_id: lsSubscriptionId } : {}),
+    ...(lsCustomerId ? { ls_customer_id: lsCustomerId } : {}),
+    ...(eventUpdatedAt ? { ls_event_at: eventUpdatedAt } : {}),
+    updated_at: new Date().toISOString(),
+  };
 
-  if (orgError) {
-    console.error("Failed to update org:", orgError);
+  const { error: subError } = await supabase
+    .from("subscriptions")
+    .upsert(subUpsert, { onConflict: "user_id" });
+
+  if (subError) {
+    console.error("Failed to upsert subscription:", subError);
     return new Response("Internal Server Error", { status: 500 });
   }
 
-  // 7. Upsert subscriptions table if user_id is available
-  if (userId) {
-    const subUpsert: Record<string, unknown> = {
-      user_id: userId,
-      plan_type: planType,
-      status: planStatus === "active" ? "active" : planStatus === "cancelled" ? "cancelled" : "inactive",
-      ...(planStartedAt ? { started_at: planStartedAt } : {}),
-      ...(planExpiresAt ? { expires_at: planExpiresAt } : {}),
-      updated_at: new Date().toISOString(),
-    };
-
-    const { error: subError } = await supabase
-      .from("subscriptions")
-      .upsert(subUpsert, { onConflict: "user_id" });
-
-    if (subError) {
-      console.error("Failed to upsert subscription:", subError);
-      // Non-fatal — org already updated
-    }
-  }
-
-  console.log(`org ${orgId} plan → ${planType} (event: ${eventName}, sub: ${lsSubscriptionId}, expires: ${planExpiresAt})`);
+  console.log(`user ${subUserId} plan → ${planType} (event: ${eventName}, sub: ${lsSubscriptionId}, expires: ${planExpiresAt})`);
 
   return new Response("OK", { status: 200 });
 });
