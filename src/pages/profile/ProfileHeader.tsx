@@ -65,60 +65,70 @@ export function ProfileHeader({
 
   return (
     <div className="flex flex-wrap gap-4 items-start sm:items-center justify-between">
-      <div className="flex items-center space-x-4">
-        <input
-          type="file"
-          accept="image/*"
-          className="hidden"
-          id="avatar-upload"
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-            if (file && onAvatarUpload) onAvatarUpload(file);
-            e.target.value = '';
-          }}
-        />
-        <div className="relative">
-          <Avatar className="h-20 w-20">
-            <AvatarImage src={profile.avatar_url ?? undefined} alt={profile.full_name ?? 'Avatar'} />
-            <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
-              {initials}
-            </AvatarFallback>
-          </Avatar>
-          {isOwnProfile && editing && onAvatarUpload && (
-            <label
-              htmlFor="avatar-upload"
-              className="absolute bottom-0 right-0 bg-primary text-primary-foreground rounded-full p-1 cursor-pointer hover:bg-primary/90 transition-colors"
-              aria-label="Upload profile picture"
-            >
-              <Camera className="h-3.5 w-3.5" />
-            </label>
-          )}
+      {isOwnProfile ? (
+        <div className="flex items-center space-x-4">
+          <input
+            type="file"
+            accept="image/*"
+            className="hidden"
+            id="avatar-upload"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file && onAvatarUpload) onAvatarUpload(file);
+              e.target.value = '';
+            }}
+          />
+          <div className="relative">
+            <Avatar className="h-20 w-20">
+              <AvatarImage src={profile.avatar_url ?? undefined} alt={profile.full_name ?? 'Avatar'} />
+              <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
+                {initials}
+              </AvatarFallback>
+            </Avatar>
+            {editing && onAvatarUpload && (
+              <label
+                htmlFor="avatar-upload"
+                className="absolute bottom-0 right-0 bg-primary text-primary-foreground rounded-full p-1 cursor-pointer hover:bg-primary/90 transition-colors"
+                aria-label="Upload profile picture"
+              >
+                <Camera className="h-3.5 w-3.5" />
+              </label>
+            )}
+          </div>
+          <div>
+            {editing ? (
+              <Input
+                value={form.full_name}
+                onChange={(e) => onFormChange({ ...form, full_name: e.target.value })}
+                placeholder="Full name"
+                className="text-xl font-bold mb-1"
+              />
+            ) : (
+              <h2 className="text-2xl font-bold text-foreground">
+                {profile.full_name || 'No name set'}
+              </h2>
+            )}
+            <p className="text-muted-foreground">
+              {user?.email ?? profile.email}
+            </p>
+            {avgRating && (
+              <div className="flex items-center space-x-1 mt-1">
+                <Star className="h-4 w-4 text-warning fill-current" />
+                <span className="text-sm font-medium">{avgRating.avg}</span>
+                <span className="text-sm text-muted-foreground">({avgRating.count} reviews)</span>
+              </div>
+            )}
+          </div>
         </div>
-        <div>
-          {editing ? (
-            <Input
-              value={form.full_name}
-              onChange={(e) => onFormChange({ ...form, full_name: e.target.value })}
-              placeholder="Full name"
-              className="text-xl font-bold mb-1"
-            />
-          ) : (
-            <h2 className="text-2xl font-bold text-foreground">
-              {profile.full_name || 'No name set'}
-            </h2>
-          )}
-          <p className="text-muted-foreground">
-            {isOwnProfile ? (user?.email ?? profile.email) : profile.email}
-          </p>
-          {avgRating && (
-            <div className="flex items-center space-x-1 mt-1">
-              <Star className="h-4 w-4 text-warning fill-current" />
-              <span className="text-sm font-medium">{avgRating.avg}</span>
-              <span className="text-sm text-muted-foreground">({avgRating.count} reviews)</span>
-            </div>
-          )}
-        </div>
-      </div>
+      ) : (
+        avgRating && (
+          <div className="flex items-center space-x-1">
+            <Star className="h-4 w-4 text-warning fill-current" />
+            <span className="text-sm font-medium">{avgRating.avg}</span>
+            <span className="text-sm text-muted-foreground">({avgRating.count} reviews)</span>
+          </div>
+        )
+      )}
       <div className="flex flex-wrap items-center gap-2">
         {shareUrl && (
           <>

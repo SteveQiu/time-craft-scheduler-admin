@@ -115,7 +115,7 @@ export function ShareDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-sm">
+      <DialogContent className="max-w-[calc(100vw-2rem)] max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-lg sm:max-w-sm">
         <DialogHeader>
           <DialogTitle>{displayName ? `${title} — ${displayName}` : title}</DialogTitle>
         </DialogHeader>

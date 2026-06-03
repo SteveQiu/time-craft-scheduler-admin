@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Phone, MapPin, Eye, EyeOff, Link } from 'lucide-react';
+import { Phone, MapPin, Eye, EyeOff, Link, Mail } from 'lucide-react';
 import type { ProfileData, FormState, PrivacySettings } from './types';
 
 interface ProfileAboutProps {
@@ -99,6 +99,12 @@ export function ProfileAbout({
 
   return (
     <>
+      {!isOwnProfile && profile.email && (
+        <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+          <Mail className="h-4 w-4" />
+          <span>{profile.email}</span>
+        </div>
+      )}
       {profile.introduction && <p className="text-foreground">{profile.introduction}</p>}
       <div className="space-y-2">
         {profile.phone && (
