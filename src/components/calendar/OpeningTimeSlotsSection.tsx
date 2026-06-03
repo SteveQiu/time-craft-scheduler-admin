@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Label } from '../ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { generateEndTimeOptions, generateDurationOptions } from './calendarUtils';
@@ -17,6 +17,8 @@ export function OpeningTimeSlotsSection({
   errors,
   setErrors,
 }: OpeningTimeSlotsSectionProps) {
+  const durationOptions = useMemo(() => generateDurationOptions(), []);
+  console.log('[OpeningTimeSlotsSection] duration:', newOpening.duration, 'type:', typeof newOpening.duration, 'stringified:', String(newOpening.duration));
   if (newOpening.multipleSlots) {
     return (
       <>
@@ -44,9 +46,9 @@ export function OpeningTimeSlotsSection({
         <div className="space-y-2">
           <Label htmlFor="interval">Interval (hours)</Label>
           <Select
-            value={newOpening.interval.toString()}
+            value={String(newOpening.interval)}
             onValueChange={(value) => {
-              setNewOpening({ ...newOpening, interval: parseFloat(value) });
+              setNewOpening(prev => ({ ...prev, interval: Number(value) }));
               setErrors(prev => ({ ...prev, interval: '' }));
             }}
           >
@@ -54,8 +56,8 @@ export function OpeningTimeSlotsSection({
               <SelectValue placeholder="Select interval" />
             </SelectTrigger>
             <SelectContent>
-              {generateDurationOptions().map((option) => (
-                <SelectItem key={option.value} value={option.value.toString()}>{option.label}</SelectItem>
+              {durationOptions.map((option) => (
+                <SelectItem key={String(option.value)} value={String(option.value)}>{option.label}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -69,9 +71,9 @@ export function OpeningTimeSlotsSection({
     <div className="space-y-2">
       <Label htmlFor="duration">Duration</Label>
       <Select
-        value={newOpening.duration.toString()}
+        value={String(newOpening.duration)}
         onValueChange={(value) => {
-          setNewOpening({ ...newOpening, duration: parseFloat(value) });
+          setNewOpening(prev => ({ ...prev, duration: Number(value) }));
           setErrors(prev => ({ ...prev, duration: '' }));
         }}
       >
@@ -79,8 +81,8 @@ export function OpeningTimeSlotsSection({
           <SelectValue placeholder="Select duration" />
         </SelectTrigger>
         <SelectContent>
-          {generateDurationOptions().map((option) => (
-            <SelectItem key={option.value} value={option.value.toString()}>{option.label}</SelectItem>
+          {durationOptions.map((option) => (
+            <SelectItem key={String(option.value)} value={String(option.value)}>{option.label}</SelectItem>
           ))}
         </SelectContent>
       </Select>
