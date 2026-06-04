@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { PhotoLightbox } from './PhotoLightbox';
@@ -16,6 +16,7 @@ export function ProfilePhotoStrip({ userId, thumbClass = 'w-16 h-16' }: Props) {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [photoGridOpen, setPhotoGridOpen] = useState(false);
+  const gridWasOpen = useRef(false);
 
   const { data: photoUrls = [] } = useQuery({
     queryKey: ['provider-photos', userId],
@@ -50,7 +51,20 @@ export function ProfilePhotoStrip({ userId, thumbClass = 'w-16 h-16' }: Props) {
   const visiblePhotos = showMoreButton ? photoUrls.slice(0, PREVIEW_COUNT) : photoUrls;
   const hiddenCount = photoUrls.length - PREVIEW_COUNT;
 
-  const open = (idx: number) => { setLightboxIndex(idx); setLightboxOpen(true); };
+  const openLightbox = (idx: number) => {
+    gridWasOpen.current = photoGridOpen;
+    setPhotoGridOpen(false);
+    setLightboxIndex(idx);
+    setLightboxOpen(true);
+  };
+
+  const closeLightbox = () => {
+    setLightboxOpen(false);
+    if (gridWasOpen.current) {
+      setPhotoGridOpen(true);
+      gridWasOpen.current = false;
+    }
+  };
 
   return (
     <>
@@ -61,7 +75,7 @@ export function ProfilePhotoStrip({ userId, thumbClass = 'w-16 h-16' }: Props) {
             src={url}
             alt={`Provider photo ${idx + 1}`}
             className={`${thumbClass} object-cover rounded-lg cursor-pointer hover:opacity-80 hover:ring-2 hover:ring-primary transition-all`}
-            onClick={() => open(idx)}
+            onClick={() => openLightbox(idx)}
           />
         ))}
         {showMoreButton && (
@@ -87,7 +101,7 @@ export function ProfilePhotoStrip({ userId, thumbClass = 'w-16 h-16' }: Props) {
                 src={url}
                 alt={`Provider photo ${idx + 1}`}
                 className="w-full aspect-square object-cover rounded-lg cursor-pointer hover:opacity-80 hover:ring-2 hover:ring-primary transition-all"
-                onClick={() => { setPhotoGridOpen(false); open(idx); }}
+                onClick={() => openLightbox(idx)}
               />
             ))}
           </div>
@@ -97,7 +111,7 @@ export function ProfilePhotoStrip({ userId, thumbClass = 'w-16 h-16' }: Props) {
         photos={photoUrls}
         initialIndex={lightboxIndex}
         open={lightboxOpen}
-        onClose={() => setLightboxOpen(false)}
+        onClose={closeLightbox}
       />
     </>
   );
