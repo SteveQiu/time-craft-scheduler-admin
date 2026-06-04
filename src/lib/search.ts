@@ -88,6 +88,13 @@ export function searchProviders(
   const terms = tokenize(options.query);
   const { locationFilter, providerOpeningsMap = new Map() } = options;
 
+  // No search terms — return location-filtered results in original order
+  if (terms.length === 0) {
+    return providers.filter(provider =>
+      matchesLocation(provider, locationFilter, providerOpeningsMap)
+    );
+  }
+
   const scored = providers
     .map(provider => ({
       provider,

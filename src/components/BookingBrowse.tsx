@@ -13,7 +13,7 @@ import { BrowseDetail } from './BrowseDetail';
 import { ProfilePhotoStrip } from './ProfilePhotoStrip';
 import { searchProviders } from '@/lib/search';
 import type { OpeningWithProfile, ProviderAccount, CustomInquiryInfo } from '@/types/browse';
-import { useLocalBookmarks, getLocalBookmarkIds } from '@/hooks/useLocalBookmarks';
+import { useLocalBookmarks } from '@/hooks/useLocalBookmarks';
 
 function getUniqueValues(values: string[]) {
   return [...new Set(values)];

@@ -21,12 +21,6 @@ export function useIsPremium({ userId }: UseIsPremiumParams) {
     queryFn: async () => {
       if (!userId) return false;
 
-      // Current user: reuse the subscription RPC cache if available
-      if (isCurrentUser) {
-        const sub = queryClient.getQueryData<any>(['subscription', userId]);
-        if (sub) return Boolean(sub.is_active);
-      }
-
       const { data, error } = await supabase
         .from('subscriptions')
         .select('plan_type, status, expires_at')
