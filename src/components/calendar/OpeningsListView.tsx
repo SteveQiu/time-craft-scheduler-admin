@@ -155,7 +155,7 @@ export function OpeningsListView({ userId }: OpeningsListViewProps) {
               <th className="text-left p-3 font-medium">Date</th>
               <th className="text-left p-3 font-medium">Time</th>
               <th className="text-left p-3 font-medium hidden sm:table-cell">Duration</th>
-              <th className="text-left p-3 font-medium hidden md:table-cell">Worker</th>
+              <th className="text-left p-3 font-medium hidden md:table-cell">Resource</th>
               <th className="text-left p-3 font-medium">Service</th>
               <th className="text-right p-3 font-medium">Rate</th>
             </tr>

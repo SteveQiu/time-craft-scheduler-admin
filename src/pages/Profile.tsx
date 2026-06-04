@@ -170,7 +170,7 @@ export default function Profile() {
   const hasSocialLinks = Object.values((profile.social_links || {}) as SocialLinks).some(Boolean);
 
   return (
-    <div className="p-6 space-y-6 max-w-3xl mx-auto">
+    <div className="p-6 space-y-6 max-w-3xl mx-auto min-h-full">
       {isOwnProfile && window.history.length > 1 && (
         <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="mb-2">
           <ArrowLeft className="h-4 w-4 mr-2" />
@@ -178,7 +178,7 @@ export default function Profile() {
         </Button>
       )}
 
-      <Card className="shadow-soft border-card-border">
+      <Card className="shadow-md border-card-border">
         <CardContent className="pt-6">
           <ProfileHeader
             profile={profile}
@@ -209,7 +209,7 @@ export default function Profile() {
       </Card>
 
       {(profilePhotos.length > 0 || (isOwnProfile && editing)) && (
-        <Card className="shadow-soft border-card-border">
+        <Card className="shadow-md border-card-border">
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
               <Camera className="h-5 w-5" />
@@ -231,7 +231,7 @@ export default function Profile() {
         </Card>
       )}
 
-      <Card className="shadow-soft border-card-border">
+      <Card className="shadow-md border-card-border">
         <CardHeader>
           <CardTitle className="text-lg">About</CardTitle>
         </CardHeader>
@@ -249,7 +249,7 @@ export default function Profile() {
       </Card>
 
       {(editing || hasSocialLinks) && (
-        <Card className="shadow-soft border-card-border">
+        <Card className="shadow-md border-card-border">
           <CardHeader>
             <CardTitle className="text-lg">Social Media</CardTitle>
           </CardHeader>
@@ -264,9 +264,9 @@ export default function Profile() {
         </Card>
       )}
 
-      <Card className="shadow-soft border-card-border">
+      <Card className="shadow-md border-card-border">
         <CardHeader>
-          <CardTitle className="text-lg">Skills &amp; Rate</CardTitle>
+          <CardTitle className="text-lg">Services &amp; Rate</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <ProfileSkillsRate
@@ -282,7 +282,7 @@ export default function Profile() {
       </Card>
 
       {isOwnProfile && (
-        <Card className="shadow-soft border-card-border">
+        <Card className="shadow-md border-card-border">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-lg">Address</CardTitle>
             <ProfileAddressHeaderActions

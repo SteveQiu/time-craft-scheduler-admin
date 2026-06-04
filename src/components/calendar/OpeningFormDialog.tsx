@@ -209,7 +209,7 @@ export function OpeningFormDialog({
 
           {isOrgMode ? (
             <div className="space-y-2">
-              <Label htmlFor="worker">Worker</Label>
+              <Label htmlFor="worker">Resource</Label>
               <Select
                 value={newOpening.worker}
                 onValueChange={(value) => {
@@ -219,7 +219,7 @@ export function OpeningFormDialog({
                 }}
               >
                 <SelectTrigger className={errors.worker ? 'border-destructive' : ''}>
-                  <SelectValue placeholder="Select worker" />
+                  <SelectValue placeholder="Select resource" />
                 </SelectTrigger>
                 <SelectContent>
                   {acceptedWorkers.map((w) => (
@@ -231,7 +231,7 @@ export function OpeningFormDialog({
             </div>
           ) : (
             <div className="space-y-2">
-              <Label>Worker</Label>
+              <Label>Resource</Label>
               <Input value={selfWorkerName} disabled className="bg-muted" />
             </div>
           )}

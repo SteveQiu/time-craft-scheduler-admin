@@ -40,7 +40,7 @@ export function ProfileSkillsRate({
     return (
       <>
         <div className="space-y-3">
-          <Label>Skills</Label>
+          <Label>Services</Label>
           <div className="space-y-3">
             <div className="flex gap-2">
               <Input

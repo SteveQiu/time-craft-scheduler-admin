@@ -27,6 +27,7 @@ function buildProviderAccount({
   openings,
   isCustomInquiry = false,
   customInquiryInfo = null,
+  skills = [],
 }: {
   userId: string;
   providerName: string;
@@ -35,14 +36,16 @@ function buildProviderAccount({
   openings: OpeningWithProfile[];
   isCustomInquiry?: boolean;
   customInquiryInfo?: CustomInquiryInfo | null;
+  skills?: string[];
 }): ProviderAccount {
+  const openingServices = getUniqueValues(openings.map(opening => opening.service));
   return {
     user_id: userId,
     provider_name: providerName,
     provider_slug: providerSlug || null,
     avatar_url: avatarUrl ?? openings[0]?.avatar_url ?? null,
     opening_count: openings.length,
-    services: getUniqueValues(openings.map(opening => opening.service)),
+    services: openingServices.length > 0 ? openingServices : skills,
     workers: getUniqueValues(openings.map(opening => opening.worker)),
     is_custom_inquiry: isCustomInquiry,
     custom_inquiry_info: customInquiryInfo,
@@ -56,9 +59,28 @@ function ProviderBrowseCard({
   provider: ProviderAccount;
   onOpen: (providerId: string) => void;
 }) {
+  // Deterministic avatar color from user ID for consistent display
+  const avatarColor = React.useMemo(() => {
+    const colors = [
+      { bg: 'bg-rose-100', text: 'text-rose-700' },
+      { bg: 'bg-sky-100', text: 'text-sky-700' },
+      { bg: 'bg-amber-100', text: 'text-amber-700' },
+      { bg: 'bg-emerald-100', text: 'text-emerald-700' },
+      { bg: 'bg-violet-100', text: 'text-violet-700' },
+      { bg: 'bg-pink-100', text: 'text-pink-700' },
+      { bg: 'bg-teal-100', text: 'text-teal-700' },
+      { bg: 'bg-orange-100', text: 'text-orange-700' },
+      { bg: 'bg-indigo-100', text: 'text-indigo-700' },
+      { bg: 'bg-cyan-100', text: 'text-cyan-700' },
+    ];
+    let hash = 0;
+    for (const ch of provider.user_id) hash = (hash * 31 + ch.charCodeAt(0)) | 0;
+    return colors[Math.abs(hash) % colors.length];
+  }, [provider.user_id]);
+
   return (
     <Card
-      className="shadow-soft border-card-border hover:shadow-lg transition-all cursor-pointer"
+      className="shadow-md border-card-border hover:shadow-lg transition-all cursor-pointer"
       onClick={() => onOpen(provider.user_id)}
     >
       <CardHeader>
@@ -66,7 +88,7 @@ function ProviderBrowseCard({
           <div className="flex items-center gap-3 flex-1">
             <Avatar className="h-12 w-12 shrink-0">
               <AvatarImage src={provider.avatar_url ?? undefined} alt={provider.provider_name} />
-              <AvatarFallback className="bg-primary/10 text-primary font-semibold text-sm">
+              <AvatarFallback className={`${avatarColor.bg} ${avatarColor.text} font-semibold text-sm`}>
                 {provider.provider_name.substring(0, 2).toUpperCase()}
               </AvatarFallback>
             </Avatar>
@@ -100,7 +122,9 @@ function ProviderBrowseCard({
         </div>
         <div>
           <p className="text-xs font-medium text-muted-foreground mb-2">Service Providers</p>
-          <p className="text-sm text-foreground truncate">{provider.workers.join(', ')}</p>
+          <p className="text-sm text-foreground truncate">
+            {provider.workers.length > 0 ? provider.workers.join(', ') : provider.provider_name}
+          </p>
         </div>
         <div onClick={e => e.stopPropagation()}>
           <ProfilePhotoStrip userId={provider.user_id} thumbClass="w-14 h-14" />
@@ -243,6 +267,7 @@ export function BookingBrowse() {
         phone: string;
         social_links: Record<string, string>;
         profile_url: string;
+        skills: string[];
       }>;
     },
   });
@@ -268,6 +293,7 @@ export function BookingBrowse() {
       if (!inquiryInfo) return p;
       return {
         ...p,
+        services: p.services.length > 0 ? p.services : (inquiryInfo.skills || []),
         is_custom_inquiry: true,
         custom_inquiry_info: {
           email: inquiryInfo.email,
@@ -286,6 +312,7 @@ export function BookingBrowse() {
         avatarUrl: ip.avatar_url || null,
         openings: [],
         isCustomInquiry: true,
+        skills: ip.skills || [],
         customInquiryInfo: {
           email: ip.email,
           phone: ip.phone,
@@ -521,7 +548,7 @@ export function BookingBrowse() {
         )}
 
         {visibleProviders.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
             {visibleProviders.map((provider) => (
               <ProviderBrowseCard
                 key={provider.user_id}

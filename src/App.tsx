@@ -125,14 +125,14 @@ function AppContent() {
             </Panel>
             <PanelResizeHandle className="w-1 bg-border hover:bg-primary/50 transition-colors cursor-col-resize active:bg-primary" />
             <Panel defaultSize={80} className="flex flex-col overflow-hidden">
-              <main className="flex-1 overflow-auto w-full">
+              <main className="flex-1 overflow-auto w-full bg-muted/50">
                 <AppRoutes />
               </main>
             </Panel>
           </PanelGroup>
         </div>
 
-        <main className="md:hidden flex-1 overflow-auto w-full">
+        <main className="md:hidden flex-1 overflow-auto w-full bg-muted/50">
           <AppRoutes />
         </main>
       </div>
