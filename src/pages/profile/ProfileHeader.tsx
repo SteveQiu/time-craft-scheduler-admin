@@ -108,9 +108,6 @@ export function ProfileHeader({
                 {profile.full_name || 'No name set'}
               </h2>
             )}
-            <p className="text-muted-foreground">
-              {user?.email ?? profile.email}
-            </p>
             {avgRating && (
               <div className="flex items-center space-x-1 mt-1">
                 <Star className="h-4 w-4 text-warning fill-current" />

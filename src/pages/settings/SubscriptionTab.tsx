@@ -17,11 +17,12 @@ export function SubscriptionTab() {
     'Up to 100 profile photos (free plan: 3)',
     'Booker attendance stats — see reliability rates per client',
     'Flag unreliable bookers to track no-shows',
-    'Advanced analytics',
-    'Priority support',
-    'Confirmation emails sent to bookers on every booking',
+    'Confirmation & denial emails sent to bookers on every booking',
+    'Multi-day openings with end date extended up to 3 months (free: 1 month)',
+    'Custom Inquiry — let customers contact you directly through your store page',
     'Active Listing — open your store for direct contact requests (email, phone, social links)',
     'Active Listing — listed in the browse page for everyday advertisement',
+    'Priority support',
   ];
 
   if (loadingSubscription) {

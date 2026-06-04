@@ -348,7 +348,7 @@ export function AppointmentCard({
                       <Button
                         variant="ghost"
                         size="sm"
-                        className={customerFlag ? 'text-red-500 hover:text-red-600' : 'text-muted-foreground hover:text-foreground'}
+                        className={customerFlag ? 'text-red-500 hover:text-red-600' : 'text-red-400 hover:text-red-500'}
                         onClick={(e) => {
                           e.stopPropagation();
                           if (customerFlag) {

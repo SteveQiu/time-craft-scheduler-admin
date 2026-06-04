@@ -15,6 +15,7 @@ interface SocialPlatformConfig {
   key: keyof SocialLinks;
   label: string;
   placeholder: string;
+  baseUrl: string;
   icon?: LucideIcon;
 }
 
@@ -23,38 +24,53 @@ const socialPlatforms: SocialPlatformConfig[] = [
     key: 'twitter',
     label: 'X (Twitter)',
     placeholder: 'https://x.com/username',
+    baseUrl: 'https://x.com/',
     icon: Twitter,
   },
   {
     key: 'instagram',
     label: 'Instagram',
     placeholder: 'https://instagram.com/username',
+    baseUrl: 'https://instagram.com/',
     icon: Instagram,
   },
   {
     key: 'linkedin',
     label: 'LinkedIn',
     placeholder: 'https://linkedin.com/in/username',
+    baseUrl: 'https://linkedin.com/in/',
     icon: Linkedin,
   },
   {
     key: 'facebook',
     label: 'Facebook',
     placeholder: 'https://facebook.com/username',
+    baseUrl: 'https://facebook.com/',
     icon: Facebook,
   },
   {
     key: 'tiktok',
     label: 'TikTok',
     placeholder: 'https://tiktok.com/@username',
+    baseUrl: 'https://tiktok.com/@',
   },
   {
     key: 'youtube',
     label: 'YouTube',
     placeholder: 'https://youtube.com/@username',
+    baseUrl: 'https://youtube.com/@',
     icon: Youtube,
   },
 ];
+
+function resolveUrl(value: string, baseUrl: string): string {
+  const trimmed = value.trim();
+  if (!trimmed) return '';
+  if (/^https?:\/\//i.test(trimmed) || /^www\./i.test(trimmed)) {
+    return trimmed.startsWith('www.') ? `https://${trimmed}` : trimmed;
+  }
+  return `${baseUrl}${trimmed.replace(/^@/, '')}`;
+}
 
 export function ProfileSocialLinks({
   profile,
@@ -67,12 +83,11 @@ export function ProfileSocialLinks({
   if (editing) {
     return (
       <div className="grid gap-4 sm:grid-cols-2">
-        {socialPlatforms.map(({ key, label, placeholder }) => (
+        {socialPlatforms.map(({ key, label, placeholder, baseUrl }) => (
           <div key={key} className="space-y-2">
             <Label htmlFor={`social-${key}`}>{label}</Label>
             <Input
               id={`social-${key}`}
-              type="url"
               value={formSocialLinks[key] || ''}
               onChange={(e) =>
                 onFormChange({
@@ -83,6 +98,18 @@ export function ProfileSocialLinks({
                   },
                 })
               }
+              onBlur={(e) => {
+                const resolved = resolveUrl(e.target.value, baseUrl);
+                if (resolved !== e.target.value) {
+                  onFormChange({
+                    ...form,
+                    social_links: {
+                      ...formSocialLinks,
+                      [key]: resolved,
+                    },
+                  });
+                }
+              }}
               placeholder={placeholder}
             />
           </div>
@@ -97,9 +124,10 @@ export function ProfileSocialLinks({
 
   return (
     <div className="flex flex-wrap items-center gap-3">
-      {links.map(({ key, label, icon: Icon }) => {
-        const href = profile.social_links?.[key]?.trim();
-        if (!href) return null;
+      {links.map(({ key, label, baseUrl, icon: Icon }) => {
+        const raw = profile.social_links?.[key]?.trim();
+        if (!raw) return null;
+        const href = resolveUrl(raw, baseUrl);
 
         return (
           <a

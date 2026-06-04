@@ -325,6 +325,7 @@ export function OpeningView() {
               <span className="text-sm">{opening.start_time} – {opening.end_time} ({opening.duration}min)</span>
             </div>
           </div>
+          <p className="text-xs text-muted-foreground/70 italic px-1">By confirming, your email will be shared with the provider for appointment communication.</p>
           <AlertDialogFooter>
             <Button variant="outline" onClick={() => setShowBookingDialog(false)}>
               Cancel

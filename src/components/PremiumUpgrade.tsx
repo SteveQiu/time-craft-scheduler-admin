@@ -161,15 +161,17 @@ export function PremiumUpgrade({ orgId, onSuccess }: PremiumUpgradeProps) {
 
   return (
     <>
-      <Button
-        onClick={() => isPremium ? setShowCancelDialog(true) : setOpen(true)}
-        variant={isPremium ? 'outline' : 'default'}
-        size="sm"
-        className={isPremium ? 'gap-2 border-red-300 text-red-600 hover:bg-red-50' : 'gap-2'}
-      >
-        <Crown className="h-4 w-4" />
-        {isPremium ? 'Cancel Subscription' : 'Go Premium'}
-      </Button>
+      {!isPremium && (
+        <Button
+          onClick={() => setOpen(true)}
+          variant="default"
+          size="sm"
+          className="gap-2"
+        >
+          <Crown className="h-4 w-4" />
+          Go Premium
+        </Button>
+      )}
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-[425px]">

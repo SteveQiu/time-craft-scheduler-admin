@@ -38,6 +38,34 @@ export function ProfileAbout({
         </div>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
+            <Label>Email</Label>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-11 w-11"
+              onClick={() =>
+                onPrivacyChange({ ...privacySettings, email_public: !privacySettings.email_public })
+              }
+              aria-label={
+                privacySettings.email_public
+                  ? 'Hide email from public profile'
+                  : 'Show email on public profile'
+              }
+            >
+              {privacySettings.email_public ? (
+                <Eye className="h-4 w-4" />
+              ) : (
+                <EyeOff className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
+          <p className="text-sm text-muted-foreground">{form.email || 'No email'}</p>
+          <p className="text-xs text-muted-foreground/70 italic">
+            Note: When you create or book an appointment, your email will be shared with the other party for communication purposes. Please be mindful of this when managing your privacy settings.
+          </p>
+        </div>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
             <Label>Phone</Label>
             <Button
               variant="ghost"
@@ -99,7 +127,7 @@ export function ProfileAbout({
 
   return (
     <>
-      {!isOwnProfile && profile.email && (
+      {profile.email && (isOwnProfile || profile.email_public) && (
         <div className="flex items-center space-x-2 text-sm text-muted-foreground">
           <Mail className="h-4 w-4" />
           <span>{profile.email}</span>
@@ -107,7 +135,7 @@ export function ProfileAbout({
       )}
       {profile.introduction && <p className="text-foreground">{profile.introduction}</p>}
       <div className="space-y-2">
-        {profile.phone && (
+        {profile.phone && (isOwnProfile || profile.phone_public) && (
           <div className="flex items-center space-x-2 text-sm text-muted-foreground">
             <Phone className="h-4 w-4" />
             <span>{profile.phone}</span>
