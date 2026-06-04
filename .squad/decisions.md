@@ -3,6 +3,11 @@
 ## 🚫 Git Commit Ban — Non-Negotiable
 **NEVER run `git commit`.** All commits are done manually by Steve. No agent, no Scribe, no coordinator. No exceptions.
 
+### Pre-commit Hook Enforcement (2026-06-04)
+**Authority:** Steve (via Copilot)
+
+`.husky/pre-commit` detects AI agent commits via environment variables (`COPILOT_SESSION`, `GITHUB_COPILOT`, `AGENT_MODE`) and parent process (`node`, `copilot`). Blocks with error. Human commits pass through to Guardian secret scanner. Defense in depth — ban in 16 instruction files + hook at git level.
+
 ---
 
 ## Build & Tooling

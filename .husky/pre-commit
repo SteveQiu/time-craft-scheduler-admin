@@ -1,3 +1,25 @@
+# ============================================================
+# 🚫 COPILOT COMMIT BLOCKER — Non-Negotiable
+# If this commit is being made by Copilot/AI agent, BLOCK IT.
+# Only Steve (the human) may run git commit.
+# ============================================================
+if [ -n "$COPILOT_SESSION" ] || [ -n "$GITHUB_COPILOT" ] || [ -n "$AGENT_MODE" ]; then
+    echo "🛑 COMMIT BLOCKED: AI agent detected"
+    echo "  Copilot and all AI agents are BANNED from running git commit."
+    echo "  Only Steve may commit manually."
+    exit 1
+fi
+PARENT_CMD=""
+if command -v ps &> /dev/null; then
+    PARENT_CMD=$(ps -o comm= -p $PPID 2>/dev/null || true)
+fi
+if [[ "$PARENT_CMD" == *"node"* ]] || [[ "$PARENT_CMD" == *"copilot"* ]]; then
+    echo "🛑 COMMIT BLOCKED: AI agent process detected (parent: $PARENT_CMD)"
+    echo "  Copilot and all AI agents are BANNED from running git commit."
+    exit 1
+fi
+echo "✅ Human commit — proceeding with checks."
+
 # --- Secrets Scan (Guardian) ---
 echo "🔍 Scanning staged files for secrets..."
 
