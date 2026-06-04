@@ -16,10 +16,9 @@ interface EditOpeningDialogProps {
   setEditForm: React.Dispatch<React.SetStateAction<EditOpeningForm>>;
   isEditSaving: boolean;
   saveEditOpening: () => Promise<void>;
-  isOrgMode: boolean;
-  selfWorkerName: string;
-  getWorkerRate: (name: string) => number;
-  getWorkerSkills: (name: string) => string[];
+  selfResourceName: string;
+  getResourceRate: (name: string) => number;
+  getResourceSkills: (name: string) => string[];
   providerPaymentMethods: { id: string; label: string; type: string }[];
   setShowPaymentDialog: (show: boolean) => void;
   setPaymentFormLabel: (label: string) => void;
@@ -34,17 +33,16 @@ export function EditOpeningDialog({
   setEditForm,
   isEditSaving,
   saveEditOpening,
-  isOrgMode,
-  selfWorkerName,
-  getWorkerRate,
-  getWorkerSkills,
+  selfResourceName,
+  getResourceRate,
+  getResourceSkills,
   providerPaymentMethods,
   setShowPaymentDialog,
   setPaymentFormLabel,
   setPaymentFormType,
   resetPaymentDetails,
 }: EditOpeningDialogProps) {
-  const workerName = isOrgMode ? (editingOpening?.worker ?? '') : selfWorkerName;
+  const resourceName = editingOpening?.worker ?? selfResourceName;
 
   return (
     <Dialog
@@ -72,7 +70,7 @@ export function EditOpeningDialog({
                 <SelectValue placeholder="Select service" />
               </SelectTrigger>
               <SelectContent>
-                {getWorkerSkills(workerName).map((skill) => (
+                {getResourceSkills(resourceName).map((skill) => (
                   <SelectItem key={skill} value={skill}>{skill}</SelectItem>
                 ))}
               </SelectContent>
@@ -126,7 +124,7 @@ export function EditOpeningDialog({
                   setEditForm(prev => ({ ...prev, isFree: true, total: 0 }));
                 } else if (editingOpening) {
                   const dur = Number(editingOpening.duration) || 0;
-                  const defaultTotal = Number(getWorkerRate(workerName)) * dur;
+                  const defaultTotal = Number(getResourceRate(resourceName)) * dur;
                   setEditForm(prev => ({
                     ...prev,
                     isFree: false,
@@ -167,7 +165,7 @@ export function EditOpeningDialog({
                       className="w-32 h-9 px-3 py-1 rounded-md border border-input bg-background text-sm"
                     />
                     <span className="text-muted-foreground text-sm">
-                      (≈ ${derivedRate.toFixed(2)}/hr · default ${Number(getWorkerRate(workerName))}/hr)
+                      (≈ ${derivedRate.toFixed(2)}/hr · default ${Number(getResourceRate(resourceName))}/hr)
                     </span>
                   </div>
                 </div>

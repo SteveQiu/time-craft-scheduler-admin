@@ -43,9 +43,9 @@ function nextCustomAddressLabel(savedAddresses: any[]): string {
   return `Custom Address ${max + 1}`;
 }
 
-interface AcceptedWorker {
+interface AcceptedResource {
   id: string;
-  worker_name: string;
+  resource_name: string;
   user_id: string;
 }
 
@@ -59,12 +59,11 @@ interface OpeningFormDialogProps {
   setNewOpening: React.Dispatch<React.SetStateAction<NewOpeningForm>>;
   loading: boolean;
   user: { id: string } | null | undefined;
-  isOrgMode: boolean;
   isPremium: boolean;
-  acceptedWorkers: AcceptedWorker[];
-  selfWorkerName: string;
-  getWorkerSkills: (name: string) => string[];
-  getWorkerRate: (name: string) => number;
+  acceptedResources: AcceptedResource[];
+  selfResourceName: string;
+  getResourceSkills: (name: string) => string[];
+  getResourceRate: (name: string) => number;
   savedAddresses: any[];
   providerPaymentMethods: { id: string; label: string; type: string }[];
   addOpening: () => Promise<void>;
@@ -85,12 +84,11 @@ export function OpeningFormDialog({
   setNewOpening,
   loading,
   user,
-  isOrgMode,
   isPremium,
-  acceptedWorkers,
-  selfWorkerName,
-  getWorkerSkills,
-  getWorkerRate,
+  acceptedResources,
+  selfResourceName,
+  getResourceSkills,
+  getResourceRate,
   savedAddresses,
   providerPaymentMethods,
   addOpening,
@@ -100,7 +98,7 @@ export function OpeningFormDialog({
   resetPaymentDetails,
   onSaveCustomAddress,
 }: OpeningFormDialogProps) {
-  const workerNameForRate = isOrgMode ? newOpening.worker : selfWorkerName;
+  const resourceNameForRate = newOpening.worker || selfResourceName;
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -114,7 +112,7 @@ export function OpeningFormDialog({
     if (!trimmed || !user) return;
     setSavingService(true);
     try {
-      const currentSkills = getWorkerSkills(workerNameForRate);
+      const currentSkills = getResourceSkills(resourceNameForRate);
       if (currentSkills.includes(trimmed)) {
         toast({ title: 'Service already exists', variant: 'destructive' });
         return;
@@ -207,13 +205,12 @@ export function OpeningFormDialog({
             />
           )}
 
-          {isOrgMode ? (
-            <div className="space-y-2">
+          <div className="space-y-2">
               <Label htmlFor="worker">Resource</Label>
               <Select
                 value={newOpening.worker}
                 onValueChange={(value) => {
-                  const skills = getWorkerSkills(value);
+                  const skills = getResourceSkills(value);
                   setNewOpening({ ...newOpening, worker: value, service: skills[0] || '' });
                   setErrors(prev => ({ ...prev, worker: '', service: '' }));
                 }}
@@ -222,19 +219,13 @@ export function OpeningFormDialog({
                   <SelectValue placeholder="Select resource" />
                 </SelectTrigger>
                 <SelectContent>
-                  {acceptedWorkers.map((w) => (
-                    <SelectItem key={w.id} value={w.worker_name}>{w.worker_name}</SelectItem>
+                  {acceptedResources.map((w) => (
+                    <SelectItem key={w.id} value={w.resource_name}>{w.resource_name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
               {errors.worker && <p className="text-sm text-destructive">{errors.worker}</p>}
             </div>
-          ) : (
-            <div className="space-y-2">
-              <Label>Resource</Label>
-              <Input value={selfWorkerName} disabled className="bg-muted" />
-            </div>
-          )}
 
           <div className="space-y-2">
             <Label htmlFor="service">Service</Label>
@@ -254,7 +245,7 @@ export function OpeningFormDialog({
                   <SelectValue placeholder="Select service" />
                 </SelectTrigger>
                 <SelectContent>
-                  {getWorkerSkills(workerNameForRate).map((skill) => (
+                  {getResourceSkills(resourceNameForRate).map((skill) => (
                     <SelectItem key={skill} value={skill}>{skill}</SelectItem>
                   ))}
                   <SelectItem value="__add_new__">
@@ -349,7 +340,7 @@ export function OpeningFormDialog({
               value={newOpening.rateMode}
               onValueChange={(value: 'free' | 'default' | 'custom') => {
                 const slotDur = newOpening.multipleSlots ? Number(newOpening.interval) : Number(newOpening.duration);
-                const defaultTotal = Number(getWorkerRate(workerNameForRate)) * slotDur;
+                const defaultTotal = Number(getResourceRate(resourceNameForRate)) * slotDur;
                 setNewOpening({
                   ...newOpening,
                   rateMode: value,
@@ -365,7 +356,7 @@ export function OpeningFormDialog({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="free">Free ($0)</SelectItem>
-                <SelectItem value="default">${Number(getWorkerRate(workerNameForRate))}/hr (default)</SelectItem>
+                <SelectItem value="default">${Number(getResourceRate(resourceNameForRate))}/hr (default)</SelectItem>
                 <SelectItem value="custom">Custom total</SelectItem>
               </SelectContent>
             </Select>
@@ -399,9 +390,9 @@ export function OpeningFormDialog({
             })()}
           </div>
 
-          {(isOrgMode ? newOpening.worker : true) && (() => {
+          {newOpening.worker && (() => {
             const dur = newOpening.multipleSlots ? Number(newOpening.interval) : Number(newOpening.duration);
-            const defaultRate = Number(getWorkerRate(workerNameForRate));
+            const defaultRate = Number(getResourceRate(resourceNameForRate));
             const total = newOpening.rateMode === 'free' ? 0
               : newOpening.rateMode === 'custom' ? Number(newOpening.customTotal) || 0
               : defaultRate * dur;

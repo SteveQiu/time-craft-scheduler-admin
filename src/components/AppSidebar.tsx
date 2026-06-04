@@ -53,8 +53,8 @@ export function AppSidebar() {
   const orgNavItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Home, path: ROUTES.dashboard },
     { id: 'resources', label: 'Resources', icon: Users, path: ROUTES.workers },
-    { id: 'openings', label: 'Opening', icon: CalendarIcon, path: `${ROUTES.openings}?mode=org` },
-    { id: 'appointments-org', label: 'Reservations', icon: Clock, path: `${ROUTES.appointments}?mode=org` },
+    { id: 'openings', label: 'Opening', icon: CalendarIcon, path: ROUTES.openings },
+    { id: 'appointments-org', label: 'Reservations', icon: Clock, path: ROUTES.appointments },
     { id: 'browse', label: 'Browse', icon: Search, path: ROUTES.browse },
   ];
 

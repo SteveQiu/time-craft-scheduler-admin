@@ -121,7 +121,6 @@ export function BookerInfo({
 interface AppointmentCardProps {
   appointment: Appointment;
   isInactive?: boolean;
-  isOrgView: boolean;
   userId: string | undefined;
   selectedIds: Set<string>;
   onSelectionChange: (id: string, checked: boolean) => void;
@@ -130,7 +129,6 @@ interface AppointmentCardProps {
   cardAppointmentIds: Set<string>;
   onsiteOnlyPaymentAppointmentIds: Set<string>;
   appointmentRateMap: Map<string, number>;
-  getWorkerRate: (name: string) => number;
   onProviderViewProof: (id: string) => void;
   onPaymentInfo: (providerId: string, providerName: string, openingId: string, appointmentId: string) => void;
   onApprove: (id: string) => void;
@@ -149,7 +147,6 @@ interface AppointmentCardProps {
 export function AppointmentCard({
   appointment,
   isInactive = false,
-  isOrgView,
   userId,
   selectedIds,
   onSelectionChange,
@@ -158,7 +155,6 @@ export function AppointmentCard({
   cardAppointmentIds,
   onsiteOnlyPaymentAppointmentIds,
   appointmentRateMap,
-  getWorkerRate,
   onProviderViewProof,
   onPaymentInfo,
   navigate,
@@ -171,8 +167,8 @@ export function AppointmentCard({
   isPremium,
   attendanceStats,
 }: AppointmentCardProps) {
-  const canManage = isOrgView || appointment.provider_id === userId;
-  const pricingContext = { isOrgView, getWorkerRate, appointmentRateMap };
+  const canManage = appointment.provider_id === userId;
+  const pricingContext = { appointmentRateMap };
   const customerFlag = appointment.user_id ? flaggedCustomerIds.get(appointment.user_id) : undefined;
 
   return (
@@ -391,8 +387,7 @@ export function AppointmentCard({
           </div>
         )}
 
-        {/* Approval attribution for org view - show who approved if not the provider */}
-        {isOrgView && appointment.status === 'confirmed' && appointment.approved_by && appointment.approved_by !== appointment.provider_id && appointment.approved_by_name && (
+        {appointment.status === 'confirmed' && appointment.approved_by && appointment.approved_by !== appointment.provider_id && appointment.approved_by_name && (
           <div className="border-t border-border pt-3">
             <div className="text-sm text-muted-foreground">
               Approved by: <span className="font-medium text-foreground">{appointment.approved_by_name}</span>

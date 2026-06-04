@@ -1,15 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { Button } from './ui/button';
 import { Plus, Crown, Store, Loader2, List } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { useUserRoles } from '@/hooks/useUserRoles';
 import { usePaymentMethod } from '@/hooks/usePaymentMethod';
 import { PaymentMethodType } from '@/lib/payment/types';
-import { useOrgWorkers } from '@/hooks/useOrgWorkers';
+import { useResources } from '@/hooks/useResources';
 import { useCalendarProfile } from '@/hooks/useCalendarProfile';
 import { useCalendarOpenings } from '@/hooks/useCalendarOpenings';
 import { useCalendarActions } from '@/hooks/useCalendarActions';
@@ -26,26 +25,46 @@ import { AddPaymentDialog } from './calendar/AddPaymentDialog';
 import type { Opening, NewOpeningForm, EditOpeningForm } from './calendar/types';
 
 export function Calendar() {
-  const [searchParams] = useSearchParams();
   const [isTogglingInquiry, setIsTogglingInquiry] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { isOrganization, isInternalDev } = useUserRoles();
   const { isPremium } = useSubscription();
   const queryClient = useQueryClient();
-  const modeParam = searchParams.get('mode');
-  const isOrgMode = modeParam === 'org' && (isOrganization || isInternalDev);
-  const { workers: workerData, acceptedWorkers, getWorkerRate: getOrgWorkerRate, getWorkerSkills: getOrgWorkerSkills } = useOrgWorkers();
+  const { resources } = useResources();
 
-  const { ownProfile, getWorkerRate, getWorkerSkills, selfWorkerName } = useCalendarProfile({
-    user, isOrgMode, getOrgWorkerRate, getOrgWorkerSkills,
-  });
+  const { ownProfile, selfResourceName } = useCalendarProfile({ user });
+
+  // Build resource list: user themselves + resources from resources table
+  const acceptedResources = React.useMemo(() => {
+    const list: { id: string; resource_name: string; user_id: string }[] = [];
+    if (ownProfile?.full_name) {
+      list.push({ id: 'self', resource_name: ownProfile.full_name, user_id: user?.id || '' });
+    }
+    resources.forEach(r => {
+      if (!list.some(w => w.resource_name === r.name)) {
+        list.push({ id: r.id, resource_name: r.name, user_id: user?.id || '' });
+      }
+    });
+    return list;
+  }, [ownProfile, resources, user?.id]);
+
+  // Rate/skills helpers that check resources first, then fall back to profile
+  const getResourceRate = (name: string): number => {
+    const resource = resources.find(r => r.name === name);
+    if (resource?.hourly_rate != null) return resource.hourly_rate;
+    return ownProfile?.hourly_rate || 0;
+  };
+
+  const getResourceSkills = (name: string): string[] => {
+    if (name === ownProfile?.full_name) return ownProfile?.skills || [];
+    return ownProfile?.skills || [];
+  };
 
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showAddOpening, setShowAddOpening] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
-  const [collapsedWorkers, setCollapsedWorkers] = useState<Set<string>>(new Set());
+  const [collapsedResources, setCollapsedResources] = useState<Set<string>>(new Set());
   const [selectedOpeningIds, setSelectedOpeningIds] = useState<Set<string>>(new Set());
 
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
@@ -79,7 +98,7 @@ export function Calendar() {
     };
   });
 
-  const { openings, setOpenings, loading, setLoading, confirmedOpeningIds, loadOpeningsForMonth } = useCalendarOpenings({ user, isOrgMode });
+  const { openings, setOpenings, loading, setLoading, confirmedOpeningIds, loadOpeningsForMonth } = useCalendarOpenings({ user });
 
   const { savedAddresses, providerPaymentMethods, savePaymentFromOpening } = useCalendarQueries({
     user, resetPaymentDetails, paymentFormLabel, paymentFormType,
@@ -108,30 +127,24 @@ export function Calendar() {
     navigateMonth, openEditDialog, resetForm, addOpening, saveEditOpening,
     removeOpening, deleteSafeOpenings, handleBulkDelete,
   } = useCalendarActions({
-    user, isOrgMode, selectedDate, currentDate, setCurrentDate, newOpening, setNewOpening,
+    user, selectedDate, currentDate, setCurrentDate, newOpening, setNewOpening,
     editForm, editingOpening, setEditingOpening, setEditForm, openings, setOpenings,
     selectedOpeningIds, setSelectedOpeningIds, setLoading, setIsEditSaving,
-    loadOpeningsForMonth, getWorkerRate, selfWorkerName, providerPaymentMethods,
-    workerData, ownProfile, isPremium, getOrgWorkerSkills, acceptedWorkers, setErrors, setShowAddOpening,
+    loadOpeningsForMonth, getResourceRate: getResourceRate, selfResourceName, providerPaymentMethods,
+    ownProfile, isPremium, getResourceSkills: getResourceSkills, acceptedResources, setErrors, setShowAddOpening,
   });
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { if (currentDate && user) loadOpeningsForMonth(currentDate); }, [currentDate, user, isOrgMode, acceptedWorkers]);
+  useEffect(() => { if (currentDate && user) loadOpeningsForMonth(currentDate); }, [currentDate, user, acceptedResources]);
 
   useEffect(() => {
-    if (!isOrgMode && ownProfile) {
-      setNewOpening(prev => ({
-        ...prev,
-        worker: ownProfile.full_name || '',
-        service: prev.service || (ownProfile.skills?.[0] || ''),
-      }));
-    } else if (isOrgMode && acceptedWorkers.length > 0 && !newOpening.worker) {
-      const firstWorker = acceptedWorkers[0];
-      const skills = getOrgWorkerSkills(firstWorker.worker_name);
-      setNewOpening(prev => ({ ...prev, worker: firstWorker.worker_name, service: skills[0] || '' }));
+    if (acceptedResources.length > 0 && !newOpening.worker) {
+      const firstResource = acceptedResources[0];
+      const skills = getResourceSkills(firstResource.resource_name);
+      setNewOpening(prev => ({ ...prev, worker: firstResource.resource_name, service: skills[0] || '' }));
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOrgMode, ownProfile, acceptedWorkers]);
+  }, [ownProfile, acceptedResources]);
 
   useEffect(() => {
     if (providerPaymentMethods.length > 0) {
@@ -229,8 +242,8 @@ export function Calendar() {
           selectedDate={selectedDate}
           openings={openings}
           user={user}
-          collapsedWorkers={collapsedWorkers}
-          setCollapsedWorkers={setCollapsedWorkers}
+          collapsedResources={collapsedResources}
+          setCollapsedResources={setCollapsedResources}
           selectedOpeningIds={selectedOpeningIds}
           setSelectedOpeningIds={setSelectedOpeningIds}
           isBulkDeleting={isBulkDeleting}
@@ -251,12 +264,11 @@ export function Calendar() {
         setNewOpening={setNewOpening}
         loading={loading}
         user={user}
-        isOrgMode={isOrgMode}
         isPremium={isPremium}
-        acceptedWorkers={acceptedWorkers}
-        selfWorkerName={selfWorkerName}
-        getWorkerSkills={getWorkerSkills}
-        getWorkerRate={getWorkerRate}
+        acceptedResources={acceptedResources}
+        selfResourceName={selfResourceName}
+        getResourceSkills={getResourceSkills}
+        getResourceRate={getResourceRate}
         savedAddresses={savedAddresses}
         providerPaymentMethods={providerPaymentMethods}
         addOpening={addOpening}
@@ -284,10 +296,9 @@ export function Calendar() {
         setEditForm={setEditForm}
         isEditSaving={isEditSaving}
         saveEditOpening={saveEditOpening}
-        isOrgMode={isOrgMode}
-        selfWorkerName={selfWorkerName}
-        getWorkerRate={getWorkerRate}
-        getWorkerSkills={getWorkerSkills}
+        selfResourceName={selfResourceName}
+        getResourceRate={getResourceRate}
+        getResourceSkills={getResourceSkills}
         providerPaymentMethods={providerPaymentMethods}
         setShowPaymentDialog={setShowPaymentDialog}
         setPaymentFormLabel={setPaymentFormLabel}

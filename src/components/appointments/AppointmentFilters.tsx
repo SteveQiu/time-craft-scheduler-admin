@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, Filter, User } from 'lucide-react';
+import { Search, Filter } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,12 +11,8 @@ interface AppointmentFiltersProps {
   setSearchTerm: (v: string) => void;
   statusFilter: string;
   setStatusFilter: (v: string) => void;
-  workerFilter: string;
-  setWorkerFilter: (v: string) => void;
   dateFilter: DateFilter;
   setDateFilter: (v: DateFilter) => void;
-  isOrgView: boolean;
-  workers: { id: string; worker_name: string }[];
   onFilterChange: () => void;
 }
 
@@ -25,12 +21,8 @@ export function AppointmentFilters({
   setSearchTerm,
   statusFilter,
   setStatusFilter,
-  workerFilter,
-  setWorkerFilter,
   dateFilter,
   setDateFilter,
-  isOrgView,
-  workers,
   onFilterChange,
 }: AppointmentFiltersProps) {
   return (
@@ -62,22 +54,6 @@ export function AppointmentFilters({
               <SelectItem value="cancelled">Cancelled</SelectItem>
             </SelectContent>
           </Select>
-          {isOrgView && (
-            <Select value={workerFilter} onValueChange={(v) => { setWorkerFilter(v); onFilterChange(); }}>
-              <SelectTrigger className="w-full sm:w-48">
-                <div className="flex items-center space-x-2">
-                  <User className="h-4 w-4" />
-                  <SelectValue placeholder="Filter by service provider" />
-                </div>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Service Providers</SelectItem>
-                {workers.map(w => (
-                  <SelectItem key={w.id} value={w.worker_name}>{w.worker_name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
         </div>
         <div role="group" aria-label="Date filter" className="flex flex-wrap gap-2 mt-3">
           {(['all', 'today', 'week', 'month'] as DateFilter[]).map(f => (

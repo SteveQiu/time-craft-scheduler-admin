@@ -4,32 +4,18 @@ import { Appointment } from '@/components/appointments/types';
 
 interface UseAppointmentsParams {
   userId: string | undefined;
-  isOrgView: boolean;
-  acceptedWorkers: string[];
 }
 
-export function useAppointments({ userId, isOrgView, acceptedWorkers }: UseAppointmentsParams) {
+export function useAppointments({ userId }: UseAppointmentsParams) {
   return useQuery({
-    queryKey: ['appointments', userId, isOrgView, acceptedWorkers],
+    queryKey: ['appointments', userId],
     queryFn: async () => {
       if (!userId) return [];
 
-      let query = supabase
+      const { data, error } = await supabase
         .from('appointments')
-        .select('*');
-
-      if (isOrgView) {
-        // Org view: show appointments where provider is the org (provider_id = org owner)
-        // All org openings/appointments have provider_id = org owner's ID
-        query = query.eq('provider_id', userId);
-      } else {
-        // User view: show appointments where user is either:
-        // 1. The booker/customer (user_id = user.id), OR
-        // 2. The provider who needs to approve/manage (provider_id = user.id)
-        query = query.or(`user_id.eq.${userId},provider_id.eq.${userId}`);
-      }
-
-      const { data, error } = await query
+        .select('*')
+        .or(`user_id.eq.${userId},provider_id.eq.${userId}`)
         .order('date', { ascending: false })
         .order('start_time', { ascending: false });
 

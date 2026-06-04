@@ -100,7 +100,6 @@ export const generateDurationOptions = (): { value: number; label: string }[] =>
 
 export const validateOpeningForm = (
   newOpening: NewOpeningForm,
-  isOrgMode: boolean,
   selectedDate: Date,
   isPremium: boolean,
 ): { [key: string]: string } => {
@@ -110,8 +109,8 @@ export const validateOpeningForm = (
     newErrors.startTime = 'Start time is required';
   }
 
-  if (isOrgMode && !newOpening.worker) {
-    newErrors.worker = 'Worker selection is required';
+  if (!newOpening.worker) {
+    newErrors.worker = 'Resource selection is required';
   }
 
   if (!newOpening.service) {
@@ -206,14 +205,14 @@ export interface OpeningInsertData {
 export function generateOpeningRecords({
   newOpening,
   selectedDate,
-  workerUserId,
-  workerName,
+  resourceUserId,
+  resourceName,
   totalValue,
 }: {
   newOpening: NewOpeningForm;
   selectedDate: Date;
-  workerUserId: string | null;
-  workerName: string;
+  resourceUserId: string | null;
+  resourceName: string;
   totalValue: number;
 }): { records: OpeningInsertData[]; warning?: string } {
   const acceptedIds = newOpening.acceptedPaymentMethodIds.length > 0
@@ -221,8 +220,8 @@ export function generateOpeningRecords({
   const slotDuration = newOpening.multipleSlots ? newOpening.interval : newOpening.duration;
   const derivedRate = slotDuration > 0 ? totalValue / slotDuration : 0;
   const base = {
-    user_id: workerUserId,
-    worker: workerName,
+    user_id: resourceUserId,
+    worker: resourceName,
     service: newOpening.service,
     location: serializeLocation(newOpening.locationFields),
     is_available: true,

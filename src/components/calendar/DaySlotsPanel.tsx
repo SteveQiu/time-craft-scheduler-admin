@@ -12,8 +12,8 @@ interface DaySlotsPanelProps {
   selectedDate: Date;
   openings: Opening[];
   user: { id: string } | null | undefined;
-  collapsedWorkers: Set<string>;
-  setCollapsedWorkers: React.Dispatch<React.SetStateAction<Set<string>>>;
+  collapsedResources: Set<string>;
+  setCollapsedResources: React.Dispatch<React.SetStateAction<Set<string>>>;
   selectedOpeningIds: Set<string>;
   setSelectedOpeningIds: React.Dispatch<React.SetStateAction<Set<string>>>;
   isBulkDeleting: boolean;
@@ -27,8 +27,8 @@ export function DaySlotsPanel({
   selectedDate,
   openings,
   user,
-  collapsedWorkers,
-  setCollapsedWorkers,
+  collapsedResources,
+  setCollapsedResources,
   selectedOpeningIds,
   setSelectedOpeningIds,
   isBulkDeleting,
@@ -44,13 +44,13 @@ export function DaySlotsPanel({
 
   const openingsForDate = getOpeningsForDate(selectedDate);
 
-  const groupedByWorker = openingsForDate.reduce((acc, opening) => {
+  const groupedByResource = openingsForDate.reduce((acc, opening) => {
     if (!acc[opening.worker]) acc[opening.worker] = [];
     acc[opening.worker].push(opening);
     return acc;
   }, {} as { [key: string]: Opening[] });
 
-  const workers = Object.keys(groupedByWorker).sort();
+  const resources = Object.keys(groupedByResource).sort();
 
   return (
     <Card className="shadow-soft border-card-border">
@@ -75,23 +75,23 @@ export function DaySlotsPanel({
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {workers.length === 0 ? (
+          {resources.length === 0 ? (
             <div className="text-center text-muted-foreground py-8">
               No openings for this date
             </div>
           ) : (
-            workers.map((worker) => {
-              const isCollapsed = collapsedWorkers.has(worker);
-              const workerOpenings = groupedByWorker[worker];
-
+            resources.map((resource) => {
+              const isCollapsed = collapsedResources.has(resource);
+              const resourceOpenings = groupedByResource[resource];
+ 
               return (
-                <div key={worker} className="border border-input rounded-lg overflow-hidden">
+                <div key={resource} className="border border-input rounded-lg overflow-hidden">
                   <button
                     onClick={() => {
-                      const newCollapsed = new Set(collapsedWorkers);
-                      if (isCollapsed) newCollapsed.delete(worker);
-                      else newCollapsed.add(worker);
-                      setCollapsedWorkers(newCollapsed);
+                      const newCollapsed = new Set(collapsedResources);
+                      if (isCollapsed) newCollapsed.delete(resource);
+                      else newCollapsed.add(resource);
+                      setCollapsedResources(newCollapsed);
                     }}
                     className="w-full flex items-center justify-between p-3 hover:bg-accent transition-colors"
                   >
@@ -99,14 +99,14 @@ export function DaySlotsPanel({
                       <ChevronDown
                         className={`h-4 w-4 transition-transform ${isCollapsed ? '-rotate-90' : ''}`}
                       />
-                      <span className="font-semibold text-foreground">{worker}</span>
-                      <span className="text-xs text-muted-foreground">({workerOpenings.length})</span>
+                      <span className="font-semibold text-foreground">{resource}</span>
+                      <span className="text-xs text-muted-foreground">({resourceOpenings.length})</span>
                     </div>
                   </button>
 
                   {!isCollapsed && (
                     <div className="space-y-2 p-4 bg-card/50 border-t border-input">
-                      {workerOpenings.map((opening) => (
+                      {resourceOpenings.map((opening) => (
                         <div
                           key={opening.id}
                           className="p-1 rounded-lg border border-input bg-card hover:bg-accent transition-all flex items-center justify-between gap-3 cursor-pointer"

@@ -3,7 +3,7 @@ import type { LocationFields } from '@/lib/address';
 export interface TimeSlot {
   id: string;
   time: string;
-  worker: string;
+  resource: string;
   service: string;
   client?: string;
   status: 'available' | 'booked' | 'blocked';

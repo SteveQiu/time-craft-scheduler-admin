@@ -7,12 +7,10 @@ import { usePremiumReminder } from '@/hooks/usePremiumReminder';
 
 export function useAppointmentActions({
   user,
-  isOrgView,
   appointments,
   queryClient,
 }: {
   user: any;
-  isOrgView: boolean;
   appointments: Appointment[];
   queryClient: QueryClient;
 }) {
@@ -227,7 +225,7 @@ export function useAppointmentActions({
       a =>
         selectedIds.has(a.id) &&
         a.status === 'confirmed' &&
-        (isOrgView || a.provider_id === user.id),
+        a.provider_id === user.id,
     );
     let successCount = 0;
     for (const apt of toComplete) {
@@ -282,7 +280,7 @@ export function useAppointmentActions({
       a =>
         selectedIds.has(a.id) &&
         (a.status === 'pending' || a.status === 'confirmed') &&
-        (isOrgView || a.provider_id === user.id || a.user_id === user.id),
+        (a.provider_id === user.id || a.user_id === user.id),
     );
     if (toModify.length === 0) return;
     setBulkModifyQueue(toModify);

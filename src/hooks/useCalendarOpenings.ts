@@ -5,10 +5,9 @@ import type { Opening } from '@/components/calendar/types';
 
 interface UseCalendarOpeningsParams {
   user: { id: string } | null | undefined;
-  isOrgMode: boolean;
 }
 
-export function useCalendarOpenings({ user, isOrgMode }: UseCalendarOpeningsParams) {
+export function useCalendarOpenings({ user }: UseCalendarOpeningsParams) {
   const [openings, setOpenings] = useState<Opening[]>([]);
   const [loading, setLoading] = useState(false);
   const [confirmedOpeningIds, setConfirmedOpeningIds] = useState<Set<string>>(new Set());

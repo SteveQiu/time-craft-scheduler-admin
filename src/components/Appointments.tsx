@@ -1,11 +1,9 @@
 import React, { useState, useMemo } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { useUserRoles } from '@/hooks/useUserRoles';
 import { useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent } from './ui/card';
 import { Loader2 } from 'lucide-react';
-import { useOrgWorkers } from '@/hooks/useOrgWorkers';
 import { useAppointmentNotifications } from '@/hooks/useAppointmentNotifications';
 import { useAppointments } from '@/hooks/useAppointments';
 import { usePaymentStatus } from '@/hooks/usePaymentStatus';
@@ -37,21 +35,16 @@ import {
 } from './ui/alert-dialog';
 
 export function Appointments() {
-  const { workers, acceptedWorkers, getWorkerRate } = useOrgWorkers();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const { user, loading: authLoading } = useAuth();
-  const { isOrganization, isInternalDev } = useUserRoles();
   const queryClient = useQueryClient();
 
   const { permissionStatus } = useAppointmentNotifications({
     userId: user?.id,
-    enabled: !isOrganization && !isInternalDev,
   });
 
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [workerFilter, setWorkerFilter] = useState('all');
   const [showInactive, setShowInactive] = useState(false);
   const [dateFilter, setDateFilter] = useState<DateFilter>('all');
   const [paymentInfoProviderId, setPaymentInfoProviderId] = useState<string | null>(null);
@@ -62,10 +55,7 @@ export function Appointments() {
   const [selectedPaymentTabId, setSelectedPaymentTabId] = useState<string | null>(null);
   const [flagConfirm, setFlagConfirm] = useState<{ open: boolean; appointmentId: string; bookerUserId: string; bookerName: string; action: 'flag' | 'unflag' } | null>(null);
 
-  const modeParam = searchParams.get('mode');
-  const isOrgView = modeParam === 'org' && (isOrganization || isInternalDev);
-  const acceptedWorkerNames = useMemo(() => acceptedWorkers.map(w => w.worker_name), [acceptedWorkers]);
-  const { data: appointments = [], isLoading } = useAppointments({ userId: user?.id, isOrgView, acceptedWorkers: acceptedWorkerNames });
+  const { data: appointments = [], isLoading } = useAppointments({ userId: user?.id });
   const appointmentIds = useMemo(() => appointments.map(a => a.id), [appointments]);
   const { paidAppointmentIds, cashAppointmentIds, cardAppointmentIds } = usePaymentStatus(appointmentIds);
   const { onsiteOnlyPaymentAppointmentIds } = useAppointmentPaymentRequirements(appointments);
@@ -154,7 +144,7 @@ export function Appointments() {
     advanceBulkModifyQueue,
     handleStartBulkModify,
     handleBulkModifyOne,
-  } = useAppointmentActions({ user, isOrgView, appointments, queryClient });
+  } = useAppointmentActions({ user, appointments, queryClient });
 
   const {
     activeAppointments,
@@ -165,9 +155,7 @@ export function Appointments() {
     appointments,
     searchTerm,
     statusFilter,
-    workerFilter,
     dateFilter,
-    isOrgView,
   });
 
   const handleFlag = (appointmentId: string, bookerUserId: string, bookerName: string) => {
@@ -220,12 +208,11 @@ export function Appointments() {
               Reservations
             </h2>
             <p className="text-muted-foreground">
-              {isOrgView ? 'Review and manage all bookings' : 'Your booked reservations'}
+              Review and manage all bookings
             </p>
           </div>
 
-          {/* Notification status indicator */}
-          {!isOrgView && <NotificationBadge permissionStatus={permissionStatus} />}
+          <NotificationBadge permissionStatus={permissionStatus} />
         </div>
 
         <AppointmentFilters
@@ -233,12 +220,8 @@ export function Appointments() {
           setSearchTerm={setSearchTerm}
           statusFilter={statusFilter}
           setStatusFilter={setStatusFilter}
-          workerFilter={workerFilter}
-          setWorkerFilter={setWorkerFilter}
           dateFilter={dateFilter}
           setDateFilter={setDateFilter}
-          isOrgView={isOrgView}
-          workers={workers}
           onFilterChange={() => setSelectedIds(new Set())}
         />
 
@@ -253,7 +236,6 @@ export function Appointments() {
             activeAppointments={activeAppointments}
             filteredNonPendingActive={filteredNonPendingActive}
             filteredInactive={filteredInactive}
-            isOrgView={isOrgView}
             userId={user?.id}
             selectedIds={selectedIds}
             setSelectedIds={setSelectedIds}
@@ -262,7 +244,6 @@ export function Appointments() {
             cardAppointmentIds={cardAppointmentIds}
             onsiteOnlyPaymentAppointmentIds={onsiteOnlyPaymentAppointmentIds}
             appointmentRateMap={appointmentRateMap}
-            getWorkerRate={getWorkerRate}
             groupedPendingByOpening={groupedPendingByOpening}
             dateFilter={dateFilter}
             showInactive={showInactive}

@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { Calendar, Clock, MapPin, Users, Check, X, FileImage, CalendarPlus } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,6 @@ interface PendingGroupSectionProps {
   openingId: string;
   appts: Appointment[];
   userId: string | undefined;
-  isOrgView: boolean;
   selectedIds: Set<string>;
   setSelectedIds: React.Dispatch<React.SetStateAction<Set<string>>>;
   paidAppointmentIds: Map<string, string | null>;
@@ -23,7 +22,6 @@ interface PendingGroupSectionProps {
   cardAppointmentIds: Set<string>;
   onsiteOnlyPaymentAppointmentIds: Set<string>;
   appointmentRateMap: Map<string, number>;
-  getWorkerRate: (name: string) => number;
   onProviderViewProof: (id: string) => void;
   onApprove: (id: string) => void;
   onReject: (id: string) => void;
@@ -40,7 +38,6 @@ export function PendingGroupSection({
   openingId,
   appts,
   userId,
-  isOrgView,
   selectedIds,
   setSelectedIds,
   paidAppointmentIds,
@@ -48,7 +45,6 @@ export function PendingGroupSection({
   cardAppointmentIds,
   onsiteOnlyPaymentAppointmentIds,
   appointmentRateMap,
-  getWorkerRate,
   onProviderViewProof,
   onApprove,
   onReject,
@@ -62,12 +58,11 @@ export function PendingGroupSection({
 }: PendingGroupSectionProps) {
   const first = appts[0];
   const isProvider = first.provider_id === userId;
-  const pricingContext = { isOrgView, getWorkerRate, appointmentRateMap };
+  const pricingContext = { appointmentRateMap };
 
   return (
     <Card className="shadow-soft border-card-border hover:shadow-lg transition-shadow border-l-4 border-l-yellow-400">
       <CardContent className="p-6 space-y-4">
-        {/* Opening info header */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between space-y-3 lg:space-y-0">
           <div className="flex items-center space-x-4">
             <div
@@ -110,7 +105,6 @@ export function PendingGroupSection({
           </div>
         </div>
 
-        {/* List of pending bookers */}
         <div className="border-t border-border pt-3 space-y-3">
           <p className="text-sm font-medium text-muted-foreground">
             {isProvider ? 'Choose one to approve:' : `Pending requests for ${first.worker}`}
@@ -130,15 +124,15 @@ export function PendingGroupSection({
                       });
                     }}
                   />
-                  <BookerInfo 
-                    appointment={apt} 
-                    navigate={navigate} 
-                    isPremium={isPremium} 
-                    canManage={isOrgView || apt.provider_id === userId}
+                  <BookerInfo
+                    appointment={apt}
+                    navigate={navigate}
+                    isPremium={isPremium}
+                    canManage={aptIsProvider}
                     flaggedCustomerIds={flaggedCustomerIds}
                     onFlagCustomer={onFlagCustomer}
                     onUnflagCustomer={onUnflagCustomer}
-                    attendanceStats={apt.user_id ? attendanceStatsMap.get(apt.user_id) : undefined} 
+                    attendanceStats={apt.user_id ? attendanceStatsMap.get(apt.user_id) : undefined}
                   />
                 </div>
                 <div className="flex items-center space-x-2">
@@ -219,7 +213,3 @@ export function PendingGroupSection({
     </Card>
   );
 }
-
-
-
-

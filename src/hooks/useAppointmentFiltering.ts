@@ -6,16 +6,12 @@ export function useAppointmentFiltering({
   appointments,
   searchTerm,
   statusFilter,
-  workerFilter,
   dateFilter,
-  isOrgView,
 }: {
   appointments: Appointment[];
   searchTerm: string;
   statusFilter: string;
-  workerFilter: string;
   dateFilter: DateFilter;
-  isOrgView: boolean;
 }) {
   const today = useMemo(() => new Date().toISOString().split('T')[0], []);
 
@@ -28,10 +24,9 @@ export function useAppointmentFiltering({
           (apt.location || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
           (apt.booker_name || '').toLowerCase().includes(searchTerm.toLowerCase());
         const matchesStatus = statusFilter === 'all' || apt.status === statusFilter;
-        const matchesWorker = workerFilter === 'all' || apt.worker === workerFilter;
-        return matchesSearch && matchesStatus && matchesWorker;
+        return matchesSearch && matchesStatus;
       }),
-    [appointments, searchTerm, statusFilter, workerFilter],
+    [appointments, searchTerm, statusFilter],
   );
 
   const activeAppointments = useMemo(
@@ -51,7 +46,6 @@ export function useAppointmentFiltering({
   );
 
   const groupedPendingByOpening = useMemo(() => {
-    if (!isOrgView) return null;
     const pendingAppts = activeAppointments.filter(a => a.status === 'pending');
     const groups = new Map<string, Appointment[]>();
     for (const apt of pendingAppts) {
@@ -60,11 +54,11 @@ export function useAppointmentFiltering({
       groups.set(apt.opening_id, existing);
     }
     return groups;
-  }, [isOrgView, activeAppointments]);
+  }, [activeAppointments]);
 
   const nonPendingActive = useMemo(
-    () => (isOrgView ? activeAppointments.filter(a => a.status !== 'pending') : activeAppointments),
-    [isOrgView, activeAppointments],
+    () => activeAppointments,
+    [activeAppointments],
   );
 
   const filteredNonPendingActive = useMemo(

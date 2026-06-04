@@ -218,6 +218,25 @@ Bishop's cancel UX spec → explicit `AlertDialog` with title/description/button
 
 **Task:** Simplified webhook to handle ONLY user-level subscriptions via `subscriptions` table. No org-level plan support.
 
+### Openings worker→resource rename pass (2026-06-04)
+
+**Task:** Rename calendar/openings code-level `worker` references to `resource` while preserving the openings DB `worker` field.
+
+**Files modified:**
+- `src/components/Calendar.tsx` — renamed local resource collections/state/props (`acceptedResources`, `collapsedResources`, `selfResourceName`) and kept `newOpening.worker` as the DB-backed field.
+- `src/hooks/useCalendarActions.ts` — renamed accepted-resource types/helpers and local `resourceName` / `resourceUserId` variables while still inserting into the `worker` column.
+- `src/hooks/useCalendarProfile.ts` — renamed `selfResourceName` return value.
+- `src/components/calendar/OpeningFormDialog.tsx` — renamed accepted-resource props/helpers and local rate/skills lookup names.
+- `src/components/calendar/EditOpeningDialog.tsx` — renamed resource helper props/local names.
+- `src/components/calendar/DaySlotsPanel.tsx` — renamed collapsed/grouped resource state and loop variables.
+- `src/components/calendar/calendarUtils.ts` — renamed generate-record helper args to `resourceName` / `resourceUserId`, but preserved `worker` in insert payload.
+- `src/components/calendar/types.ts` — preserved `Opening.worker` and `NewOpeningForm.worker`; only the unused `TimeSlot` UI field now uses `resource`.
+
+**Pattern:** In openings/calendar code, rename local identifiers to `resource*`, but keep persisted openings payload fields (`worker`, `errors.worker`, `newOpening.worker`, insert payload `worker`) when they map to the DB column.
+
+**Build gate:** `npx tsc --noEmit` → 0 errors. `npm run build` → exit 0.
+**Runtime gate:** Ralph confirmed `/openings` renders non-blank text with no `PAGE ERROR:` lines and screenshot `tmp-snapshots\\openings-2026-06-04T05-19-46-664Z.png`.
+
 **Key changes:**
 - `custom_data` from `event.meta.custom_data` (LemonSqueezy payload structure)
 - Require `user_id` — return 400 if missing

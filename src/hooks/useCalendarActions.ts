@@ -3,12 +3,16 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { validateOpeningForm, generateOpeningRecords } from '@/components/calendar/calendarUtils';
 import type { Opening, NewOpeningForm, EditOpeningForm } from '@/components/calendar/types';
-import type { OrgWorker } from '@/hooks/useOrgWorkers';
 import type { User } from '@supabase/supabase-js';
+
+interface AcceptedResource {
+  id: string;
+  resource_name: string;
+  user_id: string;
+}
 
 interface UseCalendarActionsParams {
   user: User | null;
-  isOrgMode: boolean;
   selectedDate: Date;
   currentDate: Date;
   setCurrentDate: React.Dispatch<React.SetStateAction<Date>>;
@@ -25,21 +29,19 @@ interface UseCalendarActionsParams {
   setLoading: (v: boolean) => void;
   setIsEditSaving: (v: boolean) => void;
   loadOpeningsForMonth: (date: Date) => Promise<void>;
-  getWorkerRate: (name: string) => number;
-  selfWorkerName: string;
+  getResourceRate: (name: string) => number;
+  selfResourceName: string;
   providerPaymentMethods: { id: string; label: string; type: string }[];
-  workerData: OrgWorker[];
   ownProfile: { full_name: string | null; skills: string[]; hourly_rate: number } | undefined;
   isPremium: boolean;
-  getOrgWorkerSkills: (name: string) => string[];
-  acceptedWorkers: OrgWorker[];
+  getResourceSkills: (name: string) => string[];
+  acceptedResources: AcceptedResource[];
   setErrors: React.Dispatch<React.SetStateAction<{ [key: string]: string }>>;
   setShowAddOpening: (v: boolean) => void;
 }
 
 export function useCalendarActions({
   user,
-  isOrgMode,
   selectedDate,
   currentDate,
   setCurrentDate,
@@ -56,14 +58,13 @@ export function useCalendarActions({
   setLoading,
   setIsEditSaving,
   loadOpeningsForMonth,
-  getWorkerRate,
-  selfWorkerName,
+  getResourceRate,
+  selfResourceName,
   providerPaymentMethods,
-  workerData,
   ownProfile,
   isPremium,
-  getOrgWorkerSkills,
-  acceptedWorkers,
+  getResourceSkills,
+  acceptedResources,
   setErrors,
   setShowAddOpening,
 }: UseCalendarActionsParams) {
@@ -80,10 +81,8 @@ export function useCalendarActions({
     });
   };
 
-  const getWorkerUserId = (name: string): string | null => {
-    if (!isOrgMode) return user?.id || null;
-    const worker = acceptedWorkers.find(w => w.worker_name === name);
-    return worker?.user_id || null;
+  const getResourceUserId = (_name: string): string | null => {
+    return user?.id || null;
   };
 
   const openEditDialog = (opening: Opening) => {
@@ -106,10 +105,8 @@ export function useCalendarActions({
   const OPENING_TIMES_KEY = 'pikappoint_opening_times';
 
   const resetForm = () => {
-    const defaultWorker = isOrgMode
-      ? (workerData[0]?.worker_name || '')
-      : (ownProfile?.full_name || user?.email || '');
-    const defaultSkills = isOrgMode ? getOrgWorkerSkills(defaultWorker) : (ownProfile?.skills || []);
+    const defaultResource = acceptedResources[0]?.resource_name || ownProfile?.full_name || user?.email || '';
+    const defaultSkills = getResourceSkills(defaultResource);
     let cachedStart = '09:00';
     let cachedEnd = '';
     try {
@@ -124,7 +121,7 @@ export function useCalendarActions({
       startTime: cachedStart,
       endTime: cachedEnd,
       duration: 1,
-      worker: defaultWorker,
+      worker: defaultResource,
       service: defaultSkills[0] || '',
       locationFields: { address_line_1: '', address_line_2: '', city: '', province: '', country: '', zip: '' },
       multipleSlots: false,
@@ -141,7 +138,7 @@ export function useCalendarActions({
   };
 
   const validateForm = () => {
-    const newErrors = validateOpeningForm(newOpening, isOrgMode, selectedDate, isPremium);
+    const newErrors = validateOpeningForm(newOpening, selectedDate, isPremium);
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -150,21 +147,21 @@ export function useCalendarActions({
     if (!user) { toast.error('Please sign in to add openings'); return; }
     if (!validateForm()) { toast.error('Please fix validation errors'); return; }
     setLoading(true);
-    const workerName = isOrgMode ? newOpening.worker : selfWorkerName;
-    const workerUserId = isOrgMode ? user.id : getWorkerUserId(workerName);
-    if (isOrgMode && !workerUserId) {
-      toast.error('Selected worker has no user account yet');
+    const resourceName = newOpening.worker;
+    const resourceUserId = user.id;
+    if (!resourceName) {
+      toast.error('Selected resource has no user account yet');
       setLoading(false);
       return;
     }
     try {
       const slotDuration = newOpening.multipleSlots ? Number(newOpening.interval) : Number(newOpening.duration);
-      const defaultRate = Number(getWorkerRate(workerName)) || 0;
+      const defaultRate = Number(getResourceRate(resourceName)) || 0;
       const totalValue = newOpening.rateMode === 'free' ? 0
         : newOpening.rateMode === 'custom' ? Number(newOpening.customTotal) || 0
         : defaultRate * slotDuration;
       const { records, warning } = generateOpeningRecords({
-        newOpening, selectedDate, workerUserId, workerName, totalValue,
+        newOpening, selectedDate, resourceUserId, resourceName, totalValue,
       });
       if (warning) {
         toast.warning(warning);
@@ -223,7 +220,6 @@ export function useCalendarActions({
     if (!user) { toast.error('Please sign in to remove openings'); return; }
     try {
       let query = supabase.from('openings').delete().eq('id', id);
-      if (!isOrgMode) query = query.eq('user_id', user.id);
       const { error } = await query;
       if (error) throw error;
       setOpenings(prev => prev.filter(opening => opening.id !== id));
@@ -238,7 +234,6 @@ export function useCalendarActions({
   const deleteSafeOpenings = async (ids: string[]) => {
     if (ids.length === 0) return;
     let query = supabase.from('openings').delete().in('id', ids);
-    if (!isOrgMode) query = query.eq('user_id', user!.id);
     const { error } = await query;
     if (error) throw error;
     setOpenings(prev => prev.filter(o => !ids.includes(o.id)));
@@ -286,7 +281,7 @@ export function useCalendarActions({
     showBulkDeleteConfirm,
     setShowBulkDeleteConfirm,
     navigateMonth,
-    getWorkerUserId,
+    getResourceUserId,
     openEditDialog,
     resetForm,
     validateForm,

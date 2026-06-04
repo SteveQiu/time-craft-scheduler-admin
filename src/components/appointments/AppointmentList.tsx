@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { Calendar, ChevronDown, ChevronUp } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card, CardContent } from '@/components/ui/card';
@@ -16,7 +16,6 @@ interface AppointmentListProps {
   activeAppointments: Appointment[];
   filteredNonPendingActive: Appointment[];
   filteredInactive: Appointment[];
-  isOrgView: boolean;
   userId: string | undefined;
   selectedIds: Set<string>;
   setSelectedIds: React.Dispatch<React.SetStateAction<Set<string>>>;
@@ -25,8 +24,7 @@ interface AppointmentListProps {
   cardAppointmentIds: Set<string>;
   onsiteOnlyPaymentAppointmentIds: Set<string>;
   appointmentRateMap: Map<string, number>;
-  getWorkerRate: (name: string) => number;
-  groupedPendingByOpening: Map<string, Appointment[]> | null;
+  groupedPendingByOpening: Map<string, Appointment[]>;
   dateFilter: DateFilter;
   showInactive: boolean;
   setShowInactive: (v: boolean) => void;
@@ -55,7 +53,6 @@ export function AppointmentList({
   activeAppointments,
   filteredNonPendingActive,
   filteredInactive,
-  isOrgView,
   userId,
   selectedIds,
   setSelectedIds,
@@ -64,7 +61,6 @@ export function AppointmentList({
   cardAppointmentIds,
   onsiteOnlyPaymentAppointmentIds,
   appointmentRateMap,
-  getWorkerRate,
   groupedPendingByOpening,
   dateFilter,
   showInactive,
@@ -135,7 +131,6 @@ export function AppointmentList({
 
   return (
     <div className="space-y-6">
-      {/* Active */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-xl font-semibold text-foreground">Active Appointments</h3>
@@ -158,7 +153,6 @@ export function AppointmentList({
           appointments={appointments}
           userId={userId}
           isBulkActing={isBulkActing}
-          isOrgView={isOrgView}
           onApprove={onBulkApprove}
           onDeny={onBulkDeny}
           onComplete={onBulkComplete}
@@ -167,14 +161,12 @@ export function AppointmentList({
           onClear={() => setSelectedIds(new Set())}
         />
 
-        {/* Grouped pending requests (org view only) */}
-        {isOrgView && groupedPendingByOpening && Array.from(groupedPendingByOpening.entries()).map(([openingId, appts]) => (
+        {Array.from(groupedPendingByOpening.entries()).map(([openingId, appts]) => (
           <PendingGroupSection
             key={`group-${openingId}`}
             openingId={openingId}
             appts={appts}
             userId={userId}
-            isOrgView={isOrgView}
             selectedIds={selectedIds}
             setSelectedIds={setSelectedIds}
             paidAppointmentIds={paidAppointmentIds}
@@ -182,7 +174,6 @@ export function AppointmentList({
             cardAppointmentIds={cardAppointmentIds}
             onsiteOnlyPaymentAppointmentIds={onsiteOnlyPaymentAppointmentIds}
             appointmentRateMap={appointmentRateMap}
-            getWorkerRate={getWorkerRate}
             onProviderViewProof={onProviderViewProof}
             onApprove={onApprove}
             onReject={onReject}
@@ -196,7 +187,6 @@ export function AppointmentList({
           />
         ))}
 
-        {/* Non-pending or user-view appointments */}
         {filteredNonPendingActive.length > 0 ? (
           <div className="space-y-4">
             {(() => {
@@ -217,7 +207,6 @@ export function AppointmentList({
                     )}
                     <AppointmentCard
                       appointment={apt}
-                      isOrgView={isOrgView}
                       userId={userId}
                       selectedIds={selectedIds}
                       onSelectionChange={(id, checked) => {
@@ -232,7 +221,6 @@ export function AppointmentList({
                       cardAppointmentIds={cardAppointmentIds}
                       onsiteOnlyPaymentAppointmentIds={onsiteOnlyPaymentAppointmentIds}
                       appointmentRateMap={appointmentRateMap}
-                      getWorkerRate={getWorkerRate}
                       onProviderViewProof={onProviderViewProof}
                       onPaymentInfo={onPaymentInfo}
                       onApprove={onApprove}
@@ -255,7 +243,7 @@ export function AppointmentList({
         ) : (
           dateFilter !== 'all' ? (
             <p className="text-muted-foreground text-sm">No appointments for this period.</p>
-          ) : !isOrgView || !groupedPendingByOpening || groupedPendingByOpening.size === 0 ? (
+          ) : groupedPendingByOpening.size === 0 ? (
             <Card className="shadow-soft border-card-border">
               <CardContent className="text-center py-12">
                 <Calendar className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
@@ -266,7 +254,6 @@ export function AppointmentList({
         )}
       </div>
 
-      {/* Inactive */}
       <div className="space-y-4">
         <Button
           variant="ghost"
@@ -285,7 +272,6 @@ export function AppointmentList({
                   key={a.id}
                   appointment={a}
                   isInactive
-                  isOrgView={isOrgView}
                   userId={userId}
                   selectedIds={selectedIds}
                   onSelectionChange={(id, checked) => {
@@ -300,7 +286,6 @@ export function AppointmentList({
                   cardAppointmentIds={cardAppointmentIds}
                   onsiteOnlyPaymentAppointmentIds={onsiteOnlyPaymentAppointmentIds}
                   appointmentRateMap={appointmentRateMap}
-                  getWorkerRate={getWorkerRate}
                   onProviderViewProof={onProviderViewProof}
                   onPaymentInfo={onPaymentInfo}
                   onApprove={onApprove}
@@ -340,5 +325,3 @@ export function AppointmentList({
     </div>
   );
 }
-
-
