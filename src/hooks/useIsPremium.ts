@@ -1,15 +1,31 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 
 interface UseIsPremiumParams {
   userId: string | undefined;
 }
 
 export function useIsPremium({ userId }: UseIsPremiumParams) {
+  const { user } = useAuth();
+  const isCurrentUser = !!userId && userId === user?.id;
+  const queryClient = useQueryClient();
+
+  // For current user, try to derive from the existing subscription cache first
+  const cachedSub = isCurrentUser
+    ? queryClient.getQueryData<any>(['subscription', userId])
+    : undefined;
+
   const { data: isPremium = false } = useQuery({
     queryKey: ['isPremium', userId],
     queryFn: async () => {
       if (!userId) return false;
+
+      // Current user: reuse the subscription RPC cache if available
+      if (isCurrentUser) {
+        const sub = queryClient.getQueryData<any>(['subscription', userId]);
+        if (sub) return Boolean(sub.is_active);
+      }
 
       const { data, error } = await supabase
         .from('subscriptions')
@@ -18,7 +34,6 @@ export function useIsPremium({ userId }: UseIsPremiumParams) {
         .single();
 
       if (error) {
-        // No subscription found is not an error, just means not premium
         if (error.code === 'PGRST116') return false;
         console.warn('[useIsPremium] query failed:', error.message);
         return false;
@@ -33,6 +48,8 @@ export function useIsPremium({ userId }: UseIsPremiumParams) {
       return isPremiumPlan && isActive && notExpired;
     },
     enabled: !!userId,
+    staleTime: 5 * 60 * 1000,  // revalidated by RealtimeInvalidator for current user
+    initialData: cachedSub ? Boolean(cachedSub.is_active) : undefined,
     throwOnError: false,
     retry: false,
   });

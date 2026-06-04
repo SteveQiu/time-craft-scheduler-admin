@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 
@@ -6,57 +6,25 @@ export type AppRole = 'USER' | 'ORGANIZATION' | 'INTERNAL_DEV';
 
 export function useUserRoles() {
   const { user } = useAuth();
-  const [roles, setRoles] = useState<AppRole[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (!user) {
-      setRoles([]);
-      setLoading(false);
-      return;
-    }
+  const { data: roles = [], isLoading: loading } = useQuery({
+    queryKey: ['userRoles', user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user!.id);
 
-    const fetchRoles = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', user.id);
-
-        if (error) throw error;
-        
-        setRoles(data?.map(r => r.role as AppRole) || []);
-      } catch (error) {
+      if (error) {
         console.error('Error fetching user roles:', error);
-        setRoles([]);
-      } finally {
-        setLoading(false);
+        return [];
       }
-    };
 
-    fetchRoles();
-
-    // Subscribe to role changes
-    const subscription = supabase
-      .channel('user_roles_changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'user_roles',
-          filter: `user_id=eq.${user.id}`
-        },
-        () => {
-          fetchRoles();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [user]);
+      return (data?.map(r => r.role as AppRole) || []);
+    },
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000,  // roles rarely change; revalidated by RealtimeInvalidator
+  });
 
   const hasRole = (role: AppRole) => roles.includes(role);
   const isUser = hasRole('USER');

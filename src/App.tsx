@@ -20,6 +20,7 @@ import { ROUTES } from "@/config/routes";
 import { PageTitleProvider, usePageTitle } from "@/context/PageTitleContext";
 import { ProfileBrandingProvider } from "@/context/ProfileBrandingContext";
 import { useAuth } from "@/hooks/useAuth";
+import { RealtimeInvalidator } from "@/components/RealtimeInvalidator";
 import { usePaymentNotifications } from "@/hooks/usePaymentNotifications";
 
 // Lazy — loaded on first navigation
@@ -94,6 +95,7 @@ function AppContent() {
   return (
     <BrowserRouter>
       <PaymentNotificationWatcher />
+      <RealtimeInvalidator />
       <div className="w-full h-screen flex flex-col">
         <header className="md:hidden sticky top-0 z-50 bg-background border-b">
           <div className="flex items-center justify-between px-4 h-14">

@@ -21,11 +21,11 @@ export function useSubscription(): SubscriptionResult {
         p_user_id: user!.id,
       });
       if (error) throw error;
-      // RPC returns an array of rows; take first
       const row = Array.isArray(data) ? data[0] : data;
       return row ?? null;
     },
     enabled: !!user,
+    staleTime: 5 * 60 * 1000,  // subscription rarely changes; revalidated by RealtimeInvalidator
   });
 
   if (!user) {

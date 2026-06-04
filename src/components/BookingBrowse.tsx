@@ -11,7 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Calendar as CalendarIcon, MapPin, Search, Loader2, ChevronRight, Bookmark } from 'lucide-react';
 import { BrowseDetail } from './BrowseDetail';
 import { ProfilePhotoStrip } from './ProfilePhotoStrip';
-import { parseLocation } from '@/lib/address';
+import { searchProviders } from '@/lib/search';
 import type { OpeningWithProfile, ProviderAccount, CustomInquiryInfo } from '@/types/browse';
 import { useLocalBookmarks, getLocalBookmarkIds } from '@/hooks/useLocalBookmarks';
 
@@ -383,28 +383,10 @@ export function BookingBrowse() {
   }, [bookmarkedProviders, localBookmarkedProviders]);
 
   // Filter providers by search term and apply location filter
-  const filteredProviders = allProviders.filter(provider => {
-
-    const terms = debouncedSearch.toLowerCase().split(/\s+/).filter(Boolean);
-    const matchesSearch = terms.length === 0 || terms.every(term =>
-      provider.provider_name.toLowerCase().includes(term) ||
-      provider.services.some(s => s.toLowerCase().includes(term)) ||
-      provider.workers.some(w => w.toLowerCase().includes(term))
-    );
-
-    if (!matchesSearch) return false;
-
-    if (locationFilter && locationFilter.province && locationFilter.country) {
-      const providerOpenings = providerOpeningsMap.get(provider.user_id) || [];
-      return providerOpenings.some(opening => {
-        const loc = parseLocation(opening.location);
-        return loc.province.toLowerCase() === locationFilter.province.toLowerCase() &&
-          loc.country.toLowerCase() === locationFilter.country.toLowerCase();
-      });
-    }
-
-    return true;
-  });
+  const filteredProviders = React.useMemo(
+    () => searchProviders(allProviders, { query: debouncedSearch, locationFilter, providerOpeningsMap }),
+    [allProviders, debouncedSearch, locationFilter, providerOpeningsMap]
+  );
 
   const visibleProviders = viewMode === 'bookmarks' ? mergedBookmarks : filteredProviders;
 

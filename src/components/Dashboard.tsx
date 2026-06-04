@@ -6,11 +6,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { WorkerInvites } from './WorkerInvites';
 import { PremiumUpgrade } from './PremiumUpgrade';
-import { useOrgPlan } from '@/hooks/useOrgPlan';
 
 export function Dashboard() {
   const { user } = useAuth();
-  const { plan } = useOrgPlan(user?.id || null);
 
   // Fetch user's appointments
   const { data: appointments = [], isLoading } = useQuery({

@@ -29,6 +29,7 @@ export function useWorkplaceAddresses(userId?: string) {
       return data as WorkplaceAddress[];
     },
     enabled: !!userId,
+    staleTime: 2 * 60 * 1000,
   });
 
   const saveAddress = useMutation({

@@ -33,6 +33,7 @@ export function useOrgWorkers() {
       return data as OrgWorker[];
     },
     enabled: !!user,
+    staleTime: 2 * 60 * 1000,
   });
 
   const inviteWorker = useMutation({
