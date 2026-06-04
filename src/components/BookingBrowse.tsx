@@ -507,7 +507,7 @@ export function BookingBrowse() {
 
         {/* Search */}
         <Card className="shadow-soft border-card-border">
-          <CardContent className="pt-6">
+          <CardContent className="pt-6 space-y-3">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -516,6 +516,21 @@ export function BookingBrowse() {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
               />
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {['Insurance', 'Tutor', 'Beauty', 'Fitness', 'Medical', 'Legal', 'Photography', 'Music'].map(cat => (
+                <button
+                  key={cat}
+                  onClick={() => setSearchTerm(searchTerm === cat ? '' : cat)}
+                  className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                    searchTerm === cat
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
             </div>
           </CardContent>
         </Card>
