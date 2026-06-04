@@ -124,7 +124,7 @@ export function AppSidebar() {
         {showUserSection && (
           <>
             <div>
-              <h3 className="text-xs font-semibold text-muted-foreground px-4 mb-2">USER</h3>
+              <h3 className="text-xs font-semibold text-muted-foreground px-4 mb-2">INDIVIDUAL</h3>
               <div className="space-y-1 px-2">
                 {userNavItems.map((item) => {
                   const Icon = item.icon;
@@ -284,7 +284,7 @@ export function AppSidebar() {
                 <Tabs value={viewMode} onValueChange={(val) => setViewMode(val as 'user' | 'org')} className="w-full">
                   <TabsList className="grid w-full grid-cols-2 h-11">
                     <TabsTrigger value="user" className="text-xs leading-none">Org</TabsTrigger>
-                    <TabsTrigger value="org" className="text-xs leading-none">User</TabsTrigger>
+                    <TabsTrigger value="org" className="text-xs leading-none">Individual</TabsTrigger>
                   </TabsList>
                 </Tabs>
               </div>

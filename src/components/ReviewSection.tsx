@@ -8,7 +8,7 @@ import { Textarea } from './ui/textarea';
 import { Avatar, AvatarFallback } from './ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { ReportDialog } from './ReportDialog';
-import { Star, Flag, Trash2 } from 'lucide-react';
+import { Star, Flag, Trash2, Pencil } from 'lucide-react';
 
 interface Review {
   id: string;
@@ -53,6 +53,7 @@ export function ReviewSection({ profileId, profileName }: ReviewSectionProps) {
   const [newRating, setNewRating] = useState(5);
   const [newText, setNewText] = useState('');
   const [showForm, setShowForm] = useState(false);
+  const [editingReview, setEditingReview] = useState<Review | null>(null);
   const [reportReviewId, setReportReviewId] = useState<string | null>(null);
 
   const { data: reviews = [], isLoading } = useQuery({
@@ -121,16 +122,24 @@ export function ReviewSection({ profileId, profileName }: ReviewSectionProps) {
   const submitReview = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error('Not authenticated');
-      const appointmentId = selectedAppointmentId || reviewableAppointments[0]?.id;
-      if (!appointmentId) throw new Error('No eligible appointment to review');
-      const { error } = await supabase.from('reviews').insert({
-        reviewer_id: user.id,
-        reviewed_id: profileId,
-        rating: newRating,
-        review_text: newText || null,
-        appointment_id: appointmentId,
-      } as any);
-      if (error) throw error;
+      if (editingReview) {
+        const { error } = await supabase.from('reviews').update({
+          rating: newRating,
+          review_text: newText || null,
+        } as any).eq('id', editingReview.id);
+        if (error) throw error;
+      } else {
+        const appointmentId = selectedAppointmentId || reviewableAppointments[0]?.id;
+        if (!appointmentId) throw new Error('No eligible appointment to review');
+        const { error } = await supabase.from('reviews').insert({
+          reviewer_id: user.id,
+          reviewed_id: profileId,
+          rating: newRating,
+          review_text: newText || null,
+          appointment_id: appointmentId,
+        } as any);
+        if (error) throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reviews', profileId] });
@@ -140,8 +149,9 @@ export function ReviewSection({ profileId, profileName }: ReviewSectionProps) {
       setNewText('');
       setNewRating(5);
       setSelectedAppointmentId(null);
+      setEditingReview(null);
       setShowForm(false);
-      toast({ title: 'Review submitted!' });
+      toast({ title: editingReview ? 'Review updated!' : 'Review submitted!' });
     },
     onError: (err: any) => {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });
@@ -186,11 +196,11 @@ export function ReviewSection({ profileId, profileName }: ReviewSectionProps) {
                   rows={3}
                 />
                 <div className="flex justify-end space-x-2">
-                  <Button variant="ghost" size="sm" onClick={() => setShowForm(false)}>
+                  <Button variant="ghost" size="sm" onClick={() => { setShowForm(false); setEditingReview(null); }}>
                     Cancel
                   </Button>
                   <Button size="sm" onClick={() => submitReview.mutate()} disabled={submitReview.isPending}>
-                    Submit
+                    {editingReview ? 'Update' : 'Submit'}
                   </Button>
                 </div>
               </CardContent>
@@ -203,7 +213,13 @@ export function ReviewSection({ profileId, profileName }: ReviewSectionProps) {
           ) : reviews.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-4">No reviews yet.</p>
           ) : (
-            reviews.map((review) => (
+            [...reviews].sort((a, b) => {
+              if (user) {
+                if (a.reviewer_id === user.id && b.reviewer_id !== user.id) return -1;
+                if (b.reviewer_id === user.id && a.reviewer_id !== user.id) return 1;
+              }
+              return 0;
+            }).map((review) => (
               <div key={review.id} className="flex items-start space-x-3 py-3 border-b border-border last:border-0">
                 <Avatar className="h-8 w-8">
                   <AvatarFallback className="text-xs bg-secondary text-secondary-foreground">
@@ -228,9 +244,19 @@ export function ReviewSection({ profileId, profileName }: ReviewSectionProps) {
                         </Button>
                       )}
                       {user && user.id === review.reviewer_id && (
-                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => deleteReview.mutate(review.id)}>
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
+                        <>
+                          <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => {
+                            setEditingReview(review);
+                            setNewRating(review.rating);
+                            setNewText(review.review_text || '');
+                            setShowForm(true);
+                          }}>
+                            <Pencil className="h-3 w-3" />
+                          </Button>
+                          <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => deleteReview.mutate(review.id)}>
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </>
                       )}
                     </div>
                   </div>

@@ -230,7 +230,7 @@ export function SignInDialog({ open, onOpenChange }: SignInDialogProps) {
                 <RadioGroup value={signUpRole} onValueChange={(v) => setSignUpRole(v as AppRole)}>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="USER" id="dialog-role-user" />
-                    <Label htmlFor="dialog-role-user" className="font-normal">User</Label>
+                    <Label htmlFor="dialog-role-user" className="font-normal">Individual</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="ORGANIZATION" id="dialog-role-org" />

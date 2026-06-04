@@ -370,7 +370,7 @@ export default function Auth() {
                     <RadioGroup value={signUpRole} onValueChange={(value) => setSignUpRole(value as AppRole)}>
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="USER" id="role-user" />
-                        <Label htmlFor="role-user" className="font-normal">User - Book appointments</Label>
+                        <Label htmlFor="role-user" className="font-normal">Individual - Book appointments</Label>
                       </div>
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="ORGANIZATION" id="role-org" />

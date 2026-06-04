@@ -97,7 +97,7 @@ function ProviderBrowseCard({
                 {provider.provider_name}
               </h3>
               <p className="text-sm text-muted-foreground">
-                {provider.opening_count} available slots
+                {provider.is_custom_inquiry ? 'Custom inquiry' : 'Available for booking'}
               </p>
             </div>
           </div>
@@ -106,26 +106,20 @@ function ProviderBrowseCard({
       </CardHeader>
       <CardContent className="space-y-3">
         <div>
-          <p className="text-xs font-medium text-muted-foreground mb-2">Services</p>
-          <div className="flex flex-wrap gap-1">
+          <div className="flex flex-wrap gap-2">
             {provider.services.slice(0, 3).map(service => (
-              <Badge key={service} variant="secondary" className="text-xs">
+              <Badge key={service} className="text-sm font-medium px-3 py-1 bg-primary/10 text-primary border-primary/20 hover:bg-primary/20">
                 {service}
               </Badge>
             ))}
             {provider.services.length > 3 && (
-              <Badge variant="secondary" className="text-xs">
+              <Badge variant="outline" className="text-xs text-muted-foreground">
                 +{provider.services.length - 3}
               </Badge>
             )}
           </div>
         </div>
-        <div>
-          <p className="text-xs font-medium text-muted-foreground mb-2">Service Providers</p>
-          <p className="text-sm text-foreground truncate">
-            {provider.workers.length > 0 ? provider.workers.join(', ') : provider.provider_name}
-          </p>
-        </div>
+        <p className="text-sm text-muted-foreground">{provider.opening_count} available slots</p>
         <div onClick={e => e.stopPropagation()}>
           <ProfilePhotoStrip userId={provider.user_id} thumbClass="w-14 h-14" />
         </div>

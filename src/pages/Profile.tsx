@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { ReviewSection } from '@/components/ReviewSection';
 import { ReportDialog } from '@/components/ReportDialog';
 import { PhotoLightbox } from '@/components/PhotoLightbox';
-import { ArrowLeft, Camera } from 'lucide-react';
+import { ArrowLeft, Camera, Calendar } from 'lucide-react';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useIsPremium } from '@/hooks/useIsPremium';
 import { usePageTitle } from '@/context/PageTitleContext';
@@ -305,6 +305,15 @@ export default function Profile() {
       )}
 
       <ReviewSection profileId={profile.id} profileName={profile.full_name || 'User'} />
+
+      {!isOwnProfile && (
+        <div className="flex justify-center py-6">
+          <Button size="lg" onClick={() => navigate(`/browse/${profile.id}`)}>
+            <Calendar className="h-5 w-5 mr-2" />
+            Book Appointments
+          </Button>
+        </div>
+      )}
 
       {!isOwnProfile && (
         <ReportDialog

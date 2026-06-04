@@ -130,6 +130,12 @@ export function ProfileHeader({
         )
       )}
       <div className="flex flex-wrap items-center gap-2">
+        {!isOwnProfile && (
+          <Button variant="outline" size="sm" onClick={onBrowse}>
+            <Calendar className="h-4 w-4 mr-1" />
+            Book Appointments
+          </Button>
+        )}
         {shareUrl && (
           <>
             <Button variant="outline" size="sm" onClick={() => setQrOpen(true)}>
@@ -147,10 +153,6 @@ export function ProfileHeader({
         )}
         {!isOwnProfile && (
           <>
-            <Button variant="outline" size="sm" onClick={onBrowse}>
-              <Calendar className="h-4 w-4 mr-1" />
-              Browse
-            </Button>
             <Button
               variant={isBookmarked ? 'default' : 'outline'}
               size="sm"
@@ -167,6 +169,7 @@ export function ProfileHeader({
                 size="sm"
                 onClick={onReport}
                 aria-label="Report this profile"
+                className="text-red-500 hover:text-red-600 hover:bg-red-50"
               >
                 <Flag className="h-4 w-4" />
               </Button>
