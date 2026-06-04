@@ -107,31 +107,11 @@ export function BookerInfo({
           </div>
         )}
       </div>
-      {((isPremium && attendanceStats) || (canManage && appointment.user_id)) && (
+      {isPremium && attendanceStats && (
         <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-          {isPremium && attendanceStats && (
-            <span className={attendanceStats.attendancePct >= 90 ? 'text-green-600' : attendanceStats.attendancePct >= 70 ? 'text-yellow-600' : 'text-red-500'}>
-              {attendanceStats.attendancePct}% attended
-            </span>
-          )}
-          {canManage && appointment.user_id && (
-            <Button
-              variant="outline"
-              size="sm"
-              className={customerFlag ? 'border-orange-500 text-orange-600 hover:bg-orange-50' : ''}
-              onClick={(event) => {
-                event.stopPropagation();
-                if (customerFlag) {
-                  onUnflagCustomer(appointment.user_id!, appointment.booker_name || 'this user');
-                } else {
-                  onFlagCustomer(appointment.user_id!, appointment.booker_name || 'this user', appointment.id);
-                }
-              }}
-            >
-              {customerFlag ? <ShieldCheck className="mr-1 h-4 w-4" /> : <ShieldAlert className="mr-1 h-4 w-4" />}
-              {customerFlag ? 'Unflag User' : 'Flag User'}
-            </Button>
-          )}
+          <span className={attendanceStats.attendancePct >= 90 ? 'text-green-600' : attendanceStats.attendancePct >= 70 ? 'text-yellow-600' : 'text-red-500'}>
+            {attendanceStats.attendancePct}% attended
+          </span>
         </div>
       )}
     </div>
@@ -193,6 +173,7 @@ export function AppointmentCard({
 }: AppointmentCardProps) {
   const canManage = isOrgView || appointment.provider_id === userId;
   const pricingContext = { isOrgView, getWorkerRate, appointmentRateMap };
+  const customerFlag = appointment.user_id ? flaggedCustomerIds.get(appointment.user_id) : undefined;
 
   return (
     <Card
@@ -371,21 +352,21 @@ export function AppointmentCard({
                       <Button
                         variant="ghost"
                         size="sm"
-                        className={flaggedAppointmentIds.has(appointment.id) ? 'text-red-500 hover:text-red-600' : 'text-muted-foreground hover:text-foreground'}
+                        className={customerFlag ? 'text-red-500 hover:text-red-600' : 'text-muted-foreground hover:text-foreground'}
                         onClick={(e) => {
                           e.stopPropagation();
-                          if (flaggedAppointmentIds.has(appointment.id)) {
-                            onUnflag(appointment.id, appointment.booker_name || 'this user');
+                          if (customerFlag) {
+                            onUnflagCustomer(appointment.user_id!, appointment.booker_name || 'this user');
                           } else {
-                            onFlag(appointment.id, appointment.user_id, appointment.booker_name || 'this user');
+                            onFlagCustomer(appointment.user_id!, appointment.booker_name || 'this user', appointment.id);
                           }
                         }}
                       >
-                        {flaggedAppointmentIds.has(appointment.id) ? <FlagOff className="h-4 w-4" /> : <Flag className="h-4 w-4" />}
+                        {customerFlag ? <FlagOff className="h-4 w-4" /> : <Flag className="h-4 w-4" />}
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>
-                      {flaggedAppointmentIds.has(appointment.id) ? 'Remove no-show report' : 'Report no-show'}
+                      {customerFlag ? 'Unflag User' : 'Flag User'}
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>

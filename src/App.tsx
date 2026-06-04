@@ -26,7 +26,7 @@ import { usePaymentNotifications } from "@/hooks/usePaymentNotifications";
 // Lazy — loaded on first navigation
 const Calendar = lazy(() => import("@/components/Calendar").then(m => ({ default: m.Calendar })));
 const BookingBrowse = lazy(() => import("@/components/BookingBrowse").then(m => ({ default: m.BookingBrowse })));
-const Workers = lazy(() => import("@/components/Workers").then(m => ({ default: m.Workers })));
+const Resources = lazy(() => import("@/components/Resources").then(m => ({ default: m.Resources })));
 const Appointments = lazy(() => import("@/components/Appointments").then(m => ({ default: m.Appointments })));
 const AppointmentView = lazy(() => import("@/pages/AppointmentView").then(m => ({ default: m.AppointmentView })));
 const OpeningView = lazy(() => import("@/pages/OpeningView").then(m => ({ default: m.OpeningView })));
@@ -65,7 +65,7 @@ function AppRoutes() {
         <Route path={ROUTES.calendar} element={<Navigate to={ROUTES.openings} replace />} />
         <Route path={ROUTES.browse} element={<BookingBrowse />} />
         <Route path={ROUTES.browseProvider} element={<BookingBrowse />} />
-        <Route path={ROUTES.workers} element={<Workers />} />
+        <Route path={ROUTES.workers} element={<Resources />} />
         <Route path={ROUTES.appointments} element={<Appointments />} />
         <Route path={ROUTES.appointmentDetail} element={<AppointmentView />} />
         <Route path={ROUTES.openingDetail} element={<OpeningView />} />
