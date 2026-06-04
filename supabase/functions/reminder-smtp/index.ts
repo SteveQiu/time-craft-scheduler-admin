@@ -39,7 +39,7 @@ Deno.serve(async (req) => {
       )
     }
 
-    const { to, appointmentTime } = await req.json()
+    const { to, appointmentTime, type } = await req.json()
 
     if (!to || typeof to !== "string") {
       return new Response(
@@ -48,13 +48,50 @@ Deno.serve(async (req) => {
       )
     }
 
-    const subject = "Appointment Confirmed"
+    const emailType = type === "deny" ? "deny" : "confirm"
 
-    const appointmentLine = typeof appointmentTime === "string" && appointmentTime.trim().length > 0
-      ? `Your appointment is confirmed for <strong>${appointmentTime}</strong>.`
-      : `Your appointment has been booked successfully.`
+    // Escape dynamic values to prevent HTML injection
+    const escapeHtml = (str: string) =>
+      str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")
 
-    const html = `
+    const safeTime = typeof appointmentTime === "string" && appointmentTime.trim().length > 0
+      ? escapeHtml(appointmentTime)
+      : null
+
+    let subject: string
+    let html: string
+    let text: string
+
+    if (emailType === "deny") {
+      subject = "Appointment Request Denied"
+
+      const appointmentLine = safeTime
+        ? `Your appointment request for <strong>${safeTime}</strong> has been denied by the provider.`
+        : `Your appointment request has been denied by the provider.`
+
+      html = `
+<!DOCTYPE html>
+<html>
+<body style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <h2 style="color: #dc2626;">❌ Appointment Denied</h2>
+  <p>${appointmentLine}</p>
+  <p>Please feel free to browse other available time slots or reach out to the provider for more information.</p>
+  <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;" />
+  <p style="font-size: 12px; color: #6b7280;">PikAppoint — your scheduling platform</p>
+</body>
+</html>`
+
+      text = safeTime
+        ? `Your appointment request for ${appointmentTime} has been denied by the provider. Please feel free to browse other available time slots.`
+        : `Your appointment request has been denied by the provider. Please feel free to browse other available time slots.`
+    } else {
+      subject = "Appointment Confirmed"
+
+      const appointmentLine = safeTime
+        ? `Your appointment is confirmed for <strong>${safeTime}</strong>.`
+        : `Your appointment has been booked successfully.`
+
+      html = `
 <!DOCTYPE html>
 <html>
 <body style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -66,9 +103,10 @@ Deno.serve(async (req) => {
 </body>
 </html>`
 
-    const text = typeof appointmentTime === "string" && appointmentTime.trim().length > 0
-      ? `Your appointment is confirmed for ${appointmentTime}. Thank you for booking with us!`
-      : `Your appointment has been booked successfully. Thank you for booking with us!`
+      text = safeTime
+        ? `Your appointment is confirmed for ${appointmentTime}. Thank you for booking with us!`
+        : `Your appointment has been booked successfully. Thank you for booking with us!`
+    }
 
     // Get SMTP credentials from environment
     const SMTP_HOST = Deno.env.get("SMTP_HOST")

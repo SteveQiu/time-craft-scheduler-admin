@@ -88,10 +88,11 @@ export function useAppointmentActions({
         afterToast: async () => {
           try {
             await sendPremiumReminder({
-              userId: apt?.provider_id,
+              recipientUserId: apt?.user_id,
               to: apt?.booker_email,
               date: apt?.date,
               startTime: apt?.start_time,
+              type: 'confirm',
             });
           } catch (reminderError) {
             console.error('Premium reminder failed after appointment approval:', reminderError);
@@ -112,10 +113,25 @@ export function useAppointmentActions({
       });
       if (error) throw error;
 
+      const apt = appointments.find(a => a.id === appointmentId);
+
       await handleMutationSuccess({
         updater: current =>
           current.map(item => (item.id === appointmentId ? { ...item, status: 'cancelled', approved_by: user.id } : item)),
         message: 'Appointment rejected.',
+        afterToast: async () => {
+          try {
+            await sendPremiumReminder({
+              recipientUserId: apt?.user_id,
+              to: apt?.booker_email,
+              date: apt?.date,
+              startTime: apt?.start_time,
+              type: 'deny',
+            });
+          } catch (reminderError) {
+            console.error('Premium reminder failed after appointment rejection:', reminderError);
+          }
+        },
       });
     } catch (error: any) {
       toast.error(error.message || 'Failed to reject');
@@ -157,10 +173,11 @@ export function useAppointmentActions({
         if (!error) {
           successCount++;
           await sendPremiumReminder({
-            userId: apt.provider_id,
+            recipientUserId: apt.user_id,
             to: apt.booker_email,
             date: apt.date,
             startTime: apt.start_time,
+            type: 'confirm',
           });
         }
       } catch {}
@@ -208,7 +225,16 @@ export function useAppointmentActions({
           _appointment_id: apt.id,
           _provider_id: user.id,
         });
-        if (!error) successCount++;
+        if (!error) {
+          successCount++;
+          await sendPremiumReminder({
+            recipientUserId: apt.user_id,
+            to: apt.booker_email,
+            date: apt.date,
+            startTime: apt.start_time,
+            type: 'deny',
+          });
+        }
       } catch {}
     }
     setSelectedIds(new Set());

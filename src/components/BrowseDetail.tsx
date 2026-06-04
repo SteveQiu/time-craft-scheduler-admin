@@ -386,10 +386,11 @@ export function BrowseDetail({
                   const { data: profiles } = await supabase.rpc('get_public_profile_by_id', { profile_id: selectedSlot.user_id });
                   const to = (profiles as any)?.[0]?.email;
                   await sendPremiumReminder({
-                    userId: selectedSlot.user_id,
+                    recipientUserId: selectedSlot.user_id,
                     to,
                     date: selectedSlot.date,
                     startTime: selectedSlot.start_time,
+                    type: 'confirm',
                   });
                   // Redirect to browse — page reload causes infinite spinner when no slots remain
                   setTimeout(() => navigate('/browse'), 1000);

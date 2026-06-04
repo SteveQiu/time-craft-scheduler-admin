@@ -6,6 +6,7 @@ export function useSendReminder() {
     to: string;
     date?: string;
     startTime?: string;
+    type?: 'confirm' | 'deny';
   }) => {
     try {
       await supabase.functions.invoke('reminder-smtp', {
@@ -14,11 +15,13 @@ export function useSendReminder() {
           appointmentTime: params.date && params.startTime
             ? `${new Date(params.date).toLocaleDateString()} at ${params.startTime}`
             : undefined,
+          type: params.type,
         }
       });
     } catch (emailError) {
       console.warn('Email notification failed:', emailError);
-      toast.warning('Booking confirmed! Email notification could not be sent.');
+      const label = params.type === 'deny' ? 'Denied' : 'Confirmed';
+      toast.warning(`Appointment ${label.toLowerCase()}! Email notification could not be sent.`);
     }
   };
 
