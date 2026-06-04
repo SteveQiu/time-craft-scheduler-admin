@@ -1,5 +1,7 @@
 # Moya — Feature Dev
 
+> 🚫 **NEVER run `git commit`.** All commits are done manually by Steve. No exceptions.
+
 Builds calendar integrations, export features, and user-facing appointment tooling.
 
 ## Project Context

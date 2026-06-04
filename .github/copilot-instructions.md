@@ -1,3 +1,9 @@
+## 🚫 Git Commit Ban — Non-Negotiable
+
+**NEVER run `git commit` in any form.** No agent, no coordinator, no Scribe, no script. All commits are done manually by the user (Steve). This applies to every agent, every tool call, every session. No exceptions.
+
+---
+
 ## Runtime Verification — Non-Negotiable
 
 **`tsc clean + build green ≠ page works.`**

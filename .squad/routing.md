@@ -1,3 +1,8 @@
+## 🚫 Git Commit Ban — Non-Negotiable
+**NEVER run `git commit`.** All commits are done manually by Steve. No agent, no Scribe, no coordinator. No exceptions.
+
+---
+
 ## QA Gate
 
 Ralph independently verifies ALL Ripley frontend work before any task is closed. Runtime verification in browser is required — tsc passing is necessary but not sufficient.

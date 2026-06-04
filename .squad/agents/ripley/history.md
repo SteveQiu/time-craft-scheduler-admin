@@ -7,6 +7,27 @@
 **Joined:** 2026-05-08 (replaced Dallas)
 **Requested by:** SteveQiu
 
+## Appointments org-mode merge (2026-06-04)
+
+**Task:** Remove appointments org-mode split and unify `/appointments` + `/appointments?mode=org`.
+
+**Files modified:**
+- `src/components/AppSidebar.tsx` — org reservations nav now points to `ROUTES.appointments` without `?mode=org`.
+- `src/components/Appointments.tsx` — removed `useSearchParams`, `useUserRoles`, `useOrgWorkers`, worker filter state, and org-mode branching; appointments query/filter/list now run in one unified view; notification badge always renders; subtitle now `Review and manage all bookings`.
+- `src/hooks/useAppointments.ts` — query always uses `.or('user_id.eq.${userId},provider_id.eq.${userId}')`; removed org-mode params from hook signature and query key.
+- `src/hooks/useAppointmentActions.ts` — removed org-mode param; provider-only permission checks now rely on `provider_id === user.id`.
+- `src/hooks/useAppointmentFiltering.ts` — removed worker filter and org-mode param; pending-by-opening grouping always computes.
+- `src/components/appointments/AppointmentFilters.tsx` — removed worker dropdown and org-mode props.
+- `src/components/appointments/AppointmentList.tsx` — pending groups always render; removed org-mode/getWorkerRate props.
+- `src/components/appointments/PendingGroupSection.tsx` — provider controls now use `provider_id === userId`; pricing uses `appointmentRateMap`.
+- `src/components/appointments/BulkActionBar.tsx` — removed org-mode prop; bulk permissions now use provider/booker ownership only.
+- `src/components/appointments/AppointmentCard.tsx` — removed org-mode/getWorkerRate props; provider-specific UI now keys off `appointment.provider_id === userId`.
+
+**Pattern:** Appointments page no longer depends on `?mode=org` or org-worker data. Unified reservations behavior should query both `user_id` and `provider_id`, keep grouped pending sections, and use ownership checks instead of mode flags.
+
+**Build gate:** `npx tsc --noEmit` → 0 errors. `npm run build` → exit 0.
+**Runtime gate:** Ralph ran `node scripts\snapshot-appointments.cjs`, confirmed non-blank `Text:` output for `/appointments` and `/appointments?mode=org`, no `PAGE ERROR:` lines, and verified `tmp-snapshots\sdeqiu-appointments.png` + `tmp-snapshots\sdeqiu-appointments-org.png`.
+
 ## OpeningView ShareDialog adoption (2026-06-02)
 
 **Task:** Replace `OpeningView.tsx` copy-only share button with reusable `ShareDialog`.

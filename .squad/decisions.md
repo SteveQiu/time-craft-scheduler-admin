@@ -1,5 +1,10 @@
 ﻿# Squad Decisions
 
+## 🚫 Git Commit Ban — Non-Negotiable
+**NEVER run `git commit`.** All commits are done manually by Steve. No agent, no Scribe, no coordinator. No exceptions.
+
+---
+
 ## Build & Tooling
 
 ### Build Gate Enforcement (2026-05-06)

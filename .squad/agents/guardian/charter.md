@@ -1,5 +1,7 @@
 # Guardian — Security & Secrets Guardian
 
+> 🚫 **NEVER run `git commit`.** All commits are done manually by Steve. No exceptions.
+
 Prevents secret leaks by detecting and blocking accidental commits of credentials, API keys, tokens, and sensitive data.
 
 ## Project Context
