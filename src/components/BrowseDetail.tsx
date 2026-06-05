@@ -10,6 +10,7 @@ import { formatLocation, parseLocation } from '@/lib/address';
 import { TIME_FORMATS, LOCALE } from '@/config/formats';
 import { ProfilePhotoStrip } from './ProfilePhotoStrip';
 import { CustomInquiryDialog } from './browse/CustomInquiryDialog';
+import { ShareDialog } from './ShareDialog';
 import { getEffectiveTotal } from '@/lib/utils';
 import { usePremiumReminder } from '@/hooks/usePremiumReminder';
 import { useProviderPayments } from '@/hooks/useProviderPayments';
@@ -52,6 +53,7 @@ export function BrowseDetail({
   const [calendarMonth, setCalendarMonth] = useState(new Date());
   const [showBookingDialog, setShowBookingDialog] = useState(false);
   const [showInquiryDialog, setShowInquiryDialog] = useState(false);
+  const [showShareDialog, setShowShareDialog] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<OpeningWithProfile | null>(null);
   const [isBooking, setIsBooking] = useState(false);
   const { sendPremiumReminder } = usePremiumReminder();
@@ -159,6 +161,10 @@ export function BrowseDetail({
     return <NoAppointmentsState onBack={() => navigate('/browse')} />;
   }
 
+  const shareUrl = currentProvider.provider_slug
+    ? `${window.location.origin}/browse/${currentProvider.provider_slug}`
+    : `${window.location.origin}/browse/${currentProvider.user_id}`;
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -177,14 +183,30 @@ export function BrowseDetail({
             </p>
           </div>
         </div>
-        <Button 
-          variant="outline"
-          onClick={() => navigate(`/profile/${currentProvider.user_id}`)}
-          className="gap-2"
-        >
-          <User className="h-4 w-4" />
-          View Profile
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setShowShareDialog(true)}
+          >
+            <Share2 className="h-4 w-4" />
+          </Button>
+          <ShareDialog
+            open={showShareDialog}
+            onOpenChange={setShowShareDialog}
+            shareUrl={shareUrl}
+            title="Share Provider"
+            displayName={currentProvider.provider_slug || currentProvider.provider_name}
+          />
+          <Button 
+            variant="outline"
+            onClick={() => navigate(`/profile/${currentProvider.user_id}`)}
+            className="gap-2"
+          >
+            <User className="h-4 w-4" />
+            View Profile
+          </Button>
+        </div>
       </div>
 
       <ProfilePhotoStrip userId={currentProvider.user_id} thumbClass="w-20 h-20" />
