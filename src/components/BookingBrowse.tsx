@@ -458,7 +458,7 @@ export function BookingBrowse() {
               <p className="text-sm text-foreground">
                 Sign in to sync your bookmarks across devices.
               </p>
-              <Button onClick={() => navigate('/auth?redirect=/browse')}>
+              <Button onClick={() => navigate(`/auth?returnTo=${encodeURIComponent('/browse')}`)}>
                 Sign in
               </Button>
             </CardContent>

@@ -18,6 +18,7 @@ import HCaptcha from '@hcaptcha/react-hcaptcha';
 import { flushLocalBookmarksToDb } from '@/hooks/useLocalBookmarks';
 
 type AppRole = 'USER' | 'ORGANIZATION';
+const AUTH_RETURN_TO_KEY = 'auth_return_to';
 
 export default function Auth() {
   const navigate = useNavigate();
@@ -28,7 +29,8 @@ export default function Auth() {
 
   const isRecoveryLink = window.location.hash.includes('type=recovery');
   const isResetMode = searchParams.get('mode') === 'reset' || isRecoveryLink;
-  const returnTo = searchParams.get('returnTo') || '/';
+  const storedReturnTo = sessionStorage.getItem(AUTH_RETURN_TO_KEY);
+  const returnTo = searchParams.get('returnTo') || storedReturnTo || '/';
 
   // Sign in state
   const [signInEmail, setSignInEmail] = useState('');
@@ -52,9 +54,12 @@ export default function Auth() {
 
   useEffect(() => {
     if (!loading && user && !isResetMode) {
+      if (storedReturnTo) {
+        sessionStorage.removeItem(AUTH_RETURN_TO_KEY);
+      }
       navigate(returnTo);
     }
-  }, [user, loading, isResetMode, navigate, returnTo]);
+  }, [user, loading, isResetMode, navigate, returnTo, storedReturnTo]);
 
   const handleSignIn = async (e?: React.FormEvent | React.MouseEvent) => {
     e?.preventDefault();

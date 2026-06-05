@@ -309,7 +309,7 @@ export function BrowseDetail({
                       if (!user) {
                         try { localStorage.setItem('pendingBookingOpeningId', slot.id); } catch {}
                         toast.info('Please sign in to book this appointment.');
-                        navigate(`/auth?redirect=/browse/${slot.user_id}`);
+                        navigate(`/auth?returnTo=${encodeURIComponent(`/browse/${slot.user_id}`)}`);
                         return;
                       }
                       setSelectedSlot(slot);

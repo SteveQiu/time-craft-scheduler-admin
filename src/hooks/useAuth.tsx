@@ -3,10 +3,13 @@ import { useState, useEffect, createContext, useContext } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
+const AUTH_RETURN_TO_KEY = 'auth_return_to';
+const AUTH_OAUTH_PENDING_KEY = 'auth_oauth_pending';
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
-  signInWithGoogle: () => Promise<void>;
+  signInWithGoogle: (returnTo?: string) => Promise<void>;
   signOut: () => Promise<void>;
   loading: boolean;
 }
@@ -47,10 +50,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+      (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+
+        if (event === 'SIGNED_IN' && sessionStorage.getItem(AUTH_OAUTH_PENDING_KEY) === 'true') {
+          sessionStorage.removeItem(AUTH_OAUTH_PENDING_KEY);
+          const returnTo = sessionStorage.getItem(AUTH_RETURN_TO_KEY);
+          if (returnTo) {
+            sessionStorage.removeItem(AUTH_RETURN_TO_KEY);
+            window.location.replace(returnTo);
+          }
+        }
       }
     );
 
@@ -64,8 +76,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signInWithGoogle = async () => {
+  const signInWithGoogle = async (returnTo = `${window.location.pathname}${window.location.search}${window.location.hash}`) => {
     try {
+      sessionStorage.setItem(AUTH_RETURN_TO_KEY, returnTo || '/');
+      sessionStorage.setItem(AUTH_OAUTH_PENDING_KEY, 'true');
+
       const dynamicRedirectUri = window.location.origin;
       // Clear any existing session first
       await supabase.auth.signOut();
@@ -80,9 +95,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       });
       if (error) {
+        sessionStorage.removeItem(AUTH_OAUTH_PENDING_KEY);
+        sessionStorage.removeItem(AUTH_RETURN_TO_KEY);
         throw error;
       }
     } catch (error) {
+      sessionStorage.removeItem(AUTH_OAUTH_PENDING_KEY);
+      sessionStorage.removeItem(AUTH_RETURN_TO_KEY);
       console.error('Google sign-in failed:', error);
       throw error;
     }
