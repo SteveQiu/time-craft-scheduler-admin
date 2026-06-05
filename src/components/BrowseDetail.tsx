@@ -161,9 +161,7 @@ export function BrowseDetail({
     return <NoAppointmentsState onBack={() => navigate('/browse')} />;
   }
 
-  const shareUrl = currentProvider.provider_slug
-    ? `${window.location.origin}/browse/${currentProvider.provider_slug}`
-    : `${window.location.origin}/browse/${currentProvider.user_id}`;
+  const shareUrl = `${window.location.origin}/browse/${currentProvider.provider_slug || currentProvider.user_id}`;
 
   return (
     <div className="p-6 space-y-6">
