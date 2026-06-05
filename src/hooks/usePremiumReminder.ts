@@ -2,6 +2,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useSendReminder } from '@/hooks/useSendReminder';
 
 interface PremiumReminderParams {
+  providerUserId?: string | null;
   recipientUserId?: string | null;
   to?: string | null;
   date?: string;
@@ -13,19 +14,34 @@ export function usePremiumReminder() {
   const { sendReminder } = useSendReminder();
 
   const sendPremiumReminder = async ({
+    providerUserId,
     recipientUserId,
     to,
     date,
     startTime,
     type = 'confirm',
   }: PremiumReminderParams) => {
-    if (!recipientUserId || !to) return;
+    if ((!providerUserId && !recipientUserId) || !to) return;
 
-    const { data: isRecipientPremium, error } = await (supabase as any).rpc('is_user_premium', {
-      p_user_id: recipientUserId,
-    });
+    const checks = [];
+    if (providerUserId) {
+      checks.push(
+        (supabase as any).rpc('is_user_premium', { p_user_id: providerUserId })
+      );
+    }
+    if (recipientUserId) {
+      checks.push(
+        (supabase as any).rpc('is_user_premium', { p_user_id: recipientUserId })
+      );
+    }
 
-    if (error || !isRecipientPremium) return;
+    const results = await Promise.all(checks);
+    
+    const hasError = results.some(r => r.error);
+    if (hasError) return;
+
+    const anyPremium = results.some(r => r.data === true);
+    if (!anyPremium) return;
 
     await sendReminder({
       to,

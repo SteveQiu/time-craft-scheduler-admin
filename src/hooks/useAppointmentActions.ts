@@ -88,6 +88,7 @@ export function useAppointmentActions({
         afterToast: async () => {
           try {
             await sendPremiumReminder({
+              providerUserId: user.id,
               recipientUserId: apt?.user_id,
               to: apt?.booker_email,
               date: apt?.date,
@@ -122,6 +123,7 @@ export function useAppointmentActions({
         afterToast: async () => {
           try {
             await sendPremiumReminder({
+              providerUserId: user.id,
               recipientUserId: apt?.user_id,
               to: apt?.booker_email,
               date: apt?.date,
@@ -173,6 +175,7 @@ export function useAppointmentActions({
         if (!error) {
           successCount++;
           await sendPremiumReminder({
+            providerUserId: user.id,
             recipientUserId: apt.user_id,
             to: apt.booker_email,
             date: apt.date,
@@ -228,6 +231,7 @@ export function useAppointmentActions({
         if (!error) {
           successCount++;
           await sendPremiumReminder({
+            providerUserId: user.id,
             recipientUserId: apt.user_id,
             to: apt.booker_email,
             date: apt.date,
