@@ -126,70 +126,72 @@ export function ProfileHeader({
           </div>
         )
       )}
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2 w-full justify-between">
         {!isOwnProfile && (
           <Button variant="outline" size="sm" onClick={onBrowse}>
             <Calendar className="h-4 w-4 mr-1" />
             Book Appointments
           </Button>
         )}
-        {shareUrl && (
-          <>
-            <Button variant="outline" size="sm" onClick={() => setQrOpen(true)}>
-              <Share2 className="h-4 w-4 mr-1" />
-              Share
-            </Button>
-            <ShareDialog
-              open={qrOpen}
-              onOpenChange={setQrOpen}
-              shareUrl={shareUrl}
-              title="Share Profile"
-              displayName={profile.slug || profile.full_name || undefined}
-            />
-          </>
-        )}
-        {!isOwnProfile && (
-          <>
-            <Button
-              variant={isBookmarked ? 'default' : 'outline'}
-              size="sm"
-              onClick={onToggleBookmark}
-              aria-label={
-                isBookmarked ? 'Remove bookmark from this profile' : 'Bookmark this profile'
-              }
-            >
-              <Bookmark className={`h-4 w-4 ${isBookmarked ? 'fill-current' : ''}`} />
-            </Button>
-            {user && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onReport}
-                aria-label="Report this profile"
-                className="text-red-500 hover:text-red-600 hover:bg-red-50"
-              >
-                <Flag className="h-4 w-4" />
+        <div className="flex flex-wrap items-center gap-2 ml-auto">
+          {shareUrl && (
+            <>
+              <Button variant="outline" size="sm" onClick={() => setQrOpen(true)}>
+                <Share2 className="h-4 w-4 mr-1" />
+                Share
               </Button>
-            )}
-          </>
-        )}
-        {isOwnProfile && !editing && (
-          <Button variant="outline" size="sm" onClick={onEdit}>
-            <Edit className="h-4 w-4 mr-1" />
-            Edit
-          </Button>
-        )}
-        {isOwnProfile && editing && (
-          <>
-            <Button size="sm" onClick={onSave} disabled={isSavePending}>
-              <Save className="h-4 w-4 mr-1" />
-              Save
+              <ShareDialog
+                open={qrOpen}
+                onOpenChange={setQrOpen}
+                shareUrl={shareUrl}
+                title="Share Profile"
+                displayName={profile.slug || profile.full_name || undefined}
+              />
+            </>
+          )}
+          {!isOwnProfile && (
+            <>
+              <Button
+                variant={isBookmarked ? 'default' : 'outline'}
+                size="sm"
+                onClick={onToggleBookmark}
+                aria-label={
+                  isBookmarked ? 'Remove bookmark from this profile' : 'Bookmark this profile'
+                }
+              >
+                <Bookmark className={`h-4 w-4 ${isBookmarked ? 'fill-current' : ''}`} />
+              </Button>
+              {user && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={onReport}
+                  aria-label="Report this profile"
+                  className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                >
+                  <Flag className="h-4 w-4" />
+                </Button>
+              )}
+            </>
+          )}
+          {isOwnProfile && !editing && (
+            <Button variant="outline" size="sm" onClick={onEdit}>
+              <Edit className="h-4 w-4 mr-1" />
+              Edit
             </Button>
-            <Button variant="ghost" size="sm" onClick={onCancelEdit}>
-              <X className="h-4 w-4" />
-            </Button>
-          </>
-        )}
+          )}
+          {isOwnProfile && editing && (
+            <>
+              <Button size="sm" onClick={onSave} disabled={isSavePending}>
+                <Save className="h-4 w-4 mr-1" />
+                Save
+              </Button>
+              <Button variant="ghost" size="sm" onClick={onCancelEdit}>
+                <X className="h-4 w-4" />
+              </Button>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
