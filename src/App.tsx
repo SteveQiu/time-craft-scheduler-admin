@@ -1,4 +1,4 @@
-import { useState, lazy, Suspense } from "react";
+import { useState, lazy, Suspense, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -22,6 +22,8 @@ import { ProfileBrandingProvider } from "@/context/ProfileBrandingContext";
 import { useAuth } from "@/hooks/useAuth";
 import { RealtimeInvalidator } from "@/components/RealtimeInvalidator";
 import { usePaymentNotifications } from "@/hooks/usePaymentNotifications";
+import { readLocationPreference } from "@/lib/locationPreference";
+import { LocationSetupScreen } from "@/components/LocationSetupScreen";
 
 // Lazy — loaded on first navigation
 const Calendar = lazy(() => import("@/components/Calendar").then(m => ({ default: m.Calendar })));
@@ -91,6 +93,39 @@ function AppRoutes() {
 function AppContent() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const { title } = usePageTitle();
+  const { user, loading: authLoading } = useAuth();
+  const [locationGateReady, setLocationGateReady] = useState(false);
+  const [needsLocationSetup, setNeedsLocationSetup] = useState(false);
+
+  useEffect(() => {
+    if (authLoading) return;
+
+    if (!user?.id) {
+      setNeedsLocationSetup(false);
+      setLocationGateReady(true);
+      return;
+    }
+
+    setNeedsLocationSetup(!readLocationPreference(user.id));
+    setLocationGateReady(true);
+  }, [authLoading, user?.id]);
+
+  if (!locationGateReady) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-background text-foreground">
+        Loading...
+      </div>
+    );
+  }
+
+  if (needsLocationSetup && user?.id) {
+    return (
+      <LocationSetupScreen
+        userId={user.id}
+        onComplete={() => setNeedsLocationSetup(false)}
+      />
+    );
+  }
 
   return (
     <BrowserRouter>

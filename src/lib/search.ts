@@ -64,12 +64,21 @@ export function matchesLocation(
 ): boolean {
   if (!locationFilter?.province || !locationFilter?.country) return true;
 
+  const preferredProvince = locationFilter.province.trim().toLowerCase();
+  const preferredCountry = locationFilter.country.trim().toLowerCase();
+
   const openings = providerOpeningsMap.get(provider.user_id) || [];
   return openings.some(opening => {
     const loc = parseLocation(opening.location);
+    const openingProvince = (loc.province || loc.city).trim().toLowerCase();
+    const openingCountry = loc.country.trim().toLowerCase();
+    if (!openingProvince || !openingCountry) return false;
+
     return (
-      loc.province.toLowerCase() === locationFilter.province.toLowerCase() &&
-      loc.country.toLowerCase() === locationFilter.country.toLowerCase()
+      openingCountry === preferredCountry &&
+      (openingProvince === preferredProvince ||
+        openingProvince.includes(preferredProvince) ||
+        preferredProvince.includes(openingProvince))
     );
   });
 }

@@ -14,6 +14,7 @@ import { ProfilePhotoStrip } from './ProfilePhotoStrip';
 import { searchProviders } from '@/lib/search';
 import type { OpeningWithProfile, ProviderAccount, CustomInquiryInfo } from '@/types/browse';
 import { useLocalBookmarks } from '@/hooks/useLocalBookmarks';
+import { readLocationPreference, type LocationPreference } from '@/lib/locationPreference';
 
 function getUniqueValues(values: string[]) {
   return [...new Set(values)];
@@ -135,7 +136,7 @@ export function BookingBrowse() {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [viewMode, setViewMode] = useState<'all' | 'bookmarks'>('all');
-  const [locationFilter, setLocationFilter] = useState<{ province: string; country: string } | null>(null);
+  const [locationFilter, setLocationFilter] = useState<LocationPreference | null>(null);
   const localBookmarks = useLocalBookmarks();
 
   const today = new Date().toISOString().split('T')[0];
@@ -143,14 +144,21 @@ export function BookingBrowse() {
   // Load location preference on mount
   React.useEffect(() => {
     if (user?.id) {
-      const savedPref = localStorage.getItem(`locationPreference_${user.id}`);
-      if (savedPref) {
-        try {
-          setLocationFilter(JSON.parse(savedPref));
-        } catch {}
-      }
+      setLocationFilter(readLocationPreference(user.id));
+      return;
     }
+    setLocationFilter(null);
   }, [user?.id]);
+
+  const activeLocationFilter = React.useMemo(() => {
+    if (!locationFilter?.province || !locationFilter.country) return null;
+    return {
+      province: locationFilter.province.trim(),
+      country: locationFilter.country,
+    };
+  }, [locationFilter]);
+
+  const escapeIlikePattern = (value: string) => value.replace(/[\\%_]/g, '\\$&');
 
   // Debounce search input by 200ms
   useEffect(() => {
@@ -165,13 +173,23 @@ export function BookingBrowse() {
     isError: openingsError,
     error: queryError 
   } = useQuery({
-    queryKey: ['browse-openings', today],
+    queryKey: ['browse-openings', today, activeLocationFilter?.province ?? null, activeLocationFilter?.country ?? null],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let openingsQuery = supabase
         .from('openings')
         .select('*')
         .eq('is_available', true)
-        .gte('date', today)
+        .gte('date', today);
+
+      if (activeLocationFilter) {
+        const provincePattern = `%${escapeIlikePattern(activeLocationFilter.province)}%`;
+        const countryPattern = `%${escapeIlikePattern(activeLocationFilter.country)}%`;
+        openingsQuery = openingsQuery
+          .ilike('location', provincePattern)
+          .ilike('location', countryPattern);
+      }
+
+      const { data, error } = await openingsQuery
         .order('date', { ascending: true })
         .order('start_time', { ascending: true });
 
@@ -405,8 +423,8 @@ export function BookingBrowse() {
 
   // Filter providers by search term and apply location filter
   const filteredProviders = React.useMemo(
-    () => searchProviders(allProviders, { query: debouncedSearch, locationFilter, providerOpeningsMap }),
-    [allProviders, debouncedSearch, locationFilter, providerOpeningsMap]
+    () => searchProviders(allProviders, { query: debouncedSearch, locationFilter: activeLocationFilter, providerOpeningsMap }),
+    [allProviders, debouncedSearch, activeLocationFilter, providerOpeningsMap]
   );
 
   const visibleProviders = viewMode === 'bookmarks' ? mergedBookmarks : filteredProviders;
@@ -465,26 +483,6 @@ export function BookingBrowse() {
           </Card>
         )}
 
-        {/* Location filter badge */}
-        {locationFilter && locationFilter.province && locationFilter.country && (
-          <Card className="shadow-soft border-card-border bg-blue-50 dark:bg-blue-950/30">
-            <CardContent className="flex items-center justify-between gap-3 py-3">
-              <div className="flex items-center gap-2 text-sm">
-                <MapPin className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                <span className="font-medium">Showing results near:</span>
-                <span>{locationFilter.province}, {locationFilter.country}</span>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setLocationFilter(null)}
-                className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
-              >
-                ✕ Clear filter
-              </Button>
-            </CardContent>
-          </Card>
-        )}
 
         {/* Tab buttons (bookmarks available to all users) */}
         <div className="flex gap-2">

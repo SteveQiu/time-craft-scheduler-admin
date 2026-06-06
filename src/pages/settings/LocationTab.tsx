@@ -7,29 +7,26 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MapPin } from 'lucide-react';
 import { COUNTRIES, PROVINCES_BY_COUNTRY } from '@/lib/address';
+import {
+  EMPTY_LOCATION_PREFERENCE,
+  readLocationPreference,
+  saveLocationPreference,
+  type LocationPreference,
+} from '@/lib/locationPreference';
 
 export function LocationTab() {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  const [locationPref, setLocationPref] = useState(() => {
-    if (typeof window !== 'undefined' && user?.id) {
-      const saved = localStorage.getItem(`locationPreference_${user.id}`);
-      if (saved) {
-        try { return JSON.parse(saved); } catch {}
-      }
-    }
-    return { province: '', country: '' };
-  });
+  const [locationPref, setLocationPref] = useState<LocationPreference>(() =>
+    readLocationPreference(user?.id) ?? EMPTY_LOCATION_PREFERENCE
+  );
   const [locationPrefSaving, setLocationPrefSaving] = useState(false);
 
   // Keep in sync with user id on mount
   React.useEffect(() => {
     if (user?.id) {
-      const saved = localStorage.getItem(`locationPreference_${user.id}`);
-      if (saved) {
-        try { setLocationPref(JSON.parse(saved)); } catch {}
-      }
+      setLocationPref(readLocationPreference(user.id) ?? EMPTY_LOCATION_PREFERENCE);
     }
   }, [user?.id]);
 
@@ -37,22 +34,14 @@ export function LocationTab() {
     if (!user?.id) return;
     setLocationPrefSaving(true);
     try {
-      localStorage.setItem(`locationPreference_${user.id}`, JSON.stringify(locationPref));
+      const normalizedLocation = saveLocationPreference(user.id, locationPref);
+      setLocationPref(normalizedLocation);
       toast({ title: 'Location preference saved' });
     } catch {
       toast({ title: 'Failed to save preference', variant: 'destructive' });
     } finally {
       setLocationPrefSaving(false);
     }
-  };
-
-  const handleClear = () => {
-    if (!user?.id) return;
-    setLocationPref({ province: '', country: '' });
-    try {
-      localStorage.removeItem(`locationPreference_${user.id}`);
-      toast({ title: 'Location preference cleared' });
-    } catch {}
   };
 
   return (
@@ -63,19 +52,19 @@ export function LocationTab() {
             <MapPin className="h-5 w-5" />
             Your Location Preference
           </CardTitle>
-          <CardDescription>Set your preferred location to pre-filter openings in Browse</CardDescription>
+          <CardDescription>
+            Set your province/state and country to keep Browse focused on nearby openings.
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Country</Label>
               <Select
                 value={locationPref.country}
-                onValueChange={(country) => {
-                  const provinces = PROVINCES_BY_COUNTRY[country] || [];
-                  const newProvince = provinces.includes(locationPref.province) ? locationPref.province : '';
-                  setLocationPref({ country, province: newProvince });
-                }}
+                onValueChange={(country) =>
+                  setLocationPref((prev) => ({ ...prev, country, province: '' }))
+                }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select country" />
@@ -91,14 +80,16 @@ export function LocationTab() {
               <Label>Province / State</Label>
               <Select
                 value={locationPref.province}
-                onValueChange={(province) => setLocationPref({ ...locationPref, province })}
-                disabled={!locationPref.country || (PROVINCES_BY_COUNTRY[locationPref.country]?.length ?? 0) === 0}
+                onValueChange={(province) =>
+                  setLocationPref((prev) => ({ ...prev, province }))
+                }
+                disabled={!locationPref.country}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder={!locationPref.country ? 'Select country first' : 'Select province/state'} />
+                  <SelectValue placeholder={locationPref.country ? 'Select province / state' : 'Select country first'} />
                 </SelectTrigger>
                 <SelectContent>
-                  {(PROVINCES_BY_COUNTRY[locationPref.country] || []).map((province) => (
+                  {(PROVINCES_BY_COUNTRY[locationPref.country] ?? []).map((province) => (
                     <SelectItem key={province} value={province}>{province}</SelectItem>
                   ))}
                 </SelectContent>
@@ -108,11 +99,10 @@ export function LocationTab() {
           <div className="flex gap-2">
             <Button
               onClick={handleSave}
-              disabled={locationPrefSaving || !locationPref.province || !locationPref.country}
+              disabled={locationPrefSaving || !locationPref.province.trim() || !locationPref.country}
             >
               {locationPrefSaving ? 'Saving...' : 'Save'}
             </Button>
-            <Button variant="outline" onClick={handleClear}>Clear</Button>
           </div>
         </CardContent>
       </Card>
