@@ -4,6 +4,12 @@ enabled = true
 verify_jwt = false
 entrypoint = "./functions/lemonsqueezy-webhook/index.ts"
 
+[functions.scheduler-api]
+enabled = true
+verify_jwt = true
+import_map = "./functions/scheduler-api/deno.json"
+entrypoint = "./functions/scheduler-api/index.ts"
+
 [functions.reminder-smtp]
 enabled = true
 verify_jwt = true

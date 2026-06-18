@@ -43,6 +43,7 @@ const Help = lazy(() => import("@/pages/Help"));
 const TestReminder = lazy(() => import("@/pages/dev/TestReminder"));
 const SignUpConfirmation = lazy(() => import("@/pages/auth/SignUpConfirmation"));
 const OpeningsListPage = lazy(() => import("@/pages/OpeningsListPage"));
+const ApiDoc = lazy(() => import("@/pages/ApiDoc"));
 
 const queryClient = new QueryClient();
 
@@ -82,6 +83,7 @@ function AppRoutes() {
         <Route path={ROUTES.privacy} element={<Privacy />} />
         <Route path={ROUTES.refund} element={<Refund />} />
         <Route path={ROUTES.help} element={<Help />} />
+        <Route path={ROUTES.apiDoc} element={<ApiDoc />} />
         {import.meta.env.DEV && <Route path="/test" element={<TestReminder />} />}
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
