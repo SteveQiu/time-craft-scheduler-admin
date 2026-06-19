@@ -169,7 +169,7 @@ test.describe('Total Refactor E2E', () => {
         if (!createClient) return null;
         const supabase = createClient(
           'https://dbabjfydcllqbjpolhym.supabase.co',
-          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRiYWJqZnlkY2xscWJqcG9saHltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUxNjgwNzgsImV4cCI6MjA2MDc0NDA3OH0.VpzJfJqt-QRUY-xxvRqBvAyNjYxgSwgQ3W_KQ1W2N1Y'
+          process.env.VITE_SUPABASE_PUBLISHABLE_KEY!
         );
         const { data } = await supabase
           .from('openings')
@@ -302,7 +302,7 @@ test.describe('Total Refactor E2E', () => {
         if (!createClient) return null;
         const supabase = createClient(
           'https://dbabjfydcllqbjpolhym.supabase.co',
-          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRiYWJqZnlkY2xscWJqcG9saHltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUxNjgwNzgsImV4cCI6MjA2MDc0NDA3OH0.VpzJfJqt-QRUY-xxvRqBvAyNjYxgSwgQ3W_KQ1W2N1Y'
+          process.env.VITE_SUPABASE_PUBLISHABLE_KEY!
         );
         const { data } = await supabase
           .from('appointments')

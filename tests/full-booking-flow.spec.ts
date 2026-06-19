@@ -13,8 +13,8 @@ import path from 'path';
  */
 
 const BASE_URL = 'http://localhost:8080';
-const SUPABASE_URL = 'https://dbabjfydcllqbjpolhym.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRiYWJqZnlkY2xscWJqcG9saHltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMwMzk1OTYsImV4cCI6MjA2ODYxNTU5Nn0.SyYn3n9-sA9A2gwoIgY06oHHRg8Lfw1p3XNjV7Dadys';
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL!;
+const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_PUBLISHABLE_KEY!;
 
 const PROVIDER_EMAIL = 'aaa@aaa.com';
 const PROVIDER_PASSWORD = 'aaaaaa';

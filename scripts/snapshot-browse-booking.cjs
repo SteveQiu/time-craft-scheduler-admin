@@ -19,8 +19,8 @@ const SNAP  = path.join(__dirname, '..', 'tmp-snapshots');
 if (!fs.existsSync(SNAP)) fs.mkdirSync(SNAP, { recursive: true });
 
 const SUPABASE_URL = 'https://dbabjfydcllqbjpolhym.supabase.co';
-const SUPABASE_ANON_KEY = secret['SUPABASE_Publishable_KEY'] ||
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRiYWJqZnlkY2xscWJqcG9saHltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMwMzk1OTYsImV4cCI6MjA2ODYxNTU5Nn0.SyYn3n9-sA9A2gwoIgY06oHHRg8Lfw1p3XNjV7Dadys';
+const SUPABASE_ANON_KEY = secret['SUPABASE_Publishable_KEY'];
+if (!SUPABASE_ANON_KEY) { console.error('Missing SUPABASE_Publishable_KEY in .secret'); process.exit(1); }
 const PROJECT_REF = 'dbabjfydcllqbjpolhym';
 
 function supabaseSignIn(email, password) {

@@ -1,7 +1,18 @@
 import { createClient } from '@supabase/supabase-js';
+import * as fs from 'fs';
 
-const supabaseUrl = 'https://ygghiowacyeqktwlsjxo.supabase.co';
-const supabaseKey = 'sb_secret_RiV6RWJH8Ij72J3gyHz--Q_njyZQY2n';
+const secretContent = fs.readFileSync('.secret', 'utf8');
+const secret = Object.fromEntries(secretContent.split('\n').filter(l => l.includes('=')).map(l => { const [k,...v] = l.split('='); return [k.trim(), v.join('=').trim()]; }));
+const envContent = fs.readFileSync('.env', 'utf8');
+const env = Object.fromEntries(envContent.split('\n').filter(l => l.includes('=')).map(l => { const [k,...v] = l.split('='); return [k.trim(), v.join('=').replace(/^"|"$/g, '').trim()]; }));
+
+const supabaseUrl = env.VITE_SUPABASE_URL;
+const supabaseKey = secret.SUPABASE_KEY;
+
+if (!supabaseKey) {
+  console.error('❌ SUPABASE_KEY not found in .secret file');
+  process.exit(1);
+}
 
 const supabase = createClient(supabaseUrl, supabaseKey, {
   auth: { persistSession: false },

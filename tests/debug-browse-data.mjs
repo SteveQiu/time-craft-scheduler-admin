@@ -4,8 +4,10 @@
  * Direct test: Can we fetch openings and see them?
  */
 
-const SUPABASE_URL = 'https://dbabjfydcllqbjpolhym.supabase.co';
-const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRiYWJqZnlkY2xscWJqcG9saHltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMwMzk1OTYsImV4cCI6MjA2ODYxNTU5Nn0.SyYn3n9-sA9A2gwoIgY06oHHRg8Lfw1p3XNjV7Dadys';
+import 'dotenv/config';
+
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL || 'https://dbabjfydcllqbjpolhym.supabase.co';
+const ANON_KEY = process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
 (async () => {
   console.log('🔍 Debug: Can we fetch data for browse page?\n');
