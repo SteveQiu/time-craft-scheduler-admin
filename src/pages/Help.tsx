@@ -1,5 +1,8 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Code2 } from 'lucide-react';
+import { ROUTES } from '@/config/routes';
 
 const DEMO_VIDEO_URL = 'https://github.com/SteveQiu/time-craft-scheduler-admin/raw/refs/heads/main/media/videos/pikappoint-demo.mp4';
 
@@ -60,6 +63,32 @@ export default function Help() {
               <li>→ <strong>Settings</strong> — configure location, payment, and preferences</li>
             </ul>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Developer API */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Code2 className="h-5 w-5" />
+            Developer API
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <p className="text-sm text-muted-foreground">
+            Build your own integrations using the PikAppoint Scheduler API. Book and manage appointments programmatically from any app or website.
+          </p>
+          <ul className="text-sm text-muted-foreground space-y-1 list-none pl-2">
+            <li>→ <strong>Free plan</strong> — 100 requests/day for evaluation</li>
+            <li>→ <strong>Premium plan</strong> — 2,000 requests/day for production</li>
+          </ul>
+          <Link
+            to={ROUTES.apiDoc}
+            className="inline-flex items-center gap-1.5 text-sm text-primary font-medium hover:underline mt-1"
+          >
+            <Code2 className="h-4 w-4" />
+            View API Documentation →
+          </Link>
         </CardContent>
       </Card>
 
