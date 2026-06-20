@@ -520,6 +520,8 @@ export type Database = {
           phone: string | null
           phone_public: boolean | null
           profile_url: string | null
+          province: string | null
+          country: string | null
           social_links: Json | null
           skills: string[]
           skills_public: boolean | null
@@ -542,6 +544,8 @@ export type Database = {
           phone?: string | null
           phone_public?: boolean | null
           profile_url?: string | null
+          province?: string | null
+          country?: string | null
           social_links?: Json | null
           skills?: string[]
           skills_public?: boolean | null
@@ -564,6 +568,8 @@ export type Database = {
           phone?: string | null
           phone_public?: boolean | null
           profile_url?: string | null
+          province?: string | null
+          country?: string | null
           social_links?: Json | null
           skills?: string[]
           skills_public?: boolean | null

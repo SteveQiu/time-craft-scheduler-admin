@@ -4,7 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { COUNTRIES, PROVINCES_BY_COUNTRY } from '@/lib/address';
 import {
   EMPTY_LOCATION_PREFERENCE,
-  saveLocationPreference,
+  persistLocationPreference,
   type LocationPreference,
 } from '@/lib/locationPreference';
 import { Button } from '@/components/ui/button';
@@ -21,10 +21,10 @@ export function LocationSetupScreen({ userId, onComplete }: LocationSetupScreenP
   const [locationPref, setLocationPref] = useState<LocationPreference>(EMPTY_LOCATION_PREFERENCE);
   const [isSaving, setIsSaving] = useState(false);
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     setIsSaving(true);
     try {
-      saveLocationPreference(userId, locationPref);
+      await persistLocationPreference(userId, locationPref);
       onComplete();
     } catch (error) {
       toast({

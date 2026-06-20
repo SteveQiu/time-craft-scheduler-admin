@@ -22,7 +22,7 @@ import { ProfileBrandingProvider } from "@/context/ProfileBrandingContext";
 import { useAuth } from "@/hooks/useAuth";
 import { RealtimeInvalidator } from "@/components/RealtimeInvalidator";
 import { usePaymentNotifications } from "@/hooks/usePaymentNotifications";
-import { readLocationPreference } from "@/lib/locationPreference";
+import { readLocationPreference, fetchLocationPreference } from "@/lib/locationPreference";
 import { LocationSetupScreen } from "@/components/LocationSetupScreen";
 
 // Lazy — loaded on first navigation
@@ -108,8 +108,34 @@ function AppContent() {
       return;
     }
 
-    setNeedsLocationSetup(!readLocationPreference(user.id));
-    setLocationGateReady(true);
+    // Fast path: a cached preference means we can decide synchronously.
+    if (readLocationPreference(user.id)) {
+      setNeedsLocationSetup(false);
+      setLocationGateReady(true);
+      return;
+    }
+
+    // No local cache — the user may have set their location on another device,
+    // so check the profile in the database before forcing the setup screen.
+    let cancelled = false;
+    setLocationGateReady(false);
+    fetchLocationPreference(user.id)
+      .then((pref) => {
+        if (cancelled) return;
+        setNeedsLocationSetup(!pref);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setNeedsLocationSetup(true);
+      })
+      .finally(() => {
+        if (cancelled) return;
+        setLocationGateReady(true);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [authLoading, user?.id]);
 
   if (!locationGateReady) {
