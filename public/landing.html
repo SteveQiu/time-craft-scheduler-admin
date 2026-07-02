@@ -1006,7 +1006,6 @@
       <div class="nav-inner">
         <a class="brand" href="/landing.html">Pik<span>Appoint</span></a>
         <div class="nav-actions">
-          <a class="nav-link" href="/browse">Browse</a>
           <a class="nav-cta" href="/auth">Get Started Free</a>
         </div>
       </div>
@@ -1449,26 +1448,60 @@
     })();
   </script>
 
-  <!-- Auth redirect: signed-in users skip the landing and go straight to the app -->
+  <!-- Auth state indicator: show "Go to App" when logged in, "Browse" when logged out -->
   <script>
     (function () {
       var SUPABASE_URL = 'https://dbabjfydcllqbjpolhym.supabase.co';
       var SUPABASE_ANON_KEY = 'sb_publishable_LGzr9sQ7QCazLxDaHd7EcA_eEM7Bqqt';
+      var navCta = document.querySelector('.nav-cta');
+      
       try {
         var raw = localStorage.getItem('sb-dbabjfydcllqbjpolhym-auth-token');
-        if (!raw) return;
+        if (!raw) {
+          // Not logged in — show "Browse"
+          if (navCta) {
+            navCta.textContent = 'Browse';
+            navCta.href = '/browse';
+          }
+          return;
+        }
+        
         var session = JSON.parse(raw);
         var accessToken = session && (session.access_token || (session.currentSession && session.currentSession.access_token));
-        if (!accessToken) return;
+        if (!accessToken) {
+          // Not logged in — show "Browse"
+          if (navCta) {
+            navCta.textContent = 'Browse';
+            navCta.href = '/browse';
+          }
+          return;
+        }
+        
         // Quick expiry check without a full JWT decode
         var parts = accessToken.split('.');
         if (parts.length === 3) {
           var payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
           if (payload.exp && Date.now() / 1000 < payload.exp) {
-            window.location.replace('/appointments');
+            // User is logged in — show "Go to App"
+            if (navCta) {
+              navCta.textContent = 'Go to App';
+              navCta.href = '/appointments';
+            }
+          } else {
+            // Token expired — show "Browse"
+            if (navCta) {
+              navCta.textContent = 'Browse';
+              navCta.href = '/browse';
+            }
           }
         }
-      } catch (e) { /* no-op — stay on landing */ }
+      } catch (e) { 
+        // Error parsing — default to "Browse"
+        if (navCta) {
+          navCta.textContent = 'Browse';
+          navCta.href = '/browse';
+        }
+      }
     })();
   </script>
 </body>
