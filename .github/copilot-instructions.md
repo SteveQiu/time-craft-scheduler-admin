@@ -1,3 +1,15 @@
+## 🧠 Project Memory — Read First
+
+**`.github/COPILOT_MEMORY.md` is this project's persistent memory store.**
+
+Every session MUST:
+1. **Read `.github/COPILOT_MEMORY.md` at the start** of any task to recall durable facts (architecture, conventions, gotchas, ops notes).
+2. **Append new durable facts to it** whenever you learn something that will matter in future sessions — codebase conventions, design decisions, verified build/test commands, recurring gotchas. Keep entries short and cite the relevant files. Do NOT store secrets or ephemeral task notes.
+
+This replaces the hosted Copilot memory feature (not enabled for this repo).
+
+---
+
 ## 🚫 Git Commit Ban — Non-Negotiable
 
 **NEVER run `git commit` in any form.** No agent, no coordinator, no Scribe, no script. All commits are done manually by the user (Steve). This applies to every agent, every tool call, every session. No exceptions.

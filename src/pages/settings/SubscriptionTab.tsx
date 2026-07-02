@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useSubscription } from '@/hooks/useSubscription';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Check, Zap } from 'lucide-react';
+import { Check, Zap, Code2 } from 'lucide-react';
 import { PremiumUpgrade } from '@/components/PremiumUpgrade';
+import { ROUTES } from '@/config/routes';
 
 export function SubscriptionTab() {
   const { user } = useAuth();
@@ -23,6 +25,7 @@ export function SubscriptionTab() {
     'Active Listing — open your store for direct contact requests (email, phone, social links)',
     'Active Listing — listed in the browse page for everyday advertisement',
     'Priority support',
+    'Scheduler API — 2,000 requests/day to book & manage appointments programmatically',
   ];
 
   if (loadingSubscription) {
@@ -86,6 +89,14 @@ export function SubscriptionTab() {
                 ))}
               </ul>
             </div>
+            <div className="flex items-start gap-3 rounded-lg border border-green-300 dark:border-green-700 bg-green-100/50 dark:bg-green-900/30 p-3">
+              <Code2 className="h-4 w-4 mt-0.5 text-green-700 dark:text-green-300 shrink-0" />
+              <div className="text-sm text-green-700 dark:text-green-300">
+                <span className="font-medium">Scheduler API is active.</span>{' '}
+                2,000 requests/day — book and manage appointments from your own app.{' '}
+                <Link to={ROUTES.apiDoc} className="underline hover:no-underline font-medium">View API docs →</Link>
+              </div>
+            </div>
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">
                 To cancel, open the billing email from LemonSqueezy and click <span className="font-medium">Manage Subscription</span>.
@@ -141,6 +152,13 @@ export function SubscriptionTab() {
               </li>
             ))}
           </ul>
+          <div className="flex items-start gap-3 rounded-lg border p-3 mt-3">
+            <Code2 className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
+            <div className="text-sm text-muted-foreground">
+              <span className="font-medium text-foreground">Scheduler API</span> — integrate appointment booking directly into your own app or website.{' '}
+              <Link to={ROUTES.apiDoc} className="text-primary hover:underline">View API docs →</Link>
+            </div>
+          </div>
         </div>
         {user && <PremiumUpgrade orgId={user.id} />}
       </CardContent>

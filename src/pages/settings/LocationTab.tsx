@@ -10,7 +10,8 @@ import { COUNTRIES, PROVINCES_BY_COUNTRY } from '@/lib/address';
 import {
   EMPTY_LOCATION_PREFERENCE,
   readLocationPreference,
-  saveLocationPreference,
+  fetchLocationPreference,
+  persistLocationPreference,
   type LocationPreference,
 } from '@/lib/locationPreference';
 
@@ -23,18 +24,24 @@ export function LocationTab() {
   );
   const [locationPrefSaving, setLocationPrefSaving] = useState(false);
 
-  // Keep in sync with user id on mount
+  // Keep in sync with user id on mount; pull the authoritative value from the DB.
   React.useEffect(() => {
-    if (user?.id) {
-      setLocationPref(readLocationPreference(user.id) ?? EMPTY_LOCATION_PREFERENCE);
-    }
+    if (!user?.id) return;
+    setLocationPref(readLocationPreference(user.id) ?? EMPTY_LOCATION_PREFERENCE);
+    let cancelled = false;
+    fetchLocationPreference(user.id).then((pref) => {
+      if (!cancelled && pref) setLocationPref(pref);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [user?.id]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!user?.id) return;
     setLocationPrefSaving(true);
     try {
-      const normalizedLocation = saveLocationPreference(user.id, locationPref);
+      const normalizedLocation = await persistLocationPreference(user.id, locationPref);
       setLocationPref(normalizedLocation);
       toast({ title: 'Location preference saved' });
     } catch {

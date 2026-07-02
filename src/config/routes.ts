@@ -20,6 +20,7 @@ export const ROUTES = {
   privacy: '/privacy',
   refund: '/refund',
   help: '/help',
+  apiDoc: '/api-doc',
 } as const;
 
 export type AppRoute = (typeof ROUTES)[keyof typeof ROUTES];
