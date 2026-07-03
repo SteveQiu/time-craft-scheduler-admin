@@ -804,3 +804,5 @@ ode scripts/snapshot-appointments.cjs and confirmed non-blank render.
 
 **Build gate:** `npx tsc --noEmit` → 0 errors. `npm run build` → exit 0.
 **Runtime gate:** Ralph ran `node scripts/snapshot-appointments.cjs`, confirmed non-blank render, and verified screenshot output in `tmp-snapshots/`.
+## Learnings
+- 2026-07-02: Consolidated profiles.address -> public_address_id reference. Public view uses RPC address string; own view resolves workplace address via formatAddressDisplay. Removed dead addressVisibility.

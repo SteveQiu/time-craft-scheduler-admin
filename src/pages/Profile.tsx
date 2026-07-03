@@ -19,13 +19,8 @@ import { ProfileSocialLinks } from './profile/ProfileSocialLinks';
 import { ProfileSkillsRate } from './profile/ProfileSkillsRate';
 import { ProfileAddress, ProfileAddressHeaderActions } from './profile/ProfileAddress';
 import { ProfilePhotos } from './profile/ProfilePhotos';
-import type {
-  AddressData,
-  AddressVisibility,
-  FormState,
-  PrivacySettings,
-  SocialLinks,
-} from './profile/types';
+import { formatAddressDisplay } from '@/pages/settings/settingsUtils';
+import type { FormState, PrivacySettings, SocialLinks } from './profile/types';
 
 export default function Profile() {
   const { slug } = useParams<{ slug: string }>();
@@ -42,22 +37,7 @@ export default function Profile() {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
 
-  const [address, setAddress] = useState<AddressData>({
-    address_line_1: '',
-    address_line_2: '',
-    city: '',
-    province_state: '',
-    country: '',
-    postal_code: '',
-  });
-  const [addressVisibility, setAddressVisibility] = useState<AddressVisibility>({
-    address_line_1: true,
-    address_line_2: true,
-    city: true,
-    province_state: true,
-    country: true,
-    postal_code: true,
-  });
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>({
     full_name: '',
     email: '',
@@ -126,12 +106,7 @@ export default function Profile() {
         skills_public: profile.skills_public ?? true,
       });
       setSkillInput('');
-
-      const savedAddress = localStorage.getItem(`address_${profile.id}`);
-      if (savedAddress) setAddress(JSON.parse(savedAddress));
-
-      const savedVisibility = localStorage.getItem(`addressVisibility_${profile.id}`);
-      if (savedVisibility) setAddressVisibility(JSON.parse(savedVisibility));
+      setSelectedAddressId(profile.public_address_id ?? null);
     }
   }, [profile]);
 
@@ -168,6 +143,12 @@ export default function Profile() {
   }
 
   const hasSocialLinks = Object.values((profile.social_links || {}) as SocialLinks).some(Boolean);
+  const selectedWorkplace = savedAddresses.find((a) => a.id === selectedAddressId);
+  const aboutAddressDisplay = isOwnProfile
+    ? selectedWorkplace
+      ? formatAddressDisplay(selectedWorkplace.address)
+      : null
+    : (profile.address ?? null);
 
   return (
     <div className="p-6 space-y-6 max-w-3xl mx-auto min-h-full">
@@ -194,7 +175,9 @@ export default function Profile() {
             privacySettings={privacySettings}
             onPrivacyChange={setPrivacySettings}
             onEdit={() => setEditing(true)}
-            onSave={() => saveMutation.mutate({ form, address, privacySettings })}
+            onSave={() =>
+              saveMutation.mutate({ form, public_address_id: selectedAddressId, privacySettings })
+            }
             onCancelEdit={() => setEditing(false)}
             onCopyShare={copyShareLink}
             onToggleBookmark={handleToggleBookmark}
@@ -244,6 +227,7 @@ export default function Profile() {
             onFormChange={setForm}
             privacySettings={privacySettings}
             onPrivacyChange={setPrivacySettings}
+            addressDisplay={aboutAddressDisplay}
           />
         </CardContent>
       </Card>
@@ -294,8 +278,8 @@ export default function Profile() {
           <CardContent className="space-y-4">
             <ProfileAddress
               editing={editing}
-              address={address}
-              onAddressChange={setAddress}
+              selectedAddressId={selectedAddressId}
+              onSelectedAddressChange={setSelectedAddressId}
               privacySettings={privacySettings}
               onPrivacyChange={setPrivacySettings}
               savedAddresses={savedAddresses}
@@ -332,4 +316,3 @@ export default function Profile() {
     </div>
   );
 }
-

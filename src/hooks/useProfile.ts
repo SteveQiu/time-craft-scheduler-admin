@@ -228,25 +228,15 @@ export function useProfile({ slug, user, onSaveSuccess }: UseProfileOptions) {
   };
 
   const saveMutation = useMutation({
-    mutationFn: async ({ form, address, privacySettings }: SaveProfileVariables) => {
+    mutationFn: async ({ form, public_address_id, privacySettings }: SaveProfileVariables) => {
       if (!user) throw new Error('Not authenticated');
-      const formattedAddress = [
-        address.address_line_1,
-        address.address_line_2,
-        address.city,
-        address.province_state,
-        address.country,
-        address.postal_code,
-      ]
-        .filter(Boolean)
-        .join(', ');
       const { error } = await supabase
         .from('profiles')
         .update({
           full_name: form.full_name || null,
           introduction: form.introduction || null,
           phone: form.phone || null,
-          address: formattedAddress || null,
+          public_address_id,
           slug: form.slug || null,
           skills: form.skills,
           hourly_rate: form.hourly_rate,

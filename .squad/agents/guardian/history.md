@@ -203,3 +203,8 @@ Block any commit attempt containing:
 **Pattern learned:** Edge functions in this repo default to `verify_jwt=true` only when explicitly set in `config.toml`. `create-checkout` has no entry ? relies on Supabase default which only validates anon JWT (public key, not authentication). Must do explicit `auth.getUser(token)` for true auth in any privileged Edge Function.
 
 **Convention reminder:** All `custom_data` in payment provider webhooks must be treated as attacker-influenced unless the provider+integration guarantees server-side derivation. LS lets the merchant set custom_data freely at checkout creation, so it inherits the trust level of whatever creates the checkout. Lock down checkout creation first.
+
+### 2026-07-02 — Profile address consolidation
+
+- Public profile address now references `profiles.public_address_id -> workplace_addresses.id`; legacy `profiles.address` dropped by review migration.
+- Public RPC exposure pattern: `SECURITY DEFINER` + fixed `search_path`, `address_public` gate, return formatted string only. Never expose raw address JSON, label, is_default, or user_id.

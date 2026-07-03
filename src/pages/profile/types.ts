@@ -13,7 +13,8 @@ export interface ProfileData {
   email: string | null;
   introduction: string | null;
   phone: string | null;
-  address: string | null;
+  address?: string | null;
+  public_address_id?: string | null;
   slug: string | null;
   avatar_url: string | null;
   skills: string[];
@@ -25,24 +26,6 @@ export interface ProfileData {
   skills_public?: boolean;
   profile_url?: string | null;
   social_links?: SocialLinks | null;
-}
-
-export interface AddressData {
-  address_line_1: string;
-  address_line_2: string;
-  city: string;
-  province_state: string;
-  country: string;
-  postal_code: string;
-}
-
-export interface AddressVisibility {
-  address_line_1: boolean;
-  address_line_2: boolean;
-  city: boolean;
-  province_state: boolean;
-  country: boolean;
-  postal_code: boolean;
 }
 
 export interface FormState {
@@ -67,6 +50,6 @@ export interface PrivacySettings {
 
 export interface SaveProfileVariables {
   form: FormState;
-  address: AddressData;
+  public_address_id: string | null;
   privacySettings: PrivacySettings;
 }

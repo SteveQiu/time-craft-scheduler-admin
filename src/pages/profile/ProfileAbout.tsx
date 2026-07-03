@@ -13,6 +13,7 @@ interface ProfileAboutProps {
   onFormChange: (form: FormState) => void;
   privacySettings: PrivacySettings;
   onPrivacyChange: (settings: PrivacySettings) => void;
+  addressDisplay: string | null;
 }
 
 export function ProfileAbout({
@@ -23,6 +24,7 @@ export function ProfileAbout({
   onFormChange,
   privacySettings,
   onPrivacyChange,
+  addressDisplay,
 }: ProfileAboutProps) {
   if (editing) {
     return (
@@ -141,10 +143,10 @@ export function ProfileAbout({
             <span>{profile.phone}</span>
           </div>
         )}
-        {profile.address && (
+        {addressDisplay && (
           <div className="flex items-center space-x-2 text-sm text-muted-foreground">
             <MapPin className="h-4 w-4" />
-            <span>{profile.address}</span>
+            <span>{addressDisplay}</span>
           </div>
         )}
         {profile.profile_url && (
@@ -161,7 +163,7 @@ export function ProfileAbout({
           </div>
         )}
       </div>
-      {!profile.introduction && !profile.phone && !profile.address && isOwnProfile && (
+      {!profile.introduction && !profile.phone && !addressDisplay && isOwnProfile && (
         <p className="text-sm text-muted-foreground">
           Click &quot;Edit&quot; to add your introduction, contact info, and address.
         </p>

@@ -505,7 +505,6 @@ export type Database = {
       }
       profiles: {
         Row: {
-          address: string | null
           address_public: boolean | null
           avatar_url: string | null
           created_at: string
@@ -520,6 +519,7 @@ export type Database = {
           phone: string | null
           phone_public: boolean | null
           profile_url: string | null
+          public_address_id: string | null
           province: string | null
           country: string | null
           social_links: Json | null
@@ -529,7 +529,6 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          address?: string | null
           address_public?: boolean | null
           avatar_url?: string | null
           created_at?: string
@@ -544,6 +543,7 @@ export type Database = {
           phone?: string | null
           phone_public?: boolean | null
           profile_url?: string | null
+          public_address_id?: string | null
           province?: string | null
           country?: string | null
           social_links?: Json | null
@@ -553,7 +553,6 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          address?: string | null
           address_public?: boolean | null
           avatar_url?: string | null
           created_at?: string
@@ -568,6 +567,7 @@ export type Database = {
           phone?: string | null
           phone_public?: boolean | null
           profile_url?: string | null
+          public_address_id?: string | null
           province?: string | null
           country?: string | null
           social_links?: Json | null
@@ -576,7 +576,15 @@ export type Database = {
           slug?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_public_address_id_fkey"
+            columns: ["public_address_id"]
+            isOneToOne: false
+            referencedRelation: "workplace_addresses"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       reports: {
         Row: {
