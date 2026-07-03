@@ -265,7 +265,7 @@ export default function Profile() {
         </CardContent>
       </Card>
 
-      {isOwnProfile && (
+      {isOwnProfile && editing && (
         <Card className="shadow-md border-card-border">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-lg">Address</CardTitle>

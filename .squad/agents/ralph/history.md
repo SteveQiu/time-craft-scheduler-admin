@@ -757,3 +757,32 @@ ode scripts/snapshot-appointments.cjs ✅
 4. ✅ Customer flag badge + reason tooltip visible in provider appointments view
 
 **Lesson:** Customer behavior flags isolated from existing no-show flag logic. Separate hook + dialog prevent state conflicts. No side effects on appointment display path.
+
+### 2026-07-02 — Profile Address Runtime Gate
+
+Verdict: PASS. `npx tsc --noEmit` exit 0; `npm run build` exit 0; `node scripts/snapshot-appointments.cjs` non-blank.
+
+Evidence:
+- `/appointments` Text: `Set your location We use this to show appointments near you and keep Browse results focused. Country Select country Province / State Select country first Continue`
+- `/profile` Text: `PikAppoint Premium ORGANIZATION Dashboard Resources Opening Reservations Browse Notifications Seed Settings Help Org Individual Sign Out Back S Seed Share Edit Photos About test@appointment.pro IT specialist 12345567890 Services & Rate...`
+- PAGE ERROR: none. Browser errors: none.
+- Screenshots: `tmp-snapshots/sdeqiu-appointments.png`, `tmp-snapshots/sdeqiu-profile-ralph.png`.
+- Profile save not tested; blocked until `profiles.public_address_id` migration applied.
+
+## Learnings
+
+### 2026-07-02 — profile public_address_id save round-trip
+
+Verdict: PASS.
+
+Evidence:
+- `npx tsc --noEmit`: exit 0.
+- `npm run build`: exit 0.
+- `node scripts\snapshot-appointments.cjs`: `/appointments`, `/appointments?mode=org`, `/workers` non-blank; no `PAGE ERROR`; screenshots `tmp-snapshots\sdeqiu-appointments.png`, `tmp-snapshots\sdeqiu-appointments-org.png`, `tmp-snapshots\sdeqiu-workers.png`.
+- Appointments text: `Set your location ... Country ... Province / State ... Continue`.
+- Profile save path used TESTER3 user JWT against Supabase REST/RLS: profile read 200, PATCH `profiles.public_address_id` 200, re-read 200 persisted `5914ed0b-ccde-489c-96b4-54d17f2bdb4c`.
+- RPC `get_public_profile_by_id` status 200 returned address `4700 Kingsway, Burnaby, British Columbia, Canada, V5H4M1` because `address_public=true`.
+- Profile route non-blank; no browser errors; screenshot `tmp-snapshots\tester3-profile-public-address.png`.
+
+## Learnings
+- 2026-07-02 Ralph profile address QA: PASS. `npx tsc --noEmit` exit 0; `npm run build` exit 0. `node scripts/snapshot-appointments.cjs` non-blank, no PAGE ERROR; initial TESTER3 location gate shown because location pref absent. Runtime with injected TESTER3 location pref rendered `/appointments` and `/appointments?mode=org` non-blank: `Reservations Review and manage all bookings ... Active Appointments ... No active appointments`. Own `/profile` non-blank. View mode text had `4700 Kingsway, Burnaby, British Columbia, Canada, V5H4M1` exactly once; standalone `Address` heading count 0; About card contained address. Edit mode showed `Address` card, combobox selected `Metrotown`, address visibility toggle count 1. Screenshots: `tmp-snapshots\ralph-profile-view-tester3.png`, `tmp-snapshots\ralph-profile-edit-tester3.png`, `tmp-snapshots\ralph-profile-edit-address-card-tester3.png`, `tmp-snapshots\ralph-appointments-tester3.png`, `tmp-snapshots\ralph-appointments-org-tester3.png`. Browser errors: none.
