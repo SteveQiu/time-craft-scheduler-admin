@@ -806,3 +806,11 @@ Evidence:
 - Screenshots: `tmp-snapshots/sdeqiu-appointments.png`, `tmp-snapshots/sdeqiu-appointments-org.png`, `tmp-snapshots/sdeqiu-workers.png`, `tmp-snapshots/sdeqiu-browse-active-listing.png`.
 
 **Note:** TESTER3 profile `province/country` null, so BC/Canada was injected into localStorage for browse active-listing filter. PikAppoint appeared, but not as 0-opening `Featured listing` because it also matched existing custom inquiry/opening data.
+
+### 2026-07-02 — Active Listing Featured-card runtime QA
+
+**Verdict:** PASS core browse runtime. `/browse` rendered non-blank for TESTER3 with `locationPreference_{userId}={ province: "British Columbia", country: "Canada" }`. No `PAGE ERROR` or console errors.
+
+**Evidence:** `node scripts\snapshot-appointments.cjs` rendered `/appointments` non-blank (`Text: PikAppoint ... Reservations ... No active appointments`). Browse screenshot: `tmp-snapshots\tester3-browse-bc-active-listing-2026-07-03T01-00-38-452Z.png`. Browse text showed `7 providers`, `PikAppoint ... 20 available slots`, `Andy Lau ... 43 available slots`, plus featured cards `Yu Feng`, `Aurora`, `Seed` with subtitle `Featured listing` and no `available slots` line on those cards.
+
+**Note:** Expected data mentioned Steve + Minnie Mai too, but DOM text only showed Yu Feng, Aurora, Seed as featured cards in this run; provider count label still showed `7 providers`.

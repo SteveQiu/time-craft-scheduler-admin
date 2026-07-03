@@ -103,10 +103,10 @@ function ProviderBrowseCard({
                 {provider.provider_name}
               </h3>
               <p className="text-sm text-muted-foreground">
-                {provider.is_custom_inquiry
-                  ? 'Custom inquiry'
-                  : showFeaturedListing
-                    ? 'Featured listing'
+                {showFeaturedListing
+                  ? 'Featured listing'
+                  : provider.is_custom_inquiry
+                    ? 'Custom inquiry'
                     : 'Available for booking'}
               </p>
             </div>
@@ -295,33 +295,6 @@ export function BookingBrowse() {
     },
   });
 
-  const { data: activeListingProviders = [] } = useQuery({
-    queryKey: [
-      'active-listing-providers',
-      activeLocationFilter?.province ?? null,
-      activeLocationFilter?.country ?? null,
-    ],
-    queryFn: async () => {
-      const { data, error } = await (supabase as any).rpc('get_active_listing_providers', {
-        p_province: activeLocationFilter?.province ?? null,
-        p_country: activeLocationFilter?.country ?? null,
-      });
-      if (error) {
-        console.error('active listing providers fetch error:', error);
-        return [];
-      }
-      return (data ?? []) as Array<{
-        id: string;
-        full_name: string;
-        slug: string;
-        avatar_url: string;
-        province: string;
-        country: string;
-        skills: string[];
-      }>;
-    },
-  });
-
   // Group openings by provider
   const providers: ProviderAccount[] = React.useMemo(() => {
     return Array.from(providerOpeningsMap.entries())
@@ -353,6 +326,9 @@ export function BookingBrowse() {
         },
       };
     });
+    // Custom-inquiry providers (premium + "Active Listing & Custom Time" toggle ON)
+    // with zero openings. Advertised so bookers can reach out. Uses the deployed
+    // get_premium_inquiry_providers RPC (gates the toggle, returns contact info).
     const inquiryOnly = inquiryProviders
       .filter(ip => !existingIds.has(ip.id))
       .map(ip => buildProviderAccount({
@@ -362,6 +338,7 @@ export function BookingBrowse() {
         avatarUrl: ip.avatar_url || null,
         openings: [],
         isCustomInquiry: true,
+        isActiveListing: true,
         skills: ip.skills || [],
         customInquiryInfo: {
           email: ip.email,
@@ -370,25 +347,13 @@ export function BookingBrowse() {
           profile_url: ip.profile_url,
         },
       }));
-    const inquiryOnlyIds = new Set(inquiryOnly.map(p => p.user_id));
-    const activeListingOnly = activeListingProviders
-      .filter(ap => !existingIds.has(ap.id) && !inquiryOnlyIds.has(ap.id))
-      .map(ap => buildProviderAccount({
-        userId: ap.id,
-        providerName: ap.full_name || 'Unknown',
-        providerSlug: ap.slug || null,
-        avatarUrl: ap.avatar_url || null,
-        openings: [],
-        isActiveListing: true,
-        skills: ap.skills || [],
-      }));
-    return [...taggedProviders, ...inquiryOnly, ...activeListingOnly]
+    return [...taggedProviders, ...inquiryOnly]
       .sort((a, b) => {
         if (a.is_custom_inquiry && !b.is_custom_inquiry) return -1;
         if (!a.is_custom_inquiry && b.is_custom_inquiry) return 1;
         return b.opening_count - a.opening_count;
       });
-  }, [providers, inquiryProviders, activeListingProviders]);
+  }, [providers, inquiryProviders]);
 
   // Fetch bookmarks with provider details
   const { data: bookmarkedProviders = [] } = useQuery({

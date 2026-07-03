@@ -45,4 +45,8 @@ recall them. Keep entries short and cite the relevant files.
 
 ## Browse active listings
 
-- `BookingBrowse` merges `get_active_listing_providers(p_province,p_country)` rows as 0-opening featured cards after regular providers and custom inquiry providers. See `src/components/BookingBrowse.tsx`, `src/lib/search.ts`, `src/types/browse.ts`.
+- **"Active Listing & Custom Time" = the `profiles.custom_inquiry_open` toggle** (Calendar.tsx:215). Browse advertises toggled-on premium/pro providers so bookers can reach out.
+- `BookingBrowse` uses the deployed `get_premium_inquiry_providers()` RPC (gates `custom_inquiry_open=true` + active premium/pro sub; returns email/phone gated by `email_public`/`phone_public`, social_links, profile_url, skills). Rows: providers-with-openings get tagged with contact; zero-opening toggled-on providers become `inquiryOnly` cards with `is_custom_inquiry=true` + `is_active_listing=true` + contact info. See `src/components/BookingBrowse.tsx`.
+- `BrowseDetail` shows the "Custom Time Inquiry" contact box **whenever `is_custom_inquiry` is true** (not gated on contact being public; shown on own profile as a "Preview"). `CustomInquiryDialog` degrades to a profile-page link when no public contact. Hard requirement: toggled-on providers MUST be reachable.
+- `matchesLocation` (search.ts:70) bypasses the location filter for any 0-opening `is_active_listing || is_custom_inquiry` card so featured providers survive location filtering.
+- `get_active_listing_providers(province,country)` RPC (`20260703_active_listing_browse.sql`) is an OPTIONAL location-filtered variant — **not currently wired into the frontend**. Apply only if location-scoped active listings are wanted later.

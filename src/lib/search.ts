@@ -67,7 +67,7 @@ export function matchesLocation(
   const preferredProvince = locationFilter.province.trim().toLowerCase();
   const preferredCountry = locationFilter.country.trim().toLowerCase();
 
-  if (provider.is_active_listing && provider.opening_count === 0) return true;
+  if ((provider.is_active_listing || provider.is_custom_inquiry) && provider.opening_count === 0) return true;
 
   const openings = providerOpeningsMap.get(provider.user_id) || [];
   return openings.some(opening => {

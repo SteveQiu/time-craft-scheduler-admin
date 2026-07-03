@@ -213,7 +213,7 @@ export function BrowseDetail({
         {/* Services */}
         <div className="space-y-3">
           <h3 className="font-semibold text-foreground">Services</h3>
-          {currentProvider?.is_custom_inquiry && currentProvider.custom_inquiry_info && !isOwnProfile && (
+          {currentProvider?.is_custom_inquiry && (
             <Card
               className="cursor-pointer hover:bg-muted/50 transition-colors"
               onClick={() => setShowInquiryDialog(true)}
@@ -222,7 +222,9 @@ export function BrowseDetail({
                 <MessageSquare className="h-5 w-5 text-muted-foreground" />
                 <div>
                   <p className="font-medium text-sm">Custom Time Inquiry</p>
-                  <p className="text-xs text-muted-foreground">Contact provider directly</p>
+                  <p className="text-xs text-muted-foreground">
+                    {isOwnProfile ? 'Preview — how bookers reach you' : 'Contact provider directly'}
+                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -328,13 +330,13 @@ export function BrowseDetail({
       </div>
 
       {/* Booking Confirmation Dialog */}
-      {currentProvider?.is_custom_inquiry && currentProvider.custom_inquiry_info && (
+      {currentProvider?.is_custom_inquiry && (
         <CustomInquiryDialog
           open={showInquiryDialog}
           onClose={() => setShowInquiryDialog(false)}
           providerName={currentProvider.provider_name}
           providerId={currentProvider.user_id}
-          info={currentProvider.custom_inquiry_info}
+          info={currentProvider.custom_inquiry_info ?? {}}
         />
       )}
 
