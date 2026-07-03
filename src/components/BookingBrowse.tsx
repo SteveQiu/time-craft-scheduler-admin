@@ -531,7 +531,7 @@ export function BookingBrowse() {
               />
             </div>
             <div className="flex flex-wrap gap-2">
-              {['Insurance', 'Tutor', 'Beauty', 'Fitness', 'Medical', 'Legal', 'Photography', 'Music'].map(cat => (
+              {['Insurance', 'Repair', 'Tutor', 'Beauty', 'Fitness', 'Legal', 'Photography'].map(cat => (
                 <button
                   key={cat}
                   onClick={() => setSearchTerm(searchTerm === cat ? '' : cat)}
