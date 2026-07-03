@@ -35,3 +35,7 @@ recall them. Keep entries short and cite the relevant files.
   with the personal access token. Project ref: `dbabjfydcllqbjpolhym`.
 - Legacy anon/service_role API keys were disabled 2026-06-19; CLI `gen types` fails.
   Update generated types in `src/integrations/supabase/types.ts` manually when adding columns.
+
+## Profile address consolidation
+
+- Public profile address now stores `profiles.public_address_id` referencing `workplace_addresses.id`; public RPCs still return gated formatted `address` string. Own profile resolves selected workplace address with `formatAddressDisplay()`; dead per-field `addressVisibility` removed. See `src/pages/Profile.tsx`, `src/pages/profile/ProfileAddress.tsx`, and `src/integrations/supabase/types.ts`.
