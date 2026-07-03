@@ -208,3 +208,10 @@ Block any commit attempt containing:
 
 - Public profile address now references `profiles.public_address_id -> workplace_addresses.id`; legacy `profiles.address` dropped by review migration.
 - Public RPC exposure pattern: `SECURITY DEFINER` + fixed `search_path`, `address_public` gate, return formatted string only. Never expose raw address JSON, label, is_default, or user_id.
+
+## Learnings
+
+### 2026-07-03 — Active Listing browse RPC
+
+- Authored `supabase/migrations/20260703_active_listing_browse.sql`; do not apply via CLI. Steve applies via Supabase SQL Editor.
+- Public browse RPC pattern: `SECURITY DEFINER`, fixed `search_path`, anon + authenticated grants, expose only public profile basics/coarse location, gate `skills` with `skills_public`.

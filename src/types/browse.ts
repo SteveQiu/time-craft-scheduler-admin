@@ -34,5 +34,6 @@ export interface ProviderAccount {
   services: string[];
   workers: string[];
   is_custom_inquiry?: boolean;
+  is_active_listing?: boolean;
   custom_inquiry_info?: CustomInquiryInfo | null;
 }

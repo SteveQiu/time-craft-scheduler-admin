@@ -807,3 +807,19 @@ ode scripts/snapshot-appointments.cjs and confirmed non-blank render.
 ## Learnings
 - 2026-07-02: Consolidated profiles.address -> public_address_id reference. Public view uses RPC address string; own view resolves workplace address via formatAddressDisplay. Removed dead addressVisibility.
 - 2026-07-02: Own-profile view shows address once in About card. Standalone Address card now edit-only; holds saved-address selector + visibility toggle.
+
+## Learnings
+
+### Booking Browse active listing ads (2026-07-02)
+
+**Task:** Add premium Active Listing providers to Browse as 0-opening featured cards when profile province/country matches the active location filter.
+
+**Files modified:**
+- `src/types/browse.ts` — added optional `ProviderAccount.is_active_listing`.
+- `src/components/BookingBrowse.tsx` — added `get_active_listing_providers` RPC query keyed by province/country; merged active-listing-only providers after regular + custom inquiry providers; featured 0-opening cards show `Featured listing` and hide slots count.
+- `src/lib/search.ts` — lets active-listing-only providers pass location filtering because RPC already matches profile province/country.
+
+**Pattern:** Active Listing browse ads mirror custom inquiry merge flow: `(supabase as any).rpc(...)`, return `[]` on error, dedupe against opening providers and inquiry-only providers, then map through `buildProviderAccount()` with empty `openings`.
+
+**Build gate:** `npx tsc --noEmit` → 0 errors. `npm run build` → exit 0.
+**Runtime gate:** Ralph must run `node scripts/snapshot-appointments.cjs` before close.

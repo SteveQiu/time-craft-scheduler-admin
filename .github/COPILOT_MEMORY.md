@@ -35,7 +35,14 @@ recall them. Keep entries short and cite the relevant files.
   with the personal access token. Project ref: `dbabjfydcllqbjpolhym`.
 - Legacy anon/service_role API keys were disabled 2026-06-19; CLI `gen types` fails.
   Update generated types in `src/integrations/supabase/types.ts` manually when adding columns.
+- Public browse/listing RPCs should use `SECURITY DEFINER`, fixed `search_path`, anon +
+  authenticated grants, and expose only public/coarse fields with privacy-gated columns
+  (e.g. `skills_public`). See `supabase/migrations/20260703_active_listing_browse.sql`.
 
 ## Profile address consolidation
 
 - Public profile address now stores `profiles.public_address_id` referencing `workplace_addresses.id`; public RPCs still return gated formatted `address` string. Own profile resolves selected workplace address with `formatAddressDisplay()`; dead per-field `addressVisibility` removed. See `src/pages/Profile.tsx`, `src/pages/profile/ProfileAddress.tsx`, and `src/integrations/supabase/types.ts`.
+
+## Browse active listings
+
+- `BookingBrowse` merges `get_active_listing_providers(p_province,p_country)` rows as 0-opening featured cards after regular providers and custom inquiry providers. See `src/components/BookingBrowse.tsx`, `src/lib/search.ts`, `src/types/browse.ts`.

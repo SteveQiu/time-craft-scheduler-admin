@@ -27,6 +27,7 @@ function buildProviderAccount({
   avatarUrl,
   openings,
   isCustomInquiry = false,
+  isActiveListing = false,
   customInquiryInfo = null,
   skills = [],
 }: {
@@ -36,6 +37,7 @@ function buildProviderAccount({
   avatarUrl?: string | null;
   openings: OpeningWithProfile[];
   isCustomInquiry?: boolean;
+  isActiveListing?: boolean;
   customInquiryInfo?: CustomInquiryInfo | null;
   skills?: string[];
 }): ProviderAccount {
@@ -49,6 +51,7 @@ function buildProviderAccount({
     services: openingServices.length > 0 ? openingServices : skills,
     workers: getUniqueValues(openings.map(opening => opening.worker)),
     is_custom_inquiry: isCustomInquiry,
+    is_active_listing: isActiveListing,
     custom_inquiry_info: customInquiryInfo,
   };
 }
@@ -60,6 +63,8 @@ function ProviderBrowseCard({
   provider: ProviderAccount;
   onOpen: (providerId: string) => void;
 }) {
+  const showFeaturedListing = provider.is_active_listing && provider.opening_count === 0;
+
   // Deterministic avatar color from user ID for consistent display
   const avatarColor = React.useMemo(() => {
     const colors = [
@@ -98,7 +103,11 @@ function ProviderBrowseCard({
                 {provider.provider_name}
               </h3>
               <p className="text-sm text-muted-foreground">
-                {provider.is_custom_inquiry ? 'Custom inquiry' : 'Available for booking'}
+                {provider.is_custom_inquiry
+                  ? 'Custom inquiry'
+                  : showFeaturedListing
+                    ? 'Featured listing'
+                    : 'Available for booking'}
               </p>
             </div>
           </div>
@@ -120,7 +129,9 @@ function ProviderBrowseCard({
             )}
           </div>
         </div>
-        <p className="text-sm text-muted-foreground">{provider.opening_count} available slots</p>
+        {showFeaturedListing ? null : (
+          <p className="text-sm text-muted-foreground">{provider.opening_count} available slots</p>
+        )}
         <div onClick={e => e.stopPropagation()}>
           <ProfilePhotoStrip userId={provider.user_id} thumbClass="w-14 h-14" />
         </div>
@@ -284,6 +295,33 @@ export function BookingBrowse() {
     },
   });
 
+  const { data: activeListingProviders = [] } = useQuery({
+    queryKey: [
+      'active-listing-providers',
+      activeLocationFilter?.province ?? null,
+      activeLocationFilter?.country ?? null,
+    ],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any).rpc('get_active_listing_providers', {
+        p_province: activeLocationFilter?.province ?? null,
+        p_country: activeLocationFilter?.country ?? null,
+      });
+      if (error) {
+        console.error('active listing providers fetch error:', error);
+        return [];
+      }
+      return (data ?? []) as Array<{
+        id: string;
+        full_name: string;
+        slug: string;
+        avatar_url: string;
+        province: string;
+        country: string;
+        skills: string[];
+      }>;
+    },
+  });
+
   // Group openings by provider
   const providers: ProviderAccount[] = React.useMemo(() => {
     return Array.from(providerOpeningsMap.entries())
@@ -332,13 +370,25 @@ export function BookingBrowse() {
           profile_url: ip.profile_url,
         },
       }));
-    return [...taggedProviders, ...inquiryOnly]
+    const inquiryOnlyIds = new Set(inquiryOnly.map(p => p.user_id));
+    const activeListingOnly = activeListingProviders
+      .filter(ap => !existingIds.has(ap.id) && !inquiryOnlyIds.has(ap.id))
+      .map(ap => buildProviderAccount({
+        userId: ap.id,
+        providerName: ap.full_name || 'Unknown',
+        providerSlug: ap.slug || null,
+        avatarUrl: ap.avatar_url || null,
+        openings: [],
+        isActiveListing: true,
+        skills: ap.skills || [],
+      }));
+    return [...taggedProviders, ...inquiryOnly, ...activeListingOnly]
       .sort((a, b) => {
         if (a.is_custom_inquiry && !b.is_custom_inquiry) return -1;
         if (!a.is_custom_inquiry && b.is_custom_inquiry) return 1;
         return b.opening_count - a.opening_count;
       });
-  }, [providers, inquiryProviders]);
+  }, [providers, inquiryProviders, activeListingProviders]);
 
   // Fetch bookmarks with provider details
   const { data: bookmarkedProviders = [] } = useQuery({
