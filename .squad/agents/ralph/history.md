@@ -786,3 +786,23 @@ Evidence:
 
 ## Learnings
 - 2026-07-02 Ralph profile address QA: PASS. `npx tsc --noEmit` exit 0; `npm run build` exit 0. `node scripts/snapshot-appointments.cjs` non-blank, no PAGE ERROR; initial TESTER3 location gate shown because location pref absent. Runtime with injected TESTER3 location pref rendered `/appointments` and `/appointments?mode=org` non-blank: `Reservations Review and manage all bookings ... Active Appointments ... No active appointments`. Own `/profile` non-blank. View mode text had `4700 Kingsway, Burnaby, British Columbia, Canada, V5H4M1` exactly once; standalone `Address` heading count 0; About card contained address. Edit mode showed `Address` card, combobox selected `Metrotown`, address visibility toggle count 1. Screenshots: `tmp-snapshots\ralph-profile-view-tester3.png`, `tmp-snapshots\ralph-profile-edit-tester3.png`, `tmp-snapshots\ralph-profile-edit-address-card-tester3.png`, `tmp-snapshots\ralph-appointments-tester3.png`, `tmp-snapshots\ralph-appointments-org-tester3.png`. Browser errors: none.
+
+## Learnings
+
+### 2026-07-02 — Active Listing Browse QA
+
+**Verdict:** PASS.
+
+**Checks:**
+- `npx tsc --noEmit` exit 0.
+- `npm run build` exit 0.
+- `node scripts/snapshot-appointments.cjs` exit 0; TESTER3 appointments/org/workers routes non-blank, no `PAGE ERROR`.
+- Browse runtime check signed in TESTER3; forced local location BC/Canada because profile location was null.
+
+**Evidence:**
+- Appointments Text: `Set your location ... Country ... Province / State ... Continue`.
+- Browse Text: `PikAppoint ... Browse & Book ... 7 providers ... PikAppoint ... Custom inquiry ... 20 available slots`.
+- Browse cards rendered: 14 card elements; `PikAppoint` present; no browser errors.
+- Screenshots: `tmp-snapshots/sdeqiu-appointments.png`, `tmp-snapshots/sdeqiu-appointments-org.png`, `tmp-snapshots/sdeqiu-workers.png`, `tmp-snapshots/sdeqiu-browse-active-listing.png`.
+
+**Note:** TESTER3 profile `province/country` null, so BC/Canada was injected into localStorage for browse active-listing filter. PikAppoint appeared, but not as 0-opening `Featured listing` because it also matched existing custom inquiry/opening data.
