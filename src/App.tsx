@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { PanelGroup, Panel, PanelResizeHandle } from "react-resizable-panels";
 import { Menu } from "lucide-react";
@@ -44,6 +44,7 @@ const TestReminder = lazy(() => import("@/pages/dev/TestReminder"));
 const SignUpConfirmation = lazy(() => import("@/pages/auth/SignUpConfirmation"));
 const OpeningsListPage = lazy(() => import("@/pages/OpeningsListPage"));
 const ApiDoc = lazy(() => import("@/pages/ApiDoc"));
+const LandingPage = lazy(() => import("@/pages/LandingPage"));
 
 const queryClient = new QueryClient();
 
@@ -96,10 +97,19 @@ function AppContent() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const { title } = usePageTitle();
   const { user, loading: authLoading } = useAuth();
+  const location = useLocation();
   const [locationGateReady, setLocationGateReady] = useState(false);
   const [needsLocationSetup, setNeedsLocationSetup] = useState(false);
 
+  const isLandingPage = location.pathname === '/';
+
   useEffect(() => {
+    // Landing page bypasses the location gate entirely
+    if (isLandingPage) {
+      setLocationGateReady(true);
+      return;
+    }
+
     if (authLoading) return;
 
     if (!user?.id) {
@@ -136,7 +146,20 @@ function AppContent() {
     return () => {
       cancelled = true;
     };
-  }, [authLoading, user?.id]);
+  }, [authLoading, user?.id, isLandingPage]);
+
+  // Landing page: render full-width outside the sidebar shell (no CSS bleed)
+  if (isLandingPage) {
+    if (authLoading) return <div className="min-h-screen bg-white" />;
+    if (!user) {
+      return (
+        <Suspense fallback={<div className="min-h-screen bg-white" />}>
+          <LandingPage />
+        </Suspense>
+      );
+    }
+    // Authenticated at '/': fall through — sidebar + RootRedirect handles the redirect
+  }
 
   if (!locationGateReady) {
     return (
@@ -156,7 +179,7 @@ function AppContent() {
   }
 
   return (
-    <BrowserRouter>
+    <>
       <PaymentNotificationWatcher />
       <RealtimeInvalidator />
       <div className="w-full h-screen flex flex-col">
@@ -199,7 +222,7 @@ function AppContent() {
           <AppRoutes />
         </main>
       </div>
-    </BrowserRouter>
+    </>
   );
 }
 
@@ -210,9 +233,11 @@ const App = () => {
         <PageTitleProvider>
           <ProfileBrandingProvider>
             <TooltipProvider>
-              <Toaster />
-              <Sonner />
-              <AppContent />
+              <BrowserRouter>
+                <Toaster />
+                <Sonner />
+                <AppContent />
+              </BrowserRouter>
             </TooltipProvider>
           </ProfileBrandingProvider>
         </PageTitleProvider>

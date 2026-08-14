@@ -3,14 +3,11 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
-import { Card, CardContent, CardHeader } from './ui/card';
+import { Card, CardContent } from './ui/card';
 import { Button } from './ui/button';
-import { Badge } from './ui/badge';
 import { Input } from './ui/input';
-import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
-import { Calendar as CalendarIcon, MapPin, Search, Loader2, ChevronRight, Bookmark } from 'lucide-react';
+import { Calendar as CalendarIcon, MapPin, Search, Loader2, Bookmark, Star, ArrowRight, CheckCircle } from 'lucide-react';
 import { BrowseDetail } from './BrowseDetail';
-import { ProfilePhotoStrip } from './ProfilePhotoStrip';
 import { searchProviders } from '@/lib/search';
 import type { OpeningWithProfile, ProviderAccount, CustomInquiryInfo } from '@/types/browse';
 import { useLocalBookmarks } from '@/hooks/useLocalBookmarks';
@@ -59,84 +56,146 @@ function buildProviderAccount({
 function ProviderBrowseCard({
   provider,
   onOpen,
+  rating,
 }: {
   provider: ProviderAccount;
   onOpen: (providerId: string) => void;
+  rating?: { avg: number; count: number };
 }) {
   const showFeaturedListing = provider.is_active_listing && provider.opening_count === 0;
+  const [showAllServices, setShowAllServices] = useState(false);
 
-  // Deterministic avatar color from user ID for consistent display
-  const avatarColor = React.useMemo(() => {
-    const colors = [
-      { bg: 'bg-rose-100', text: 'text-rose-700' },
-      { bg: 'bg-sky-100', text: 'text-sky-700' },
-      { bg: 'bg-amber-100', text: 'text-amber-700' },
-      { bg: 'bg-emerald-100', text: 'text-emerald-700' },
-      { bg: 'bg-violet-100', text: 'text-violet-700' },
-      { bg: 'bg-pink-100', text: 'text-pink-700' },
-      { bg: 'bg-teal-100', text: 'text-teal-700' },
-      { bg: 'bg-orange-100', text: 'text-orange-700' },
-      { bg: 'bg-indigo-100', text: 'text-indigo-700' },
-      { bg: 'bg-cyan-100', text: 'text-cyan-700' },
-    ];
+  // Deterministic gradient from user ID
+  const gradients = [
+    'from-rose-400 to-rose-600',
+    'from-sky-400 to-sky-600',
+    'from-amber-400 to-amber-600',
+    'from-emerald-400 to-emerald-600',
+    'from-violet-400 to-violet-600',
+    'from-pink-400 to-pink-600',
+    'from-teal-400 to-teal-600',
+    'from-orange-400 to-orange-600',
+    'from-indigo-400 to-indigo-600',
+    'from-cyan-400 to-cyan-600',
+  ];
+  const gradientIdx = React.useMemo(() => {
     let hash = 0;
     for (const ch of provider.user_id) hash = (hash * 31 + ch.charCodeAt(0)) | 0;
-    return colors[Math.abs(hash) % colors.length];
-  }, [provider.user_id]);
+    return Math.abs(hash) % gradients.length;
+  }, [provider.user_id, gradients.length]);
+
+  const availabilityLabel =
+    showFeaturedListing || provider.is_custom_inquiry
+      ? 'Custom inquiry'
+      : provider.opening_count > 0
+        ? `${provider.opening_count} slot${provider.opening_count !== 1 ? 's' : ''} available`
+        : 'No openings';
+  const dotColor =
+    provider.is_custom_inquiry || showFeaturedListing
+      ? 'bg-sky-500'
+      : provider.opening_count > 0
+        ? 'bg-emerald-500'
+        : 'bg-gray-400';
+
+  const primaryService = provider.services[0] || 'Provider';
+  const isCustom = showFeaturedListing || provider.is_custom_inquiry;
 
   return (
-    <Card
-      className="shadow-md border-card-border hover:shadow-lg transition-all cursor-pointer"
+    <button
+      type="button"
+      className="group block rounded-2xl border border-border bg-card text-left w-full p-0 overflow-hidden hover:shadow-md transition-shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a7fba] focus-visible:ring-offset-2"
       onClick={() => onOpen(provider.user_id)}
     >
-      <CardHeader>
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-3 flex-1">
-            <Avatar className="h-12 w-12 shrink-0">
-              <AvatarImage src={provider.avatar_url ?? undefined} alt={provider.provider_name} />
-              <AvatarFallback className={`${avatarColor.bg} ${avatarColor.text} font-semibold text-sm`}>
-                {provider.provider_name.substring(0, 2).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-foreground truncate hover:underline">
-                {provider.provider_name}
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                {showFeaturedListing
-                  ? 'Featured listing'
-                  : provider.is_custom_inquiry
-                    ? 'Custom inquiry'
-                    : 'Available for booking'}
-              </p>
-            </div>
-          </div>
-          <ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+      {/* Photo area — fixed height so all cards are identical across all breakpoints */}
+      <div className={`relative h-44 overflow-hidden bg-gradient-to-br ${gradients[gradientIdx]}`}>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <span className="text-white text-4xl font-bold opacity-40 select-none">
+            {provider.provider_name.substring(0, 2).toUpperCase()}
+          </span>
         </div>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        <div>
-          <div className="flex flex-wrap gap-2">
-            {provider.services.slice(0, 3).map(service => (
-              <Badge key={service} className="text-sm font-medium px-3 py-1 bg-primary/10 text-primary border-primary/20 hover:bg-primary/20">
-                {service}
-              </Badge>
+        {provider.avatar_url && (
+          <img
+            src={provider.avatar_url}
+            alt={provider.provider_name}
+            className="absolute inset-0 w-full h-full object-cover"
+            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+          />
+        )}
+        {/* Bottom fade for badge legibility */}
+        <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
+        <span className="absolute top-2 left-2 inline-flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1 text-xs font-medium shadow-sm">
+          <span className={`h-1.5 w-1.5 rounded-full ${dotColor}`} aria-hidden="true" />
+          {availabilityLabel}
+        </span>
+      </div>
+
+      {/* Info */}
+      <div className="p-4">
+        {/* 1. Service pills */}
+        {provider.services.length > 0 && (
+          <div className="flex flex-wrap gap-1 mb-2">
+            {provider.services.slice(0, 2).map(s => (
+              <span key={s} className="rounded border border-foreground/20 px-1.5 py-0.5 text-[11px] font-medium text-foreground">
+                {s}
+              </span>
             ))}
-            {provider.services.length > 3 && (
-              <Badge variant="outline" className="text-xs text-muted-foreground">
-                +{provider.services.length - 3}
-              </Badge>
+            {provider.services.length > 2 && (
+              <span
+                className="relative rounded border border-foreground/20 px-1.5 py-0.5 text-[11px] font-medium text-foreground cursor-pointer select-none"
+                onMouseEnter={() => setShowAllServices(true)}
+                onMouseLeave={() => setShowAllServices(false)}
+                onClick={(e) => { e.stopPropagation(); setShowAllServices(v => !v); }}
+              >
+                +{provider.services.length - 2} more
+                {showAllServices && (
+                  <div className="absolute left-0 top-full mt-1 z-10 bg-popover border border-border rounded-md shadow-md p-2 flex flex-col gap-1 min-w-max">
+                    {provider.services.slice(2).map(s => (
+                      <span key={s} className="text-[11px] text-foreground whitespace-nowrap">{s}</span>
+                    ))}
+                  </div>
+                )}
+              </span>
             )}
           </div>
-        </div>
-        {showFeaturedListing ? null : (
-          <p className="text-sm text-muted-foreground">{provider.opening_count} available slots</p>
         )}
-        <div onClick={e => e.stopPropagation()}>
-          <ProfilePhotoStrip userId={provider.user_id} thumbClass="w-14 h-14" />
+
+        {/* 2. Provider name */}
+        <p className="text-xs text-muted-foreground mb-2">{provider.provider_name}</p>
+
+        {/* 3. Status badge + location */}
+        <span
+          className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${
+            isCustom
+              ? 'bg-sky-50 text-[#1a7fba] dark:bg-sky-950 dark:text-sky-300'
+              : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'
+          }`}
+        >
+          <CheckCircle className="h-3 w-3" aria-hidden="true" />
+          {showFeaturedListing ? 'Active listing' : provider.is_custom_inquiry ? 'Custom inquiry' : 'Available for booking'}
+        </span>
+        <div className="mt-2 flex items-center gap-1 text-xs text-muted-foreground/50">
+          <MapPin className="h-3 w-3 shrink-0" aria-hidden="true" />
+          N/A
         </div>
-      </CardContent>
-    </Card>
+
+        {/* 4. Stars + review count */}
+        {rating && (
+          <div className="mt-2 flex items-center gap-1">
+            <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" aria-hidden="true" />
+            <span className="text-sm text-muted-foreground">
+              {rating.avg.toFixed(1)} · {rating.count} review{rating.count !== 1 ? 's' : ''}
+            </span>
+          </div>
+        )}
+
+        {/* 5. View link */}
+        <div className="mt-3 flex justify-end">
+          <span className="text-xs font-medium text-[#1a7fba] group-hover:underline inline-flex items-center gap-0.5">
+            View <ArrowRight className="h-3 w-3" aria-hidden="true" />
+          </span>
+        </div>
+      </div>
+    </button>
   );
 }
 
@@ -355,6 +414,33 @@ export function BookingBrowse() {
       });
   }, [providers, inquiryProviders]);
 
+  // Batch fetch ratings for all visible providers
+  const allProviderIds = React.useMemo(() => allProviders.map(p => p.user_id), [allProviders]);
+
+  const { data: ratingsMap = new Map<string, { avg: number; count: number }>() } = useQuery({
+    queryKey: ['browse-ratings', allProviderIds],
+    queryFn: async () => {
+      const map = new Map<string, { avg: number; count: number }>();
+      if (!allProviderIds.length) return map;
+      const { data } = await supabase
+        .from('reviews')
+        .select('reviewed_id, rating')
+        .in('reviewed_id', allProviderIds);
+      if (!data) return map;
+      const grouped = new Map<string, number[]>();
+      for (const r of data as { reviewed_id: string; rating: number }[]) {
+        if (!grouped.has(r.reviewed_id)) grouped.set(r.reviewed_id, []);
+        grouped.get(r.reviewed_id)!.push(r.rating);
+      }
+      for (const [id, ratings] of grouped) {
+        const avg = ratings.reduce((s, r) => s + r, 0) / ratings.length;
+        map.set(id, { avg: Math.round(avg * 10) / 10, count: ratings.length });
+      }
+      return map;
+    },
+    enabled: allProviderIds.length > 0,
+  });
+
   // Fetch bookmarks with provider details
   const { data: bookmarkedProviders = [] } = useQuery({
     queryKey: ['bookmarks-with-details', user?.id],
@@ -570,12 +656,13 @@ export function BookingBrowse() {
         )}
 
         {visibleProviders.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {visibleProviders.map((provider) => (
               <ProviderBrowseCard
                 key={provider.user_id}
                 provider={provider}
                 onOpen={(selectedProviderId) => navigate(`/browse/${selectedProviderId}`)}
+                rating={ratingsMap.get(provider.user_id)}
               />
             ))}
           </div>

@@ -39,11 +39,62 @@
     <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
 
     <link rel="icon" type="image/svg+xml" href="/calendar-icon.svg" />
+    <link rel="stylesheet" href="/landing.css" />
     <script src="https://assets.lemonsqueezy.com/lemon.js" defer></script>
   </head>
 
   <body>
-    <div id="root"></div>
+    <div id="root"><div class="lp" id="lp-static">
+  <a href="#main-content" class="lp-skip">Skip to main content</a>
+  <nav class="lp-nav" aria-label="Main navigation">
+    <div class="lp-nav-inner">
+      <a href="/" class="lp-nav-logo" aria-label="PikAppoint home">
+        <svg class="lp-nav-logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        PikAppoint
+      </a>
+      <div class="lp-nav-links">
+        <a href="#explore" class="lp-nav-link">Explore</a>
+        <a href="#for-professionals" class="lp-nav-link">For professionals</a>
+        <a href="#pricing" class="lp-nav-link">Pricing</a>
+      </div>
+      <div class="lp-nav-actions">
+        <a href="/auth" class="lp-nav-login">Log in</a>
+        <a href="/auth" class="lp-btn lp-btn--navy">List your business</a>
+      </div>
+    </div>
+  </nav>
+  <main id="main-content">
+    <section class="lp-hero">
+      <div class="lp-hero-inner">
+        <span class="lp-badge"><span class="lp-badge-dot"></span>Trusted local pros, booked in a couple of taps</span>
+        <h1 class="lp-h1">Book <span class="lp-rotating-term">a tutor</span><br>near you.</h1>
+        <p class="lp-hero-sub">PikAppoint is where your neighbourhood gets things done. Find a pro, see their real availability, and book on the spot.</p>
+        <div class="lp-search">
+          <div class="lp-search-field">
+            <svg class="lp-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <div class="lp-search-field-inner">
+              <span class="lp-search-label">Service</span>
+              <input type="text" placeholder="e.g. barber or tutor" class="lp-search-input">
+            </div>
+          </div>
+          <div class="lp-search-divider" aria-hidden="true"></div>
+          <div class="lp-search-field">
+            <svg class="lp-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+            <div class="lp-search-field-inner">
+              <span class="lp-search-label">Where</span>
+              <input type="text" placeholder="Your location" class="lp-search-input">
+            </div>
+          </div>
+          <button class="lp-search-btn">
+            <svg class="lp-search-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            Search
+          </button>
+        </div>
+        <p class="lp-stat"><span class="lp-stat-dot" aria-hidden="true"></span><strong>12,480</strong> appointments booked on PikAppoint this week</p>
+      </div>
+    </section>
+  </main>
+</div></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
