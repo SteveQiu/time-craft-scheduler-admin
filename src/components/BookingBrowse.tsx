@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
@@ -53,7 +53,7 @@ function buildProviderAccount({
   };
 }
 
-function ProviderBrowseCard({
+export function ProviderBrowseCard({
   provider,
   onOpen,
   rating,
@@ -103,54 +103,68 @@ function ProviderBrowseCard({
   return (
     <button
       type="button"
-      className="group block rounded-2xl border border-border bg-card text-left w-full p-0 overflow-hidden hover:shadow-md transition-shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a7fba] focus-visible:ring-offset-2"
+      className="group relative flex flex-col rounded-2xl border border-border bg-card text-left w-full p-0 overflow-hidden hover:shadow-md transition-shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a7fba] focus-visible:ring-offset-2"
       onClick={() => onOpen(provider.user_id)}
     >
-      {/* Photo area — fixed height so all cards are identical across all breakpoints */}
-      <div className={`relative h-44 overflow-hidden bg-gradient-to-br ${gradients[gradientIdx]}`}>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-white text-4xl font-bold opacity-40 select-none">
-            {provider.provider_name.substring(0, 2).toUpperCase()}
-          </span>
-        </div>
-        {provider.avatar_url && (
-          <img
-            src={provider.avatar_url}
-            alt={provider.provider_name}
-            className="absolute inset-0 w-full h-full object-cover"
-            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-          />
-        )}
-        {/* Bottom fade for badge legibility */}
-        <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
-        <span className="absolute top-2 left-2 inline-flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1 text-xs font-medium shadow-sm">
+      {/* Header area — plain/subtle bg with small circular avatar, fixed height so all cards are identical across all breakpoints */}
+      <div className="relative h-28 bg-muted flex items-center justify-center overflow-hidden">
+        {/* Backdrop stripe: prefer first profile_photos entry, fall back to avatar_url, else plain bg-muted */}
+        {(() => {
+          const stripeSrc = provider.stripe_photo_url ?? provider.avatar_url;
+          return stripeSrc && (
+            <>
+              <img
+                src={stripeSrc}
+                alt=""
+                aria-hidden="true"
+                className="absolute inset-0 w-full h-full object-cover blur-lg scale-110"
+                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+              />
+              <div className="absolute inset-0 bg-black/25" aria-hidden="true" />
+            </>
+          );
+        })()}
+        <span className="absolute top-2 left-2 inline-flex items-center gap-1 rounded-full bg-white/95 px-2.5 py-1 text-xs font-medium shadow-sm">
           <span className={`h-1.5 w-1.5 rounded-full ${dotColor}`} aria-hidden="true" />
           {availabilityLabel}
         </span>
+        <div className={`relative z-10 h-16 w-16 rounded-full overflow-hidden ring-2 ring-background shadow-sm bg-gradient-to-br ${gradients[gradientIdx]} flex items-center justify-center shrink-0`}>
+          <span className="text-white text-lg font-bold select-none">
+            {provider.provider_name.substring(0, 2).toUpperCase()}
+          </span>
+          {provider.avatar_url && (
+            <img
+              src={provider.avatar_url}
+              alt={provider.provider_name}
+              className="absolute inset-0 w-full h-full object-cover"
+              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+            />
+          )}
+        </div>
       </div>
 
       {/* Info */}
-      <div className="p-4">
+      <div className="p-4 pb-9">
         {/* 1. Service pills */}
         {provider.services.length > 0 && (
-          <div className="flex flex-wrap gap-1 mb-2">
+          <div className="flex flex-wrap gap-1.5 mb-3">
             {provider.services.slice(0, 2).map(s => (
-              <span key={s} className="rounded border border-foreground/20 px-1.5 py-0.5 text-[11px] font-medium text-foreground">
+              <span key={s} className="rounded-md border border-foreground/25 px-2.5 py-1 text-xs font-semibold text-foreground">
                 {s}
               </span>
             ))}
             {provider.services.length > 2 && (
               <span
-                className="relative rounded border border-foreground/20 px-1.5 py-0.5 text-[11px] font-medium text-foreground cursor-pointer select-none"
+                className="relative rounded-md border border-foreground/25 px-2.5 py-1 text-xs font-semibold text-foreground cursor-pointer select-none"
                 onMouseEnter={() => setShowAllServices(true)}
                 onMouseLeave={() => setShowAllServices(false)}
                 onClick={(e) => { e.stopPropagation(); setShowAllServices(v => !v); }}
               >
                 +{provider.services.length - 2} more
                 {showAllServices && (
-                  <div className="absolute left-0 top-full mt-1 z-10 bg-popover border border-border rounded-md shadow-md p-2 flex flex-col gap-1 min-w-max">
+                  <div className="absolute left-0 top-full mt-1 z-10 bg-popover border border-border rounded-md shadow-md p-2 flex flex-col gap-1.5 min-w-max">
                     {provider.services.slice(2).map(s => (
-                      <span key={s} className="text-[11px] text-foreground whitespace-nowrap">{s}</span>
+                      <span key={s} className="text-xs font-medium text-foreground whitespace-nowrap">{s}</span>
                     ))}
                   </div>
                 )}
@@ -189,7 +203,7 @@ function ProviderBrowseCard({
         )}
 
         {/* 5. View link */}
-        <div className="mt-3 flex justify-end">
+        <div className="absolute bottom-3 right-4">
           <span className="text-xs font-medium text-[#1a7fba] group-hover:underline inline-flex items-center gap-0.5">
             View <ArrowRight className="h-3 w-3" aria-hidden="true" />
           </span>
@@ -202,23 +216,32 @@ function ProviderBrowseCard({
 export function BookingBrowse() {
   const navigate = useNavigate();
   const { providerId } = useParams<{ providerId?: string }>();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
-  const [searchTerm, setSearchTerm] = useState<string>('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [searchTerm, setSearchTerm] = useState<string>(() => searchParams.get('q') ?? '');
+  const [debouncedSearch, setDebouncedSearch] = useState(() => searchParams.get('q') ?? '');
   const [viewMode, setViewMode] = useState<'all' | 'bookmarks'>('all');
-  const [locationFilter, setLocationFilter] = useState<LocationPreference | null>(null);
+  const [locationFilter, setLocationFilter] = useState<LocationPreference | null>(() => {
+    const country = searchParams.get('country');
+    const province = searchParams.get('province');
+    if (country && province) return { country, province };
+    return null;
+  });
   const localBookmarks = useLocalBookmarks();
 
   const today = new Date().toISOString().split('T')[0];
 
-  // Load location preference on mount
+  // Load location preference on mount — only if URL didn't supply one
   React.useEffect(() => {
+    const urlCountry = searchParams.get('country');
+    const urlProvince = searchParams.get('province');
+    if (urlCountry && urlProvince) return; // URL params take precedence
     if (user?.id) {
       setLocationFilter(readLocationPreference(user.id));
       return;
     }
     setLocationFilter(null);
-  }, [user?.id]);
+  }, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const activeLocationFilter = React.useMemo(() => {
     if (!locationFilter?.province || !locationFilter.country) return null;
@@ -530,6 +553,32 @@ export function BookingBrowse() {
 
   const visibleProviders = viewMode === 'bookmarks' ? mergedBookmarks : filteredProviders;
 
+  // Batch fetch card header backdrop stripe photos (first profile_photos entry per provider)
+  const stripePhotoProviderIds = React.useMemo(
+    () => [...new Set([...allProviderIds, ...mergedBookmarks.map(p => p.user_id)])],
+    [allProviderIds, mergedBookmarks]
+  );
+
+  const { data: stripePhotoMap = new Map<string, string>() } = useQuery({
+    queryKey: ['browse-strip-photos', stripePhotoProviderIds],
+    queryFn: async () => {
+      const map = new Map<string, string>();
+      if (!stripePhotoProviderIds.length) return map;
+      const { data } = await (supabase as any)
+        .from('profile_photos')
+        .select('user_id, storage_path, display_order')
+        .in('user_id', stripePhotoProviderIds)
+        .order('display_order', { ascending: true });
+      for (const row of (data || []) as { user_id: string; storage_path: string }[]) {
+        if (map.has(row.user_id)) continue; // ordered ascending — keep first occurrence only
+        const { data: urlData } = supabase.storage.from('profile-photos').getPublicUrl(row.storage_path);
+        map.set(row.user_id, urlData.publicUrl);
+      }
+      return map;
+    },
+    enabled: stripePhotoProviderIds.length > 0,
+  });
+
   if (openingsLoading) {
     return (
       <div className="flex justify-center py-12">
@@ -660,7 +709,7 @@ export function BookingBrowse() {
             {visibleProviders.map((provider) => (
               <ProviderBrowseCard
                 key={provider.user_id}
-                provider={provider}
+                provider={{ ...provider, stripe_photo_url: stripePhotoMap.get(provider.user_id) ?? null }}
                 onOpen={(selectedProviderId) => navigate(`/browse/${selectedProviderId}`)}
                 rating={ratingsMap.get(provider.user_id)}
               />

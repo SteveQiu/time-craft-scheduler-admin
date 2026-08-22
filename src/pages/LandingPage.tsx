@@ -7,6 +7,9 @@ import {
   CheckCircle, Clock, Bell, CreditCard, LinkIcon, Users, BarChart3, Star,
   ChevronRight, Calendar, ArrowRight,
 } from 'lucide-react';
+import { ProviderBrowseCard } from '@/components/BookingBrowse';
+import type { ProviderAccount } from '@/types/browse';
+import { COUNTRIES, PROVINCES_BY_COUNTRY } from '@/lib/address';
 // landing.css is loaded globally via index.html — no import needed here
 
 // ─── constants ───────────────────────────────────────────────────────
@@ -22,29 +25,55 @@ const CATEGORY_PILLS = [
   { label: 'Cleaners', icon: Sparkles },
 ] as const;
 
-const CATEGORIES = [
-  { title: 'Technicians & trades', count: '1,200+ pros', query: 'technician' },
-  { title: 'Tutors & lessons', count: '800+ pros', query: 'tutor' },
-  { title: 'Insurance & advice', count: '300+ advisors', query: 'insurance' },
-  { title: 'Barbers & stylists', count: '2,400+ pros', query: 'barber' },
-  { title: 'Fitness & trainers', count: '1,600+ pros', query: 'trainer' },
-  { title: 'Home & cleaning', count: '900+ pros', query: 'cleaning' },
-] as const;
-
-const CATEGORY_GRADIENTS = [
-  'from-sky-600/80 to-sky-800/80',
-  'from-amber-600/80 to-amber-800/80',
-  'from-emerald-600/80 to-emerald-800/80',
-  'from-rose-600/80 to-rose-800/80',
-  'from-violet-600/80 to-violet-800/80',
-  'from-cyan-600/80 to-cyan-800/80',
-] as const;
-
-const PROVIDERS = [
-  { title: 'Insurance advisor', name: 'Elena Rossi', reviews: 128, rating: 4.9, badge: 'Licensed advisor', location: 'Financial District · 1.2 mi', languages: ['English', 'Spanish'], price: 'Free consult', availability: 'Available today' },
-  { title: 'Personal trainer', name: 'Marcus Bennett', reviews: 204, rating: 5.0, badge: 'Certified trainer', location: 'Riverside Gym · 0.8 mi', languages: ['English'], price: 'from $45', availability: 'Available tomorrow' },
-  { title: 'Maths & science tutor', name: 'Amelia Chen', reviews: 86, rating: 4.9, badge: 'Background-checked', location: 'Online + Central · 2.1 mi', languages: ['English', 'Mandarin'], price: 'from $38', availability: 'Available today' },
-  { title: 'Barber', name: 'The Fade Room', reviews: 312, rating: 4.8, badge: 'Verified business', location: 'Old Town · 1.5 mi', languages: ['English'], price: 'from $28', availability: 'Available today' },
+const MOCK_PROVIDERS: (ProviderAccount & { rating?: { avg: number; count: number } })[] = [
+  {
+    user_id: 'mock-1',
+    provider_name: 'Elena Rossi',
+    provider_slug: null,
+    avatar_url: null,
+    opening_count: 3,
+    services: ['Insurance Advisor', 'Financial Planning'],
+    workers: [],
+    is_custom_inquiry: false,
+    is_active_listing: true,
+    rating: { avg: 4.9, count: 128 },
+  },
+  {
+    user_id: 'mock-2',
+    provider_name: 'Marcus Bennett',
+    provider_slug: null,
+    avatar_url: null,
+    opening_count: 5,
+    services: ['Personal Training', 'Strength & Conditioning'],
+    workers: [],
+    is_custom_inquiry: false,
+    is_active_listing: true,
+    rating: { avg: 5.0, count: 204 },
+  },
+  {
+    user_id: 'mock-3',
+    provider_name: 'Amelia Chen',
+    provider_slug: null,
+    avatar_url: null,
+    opening_count: 2,
+    services: ['Maths Tutor', 'Science Tutor', 'Test Prep'],
+    workers: [],
+    is_custom_inquiry: true,
+    is_active_listing: false,
+    rating: { avg: 4.9, count: 86 },
+  },
+  {
+    user_id: 'mock-4',
+    provider_name: 'The Fade Room',
+    provider_slug: null,
+    avatar_url: null,
+    opening_count: 8,
+    services: ['Barber', 'Fades & Tapers', 'Beard Grooming'],
+    workers: [],
+    is_custom_inquiry: false,
+    is_active_listing: true,
+    rating: { avg: 4.8, count: 312 },
+  },
 ] as const;
 
 const CUSTOMER_STEPS = [
@@ -71,25 +100,38 @@ const PRO_FEATURES = [
 const PRICING_PLANS = [
   {
     name: 'Free', price: '$0', period: '/month', popular: false,
-    features: ['1 provider', 'Unlimited bookings', 'Public booking page', 'Email reminders', 'Basic payments'],
+    features: [
+      'Public provider listing & booking page',
+      'Up to 3 profile photos',
+      'Unlimited appointment bookings',
+      'Openings schedulable up to 1 month ahead',
+      'Bookmark providers',
+      'Leave & receive reviews',
+    ],
     cta: 'Start free', ctaStyle: 'border border-border hover:bg-muted',
   },
   {
-    name: 'Pro', price: '$19', period: '/month', popular: true,
-    features: ['Up to 5 providers', 'Priority support', 'Custom branding', 'Advanced analytics', 'Deposit collection', 'SMS reminders'],
-    cta: 'Get Pro', ctaStyle: 'bg-[#1a7fba] text-white hover:bg-[#15689a]',
-  },
-  {
-    name: 'Business', price: '$49', period: '/month', popular: false,
-    features: ['Unlimited providers', 'Team management', 'White-label option', 'API access', 'Dedicated onboarding', 'Everything in Pro'],
-    cta: 'Talk to us', ctaStyle: 'border border-border hover:bg-muted',
+    name: 'Premium', price: '$7', period: '/month', popular: true,
+    features: [
+      'Everything in Free',
+      'Premium badge on your listing',
+      'Up to 100 profile photos',
+      'Openings up to 3 months ahead',
+      'Custom Inquiry — clients contact you directly',
+      'Active Listing — featured in Browse for ongoing visibility',
+      'Booker attendance stats & no-show flagging',
+      'Confirmation & denial emails to bookers',
+      'Scheduler API — 2,000 requests/day',
+      'Priority support',
+    ],
+    cta: 'Get Premium', ctaStyle: 'bg-[#1a7fba] text-white hover:bg-[#15689a]',
   },
 ] as const;
 
 const TESTIMONIALS = [
-  { quote: '"I used to lose $200 a week to no-shows. Now I barely get any, the reminders just work. I set it up on a Sunday and it was live by dinner."', name: 'Marcus T.', role: 'Personal trainer' },
-  { quote: '"My clients always say the booking is so easy. I have a 5-star rating on Google now, and PikAppoint is a huge part of that."', name: 'Sara K.', role: 'Hair stylist' },
-  { quote: '"I manage four staff. Before this I had a whiteboard that was always wrong. Now it\'s all in one place and my team actually likes using it."', name: 'David R.', role: 'Barbershop owner' },
+  { quote: '"I used to lose $200 a week to no-shows. Now I barely get any, the reminders just work. I set it up on a Sunday and it was live by dinner."', name: 'Marcus T.', role: 'Personal trainer', photo: 'https://randomuser.me/api/portraits/men/32.jpg' },
+  { quote: '"My clients always say the booking is so easy. I have a 5-star rating on Google now, and PikAppoint is a huge part of that."', name: 'Sara K.', role: 'Hair stylist', photo: 'https://randomuser.me/api/portraits/women/44.jpg' },
+  { quote: '"I manage four staff. Before this I had a whiteboard that was always wrong. Now it\'s all in one place and my team actually likes using it."', name: 'David R.', role: 'Barbershop owner', photo: 'https://randomuser.me/api/portraits/men/65.jpg' },
 ] as const;
 
 // ─── sub-components (file-level, not nested) ────────────────────────
@@ -168,15 +210,19 @@ function AppointmentMockup() {
 export function LandingPage() {
   const navigate = useNavigate();
   const [serviceQuery, setServiceQuery] = useState('');
-  const [locationQuery, setLocationQuery] = useState('');
+  const [locationCountry, setLocationCountry] = useState('');
+  const [locationProvince, setLocationProvince] = useState('');
   const [howItWorksTab, setHowItWorksTab] = useState<'customer' | 'business'>('customer');
+
+  const availableProvinces = locationCountry ? (PROVINCES_BY_COUNTRY[locationCountry] ?? []) : [];
 
   const handleSearch = useCallback(() => {
     const params = new URLSearchParams();
     if (serviceQuery.trim()) params.set('q', serviceQuery.trim());
-    if (locationQuery.trim()) params.set('location', locationQuery.trim());
+    if (locationCountry) params.set('country', locationCountry);
+    if (locationProvince) params.set('province', locationProvince);
     navigate(`${ROUTES.browse}${params.toString() ? '?' + params.toString() : ''}`);
-  }, [serviceQuery, locationQuery, navigate]);
+  }, [serviceQuery, locationCountry, locationProvince, navigate]);
 
   return (
     <div className="lp">
@@ -189,22 +235,18 @@ export function LandingPage() {
       <nav className="lp-nav" aria-label="Main navigation">
         <div className="lp-nav-inner">
           <Link to="/" className="lp-nav-logo" aria-label={`${APP_NAME} home`}>
-            <CheckCircle className="lp-nav-logo-icon" aria-hidden="true" />
+            <Calendar className="lp-nav-logo-icon" style={{ color: '#000' }} aria-hidden="true" />
             {APP_NAME}
           </Link>
 
           <div className="lp-nav-links">
-            <a href="#explore" className="lp-nav-link">Explore</a>
             <a href="#for-professionals" className="lp-nav-link">For professionals</a>
             <a href="#pricing" className="lp-nav-link">Pricing</a>
           </div>
 
           <div className="lp-nav-actions">
-            <Link to={ROUTES.auth} className="lp-nav-login">
-              Log in
-            </Link>
-            <Link to={ROUTES.auth} className="lp-btn lp-btn--navy">
-              List your business
+            <Link to={ROUTES.browse} className="lp-btn lp-btn--navy">
+              Browse
             </Link>
           </div>
         </div>
@@ -214,8 +256,6 @@ export function LandingPage() {
         {/* ─── Hero ─── */}
         <section className="lp-hero" aria-labelledby="hero-heading">
           <div className="lp-hero-inner">
-            <SectionBadge>Trusted local pros, booked in a couple of taps</SectionBadge>
-
             <h1 id="hero-heading" className="lp-h1">
               Book <RotatingTerm /><br />near you.
             </h1>
@@ -246,16 +286,29 @@ export function LandingPage() {
               <div className="lp-search-field">
                 <MapPin className="lp-search-icon" aria-hidden="true" />
                 <div className="lp-search-field-inner">
-                  <label htmlFor="location-search" className="lp-search-label">Where</label>
-                  <input
-                    id="location-search"
-                    type="text"
-                    placeholder="Your location"
-                    value={locationQuery}
-                    onChange={e => setLocationQuery(e.target.value)}
-                    onKeyDown={e => e.key === 'Enter' && handleSearch()}
-                    className="lp-search-input"
-                  />
+                  <label htmlFor="location-country" className="lp-search-label">Where</label>
+                  <div className="lp-location-selects">
+                    <select
+                      id="location-country"
+                      value={locationCountry}
+                      onChange={e => { setLocationCountry(e.target.value); setLocationProvince(''); }}
+                      className="lp-search-select"
+                      aria-label="Country"
+                    >
+                      <option value="">Country</option>
+                      {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                    <select
+                      value={locationProvince}
+                      onChange={e => setLocationProvince(e.target.value)}
+                      className="lp-search-select"
+                      disabled={!locationCountry}
+                      aria-label="Province / State"
+                    >
+                      <option value="">Province / State</option>
+                      {availableProvinces.map(p => <option key={p} value={p}>{p}</option>)}
+                    </select>
+                  </div>
                 </div>
               </div>
               <button
@@ -282,41 +335,6 @@ export function LandingPage() {
                 </Link>
               ))}
             </div>
-
-            <p className="lp-stat">
-              <span className="lp-stat-dot" aria-hidden="true" />
-              <strong>12,480</strong> appointments booked on {APP_NAME} this week
-            </p>
-          </div>
-        </section>
-
-        {/* ─── Explore Categories ─── */}
-        <section id="explore" className="lp-section" aria-labelledby="explore-heading">
-          <div className="lp-section-inner">
-            <div className="lp-section-header">
-              <div>
-                <SectionBadge>Explore</SectionBadge>
-                <h2 id="explore-heading" className="lp-h2">What do you need done?</h2>
-              </div>
-              <Link to={ROUTES.browse} className="lp-btn lp-btn--outline">
-                Browse everything
-              </Link>
-            </div>
-
-            <div className="lp-explore-grid">
-              {CATEGORIES.map((cat) => (
-                <Link
-                  key={cat.title}
-                  to={`${ROUTES.browse}?q=${cat.query}`}
-                  className="lp-explore-card"
-                >
-                  <div className="lp-explore-card-text">
-                    <div className="lp-explore-card-title">{cat.title}</div>
-                    <div className="lp-explore-card-count">{cat.count}</div>
-                  </div>
-                </Link>
-              ))}
-            </div>
           </div>
         </section>
 
@@ -325,57 +343,21 @@ export function LandingPage() {
           <div className="lp-section-inner">
             <div className="lp-section-header">
               <div>
-                <SectionBadge>Recommended near you</SectionBadge>
-                <h2 id="recommended-heading" className="lp-h2">Highly rated, ready to book</h2>
+                <h2 id="recommended-heading" className="lp-h2">Explore Services</h2>
               </div>
               <Link to={ROUTES.browse} className="lp-btn lp-btn--outline">
                 See all pros
               </Link>
             </div>
 
-            <div className="lp-provider-grid">
-              {PROVIDERS.map(p => (
-                <Link
-                  key={p.title}
-                  to={ROUTES.browse}
-                  className="lp-provider-card"
-                >
-                  <div className="lp-provider-photo">
-                    <div className="lp-provider-photo-inner" />
-                    <span className="lp-avail-badge">
-                      <span className="lp-avail-dot" aria-hidden="true" />
-                      {p.availability}
-                    </span>
-                  </div>
-                  <div className="lp-provider-title-row">
-                    <h3 className="lp-provider-title">{p.title}</h3>
-                    <span className="lp-provider-rating">
-                      <Star className="lp-star-icon" aria-hidden="true" />
-                      {p.rating}
-                    </span>
-                  </div>
-                  <p className="lp-provider-reviews">{p.reviews} reviews · {p.name}</p>
-                  <span className="lp-provider-status">
-                    <CheckCircle className="lp-provider-status-icon" aria-hidden="true" />
-                    {p.badge}
-                  </span>
-                  <div className="lp-provider-location">
-                    <MapPin className="lp-location-icon" aria-hidden="true" />
-                    {p.location}
-                  </div>
-                  <div className="lp-provider-langs">
-                    Languages:
-                    {p.languages.map(l => (
-                      <span key={l} className="lp-lang-pill">{l}</span>
-                    ))}
-                  </div>
-                  <div className="lp-provider-footer">
-                    <span className="lp-provider-price">{p.price}</span>
-                    <span className="lp-provider-link">
-                      View profile <ArrowRight className="lp-arrow-icon" aria-hidden="true" />
-                    </span>
-                  </div>
-                </Link>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {MOCK_PROVIDERS.map(p => (
+                <ProviderBrowseCard
+                  key={p.user_id}
+                  provider={p}
+                  rating={p.rating}
+                  onOpen={() => navigate(ROUTES.browse)}
+                />
               ))}
             </div>
           </div>
@@ -384,8 +366,7 @@ export function LandingPage() {
         {/* ─── How It Works ─── */}
         <section className="lp-section" aria-labelledby="how-it-works-heading">
           <div className="lp-section-inner--md">
-            <SectionBadge>Getting started</SectionBadge>
-            <h2 id="how-it-works-heading" className="lp-h2">Up and running in minutes</h2>
+            <h2 id="how-it-works-heading" className="lp-h2">Getting Started</h2>
 
             <div className="lp-tabs" role="tablist" aria-label="How it works audience">
               <button
@@ -437,8 +418,7 @@ export function LandingPage() {
           <div className="lp-section-inner">
             <div className="lp-pro-grid">
               <div>
-                <SectionBadge>For professionals</SectionBadge>
-                <h2 id="pro-heading" className="lp-h2">The other side of the booking</h2>
+                <h2 id="pro-heading" className="lp-h2">Manage Your Appointment</h2>
                 <p className="lp-body-muted">
                   Behind every listing is a pro running their day on {APP_NAME}. Set your hours, share one link, and let clients book and pay themselves. Free to start.
                 </p>
@@ -473,7 +453,6 @@ export function LandingPage() {
         {/* ─── Pricing ─── */}
         <section id="pricing" className="lp-section" aria-labelledby="pricing-heading">
           <div className="lp-pricing-intro">
-            <SectionBadge>Pricing for pros</SectionBadge>
             <h2 id="pricing-heading" className="lp-h2">
               Start free. Scale when you&apos;re ready.
             </h2>
@@ -518,8 +497,7 @@ export function LandingPage() {
         {/* ─── Testimonials ─── */}
         <section className="lp-section lp-section--sky" aria-labelledby="testimonials-heading">
           <div className="lp-section-inner--md">
-            <SectionBadge>Loved by local pros</SectionBadge>
-            <h2 id="testimonials-heading" className="lp-h2">They stopped running on sticky notes</h2>
+            <h2 id="testimonials-heading" className="lp-h2">Reviews</h2>
           </div>
 
           <div className="lp-testi-grid">
@@ -532,7 +510,7 @@ export function LandingPage() {
                 </div>
                 <p className="lp-testi-quote">{t.quote}</p>
                 <div className="lp-testi-author">
-                  <div className="lp-testi-avatar" aria-hidden="true" />
+                  <img src={t.photo} alt={t.name} className="lp-testi-avatar" />
                   <div>
                     <div className="lp-testi-name">{t.name}</div>
                     <div className="lp-testi-role">{t.role}</div>
@@ -546,7 +524,7 @@ export function LandingPage() {
         {/* ─── Final CTA ─── */}
         <section className="lp-section lp-section--navy" aria-labelledby="cta-heading">
           <div className="lp-cta-inner">
-            <h2 id="cta-heading" className="lp-h2 lp-h2--white">Your neighbourhood is one tap away</h2>
+            <h2 id="cta-heading" className="lp-h2 lp-h2--white">Find professionals in your neighbourhood. Support locals.</h2>
             <p className="lp-cta-sub">
               Find a trusted local pro, or start taking bookings of your own. It&apos;s free to begin.
             </p>
@@ -565,7 +543,7 @@ export function LandingPage() {
           <div className="lp-footer-grid">
             <div className="lp-footer-brand">
               <Link to="/" className="lp-footer-logo">
-                <CheckCircle className="lp-footer-logo-icon" aria-hidden="true" />
+                <Calendar className="lp-footer-logo-icon" style={{ color: '#000' }} aria-hidden="true" />
                 {APP_NAME}
               </Link>
               <p className="lp-footer-tagline">Scheduling that works as hard as you do.</p>
@@ -574,7 +552,6 @@ export function LandingPage() {
               <h3 className="lp-footer-col-title">Discover</h3>
               <ul className="lp-footer-links">
                 <li><Link to={ROUTES.browse} className="lp-footer-link">Browse pros</Link></li>
-                <li><a href="#explore" className="lp-footer-link">Categories</a></li>
                 <li><a href="#for-professionals" className="lp-footer-link">For professionals</a></li>
               </ul>
             </div>

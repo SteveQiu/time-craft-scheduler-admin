@@ -118,13 +118,26 @@ export function ProfileHeader({
           </div>
         </div>
       ) : (
-        avgRating && (
-          <div className="flex items-center space-x-1">
-            <Star className="h-4 w-4 text-warning fill-current" />
-            <span className="text-sm font-medium">{avgRating.avg}</span>
-            <span className="text-sm text-muted-foreground">({avgRating.count} reviews)</span>
+        <div className="flex items-center space-x-4">
+          <Avatar className="h-20 w-20">
+            <AvatarImage src={profile.avatar_url ?? undefined} alt={profile.full_name ?? 'Avatar'} />
+            <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
+              {initials}
+            </AvatarFallback>
+          </Avatar>
+          <div>
+            <h2 className="text-2xl font-bold text-foreground">
+              {profile.full_name || 'No name set'}
+            </h2>
+            {avgRating && (
+              <div className="flex items-center space-x-1 mt-1">
+                <Star className="h-4 w-4 text-warning fill-current" />
+                <span className="text-sm font-medium">{avgRating.avg}</span>
+                <span className="text-sm text-muted-foreground">({avgRating.count} reviews)</span>
+              </div>
+            )}
           </div>
-        )
+        </div>
       )}
       <div className="flex flex-wrap items-center gap-2 w-full justify-between">
         {!isOwnProfile && (

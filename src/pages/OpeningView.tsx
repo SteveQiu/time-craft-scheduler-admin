@@ -100,7 +100,7 @@ export function OpeningView() {
       queryClient.invalidateQueries({ queryKey: ['browse-openings'] });
       toast.success('Appointment booked successfully!');
       await sendPremiumReminder({
-        userId: opening.user_id,
+        providerUserId: opening.user_id,
         to: opening.provider_email,
         date: opening.date,
         startTime: opening.start_time,

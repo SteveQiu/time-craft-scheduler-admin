@@ -30,6 +30,8 @@ export interface ProviderAccount {
   provider_name: string;
   provider_slug: string | null;
   avatar_url?: string | null;
+  /** First profile_photos entry (display_order asc), preferred backdrop stripe image. */
+  stripe_photo_url?: string | null;
   opening_count: number;
   services: string[];
   workers: string[];

@@ -137,6 +137,15 @@ async function injectSession(page, session) {
       console.log(`   URL: ${page.url()}`);
       console.log(`   Text: ${text3 || '(blank)'}`);
 
+      // Browse route
+      console.log('6. Going to /browse...');
+      await page.goto('http://localhost:8080/browse', { waitUntil: 'domcontentloaded' });
+      await page.waitForTimeout(4000);
+      await snap(`${user.label}-browse`);
+      const text4 = await page.evaluate(() => document.body.innerText.trim().substring(0, 600));
+      console.log(`   URL: ${page.url()}`);
+      console.log(`   Text: ${text4 || '(blank)'}`);
+
     } catch (err) {
       await snap(`${user.label}-error`);
       console.error('ERROR:', err.message);

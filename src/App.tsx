@@ -60,7 +60,7 @@ function PaymentNotificationWatcher() {
 
 function AppRoutes() {
   return (
-    <Suspense fallback={<div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">Loading…</div>}>
+    <Suspense fallback={<div className="w-full h-screen flex items-center justify-center text-muted-foreground text-sm">Loading…</div>}>
       <Routes>
         <Route path="/" element={<RootRedirect />} />
         <Route path={ROUTES.dashboard} element={<Dashboard />} />
