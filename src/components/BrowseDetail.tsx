@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader } from './ui/card';
@@ -15,6 +15,8 @@ import { getEffectiveTotal } from '@/lib/utils';
 import { usePremiumReminder } from '@/hooks/usePremiumReminder';
 import { useProviderPayments } from '@/hooks/useProviderPayments';
 import { useAuth } from '@/hooks/useAuth';
+import { useIsPremium } from '@/hooks/useIsPremium';
+import { useProfileBranding } from '@/context/ProfileBrandingContext';
 import { getMethodLabel } from '@/lib/payment/methods';
 import type { OpeningWithProfile, ProviderAccount } from '@/types/browse';
 
@@ -72,6 +74,18 @@ export function BrowseDetail({
 
   // Get provider
   const currentProvider = providers.find(p => p.user_id === providerId);
+
+  const { isPremium: currentProviderPremium } = useIsPremium({ userId: currentProvider?.user_id });
+  const { setBranding, clearBranding } = useProfileBranding();
+
+  useEffect(() => {
+    if (!isOwnProfile && currentProvider) {
+      setBranding(currentProvider.avatar_url ?? null, currentProvider.provider_name ?? null, currentProviderPremium);
+    }
+    return () => {
+      clearBranding();
+    };
+  }, [isOwnProfile, currentProvider?.avatar_url, currentProvider?.provider_name, currentProviderPremium, setBranding, clearBranding]);
 
   // Get openings for selected provider
   const selectedProviderOpenings = providerId 

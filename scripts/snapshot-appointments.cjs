@@ -146,6 +146,39 @@ async function injectSession(page, session) {
       console.log(`   URL: ${page.url()}`);
       console.log(`   Text: ${text4 || '(blank)'}`);
 
+      // Browse detail route (checks ProfileBrandingContext white-label swap in AppSidebar)
+      const BROWSE_DETAIL_PROVIDER_ID = '9427e379-29d3-4d7c-9ecb-b95b898400e5';
+      console.log(`7. Going to /browse/${BROWSE_DETAIL_PROVIDER_ID}...`);
+      await page.goto(`http://localhost:8080/browse/${BROWSE_DETAIL_PROVIDER_ID}`, { waitUntil: 'domcontentloaded' });
+      await page.waitForTimeout(4000);
+      await snap(`${user.label}-browse-detail`);
+      const text5 = await page.evaluate(() => document.body.innerText.trim().substring(0, 600));
+      console.log(`   URL: ${page.url()}`);
+      console.log(`   Text: ${text5 || '(blank)'}`);
+      const sidebarH1AfterDetail = await page.evaluate(() => {
+        const h1s = Array.from(document.querySelectorAll('h1'));
+        // AppSidebar logo/name h1 has extra classes (truncate/text-2xl/text-lg); the md:hidden mobile
+        // title bar h1 has ONLY class="font-bold", so excluding that isolates the sidebar element.
+        const sidebarH1 = h1s.find(h => h.className.trim() !== 'font-bold');
+        return sidebarH1 ? sidebarH1.textContent : null;
+      });
+      console.log(`   Sidebar branding h1 (expect provider name if white-labeled): ${sidebarH1AfterDetail}`);
+
+      // Back to /browse list — confirms clearBranding() reverts sidebar to default app branding
+      console.log('8. Going back to /browse (verify branding reverts)...');
+      await page.goto('http://localhost:8080/browse', { waitUntil: 'domcontentloaded' });
+      await page.waitForTimeout(4000);
+      await snap(`${user.label}-browse-after-detail`);
+      const text6 = await page.evaluate(() => document.body.innerText.trim().substring(0, 600));
+      console.log(`   URL: ${page.url()}`);
+      console.log(`   Text: ${text6 || '(blank)'}`);
+      const sidebarH1AfterRevert = await page.evaluate(() => {
+        const h1s = Array.from(document.querySelectorAll('h1'));
+        const sidebarH1 = h1s.find(h => h.className.trim() !== 'font-bold');
+        return sidebarH1 ? sidebarH1.textContent : null;
+      });
+      console.log(`   Sidebar branding h1 (expect default app name): ${sidebarH1AfterRevert}`);
+
     } catch (err) {
       await snap(`${user.label}-error`);
       console.error('ERROR:', err.message);

@@ -43,6 +43,11 @@ recall them. Keep entries short and cite the relevant files.
 
 - Public profile address now stores `profiles.public_address_id` referencing `workplace_addresses.id`; public RPCs still return gated formatted `address` string. Own profile resolves selected workplace address with `formatAddressDisplay()`; dead per-field `addressVisibility` removed. See `src/pages/Profile.tsx`, `src/pages/profile/ProfileAddress.tsx`, and `src/integrations/supabase/types.ts`.
 
+## Profile/browse white-label branding
+
+- `BrowseDetail.tsx` (`/browse/:id`) and `Profile.tsx` (`/profile/:slug`) both call `ProfileBrandingContext.setBranding(avatarUrl, providerName, isPremium)` for non-own profiles, and `clearBranding()` on unmount. `AppSidebar.tsx`'s `isWhiteLabel = !!providerName` — the avatar/name swap in the sidebar happens for **any** viewed provider with a name, premium or not; `isPremium` only toggles the gold gradient text styling, not the swap itself. Verified 2026-08-23 via `scripts/snapshot-appointments.cjs` (steps 7-8): non-premium provider `9427e379-29d3-4d7c-9ecb-b95b898400e5` still shows sidebar h1 = provider name (plain `text-foreground`, no gradient) at `/browse/:id`, and reverts to app name/logo after navigating back to `/browse`.
+- Beware: `App.tsx:186` has a separate `md:hidden` mobile header `<h1 className="font-bold">{title}</h1>` (page title, not sidebar branding). When testing sidebar branding via `document.querySelectorAll('h1')`, filter out the mobile one (its className is exactly `"font-bold"`, nothing else) or you'll pick the wrong element.
+
 ## Browse active listings
 
 - **"Active Listing & Custom Time" = the `profiles.custom_inquiry_open` toggle** (Calendar.tsx:215). Browse advertises toggled-on premium/pro providers so bookers can reach out.
