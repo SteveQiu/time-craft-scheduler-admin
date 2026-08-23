@@ -6,15 +6,57 @@ import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
+import { Popover, PopoverTrigger, PopoverContent } from './ui/popover';
 import { Calendar as CalendarIcon, MapPin, Search, Loader2, Bookmark, Star, ArrowRight, CheckCircle } from 'lucide-react';
 import { BrowseDetail } from './BrowseDetail';
 import { searchProviders } from '@/lib/search';
 import type { OpeningWithProfile, ProviderAccount, CustomInquiryInfo } from '@/types/browse';
 import { useLocalBookmarks } from '@/hooks/useLocalBookmarks';
 import { readLocationPreference, type LocationPreference } from '@/lib/locationPreference';
+import { getProfilePhotoPublicUrl } from '@/lib/profilePhotos';
 
 function getUniqueValues(values: string[]) {
   return [...new Set(values)];
+}
+
+/** Shape returned by get_premium_inquiry_providers RPC. */
+type InquiryProviderRow = {
+  id: string;
+  full_name: string;
+  slug: string;
+  avatar_url: string;
+  email: string;
+  phone: string;
+  social_links: Record<string, string>;
+  profile_url: string;
+  skills: string[];
+};
+
+/**
+ * Cross-references a ProviderAccount against the premium-inquiry RPC results and applies
+ * inquiry enrichment (is_custom_inquiry/custom_inquiry_info/services-merge) if matched.
+ * MUST be called on every path that builds a ProviderAccount (allProviders, bookmarks,
+ * local-bookmarks) so inquiry-only providers render correctly regardless of query path.
+ */
+function enrichWithInquiryInfo(account: ProviderAccount, inquiryProviders: InquiryProviderRow[]): ProviderAccount {
+  const inquiryInfo = inquiryProviders.find(ip => ip.id === account.user_id);
+  if (!inquiryInfo) return account;
+  return {
+    ...account,
+    services: account.services.length > 0 ? account.services : (inquiryInfo.skills || []),
+    is_custom_inquiry: true,
+    custom_inquiry_info: {
+      email: inquiryInfo.email,
+      phone: inquiryInfo.phone,
+      social_links: inquiryInfo.social_links,
+      profile_url: inquiryInfo.profile_url,
+    },
+  };
+}
+
+/** Shared fallback chain for the card header backdrop stripe photo. */
+function resolveProviderPhotoUrl(provider: Pick<ProviderAccount, 'stripe_photo_url' | 'avatar_url'>): string | null {
+  return provider.stripe_photo_url ?? provider.avatar_url ?? null;
 }
 
 function buildProviderAccount({
@@ -84,21 +126,20 @@ export function ProviderBrowseCard({
     return Math.abs(hash) % gradients.length;
   }, [provider.user_id, gradients.length]);
 
-  const availabilityLabel =
-    showFeaturedListing || provider.is_custom_inquiry
-      ? 'Custom inquiry'
-      : provider.opening_count > 0
-        ? `${provider.opening_count} slot${provider.opening_count !== 1 ? 's' : ''} available`
-        : 'No openings';
-  const dotColor =
-    provider.is_custom_inquiry || showFeaturedListing
-      ? 'bg-sky-500'
-      : provider.opening_count > 0
-        ? 'bg-emerald-500'
-        : 'bg-gray-400';
-
-  const primaryService = provider.services[0] || 'Provider';
+  // Single source of truth for the "custom inquiry" state — used for label, dot color, and badge.
   const isCustom = showFeaturedListing || provider.is_custom_inquiry;
+
+  const availabilityLabel = isCustom
+    ? 'Custom inquiry'
+    : provider.opening_count > 0
+      ? `${provider.opening_count} slot${provider.opening_count !== 1 ? 's' : ''} available`
+      : 'No openings';
+  const dotColor = isCustom
+    ? 'bg-sky-500'
+    : provider.opening_count > 0
+      ? 'bg-emerald-500'
+      : 'bg-gray-400';
+  const stripeSrc = resolveProviderPhotoUrl(provider);
 
   return (
     <button
@@ -109,22 +150,19 @@ export function ProviderBrowseCard({
       {/* Header area — plain/subtle bg with small circular avatar, fixed height so all cards are identical across all breakpoints */}
       <div className="relative h-28 bg-muted flex items-center justify-center overflow-hidden">
         {/* Backdrop stripe: prefer first profile_photos entry, fall back to avatar_url, else plain bg-muted */}
-        {(() => {
-          const stripeSrc = provider.stripe_photo_url ?? provider.avatar_url;
-          return stripeSrc && (
-            <>
-              <img
-                src={stripeSrc}
-                alt=""
-                aria-hidden="true"
-                className="absolute inset-0 w-full h-full object-cover blur-lg scale-110"
-                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-              />
-              <div className="absolute inset-0 bg-black/25" aria-hidden="true" />
-            </>
-          );
-        })()}
-        <span className="absolute top-2 left-2 inline-flex items-center gap-1 rounded-full bg-white/95 px-2.5 py-1 text-xs font-medium shadow-sm">
+        {stripeSrc && (
+          <>
+            <img
+              src={stripeSrc}
+              alt=""
+              aria-hidden="true"
+              className="absolute inset-0 w-full h-full object-cover blur-lg scale-110"
+              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+            />
+            <div className="absolute inset-0 bg-black/25" aria-hidden="true" />
+          </>
+        )}
+        <span className="absolute top-2 left-2 inline-flex items-center gap-1 rounded-full bg-white/95 px-2.5 py-1 text-xs font-medium text-gray-900 shadow-sm">
           <span className={`h-1.5 w-1.5 rounded-full ${dotColor}`} aria-hidden="true" />
           {availabilityLabel}
         </span>
@@ -154,21 +192,39 @@ export function ProviderBrowseCard({
               </span>
             ))}
             {provider.services.length > 2 && (
-              <span
-                className="relative rounded-md border border-foreground/25 px-2.5 py-1 text-xs font-semibold text-foreground cursor-pointer select-none"
-                onMouseEnter={() => setShowAllServices(true)}
-                onMouseLeave={() => setShowAllServices(false)}
-                onClick={(e) => { e.stopPropagation(); setShowAllServices(v => !v); }}
-              >
-                +{provider.services.length - 2} more
-                {showAllServices && (
-                  <div className="absolute left-0 top-full mt-1 z-10 bg-popover border border-border rounded-md shadow-md p-2 flex flex-col gap-1.5 min-w-max">
-                    {provider.services.slice(2).map(s => (
-                      <span key={s} className="text-xs font-medium text-foreground whitespace-nowrap">{s}</span>
-                    ))}
-                  </div>
-                )}
-              </span>
+              <Popover open={showAllServices} onOpenChange={setShowAllServices}>
+                <PopoverTrigger asChild>
+                  {/* Nested inside the card's outer <button>; span (not <button>) avoids invalid button-in-button nesting
+                      while still being keyboard-operable via role="button" + tabIndex + onKeyDown below. */}
+                  <span
+                    role="button"
+                    tabIndex={0}
+                    aria-haspopup="true"
+                    aria-expanded={showAllServices}
+                    className="rounded-md border border-foreground/25 px-2.5 py-1 text-xs font-semibold text-foreground cursor-pointer select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a7fba]"
+                    onClick={(e) => { e.stopPropagation(); setShowAllServices(v => !v); }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setShowAllServices(v => !v);
+                      }
+                    }}
+                  >
+                    +{provider.services.length - 2} more
+                  </span>
+                </PopoverTrigger>
+                {/* Portal-based content — not clipped by the card's overflow-hidden */}
+                <PopoverContent
+                  align="start"
+                  className="w-auto min-w-max p-2 flex flex-col gap-1.5"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {provider.services.slice(2).map(s => (
+                    <span key={s} className="text-xs font-medium text-foreground whitespace-nowrap">{s}</span>
+                  ))}
+                </PopoverContent>
+              </Popover>
             )}
           </div>
         )}
@@ -363,17 +419,7 @@ export function BookingBrowse() {
         console.error('inquiry providers fetch error:', error);
         return [];
       }
-      return (data ?? []) as Array<{
-        id: string;
-        full_name: string;
-        slug: string;
-        avatar_url: string;
-        email: string;
-        phone: string;
-        social_links: Record<string, string>;
-        profile_url: string;
-        skills: string[];
-      }>;
+      return (data ?? []) as InquiryProviderRow[];
     },
   });
 
@@ -393,21 +439,7 @@ export function BookingBrowse() {
   // Merge inquiry providers with regular providers — inquiry providers float to top
   const allProviders: ProviderAccount[] = React.useMemo(() => {
     const existingIds = new Set(providers.map(p => p.user_id));
-    const taggedProviders = providers.map(p => {
-      const inquiryInfo = inquiryProviders.find(ip => ip.id === p.user_id);
-      if (!inquiryInfo) return p;
-      return {
-        ...p,
-        services: p.services.length > 0 ? p.services : (inquiryInfo.skills || []),
-        is_custom_inquiry: true,
-        custom_inquiry_info: {
-          email: inquiryInfo.email,
-          phone: inquiryInfo.phone,
-          social_links: inquiryInfo.social_links,
-          profile_url: inquiryInfo.profile_url,
-        },
-      };
-    });
+    const taggedProviders = providers.map(p => enrichWithInquiryInfo(p, inquiryProviders));
     // Custom-inquiry providers (premium + "Active Listing & Custom Time" toggle ON)
     // with zero openings. Advertised so bookers can reach out. Uses the deployed
     // get_premium_inquiry_providers RPC (gates the toggle, returns contact info).
@@ -538,12 +570,15 @@ export function BookingBrowse() {
     },
   });
 
-  // Merge DB and localStorage bookmarks (dedup by user_id)
+  // Merge DB and localStorage bookmarks (dedup by user_id), applying the same inquiry
+  // enrichment as allProviders so bookmarked inquiry-only providers render correctly.
   const mergedBookmarks = React.useMemo(() => {
-    const dbIds = new Set(bookmarkedProviders.map(p => p.user_id));
-    const extra = localBookmarkedProviders.filter(p => !dbIds.has(p.user_id));
-    return [...bookmarkedProviders, ...extra];
-  }, [bookmarkedProviders, localBookmarkedProviders]);
+    const enrichedDb = bookmarkedProviders.map(p => enrichWithInquiryInfo(p, inquiryProviders));
+    const enrichedLocal = localBookmarkedProviders.map(p => enrichWithInquiryInfo(p, inquiryProviders));
+    const dbIds = new Set(enrichedDb.map(p => p.user_id));
+    const extra = enrichedLocal.filter(p => !dbIds.has(p.user_id));
+    return [...enrichedDb, ...extra];
+  }, [bookmarkedProviders, localBookmarkedProviders, inquiryProviders]);
 
   // Filter providers by search term and apply location filter
   const filteredProviders = React.useMemo(
@@ -571,8 +606,7 @@ export function BookingBrowse() {
         .order('display_order', { ascending: true });
       for (const row of (data || []) as { user_id: string; storage_path: string }[]) {
         if (map.has(row.user_id)) continue; // ordered ascending — keep first occurrence only
-        const { data: urlData } = supabase.storage.from('profile-photos').getPublicUrl(row.storage_path);
-        map.set(row.user_id, urlData.publicUrl);
+        map.set(row.user_id, getProfilePhotoPublicUrl(row.storage_path));
       }
       return map;
     },

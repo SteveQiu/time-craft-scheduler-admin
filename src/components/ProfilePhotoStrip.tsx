@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { getProfilePhotoPublicUrl } from '@/lib/profilePhotos';
 import { PhotoLightbox } from './PhotoLightbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
@@ -26,21 +27,7 @@ export function ProfilePhotoStrip({ userId, thumbClass = 'w-16 h-16' }: Props) {
         .select('storage_path, display_order')
         .eq('user_id', userId)
         .order('display_order', { ascending: true });
-      return (data || []).map((p: { storage_path: string }) => {
-        const { data: urlData } = supabase.storage
-          .from('profile-photos')
-          .getPublicUrl(p.storage_path);
-        return urlData.publicUrl;
-      });
-    },
-    enabled: !!userId,
-  });
-
-  const { data: isPremium = false } = useQuery({
-    queryKey: ['provider-premium', userId],
-    queryFn: async () => {
-      const { data } = await (supabase as any).rpc('is_user_premium', { p_user_id: userId });
-      return Boolean(data);
+      return (data || []).map((p: { storage_path: string }) => getProfilePhotoPublicUrl(p.storage_path));
     },
     enabled: !!userId,
   });
