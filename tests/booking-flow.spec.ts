@@ -247,7 +247,7 @@ test.describe('Email Notifications', () => {
 })
 
 test.describe('RLS & Security', () => {
-  test('User cannot access other user appointments via API', async ({ request }) => {
+  test('User cannot access other user appointments via API', async (_request) => {
     // This would require API testing - skip for now as tests are UI-focused
     console.log('⏭️  Skipping API-level RLS test (requires backend testing setup)')
   })

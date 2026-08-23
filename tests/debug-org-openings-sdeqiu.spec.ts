@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 
 // Use sdeqiu credentials from .secret
 const SDEQIU_EMAIL = 'sdeqiu@gmail.com';
@@ -248,7 +248,9 @@ test.describe('Debug: sdeqiu org mode openings visibility', () => {
           try {
             const body = await response.text();
             console.log(`   Body (first 200 chars): ${body.substring(0, 200)}`);
-          } catch (e) {}
+          } catch {
+            // Ignore response parsing errors
+          }
         }
       }
     });

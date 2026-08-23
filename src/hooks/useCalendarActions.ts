@@ -59,7 +59,7 @@ export function useCalendarActions({
   setIsEditSaving,
   loadOpeningsForMonth,
   getResourceRate,
-  selfResourceName,
+  selfResourceName: _selfResourceName,
   providerPaymentMethods,
   ownProfile,
   isPremium,
@@ -116,7 +116,9 @@ export function useCalendarActions({
         if (parsed.startTime) cachedStart = parsed.startTime;
         if (parsed.endTime) cachedEnd = parsed.endTime;
       }
-    } catch {}
+    } catch {
+      // intentionally ignored: fall back to defaults if cached times are missing/invalid
+    }
     setNewOpening({
       startTime: cachedStart,
       endTime: cachedEnd,
@@ -171,7 +173,7 @@ export function useCalendarActions({
         toast.success(records.length === 1 ? 'Opening added successfully' : `${records.length} openings added successfully`);
       }
       await loadOpeningsForMonth(currentDate);
-      try { localStorage.setItem(OPENING_TIMES_KEY, JSON.stringify({ startTime: newOpening.startTime, endTime: newOpening.endTime })); } catch {}
+      try { localStorage.setItem(OPENING_TIMES_KEY, JSON.stringify({ startTime: newOpening.startTime, endTime: newOpening.endTime })); } catch { /* intentionally ignored: localStorage unavailable */ }
       resetForm();
       setShowAddOpening(false);
     } catch (error) {
@@ -219,7 +221,7 @@ export function useCalendarActions({
   const removeOpening = async (id: string) => {
     if (!user) { toast.error('Please sign in to remove openings'); return; }
     try {
-      let query = supabase.from('openings').delete().eq('id', id);
+      const query = supabase.from('openings').delete().eq('id', id);
       const { error } = await query;
       if (error) throw error;
       setOpenings(prev => prev.filter(opening => opening.id !== id));
@@ -233,7 +235,7 @@ export function useCalendarActions({
 
   const deleteSafeOpenings = async (ids: string[]) => {
     if (ids.length === 0) return;
-    let query = supabase.from('openings').delete().in('id', ids);
+    const query = supabase.from('openings').delete().in('id', ids);
     const { error } = await query;
     if (error) throw error;
     setOpenings(prev => prev.filter(o => !ids.includes(o.id)));

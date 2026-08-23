@@ -16,7 +16,7 @@ const FUNCTIONS_URL = process.env.VITE_SUPABASE_URL + '/functions/v1'
 test.describe('Data Rights APIs', () => {
   let authToken: string
 
-  test.beforeAll(async ({ request }) => {
+  test.beforeAll(async (_request) => {
     // TODO: Get valid auth token from Supabase
     // For now, skip if no token available
     authToken = process.env.TEST_AUTH_TOKEN || ''

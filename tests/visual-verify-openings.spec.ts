@@ -42,7 +42,7 @@ test.describe('Visual Verification - 10+ Openings', () => {
         // Single or double digit that's small (CSS indicator of badge)
         if (text && /^\d{1,2}$/.test(text)) {
           // Check if it's styled as a badge (small, round, etc)
-          const style = window.getComputedStyle(el);
+          const _style = window.getComputedStyle(el);
           const parent = el.parentElement;
           
           // Look for badges in specific calendar positions
@@ -72,9 +72,9 @@ test.describe('Visual Verification - 10+ Openings', () => {
     
     // Count distinct dates with markers
     const dateWithCountPattern = /(\d{1,2})\s*\n\s*(\d+)/g;
-    const dateMatches: any[] = [];
-    let match;
-    const dateRegex = new RegExp(dateWithCountPattern);
+    const _dateMatches: any[] = [];
+    let _match;
+    const _dateRegex = new RegExp(dateWithCountPattern);
     
     // Just look for Hair cut service mentions
     const haircuts = pageText.match(/Hair cut/gi) || [];

@@ -106,7 +106,7 @@ test.describe('Calendar Blinking Fix Validation', () => {
     );
 
     // If there are openings, check that loading state is properly managed
-    const hasLoadingUI = (await loadingIndicator.count()) > 0;
+    const _hasLoadingUI = (await loadingIndicator.count()) > 0;
 
     // The key is: should NOT see flickering between empty and populated
     const stabilityCheck = await page.evaluate(() => {

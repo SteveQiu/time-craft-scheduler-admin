@@ -296,7 +296,9 @@ export function OpeningFormDialog({
                           zip: addr.zip || '',
                         },
                       });
-                    } catch {}
+                    } catch {
+                      // intentionally ignored: invalid saved address JSON
+                    }
                   }
                 }}
               >

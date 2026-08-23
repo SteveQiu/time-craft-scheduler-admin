@@ -45,7 +45,7 @@ export function PaymentInfoDialog({
   loadingOrgPayments,
   loadingPaymentInfoOpening,
   allAvailableMethods,
-  selectedPaymentTabId,
+  selectedPaymentTabId: _selectedPaymentTabId,
   setSelectedPaymentTabId,
   activePaymentMethod,
   proofSubmitted,

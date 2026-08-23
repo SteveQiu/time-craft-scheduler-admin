@@ -6,14 +6,14 @@ import NotFound from "@/pages/NotFound";
 const TestReminder = () => {
   const hostname = window.location.hostname;
 
-  if (hostname !== "localhost" && hostname !== "127.0.0.1") {
-    return <NotFound />;
-  }
-
   const [to, setTo] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [rawResponse, setRawResponse] = useState<string | null>(null);
+
+  if (hostname !== "localhost" && hostname !== "127.0.0.1") {
+    return <NotFound />;
+  }
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();

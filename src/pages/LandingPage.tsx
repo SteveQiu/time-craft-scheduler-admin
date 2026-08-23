@@ -5,7 +5,7 @@ import { APP_NAME } from '@/config/app';
 import {
   Search, MapPin, Wrench, GraduationCap, Shield, Scissors, Dumbbell, Sparkles,
   CheckCircle, Clock, Bell, CreditCard, LinkIcon, Users, BarChart3, Star,
-  ChevronRight, Calendar, ArrowRight,
+  Calendar,
 } from 'lucide-react';
 import { ProviderBrowseCard } from '@/components/BookingBrowse';
 import type { ProviderAccount } from '@/types/browse';
@@ -161,15 +161,6 @@ function RotatingTerm() {
       aria-live="polite"
     >
       {ROTATING_TERMS[index]}
-    </span>
-  );
-}
-
-function SectionBadge({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="lp-badge">
-      <span className="lp-badge-dot" aria-hidden="true" />
-      {children}
     </span>
   );
 }

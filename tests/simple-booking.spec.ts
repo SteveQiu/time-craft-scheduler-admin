@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 import fs from 'fs';
 
 test('Simple booking flow', async ({ page }) => {
@@ -104,7 +104,7 @@ test('Simple booking flow', async ({ page }) => {
     const text = await btn.textContent();
     const isNum = /^\d+$/.test(text?.trim() || '');
     const isHighlighted = await btn.evaluate(el => {
-      const style = window.getComputedStyle(el);
+      const _style = window.getComputedStyle(el);
       return el.className.includes('bg-primary') || el.className.includes('primary');
     });
     
@@ -125,7 +125,7 @@ test('Simple booking flow', async ({ page }) => {
       await page.waitForTimeout(1000);
       clickedDate = true;
       console.log('   ✅ Clicked date 16');
-    } catch (e) {
+    } catch {
       console.log('   ❌ Could not click date 16');
     }
   }

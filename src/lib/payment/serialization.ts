@@ -1,5 +1,4 @@
-import { PaymentDetails } from './types';
-import { PaymentMethodType } from './types';
+import { PaymentDetails, PaymentMethodType } from './types';
 
 const MAX_DIM = 800;
 const MAX_FILE_SIZE = 1 * 1024 * 1024; // 1 MB

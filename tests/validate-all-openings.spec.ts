@@ -125,7 +125,7 @@ test.describe('Validate 10+ Org Openings with Database', () => {
           expandedCount++;
           await page.waitForTimeout(300);
         }
-      } catch (e) {
+      } catch {
         // Skip
       }
     }

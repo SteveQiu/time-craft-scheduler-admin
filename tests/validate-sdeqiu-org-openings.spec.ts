@@ -84,7 +84,7 @@ test.describe('sdeqiu Org Mode Openings Validation', () => {
             console.log(`      [${i + 1}] ${text?.substring(0, 80)}`);
           }
         }
-      } catch (e) {
+      } catch {
         // Selector didn't match
       }
     }
@@ -115,7 +115,7 @@ test.describe('sdeqiu Org Mode Openings Validation', () => {
 
     // 9. Network tab - check API calls
     console.log('\n9️⃣  Checking API requests...');
-    const responses = page.context().tracing ? [] : [];
+    const _responses = page.context().tracing ? [] : [];
     
     // Try to find any failed network requests
     const failedRequests: string[] = [];

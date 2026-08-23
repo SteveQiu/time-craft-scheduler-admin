@@ -1,4 +1,6 @@
-import { test, expect, Page } from '@playwright/test';
+import { test, expect } from '@playwright/test';
+import fs from 'fs';
+import path from 'path';
 
 /**
  * Playwright test for opening removal fix
@@ -60,8 +62,8 @@ test.describe('Opening Removal Fix', () => {
 
   test('Opening removal updates local state (no full reload)', async () => {
     // Verify the fix was applied
-    const calendarFile = require('fs').readFileSync(
-      require('path').join(process.cwd(), 'src/components/Calendar.tsx'),
+    const calendarFile = fs.readFileSync(
+      path.join(process.cwd(), 'src/components/Calendar.tsx'),
       'utf-8'
     );
 
@@ -124,8 +126,8 @@ test.describe('Opening Removal Fix', () => {
 
   test('Opening removal fails gracefully and reloads on error', async () => {
     // Verify error handling
-    const calendarFile = require('fs').readFileSync(
-      require('path').join(process.cwd(), 'src/components/Calendar.tsx'),
+    const calendarFile = fs.readFileSync(
+      path.join(process.cwd(), 'src/components/Calendar.tsx'),
       'utf-8'
     );
 

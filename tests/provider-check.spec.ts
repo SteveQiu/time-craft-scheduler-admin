@@ -14,17 +14,20 @@ test('Check database for provider openings', async ({ page }) => {
   
   const data = await page.evaluate(async () => {
     // Dynamic import to access Supabase client
-    const supabaseModule = await import('http://localhost:8080/src/integrations/supabase/client.ts');
+    const _supabaseModule = await import('http://localhost:8080/src/integrations/supabase/client.ts');
     
     try {
+      if (!window.supabaseClient) {
+        return { error: 'Supabase client not available' };
+      }
       // Get all openings
-      const { data: openings, error: openingsError } = await window.supabaseClient?.from('openings')
+      const { data: openings, error: _openingsError } = await window.supabaseClient.from('openings')
         .select('*')
         .eq('is_available', true)
         .limit(50);
 
       // Get the specific provider
-      const { data: providerOpenings, error: providerError } = await window.supabaseClient?.from('openings')
+      const { data: providerOpenings, error: _providerError } = await window.supabaseClient.from('openings')
         .select('*')
         .eq('user_id', 'f0927dd8-9e7d-4830-a6b5-c96a3c627fe9')
         .eq('is_available', true);

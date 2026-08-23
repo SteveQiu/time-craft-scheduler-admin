@@ -40,7 +40,7 @@ test.describe('Count All Openings on Calendar', () => {
     // 3. Get raw page content and count opening indicators
     console.log('\n3️⃣  Counting opening indicators on calendar...');
     
-    const pageContent = await page.content();
+    const _pageContent = await page.content();
     
     // The calendar shows numbers on each date cell for opening count
     // Look for pattern like: ">1<" or ">2<" (numbers in badges)

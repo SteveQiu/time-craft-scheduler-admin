@@ -35,7 +35,7 @@ interface PendingGroupSectionProps {
 }
 
 export function PendingGroupSection({
-  openingId,
+  openingId: _openingId,
   appts,
   userId,
   selectedIds,
@@ -119,7 +119,11 @@ export function PendingGroupSection({
                     onCheckedChange={(checked) => {
                       setSelectedIds(prev => {
                         const next = new Set(prev);
-                        checked ? next.add(apt.id) : next.delete(apt.id);
+                        if (checked) {
+                          next.add(apt.id);
+                        } else {
+                          next.delete(apt.id);
+                        }
                         return next;
                       });
                     }}

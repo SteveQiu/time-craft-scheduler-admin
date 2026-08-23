@@ -18,7 +18,6 @@ export const Step1Opening: React.FC<{ durationInFrames: number }> = ({
   const navClickFrame = 60; // 2s - Navigate to Calendar tab
   const openDialogFrame = 120; // 4s - Open "Add Opening" dialog
   const fillFormFrame = 180; // 6s - Fill form fields
-  const saveFrame = 240; // 8s - Click Save button
   const openingAppearsFrame = 300; // 10s - Opening appears on grid
 
   // Tab highlight

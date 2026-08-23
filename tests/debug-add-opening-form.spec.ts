@@ -39,7 +39,7 @@ test.describe('Debug Add Opening Form Issues', () => {
     // Inspect the form structure
     console.log('\n2️⃣  Inspecting form elements...');
     
-    const formHtml = await page.evaluate(() => {
+    const _formHtml = await page.evaluate(() => {
       const dialog = document.querySelector('dialog, [role="dialog"]');
       if (!dialog) return 'No dialog found';
       return dialog.innerHTML;

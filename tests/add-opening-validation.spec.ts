@@ -7,8 +7,8 @@ import { test, expect } from '@playwright/test';
  */
 
 test.describe('Add Opening Feature', () => {
-  const testUser = 'sdeqiu@gmail.com';
-  const testPassword = 'Soulreap1';
+  const _testUser = 'sdeqiu@gmail.com';
+  const _testPassword = 'Soulreap1';
 
   test('Cannot add opening with start date earlier than today', async ({ page }) => {
     // Navigate to calendar

@@ -1,8 +1,7 @@
 import { useMyInvites } from '@/hooks/useOrgWorkers';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
-import { Badge } from './ui/badge';
-import { Building2, Check, X, Loader2 } from 'lucide-react';
+import { Building2, Check, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 

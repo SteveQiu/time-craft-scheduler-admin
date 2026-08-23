@@ -69,7 +69,7 @@ test.describe('Create & Verify Multi-Date Openings', () => {
 
     // 6. Select days of week (let's select Mon-Wed)
     console.log('\n6️⃣  Selecting days of week...');
-    const dayButtons = await page.locator('button:has-text("Sun"), button:has-text("Mon"), button:has-text("Tue"), button:has-text("Wed"), button:has-text("Thu"), button:has-text("Fri"), button:has-text("Sat")').all();
+    const _dayButtons = await page.locator('button:has-text("Sun"), button:has-text("Mon"), button:has-text("Tue"), button:has-text("Wed"), button:has-text("Thu"), button:has-text("Fri"), button:has-text("Sat")').all();
     
     // Unselect all first by clicking any that are selected
     console.log('   Days selector found, leaving defaults (all selected)');

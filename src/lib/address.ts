@@ -93,7 +93,9 @@ export function parseLocation(raw: string | null | undefined): LocationFields {
       country: p.country || '',
       zip: p.zip || '',
     };
-  } catch {}
+  } catch {
+    // intentionally ignored: fall through to legacy freetext handling
+  }
   // Legacy freetext — put it in city
   return { address_line_1: '', address_line_2: '', city: raw, province: '', country: '', zip: '' };
 }

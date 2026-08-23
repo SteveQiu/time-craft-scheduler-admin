@@ -1,4 +1,4 @@
-import { chromium, expect } from '@playwright/test';
+import { chromium } from '@playwright/test';
 import fs from 'fs';
 import path from 'path';
 
@@ -70,7 +70,7 @@ import path from 'path';
     console.log('\n5️⃣  Counting initial openings...');
     
     // Look for opening cards - try multiple selectors
-    const openingCards = page.locator(
+    const _openingCards = page.locator(
       '[data-opening-id], [class*="opening"], [class*="slot"], button:has-text("Remove")'
     );
     let initialCount = 0;

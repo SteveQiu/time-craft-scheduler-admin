@@ -1,4 +1,6 @@
-import { test, expect, Page } from '@playwright/test';
+import { test, expect } from '@playwright/test';
+import fs from 'fs';
+import path from 'path';
 
 /**
  * Playwright tests for new issues:
@@ -26,7 +28,7 @@ test.describe('Issue 1: Circle Spinning Fix', () => {
 
     // Check that loading spinner is NOT visible after load completes
     const spinner = page.locator('.animate-spin, [data-testid="calendar-loading"]');
-    const isSpinning = await spinner.isVisible();
+    const _isSpinning = await spinner.isVisible();
 
     // Give it a moment more to be sure
     await page.waitForTimeout(1000);
@@ -67,10 +69,10 @@ test.describe('Issue 1: Circle Spinning Fix', () => {
     expect(mutationCount).toBeLessThan(50);
   });
 
-  test('acceptedWorkers should be memoized (stable reference)', async ({ page }) => {
+  test('acceptedWorkers should be memoized (stable reference)', async (_page) => {
     // Check that the fix was applied
-    const hookFile = require('fs').readFileSync(
-      require('path').join(process.cwd(), 'src/hooks/useOrgWorkers.tsx'),
+    const hookFile = fs.readFileSync(
+      path.join(process.cwd(), 'src/hooks/useOrgWorkers.tsx'),
       'utf-8'
     );
 
@@ -108,11 +110,11 @@ test.describe('Issue 2: No Openings Shown for Org Workers', () => {
     );
   });
 
-  test('Org mode should filter by acceptedWorkers (not all openings)', async ({ page }) => {
+  test('Org mode should filter by acceptedWorkers (not all openings)', async (_page) => {
     // This verifies the fix that prevents unfiltered queries
     
-    const calendarFile = require('fs').readFileSync(
-      require('path').join(process.cwd(), 'src/components/Calendar.tsx'),
+    const calendarFile = fs.readFileSync(
+      path.join(process.cwd(), 'src/components/Calendar.tsx'),
       'utf-8'
     );
 
@@ -125,13 +127,11 @@ test.describe('Issue 2: No Openings Shown for Org Workers', () => {
     console.log('✓ Org mode filtering is correctly implemented');
   });
 
-  test('Calendar should not show all openings when in org mode with no workers', async ({
-    page,
-  }) => {
+  test('Calendar should not show all openings when in org mode with no workers', async (_page) => {
     // Verify the code logic prevents showing all openings
     
-    const calendarFile = require('fs').readFileSync(
-      require('path').join(process.cwd(), 'src/components/Calendar.tsx'),
+    const calendarFile = fs.readFileSync(
+      path.join(process.cwd(), 'src/components/Calendar.tsx'),
       'utf-8'
     );
 
@@ -146,8 +146,8 @@ test.describe('Issue 2: No Openings Shown for Org Workers', () => {
 
 test.describe('Validation: Both Issues Fixed', () => {
   test('acceptedWorkers is memoized in useOrgWorkers', async () => {
-    const hookFile = require('fs').readFileSync(
-      require('path').join(process.cwd(), 'src/hooks/useOrgWorkers.tsx'),
+    const hookFile = fs.readFileSync(
+      path.join(process.cwd(), 'src/hooks/useOrgWorkers.tsx'),
       'utf-8'
     );
 
@@ -163,8 +163,8 @@ test.describe('Validation: Both Issues Fixed', () => {
   });
 
   test('Org mode handles empty workers list correctly', async () => {
-    const calendarFile = require('fs').readFileSync(
-      require('path').join(process.cwd(), 'src/components/Calendar.tsx'),
+    const calendarFile = fs.readFileSync(
+      path.join(process.cwd(), 'src/components/Calendar.tsx'),
       'utf-8'
     );
 

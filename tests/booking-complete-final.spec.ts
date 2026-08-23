@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 import fs from 'fs';
 
 test.describe('Complete Booking Flow - Fixed', () => {
@@ -97,7 +97,7 @@ test.describe('Complete Booking Flow - Fixed', () => {
       }
       
       // Look for elements specifically after the Workers heading
-      const workersHeadingParent = await workerHeading.evaluate(el => el.closest('[class*="space-y"]') || el.parentElement?.parentElement);
+      const _workersHeadingParent = await workerHeading.evaluate(el => el.closest('[class*="space-y"]') || el.parentElement?.parentElement);
       console.log('   Looking for cards in Workers parent container...');
       
       // Actually, let me find cards by their visual presence - look for all divs with text like "Rio"

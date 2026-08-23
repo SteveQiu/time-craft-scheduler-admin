@@ -60,7 +60,7 @@ Deno.serve(async (req) => {
       }
 
       // Call cancel function
-      const { data: success, error: cancelError } = await supabaseClient.rpc('cancel_account_deletion', {
+      const { data: _success, error: cancelError } = await supabaseClient.rpc('cancel_account_deletion', {
         _deletion_id: deletion_id,
       })
 

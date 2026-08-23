@@ -19,7 +19,6 @@ export const Step2Booking: React.FC<{ durationInFrames: number }> = ({
   const selectFrame = 120; // 4s - Select an opening
   const bookDialogFrame = 180; // 6s - Open booking dialog
   const fillContactFrame = 240; // 8s - Fill contact info
-  const confirmFrame = 300; // 10s - Click Confirm
   const confirmationFrame = 360; // 12s - Show confirmation screen
 
   // Opening cards fade in

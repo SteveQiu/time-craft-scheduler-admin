@@ -1,8 +1,8 @@
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 import * as fs from 'fs';
 import * as path from 'path';
 
-test('Reproduce booking error - simple direct flow', async ({ page, context }) => {
+test('Reproduce booking error - simple direct flow', async ({ page, _context }) => {
   // Create debug directory if it doesn't exist
   const debugDir = path.join(process.cwd(), 'debug');
   if (!fs.existsSync(debugDir)) {

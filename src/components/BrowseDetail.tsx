@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader } from './ui/card';
@@ -309,7 +309,7 @@ export function BrowseDetail({
                     <Button size="sm" disabled={isOwnProfile} onClick={async () => {
                       const { data: { user } } = await supabase.auth.getUser();
                       if (!user) {
-                        try { localStorage.setItem('pendingBookingOpeningId', slot.id); } catch {}
+                        try { localStorage.setItem('pendingBookingOpeningId', slot.id); } catch { /* intentionally ignored: localStorage unavailable */ }
                         toast.info('Please sign in to book this appointment.');
                         navigate(`/auth?returnTo=${encodeURIComponent(`/browse/${slot.user_id}`)}`);
                         return;

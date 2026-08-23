@@ -14,7 +14,9 @@ export function parseAddress(raw: string): AddressFields {
         zip: parsed.zip || '',
       };
     }
-  } catch {}
+  } catch {
+    // intentionally ignored: fall through to legacy freetext handling
+  }
   return { ...EMPTY_ADDRESS_FIELDS, address_line_1: raw };
 }
 

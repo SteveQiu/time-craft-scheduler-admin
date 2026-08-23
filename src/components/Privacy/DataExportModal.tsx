@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import {
   Dialog,
@@ -34,7 +33,6 @@ interface ExportJob {
 }
 
 export function DataExportModal({ open, onOpenChange }: DataExportModalProps) {
-  const { user } = useAuth();
   const { toast } = useToast();
   const [step, setStep] = useState<'select' | 'confirm' | 'processing' | 'ready'>('select');
   const [format, setFormat] = useState<ExportFormat>('json');

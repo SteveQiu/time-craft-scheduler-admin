@@ -1,4 +1,4 @@
-import { test, expect, Page } from '@playwright/test';
+import { test, Page } from '@playwright/test';
 import fs from 'fs';
 import path from 'path';
 
@@ -149,7 +149,9 @@ test.describe('Full Booking Lifecycle', () => {
             createdOpeningId = body[0].id;
             console.log('✓ Captured opening ID:', createdOpeningId);
           }
-        } catch {}
+        } catch {
+          // Ignore JSON parsing errors
+        }
       }
     });
     
@@ -248,7 +250,9 @@ test.describe('Full Booking Lifecycle', () => {
             createdAppointmentId = body[0].id;
             console.log('✓ Captured appointment ID:', createdAppointmentId);
           }
-        } catch {}
+        } catch {
+          // Ignore JSON parsing errors
+        }
       }
     });
     

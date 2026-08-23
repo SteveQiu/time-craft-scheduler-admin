@@ -36,7 +36,7 @@ export function useAppointments({ userId }: UseAppointmentsParams) {
       // Fetch contact info for all participants — direct query bypasses the email_public gate
       // so both sides of a confirmed appointment always see each other's contact details.
       const allContactIds = [...new Set([...bookerIds, ...providerIds])];
-      let contactMap = new Map<string, { email: string | null; phone: string | null }>();
+      const contactMap = new Map<string, { email: string | null; phone: string | null }>();
       if (allContactIds.length > 0) {
         const { data: contacts } = await supabase
           .rpc('get_appointment_contact_info', { profile_ids: allContactIds });

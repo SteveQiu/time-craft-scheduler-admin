@@ -47,7 +47,7 @@ export function PremiumUpgrade({ orgId, onSuccess }: PremiumUpgradeProps) {
 
   // Subscribe to subscription plan changes
   useEffect(() => {
-    let effectOrgId = orgId;
+    const effectOrgId = orgId;
     let unsubscribe: (() => void) | null = null;
 
     const setup = async () => {

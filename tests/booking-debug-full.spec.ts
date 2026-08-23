@@ -1,9 +1,8 @@
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 import fs from 'fs';
-import path from 'path';
 
 test.describe('Booking Debug - Capture Everything', () => {
-  test('should capture all network and console data during booking', async ({ page, context }, testInfo) => {
+  test('should capture all network and console data during booking', async ({ page, _context }, testInfo) => {
     // Set larger viewport
     page.setViewportSize({ width: 1400, height: 900 });
     

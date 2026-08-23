@@ -18,7 +18,6 @@ export const Step3Confirm: React.FC<{ durationInFrames: number }> = ({
   const navAppointmentsFrame = 60; // 2s - Navigate to Appointments tab
   const selectPendingFrame = 150; // 5s - Click on pending appointment
   const reviewDetailsFrame = 210; // 7s - Review details panel
-  const approveClickFrame = 300; // 10s - Click Approve button
   const statusChangeFrame = 360; // 12s - Status changes to Confirmed
 
   // Tab highlight

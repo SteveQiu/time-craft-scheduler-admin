@@ -58,12 +58,20 @@ test('Detailed Booking Error Capture', async ({ page }) => {
 
   console.log('1. Loading app...');
   await page.goto('http://localhost:8080/openings/f0927dd8-9e7d-4830-a6b5-c96a3c627fe9');
-  await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});
+  await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {
+    // Ignore timeout on networkidle
+  });
   await page.waitForTimeout(1000);
 
   console.log('2. Checking if signed in...');
-  const signInVisible = await page.locator('button:has-text("Sign In")').isVisible().catch(() => false);
-  const signOutVisible = await page.locator('button:has-text("Sign Out")').isVisible().catch(() => false);
+  const signInVisible = await page.locator('button:has-text("Sign In")').isVisible().catch(() => {
+    // Default to false if check fails
+    return false;
+  });
+  const signOutVisible = await page.locator('button:has-text("Sign Out")').isVisible().catch(() => {
+    // Default to false if check fails
+    return false;
+  });
 
   console.log('   Sign In button:', signInVisible);
   console.log('   Sign Out button:', signOutVisible);
@@ -109,7 +117,10 @@ test('Detailed Booking Error Capture', async ({ page }) => {
 
   console.log('4. Looking for confirmation dialog...');
   const confirmBtn = page.locator('button:has-text("Confirm")').first();
-  const confirmVisible = await confirmBtn.isVisible().catch(() => false);
+  const confirmVisible = await confirmBtn.isVisible().catch(() => {
+    // Default to false if check fails
+    return false;
+  });
 
   if (!confirmVisible) {
     console.log('   ❌ Confirm button not found');
@@ -157,8 +168,14 @@ test('Detailed Booking Error Capture', async ({ page }) => {
 
   // Check for error toast
   await page.waitForTimeout(500);
-  const errorToast = await page.locator('text=/failed|error/i').first().textContent().catch(() => null);
-  const successToast = await page.locator('text=success|booked|confirmed').first().textContent().catch(() => null);
+  const errorToast = await page.locator('text=/failed|error/i').first().textContent().catch(() => {
+    // Return null if element not found
+    return null;
+  });
+  const successToast = await page.locator('text=success|booked|confirmed').first().textContent().catch(() => {
+    // Return null if element not found
+    return null;
+  });
 
   console.log('\nError toast:', errorToast);
   console.log('Success toast:', successToast);

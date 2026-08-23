@@ -7,8 +7,8 @@ import {
   Audio,
   staticFile,
   Img,
+  Easing,
 } from "remotion";
-import { Easing } from "remotion";
 
 /**
  * Premium Product Demo Video
@@ -505,7 +505,7 @@ const FeatureCard = ({
 };
 
 // SlideA — Feature Highlights (120 frames / 4s)
-const SlideA_FeatureHighlights = ({ duration }: { duration: number }) => {
+const SlideA_FeatureHighlights = ({ duration: _duration }: { duration: number }) => {
   const frame = useCurrentFrame();
 
   const headlineOpacity = interpolate(frame, [0, 25], [0, 1], {
@@ -652,7 +652,7 @@ const StatCounter = ({
 };
 
 // SlideB — Social Proof / Stats (150 frames / 5s)
-const SlideB_SocialProof = ({ duration }: { duration: number }) => {
+const SlideB_SocialProof = ({ duration: _duration }: { duration: number }) => {
   const frame = useCurrentFrame();
 
   const stats = [
@@ -862,7 +862,7 @@ const PricingCard = ({
 };
 
 // SlideC — Pricing (150 frames / 5s)
-const SlideC_Pricing = ({ duration }: { duration: number }) => {
+const SlideC_Pricing = ({ duration: _duration }: { duration: number }) => {
   const frame = useCurrentFrame();
 
   return (

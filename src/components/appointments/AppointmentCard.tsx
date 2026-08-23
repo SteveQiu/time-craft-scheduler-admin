@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar, Clock, MapPin, Mail, Phone, User, FileImage, CalendarPlus, CreditCard, Flag, FlagOff, ShieldAlert, ShieldCheck } from 'lucide-react';
+import { Calendar, Clock, MapPin, Mail, Phone, User, FileImage, CalendarPlus, CreditCard, Flag, FlagOff } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -47,10 +47,10 @@ export function BookerInfo({
   appointment,
   navigate,
   isPremium,
-  canManage,
+  canManage: _canManage,
   flaggedCustomerIds,
-  onFlagCustomer,
-  onUnflagCustomer,
+  onFlagCustomer: _onFlagCustomer,
+  onUnflagCustomer: _onUnflagCustomer,
   attendanceStats,
 }: BookerInfoProps) {
   const bookerSlug = appointment.booker_slug;
@@ -158,9 +158,9 @@ export function AppointmentCard({
   onProviderViewProof,
   onPaymentInfo,
   navigate,
-  flaggedAppointmentIds,
-  onFlag,
-  onUnflag,
+  flaggedAppointmentIds: _flaggedAppointmentIds,
+  onFlag: _onFlag,
+  onUnflag: _onUnflag,
   flaggedCustomerIds,
   onFlagCustomer,
   onUnflagCustomer,

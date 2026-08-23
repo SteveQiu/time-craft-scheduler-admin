@@ -3,8 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Star, Edit, Trash2 } from 'lucide-react';
-import { PaymentMethodRecord } from '@/lib/payment/types';
-import { PaymentMethodType } from '@/lib/payment/types';
+import { PaymentMethodRecord, PaymentMethodType } from '@/lib/payment/types';
 import { getMethodLabel } from '@/lib/payment/methods';
 import { deserializeDetailsByType } from '@/lib/payment/serialization';
 

@@ -1,7 +1,7 @@
 import { test } from '@playwright/test';
 import fs from 'fs';
 
-test('Opening View - Full Flow: Sign In → Book', async ({ page, context }) => {
+test('Opening View - Full Flow: Sign In → Book', async ({ page }) => {
   const debugDir = 'debug/opening-full-flow';
   if (!fs.existsSync(debugDir)) {
     fs.mkdirSync(debugDir, { recursive: true });

@@ -183,7 +183,9 @@ export function useAppointmentActions({
             type: 'confirm',
           });
         }
-      } catch {}
+      } catch {
+        // intentionally ignored: skip this item and continue bulk approve
+      }
     }
     setSelectedIds(new Set());
     await handleMutationSuccess({
@@ -206,7 +208,9 @@ export function useAppointmentActions({
           _caller_id: user.id,
         });
         if (!error) successCount++;
-      } catch {}
+      } catch {
+        // intentionally ignored: skip this item and continue bulk cancel
+      }
     }
     setSelectedIds(new Set());
     await handleMutationSuccess({
@@ -239,7 +243,9 @@ export function useAppointmentActions({
             type: 'deny',
           });
         }
-      } catch {}
+      } catch {
+        // intentionally ignored: skip this item and continue bulk deny
+      }
     }
     setSelectedIds(new Set());
     await handleMutationSuccess({
@@ -265,7 +271,9 @@ export function useAppointmentActions({
           .update({ status: 'completed' })
           .eq('id', apt.id);
         if (!error) successCount++;
-      } catch {}
+      } catch {
+        // intentionally ignored: skip this item and continue bulk complete
+      }
     }
     setSelectedIds(new Set());
     await handleMutationSuccess({

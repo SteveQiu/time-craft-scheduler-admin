@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { PaymentMethodConfig, PaymentDetails } from '@/lib/payment/types';
-import { PaymentMethodType } from '@/lib/payment/types';
+import { PaymentMethodConfig, PaymentDetails, PaymentMethodType } from '@/lib/payment/types';
 import { compressImageFile } from '@/lib/payment/serialization';
 import { useToast } from '@/hooks/use-toast';
 

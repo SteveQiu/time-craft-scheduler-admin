@@ -12,8 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Plus, CreditCard } from 'lucide-react';
 import { PAYMENT_METHOD_CONFIGS, getMethodConfig } from '@/lib/payment/methods';
 import { deserializeDetailsByType } from '@/lib/payment/serialization';
-import { PaymentMethodRecord } from '@/lib/payment/types';
-import { PaymentMethodType } from '@/lib/payment/types';
+import { PaymentMethodRecord, PaymentMethodType } from '@/lib/payment/types';
 import { usePaymentMethod } from '@/hooks/usePaymentMethod';
 import { PaymentMethodForm } from '@/components/payment/PaymentMethodForm';
 import { PaymentMethodCard } from '@/components/payment/PaymentMethodCard';

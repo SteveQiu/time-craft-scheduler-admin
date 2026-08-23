@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Calendar, Users, Clock, DollarSign, TrendingUp, CheckCircle, Loader2, Star, ArrowRight } from 'lucide-react';
+import { Users, Clock, DollarSign, Loader2, Star, ArrowRight } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -82,7 +82,6 @@ export function Dashboard() {
 
   // Split by role (within range)
   const asProvider = rangedAppointments.filter(a => a.provider_id === user?.id);
-  const asBooker = rangedAppointments.filter(a => a.user_id === user?.id);
 
   // Upcoming (today and future, confirmed or pending) — always forward-looking within range
   const upcoming = rangedAppointments

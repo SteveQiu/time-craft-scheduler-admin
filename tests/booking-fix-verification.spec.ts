@@ -62,7 +62,7 @@ test.describe('Booking Fix Verification', () => {
     // Wait for Available Times section with OR fallback
     try {
       await page.locator('text=Available Times').waitFor({ timeout: 5000 });
-    } catch (e) {
+    } catch {
       console.log('Available Times still not found, checking page content...');
       // Check if times are in a scrollable container
       await page.evaluate(() => window.scrollBy(300, 0));

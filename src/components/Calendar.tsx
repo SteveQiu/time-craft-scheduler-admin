@@ -88,7 +88,9 @@ export function Calendar() {
         if (parsed.startTime) startTime = parsed.startTime;
         if (parsed.endTime) endTime = parsed.endTime;
       }
-    } catch {}
+    } catch {
+      // intentionally ignored: fall back to defaults if cached times are missing/invalid
+    }
     return {
     startTime, endTime: endTime, duration: 1, worker: '', service: '',
     locationFields: { address_line_1: '', address_line_2: '', city: '', province: '', country: '', zip: '' },
@@ -124,7 +126,7 @@ export function Calendar() {
   const {
     blockedOpenings, setBlockedOpenings, isBulkDeleting, safeIdsToDelete, setSafeIdsToDelete,
     showBulkDeleteConfirm, setShowBulkDeleteConfirm,
-    navigateMonth, openEditDialog, resetForm, addOpening, saveEditOpening,
+    navigateMonth, openEditDialog, addOpening, saveEditOpening,
     removeOpening, deleteSafeOpenings, handleBulkDelete,
   } = useCalendarActions({
     user, selectedDate, currentDate, setCurrentDate, newOpening, setNewOpening,

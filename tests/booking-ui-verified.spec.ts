@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 import * as fs from 'fs';
 
 // Read credentials from .secret
@@ -46,7 +46,7 @@ test('Complete booking flow - end to end', async ({ page, context }) => {
   console.log(`✅ Signed in as ${EMAIL}\n`);
   
   // Save auth state to file for reuse
-  const cookies = await context.cookies();
+  const _cookies = await context.cookies();
   const localStorage = await page.evaluate(() => {
     const items = {};
     for (let i = 0; i < window.localStorage.length; i++) {

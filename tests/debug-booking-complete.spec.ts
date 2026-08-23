@@ -24,7 +24,9 @@ test('Reproduce booking error - complete flow', async ({ page }) => {
           timestamp: new Date().toISOString()
         });
         console.log(`[Network] ${url.split('/').pop()} - ${response.status()}`);
-      } catch (e) {}
+      } catch {
+        // Ignore response parsing errors
+      }
     }
   });
 

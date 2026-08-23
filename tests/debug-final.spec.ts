@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -33,7 +33,9 @@ test('Reproduce booking error - final comprehensive test', async ({ page }, test
         if (response.status() >= 400) {
           console.log(`  ERROR RESPONSE: ${text.substring(0, 200)}`);
         }
-      } catch (e) {}
+      } catch {
+        // Ignore response parsing errors
+      }
     }
   });
 

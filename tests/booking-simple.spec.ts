@@ -1,7 +1,7 @@
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 
 test.describe('Booking - Simple End to End', () => {
-  test('should successfully book an opening', async ({ page, context }, testInfo) => {
+  test('should successfully book an opening', async ({ page, context }, _testInfo) => {
     // Set larger viewport to see all columns
     page.setViewportSize({ width: 1400, height: 900 });
     

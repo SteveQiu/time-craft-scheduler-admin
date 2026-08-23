@@ -86,7 +86,7 @@ test.describe('Validate All 10+ Openings in Org Calendar', () => {
     // 4. Verify each date by clicking and checking sidebar
     console.log('\n4️⃣  Verifying openings by clicking dates...');
     
-    let verifiedTotal = 0;
+    let _verifiedTotal = 0;
     for (const { date } of openingCounts.counts.slice(0, 5)) {
       try {
         // Click the date
@@ -100,11 +100,11 @@ test.describe('Validate All 10+ Openings in Org Calendar', () => {
           const match = sidebarText.match(/\((\d+)\)/);
           if (match) {
             const count = parseInt(match[1]);
-            verifiedTotal += count;
+            _verifiedTotal += count;
             console.log(`   April ${date}: ✅ ${count} opening(s) in sidebar`);
           }
         }
-      } catch (e) {
+      } catch {
         // Skip if can't click
       }
     }

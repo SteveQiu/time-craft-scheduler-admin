@@ -58,7 +58,7 @@ if (allOpenings && allOpenings.length > 0) {
 // Check browser code - does it pass undefined when user is not loaded?
 console.log('Potential Issue:')
 console.log('If user?.id is undefined when component first loads,')
-console.log('the query will use `.neq('user_id', undefined)`')
+console.log('the query will use `.neq(\'user_id\', undefined)`')
 console.log('which might return ALL openings (since no user_id is undefined)\n')
 
 console.log('✅ Solution: Verify user is loaded before running query')

@@ -21,7 +21,7 @@ export function ProfileAddress({
   selectedAddressId,
   onSelectedAddressChange,
   privacySettings,
-  onPrivacyChange,
+  onPrivacyChange: _onPrivacyChange,
   savedAddresses = [],
 }: ProfileAddressProps) {
   const selectedSavedAddress = savedAddresses.find((a) => a.id === selectedAddressId);

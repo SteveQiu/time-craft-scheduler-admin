@@ -1,7 +1,7 @@
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 
 test.describe('Booking Error Capture', () => {
-  test('capture exact booking error message', async ({ page, context }) => {
+  test('capture exact booking error message', async ({ page, _context }) => {
     // Listen to all console messages
     const consoleLogs: string[] = [];
     page.on('console', msg => {

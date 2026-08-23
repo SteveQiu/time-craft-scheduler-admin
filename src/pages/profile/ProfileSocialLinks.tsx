@@ -1,5 +1,4 @@
-import type { LucideIcon } from 'lucide-react';
-import { ExternalLink, Facebook, Instagram, Linkedin, Twitter, Youtube } from 'lucide-react';
+import { ExternalLink, Facebook, Instagram, Linkedin, Twitter, Youtube, type LucideIcon } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type { FormState, ProfileData, SocialLinks } from './types';

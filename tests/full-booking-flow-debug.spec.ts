@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 import * as fs from 'fs';
 
 // Read credentials
@@ -160,7 +160,7 @@ test('Complete booking flow with detailed debugging', async ({ page }) => {
           break;
         }
       }
-    } catch (e) {
+    } catch {
       // Ignore errors when checking individual buttons
     }
   }
@@ -182,7 +182,7 @@ test('Complete booking flow with detailed debugging', async ({ page }) => {
     console.log(`   Clicking time: ${timeText}`);
     await timeButtons.first().click();
     await page.waitForTimeout(500);
-    timeClicked = true;
+    // _timeClicked = true;
     console.log('✅ Time slot selected\n');
   } else {
     console.log('⚠️  No time slot buttons found - may be hidden\n');

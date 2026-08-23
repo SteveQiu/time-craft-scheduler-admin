@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 import * as fs from 'fs';
 
 // Read credentials
@@ -21,7 +21,7 @@ const PROVIDER_ID = 'f0927dd8-9e7d-4830-a6b5-c96a3c627fe9';
 const EMAIL = secret.TESTER1_EMAIL;
 const PASSWORD = secret.TESTER1_PASSWORD1;
 
-test('Booking flow - capture exact error', async ({ page, context }) => {
+test('Booking flow - capture exact error', async ({ page, _context }) => {
   console.log('\n\n╔════════════════════════════════════════════════════════════╗');
   console.log('║         BOOKING FLOW - CAPTURE EXACT ERROR                ║');
   console.log('╚════════════════════════════════════════════════════════════╝\n');

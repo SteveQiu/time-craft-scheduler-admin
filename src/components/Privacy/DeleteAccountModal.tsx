@@ -32,13 +32,11 @@ export function DeleteAccountModal({ open, onOpenChange }: DeleteAccountModalPro
     noUndo: false,
     dataLoss: false,
   });
-  const [deletionScheduled, setDeletionScheduled] = useState(false);
 
   const resetModal = () => {
     setStep('warning');
     setPassword('');
     setConfirmations({ understand: false, noUndo: false, dataLoss: false });
-    setDeletionScheduled(false);
   };
 
   const verifyPassword = useMutation({
@@ -69,7 +67,6 @@ export function DeleteAccountModal({ open, onOpenChange }: DeleteAccountModalPro
       if (error) throw error;
     },
     onSuccess: () => {
-      setDeletionScheduled(true);
       setStep('success');
     },
     onError: (error: Error) => {
