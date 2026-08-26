@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/config/routes';
 import { APP_NAME } from '@/config/app';
@@ -13,8 +13,6 @@ import { COUNTRIES, PROVINCES_BY_COUNTRY } from '@/lib/address';
 // landing.css is loaded globally via index.html — no import needed here
 
 // ─── constants ───────────────────────────────────────────────────────
-const ROTATING_TERMS = ['a technician', 'a tutor', 'a barber', 'a trainer', 'a cleaner'];
-const ROTATION_INTERVAL_MS = 2800;
 
 const CATEGORY_PILLS = [
   { label: 'Technicians', icon: Wrench },
@@ -136,35 +134,6 @@ const TESTIMONIALS = [
 
 // ─── sub-components (file-level, not nested) ────────────────────────
 
-function RotatingTerm() {
-  const [index, setIndex] = useState(0);
-  const [visible, setVisible] = useState(true);
-
-  useEffect(() => {
-    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (prefersReduced) return;
-
-    const id = setInterval(() => {
-      setVisible(false);
-      setTimeout(() => {
-        setIndex(prev => (prev + 1) % ROTATING_TERMS.length);
-        setVisible(true);
-      }, 300);
-    }, ROTATION_INTERVAL_MS);
-    return () => clearInterval(id);
-  }, []);
-
-  return (
-    <span
-      className="lp-rotating-term"
-      style={{ opacity: visible ? 1 : 0 }}
-      aria-live="polite"
-    >
-      {ROTATING_TERMS[index]}
-    </span>
-  );
-}
-
 function AppointmentMockup() {
   return (
     <div className="lp-mockup" aria-hidden="true">
@@ -248,11 +217,11 @@ export function LandingPage() {
         <section className="lp-hero" aria-labelledby="hero-heading">
           <div className="lp-hero-inner">
             <h1 id="hero-heading" className="lp-h1">
-              Book <RotatingTerm /><br />near you.
+              Book local service professionals near you.
             </h1>
 
             <p className="lp-hero-sub">
-              {APP_NAME} is where your neighbourhood gets things done. Find a pro, see their real availability, and book on the spot.
+              Search barbers, tutors, trainers, cleaners, and more. Browse real-time availability from trusted local pros and book your appointment in seconds.
             </p>
 
             {/* Search bar */}

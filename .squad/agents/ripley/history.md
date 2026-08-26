@@ -7,6 +7,18 @@
 **Joined:** 2026-05-08 (replaced Dallas)
 **Requested by:** SteveQiu
 
+## Landing hero static copy + SEO metadata (2026-08-26)
+
+**Task:** Remove rotating H1 term, replace with stable SEO-friendly copy; update index.html metadata.
+
+**Files modified:**
+- `src/pages/LandingPage.tsx` — removed `ROTATING_TERMS`, `ROTATION_INTERVAL_MS`, `RotatingTerm` component (state+effect); H1 now static: "Book local service professionals near you."; subtitle improved to mention service categories and real-time availability. Removed `useEffect` from import.
+- `index.html` — replaced Lovable placeholder title/description/author/OG/Twitter tags; updated static fallback H1 and subtitle to match React copy exactly; removed `og:image`, `twitter:site`, `twitter:image` (no project-owned assets to replace).
+
+**Pattern:** SEO-critical above-fold H1 must be static. Keep `index.html` static fallback and hydrated React copy identical to prevent flash/drift.
+
+**Build gate:** `npx tsc --noEmit` → 0 errors. `npm run build` → exit 0.
+
 ## Appointments org-mode merge (2026-06-04)
 
 **Task:** Remove appointments org-mode split and unify `/appointments` + `/appointments?mode=org`.
