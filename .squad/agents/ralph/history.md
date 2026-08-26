@@ -814,3 +814,23 @@ Evidence:
 **Evidence:** `node scripts\snapshot-appointments.cjs` rendered `/appointments` non-blank (`Text: PikAppoint ... Reservations ... No active appointments`). Browse screenshot: `tmp-snapshots\tester3-browse-bc-active-listing-2026-07-03T01-00-38-452Z.png`. Browse text showed `7 providers`, `PikAppoint ... 20 available slots`, `Andy Lau ... 43 available slots`, plus featured cards `Yu Feng`, `Aurora`, `Seed` with subtitle `Featured listing` and no `available slots` line on those cards.
 
 **Note:** Expected data mentioned Steve + Minnie Mai too, but DOM text only showed Yu Feng, Aurora, Seed as featured cards in this run; provider count label still showed `7 providers`.
+
+## 2026-08-26 — Landing Hero + SEO QA
+
+**Verdict:** PASS.
+
+**Evidence:**
+- 
+px tsc --noEmit exit 0.
+- 
+pm run build exit 0 (LandingPage-Bv2rcn1f.js built).
+- 
+ode scripts/snapshot-appointments.cjs exit 0; TESTER3 /appointments non-blank; no PAGE ERROR.
+- Landing H1 t=0: Book local service professionals near you. ✅
+- Landing H1 t=4500ms: Book local service professionals near you. (stable, no rotation) ✅
+- Support copy: Search barbers, tutors, trainers, cleaners, and more. Browse real-time availability from trusted local pros and book your appointment in seconds. ✅
+- Document title: PikAppoint — Book Local Service Professionals Near You ✅
+- Page errors: none. Console errors: none.
+- Screenshots: 	mp-snapshots/landing-t0.png, 	mp-snapshots/landing-t4500.png.
+
+**Pattern:** For unauthenticated / landing page checks, write a temp 	mp-landing-qa.cjs in project root (never staged). Use p.lp-hero-sub selector for support copy; wait 4500ms (>old 2800ms rotation) to prove stability.
