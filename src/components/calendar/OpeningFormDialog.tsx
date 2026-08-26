@@ -1,6 +1,6 @@
 import React from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Button } from '../ui/button';
 import { Label } from '../ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
@@ -17,6 +17,7 @@ import type { LocationFields } from '@/lib/address';
 import { OpeningTimeSlotsSection } from './OpeningTimeSlotsSection';
 import { OpeningDateRangeSection } from './OpeningDateRangeSection';
 import { OpeningPaymentSection } from './OpeningPaymentSection';
+import { OpeningWeekdaySection } from './OpeningWeekdaySection';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -66,7 +67,9 @@ interface OpeningFormDialogProps {
   getResourceRate: (name: string) => number;
   savedAddresses: any[];
   providerPaymentMethods: { id: string; label: string; type: string }[];
-  addOpening: () => Promise<void>;
+  addOpening?: () => Promise<void>;
+  automatic?: boolean;
+  saveAutomaticSchedule?: () => Promise<boolean>;
   setShowPaymentDialog: (show: boolean) => void;
   setPaymentFormLabel: (label: string) => void;
   setPaymentFormType: (type: string) => void;
@@ -92,6 +95,8 @@ export function OpeningFormDialog({
   savedAddresses,
   providerPaymentMethods,
   addOpening,
+  automatic = false,
+  saveAutomaticSchedule,
   setShowPaymentDialog,
   setPaymentFormLabel,
   setPaymentFormType,
@@ -142,10 +147,23 @@ export function OpeningFormDialog({
     <Dialog open={showAddOpening} onOpenChange={(open) => { setShowAddOpening(open); if (!open) setSaveAsCustom(false); }}>
       <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Add Opening for {selectedDate.toLocaleDateString()}</DialogTitle>
+          <DialogTitle>
+            {automatic ? 'Create Automatic Schedule' : `Add Opening for ${selectedDate.toLocaleDateString()}`}
+          </DialogTitle>
+          <DialogDescription>
+            {automatic
+              ? 'Save a recurring template that automatically creates slots up to one month ahead when you sign in.'
+              : 'Configure the time, service, location, rate, and payment options for this opening.'}
+          </DialogDescription>
         </DialogHeader>
         {errors.date && <p className="text-sm text-destructive">{errors.date}</p>}
         <div className="space-y-4 pt-4">
+          {automatic && (
+            <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 text-sm text-muted-foreground">
+              Each time you sign in, PikAppoint recreates missing slots from this template and keeps your schedule filled through one month from that day.
+            </div>
+          )}
+
           <div className="flex items-center space-x-2">
             <Switch
               checked={newOpening.multipleSlots}
@@ -157,15 +175,17 @@ export function OpeningFormDialog({
             <Label>Create multiple time slots</Label>
           </div>
 
-          <div className="flex items-center space-x-2">
-            <Switch
-              checked={newOpening.multipleDates}
-              onCheckedChange={(checked) => {
-                setNewOpening({ ...newOpening, multipleDates: checked });
-              }}
-            />
-            <Label>Create multiple date slots</Label>
-          </div>
+          {!automatic && (
+            <div className="flex items-center space-x-2">
+              <Switch
+                checked={newOpening.multipleDates}
+                onCheckedChange={(checked) => {
+                  setNewOpening({ ...newOpening, multipleDates: checked });
+                }}
+              />
+              <Label>Create multiple date slots</Label>
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="startTime">Start Time</Label>
@@ -195,7 +215,13 @@ export function OpeningFormDialog({
             setErrors={setErrors}
           />
 
-          {newOpening.multipleDates && (
+          {automatic ? (
+            <OpeningWeekdaySection
+              newOpening={newOpening}
+              setNewOpening={setNewOpening}
+              error={errors.weekdays}
+            />
+          ) : newOpening.multipleDates ? (
             <OpeningDateRangeSection
               newOpening={newOpening}
               setNewOpening={setNewOpening}
@@ -203,7 +229,7 @@ export function OpeningFormDialog({
               setErrors={setErrors}
               isPremium={isPremium}
             />
-          )}
+          ) : null}
 
           <div className="space-y-2">
               <Label htmlFor="worker">Resource</Label>
@@ -250,7 +276,7 @@ export function OpeningFormDialog({
                   ))}
                   <SelectItem value="__add_new__">
                     <span className="flex items-center gap-1 text-muted-foreground">
-                      <Plus className="h-3 w-3" /> Add Service
+                      <Plus className="h-3 w-3" aria-hidden="true" /> Add Service
                     </span>
                   </SelectItem>
                 </SelectContent>
@@ -436,13 +462,17 @@ export function OpeningFormDialog({
               Cancel
             </Button>
             <Button onClick={async () => {
-              await addOpening();
-              if (saveAsCustom && onSaveCustomAddress) {
+              const saved = automatic
+                ? await saveAutomaticSchedule?.()
+                : (await addOpening?.(), true);
+              if (saved && saveAsCustom && onSaveCustomAddress) {
                 onSaveCustomAddress(customLabel, newOpening.locationFields);
                 setSaveAsCustom(false);
               }
             }} disabled={loading || !user}>
-              {loading ? 'Adding...' : 'Add Opening'}
+              {loading
+                ? (automatic ? 'Saving...' : 'Adding...')
+                : (automatic ? 'Save Automatic Schedule' : 'Add Opening')}
             </Button>
           </div>
         </div>

@@ -193,7 +193,7 @@ export function PremiumUpgrade({ orgId, onSuccess }: PremiumUpgradeProps) {
                 <li>✓ Priority support</li>
                 <li>✓ Custom branding</li>
                 <li>✓ Extended booking history</li>
-                <li>✓ Opening end dates up to 3 months out</li>
+                <li>✓ Opening end dates up to 1 year out</li>
               </ul>
             </div>
 

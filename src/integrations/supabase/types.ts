@@ -148,6 +148,81 @@ export type Database = {
           },
         ]
       }
+      automatic_opening_templates: {
+        Row: {
+          accepted_payment_method_ids: string[] | null
+          created_at: string
+          duration: number
+          end_time: string | null
+          hourly_rate: number
+          id: string
+          interval_hours: number
+          is_active: boolean
+          location: string
+          multiple_slots: boolean
+          service: string
+          start_time: string
+          total: number
+          updated_at: string
+          user_id: string
+          weekdays: number[]
+          worker: string
+        }
+        Insert: {
+          accepted_payment_method_ids?: string[] | null
+          created_at?: string
+          duration: number
+          end_time?: string | null
+          hourly_rate?: number
+          id?: string
+          interval_hours: number
+          is_active?: boolean
+          location: string
+          multiple_slots?: boolean
+          service: string
+          start_time: string
+          total?: number
+          updated_at?: string
+          user_id: string
+          weekdays: number[]
+          worker: string
+        }
+        Update: {
+          accepted_payment_method_ids?: string[] | null
+          created_at?: string
+          duration?: number
+          end_time?: string | null
+          hourly_rate?: number
+          id?: string
+          interval_hours?: number
+          is_active?: boolean
+          location?: string
+          multiple_slots?: boolean
+          service?: string
+          start_time?: string
+          total?: number
+          updated_at?: string
+          user_id?: string
+          weekdays?: number[]
+          worker?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "automatic_opening_templates_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "automatic_opening_templates_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_events: {
         Row: {
           actor_id: string | null
@@ -238,6 +313,7 @@ export type Database = {
       openings: {
         Row: {
           accepted_payment_method_ids: string[] | null
+          automatic_template_id: string | null
           created_at: string
           date: string
           duration: number
@@ -255,6 +331,7 @@ export type Database = {
         }
         Insert: {
           accepted_payment_method_ids?: string[] | null
+          automatic_template_id?: string | null
           created_at?: string
           date: string
           duration: number
@@ -272,6 +349,7 @@ export type Database = {
         }
         Update: {
           accepted_payment_method_ids?: string[] | null
+          automatic_template_id?: string | null
           created_at?: string
           date?: string
           duration?: number
@@ -288,6 +366,13 @@ export type Database = {
           worker?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "openings_automatic_template_id_fkey"
+            columns: ["automatic_template_id"]
+            isOneToOne: false
+            referencedRelation: "automatic_opening_templates"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "openings_user_id_fkey"
             columns: ["user_id"]
@@ -1000,6 +1085,24 @@ export type Database = {
         Returns: boolean
       }
       is_user_premium: { Args: { p_user_id: string }; Returns: boolean }
+      save_automatic_opening_schedule: {
+        Args: {
+          p_accepted_payment_method_ids: string[] | null
+          p_duration: number
+          p_end_time: string | null
+          p_hourly_rate: number
+          p_interval_hours: number
+          p_location: string
+          p_multiple_slots: boolean
+          p_service: string
+          p_start_time: string
+          p_template_id: string | null
+          p_total: number
+          p_weekdays: number[]
+          p_worker: string
+        }
+        Returns: number
+      }
       is_worker_of: {
         Args: { _org_id: string; _user_id: string }
         Returns: boolean
@@ -1016,6 +1119,7 @@ export type Database = {
         Returns: undefined
       }
       mark_notifications_read: { Args: never; Returns: undefined }
+      maintain_automatic_openings: { Args: never; Returns: number }
       modify_appointment: {
         Args: {
           _appointment_id: string

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import type { Opening } from '@/components/calendar/types';
@@ -12,7 +12,7 @@ export function useCalendarOpenings({ user }: UseCalendarOpeningsParams) {
   const [loading, setLoading] = useState(false);
   const [confirmedOpeningIds, setConfirmedOpeningIds] = useState<Set<string>>(new Set());
 
-  const loadOpeningsForMonth = async (currentDate: Date) => {
+  const loadOpeningsForMonth = useCallback(async (currentDate: Date) => {
     if (!currentDate || !user) return;
     try {
       setLoading(true);
@@ -55,7 +55,7 @@ export function useCalendarOpenings({ user }: UseCalendarOpeningsParams) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
   return {
     openings,

@@ -18,6 +18,7 @@ interface CalendarGridProps {
   setSelectedOpeningIds: React.Dispatch<React.SetStateAction<Set<string>>>;
   loading: boolean;
   openings: Opening[];
+  isPremium: boolean;
   navigateMonth: (direction: 'prev' | 'next') => void;
 }
 
@@ -28,6 +29,7 @@ export function CalendarGrid({
   setSelectedOpeningIds,
   loading,
   openings,
+  isPremium,
   navigateMonth,
 }: CalendarGridProps) {
   const getOpeningsForDate = (date: Date) => {
@@ -77,7 +79,7 @@ export function CalendarGrid({
           <div className="grid grid-cols-7 gap-2">
             {getDaysInMonth(currentDate).map((date, index) => {
               const openingCount = date ? getOpeningsForDate(date).length : 0;
-              const disabled = isDisabledDate(date);
+              const disabled = isDisabledDate(date, isPremium);
               return (
                 <div
                   key={index}

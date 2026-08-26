@@ -114,7 +114,7 @@ const PRICING_PLANS = [
       'Everything in Free',
       'Premium badge on your listing',
       'Up to 100 profile photos',
-      'Openings up to 3 months ahead',
+      'Openings up to 1 year ahead',
       'Custom Inquiry — clients contact you directly',
       'Active Listing — featured in Browse for ongoing visibility',
       'Booker attendance stats & no-show flagging',

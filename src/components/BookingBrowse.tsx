@@ -126,18 +126,18 @@ export function ProviderBrowseCard({
     return Math.abs(hash) % gradients.length;
   }, [provider.user_id, gradients.length]);
 
-  // Single source of truth for the "custom inquiry" state — used for label, dot color, and badge.
+  // Featured listings without slots still accept custom inquiries.
   const isCustom = showFeaturedListing || provider.is_custom_inquiry;
 
-  const availabilityLabel = isCustom
-    ? 'Custom inquiry'
-    : provider.opening_count > 0
-      ? `${provider.opening_count} slot${provider.opening_count !== 1 ? 's' : ''} available`
+  const availabilityLabel = provider.opening_count > 0
+    ? `${provider.opening_count} slot${provider.opening_count !== 1 ? 's' : ''} available`
+    : isCustom
+      ? 'Custom inquiry'
       : 'No openings';
-  const dotColor = isCustom
-    ? 'bg-sky-500'
-    : provider.opening_count > 0
-      ? 'bg-emerald-500'
+  const dotColor = provider.opening_count > 0
+    ? 'bg-emerald-500'
+    : isCustom
+      ? 'bg-sky-500'
       : 'bg-gray-400';
   const stripeSrc = resolveProviderPhotoUrl(provider);
 
@@ -232,17 +232,21 @@ export function ProviderBrowseCard({
         {/* 2. Provider name */}
         <p className="text-xs text-muted-foreground mb-2">{provider.provider_name}</p>
 
-        {/* 3. Status badge + location */}
-        <span
-          className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${
-            isCustom
-              ? 'bg-sky-50 text-[#1a7fba] dark:bg-sky-950 dark:text-sky-300'
-              : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'
-          }`}
-        >
-          <CheckCircle className="h-3 w-3" aria-hidden="true" />
-          {showFeaturedListing ? 'Active listing' : provider.is_custom_inquiry ? 'Custom inquiry' : 'Available for booking'}
-        </span>
+        {/* 3. Status badges + location */}
+        <div className="flex flex-wrap gap-1.5">
+          {isCustom && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-sky-50 px-2.5 py-0.5 text-xs font-medium text-[#1a7fba] dark:bg-sky-950 dark:text-sky-300">
+              <CheckCircle className="h-3 w-3" aria-hidden="true" />
+              {showFeaturedListing ? 'Active listing' : 'Custom inquiry'}
+            </span>
+          )}
+          {provider.opening_count > 0 && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
+              <CheckCircle className="h-3 w-3" aria-hidden="true" />
+              Available for booking
+            </span>
+          )}
+        </div>
         <div className="mt-2 flex items-center gap-1 text-xs text-muted-foreground/50">
           <MapPin className="h-3 w-3 shrink-0" aria-hidden="true" />
           N/A

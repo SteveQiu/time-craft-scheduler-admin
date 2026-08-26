@@ -23,6 +23,7 @@ import { RealtimeInvalidator } from "@/components/RealtimeInvalidator";
 import { usePaymentNotifications } from "@/hooks/usePaymentNotifications";
 import { readLocationPreference, fetchLocationPreference } from "@/lib/locationPreference";
 import { LocationSetupScreen } from "@/components/LocationSetupScreen";
+import { AutomaticScheduleWatcher } from "@/components/AutomaticScheduleWatcher";
 
 // Lazy — loaded on first navigation
 const Calendar = lazy(() => import("@/components/Calendar").then(m => ({ default: m.Calendar })));
@@ -180,6 +181,7 @@ function AppContent() {
   return (
     <>
       <PaymentNotificationWatcher />
+      <AutomaticScheduleWatcher />
       <RealtimeInvalidator />
       <div className="w-full h-screen flex flex-col">
         <header className="md:hidden sticky top-0 z-50 bg-background border-b">

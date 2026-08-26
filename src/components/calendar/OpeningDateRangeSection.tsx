@@ -1,8 +1,10 @@
 import React from 'react';
-import { addMonths, format } from 'date-fns';
+import { format } from 'date-fns';
 import { Label } from '../ui/label';
 import { Input } from '../ui/input';
 import type { NewOpeningForm } from './types';
+import { OpeningWeekdaySection } from './OpeningWeekdaySection';
+import { getOpeningDateLimit } from './calendarUtils';
 
 interface OpeningDateRangeSectionProps {
   newOpening: NewOpeningForm;
@@ -20,8 +22,8 @@ export function OpeningDateRangeSection({
   isPremium,
 }: OpeningDateRangeSectionProps) {
   const today = format(new Date(), 'yyyy-MM-dd');
-  const maxStartDate = format(addMonths(new Date(), 1), 'yyyy-MM-dd');
-  const maxEndDate = format(addMonths(new Date(), isPremium ? 3 : 1), 'yyyy-MM-dd');
+  const maxStartDate = format(getOpeningDateLimit(isPremium), 'yyyy-MM-dd');
+  const maxEndDate = format(getOpeningDateLimit(isPremium), 'yyyy-MM-dd');
 
   return (
     <>
@@ -55,30 +57,11 @@ export function OpeningDateRangeSection({
         {errors.dateRangeEnd && <p className="text-sm text-destructive">{errors.dateRangeEnd}</p>}
       </div>
 
-      <div className="space-y-2">
-        <Label>Days of Week</Label>
-        <div className="grid grid-cols-4 gap-2">
-          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, index) => (
-            <button
-              key={index}
-              type="button"
-              onClick={() => {
-                const newWeekdays = new Set(newOpening.weekdays);
-                if (newWeekdays.has(index)) newWeekdays.delete(index);
-                else newWeekdays.add(index);
-                setNewOpening({ ...newOpening, weekdays: newWeekdays });
-              }}
-              className={`px-2 py-1 rounded text-sm font-medium transition-colors ${
-                newOpening.weekdays.has(index)
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-secondary text-secondary-foreground hover:bg-accent'
-              }`}
-            >
-              {day}
-            </button>
-          ))}
-        </div>
-      </div>
+      <OpeningWeekdaySection
+        newOpening={newOpening}
+        setNewOpening={setNewOpening}
+        error={errors.weekdays}
+      />
     </>
   );
 }

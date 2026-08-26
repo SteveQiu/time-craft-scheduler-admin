@@ -56,17 +56,19 @@ export const isSameDate = (date1: Date | null, date2: Date): boolean => {
   return date1.toDateString() === date2.toDateString();
 };
 
-export const getDateBounds = () => {
+export const getOpeningDateLimit = (isPremium: boolean, fromDate = new Date()): Date =>
+  addMonths(fromDate, isPremium ? 12 : 1);
+
+export const getDateBounds = (isPremium: boolean) => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const maxDate = new Date(today);
-  maxDate.setMonth(maxDate.getMonth() + 2);
+  const maxDate = getOpeningDateLimit(isPremium, today);
   return { minDate: today, maxDate };
 };
 
-export const isDisabledDate = (date: Date | null): boolean => {
+export const isDisabledDate = (date: Date | null, isPremium: boolean): boolean => {
   if (!date) return false;
-  const { minDate, maxDate } = getDateBounds();
+  const { minDate, maxDate } = getDateBounds(isPremium);
   const d = new Date(date);
   d.setHours(0, 0, 0, 0);
   return d < minDate || d > maxDate;
@@ -96,6 +98,11 @@ export const generateDurationOptions = (): { value: number; label: string }[] =>
     options.push({ value: hours, label });
   }
   return options;
+};
+
+export const parseDateInput = (value: string): Date => {
+  const [year, month, day] = value.split('-').map(Number);
+  return new Date(year, month - 1, day);
 };
 
 export const validateOpeningForm = (
@@ -145,29 +152,31 @@ export const validateOpeningForm = (
   today.setHours(0, 0, 0, 0);
 
   if (newOpening.multipleDates && newOpening.dateRangeStart) {
-    const startDate = new Date(newOpening.dateRangeStart);
-    startDate.setHours(0, 0, 0, 0);
+    const startDate = parseDateInput(newOpening.dateRangeStart);
     if (startDate < today) {
       newErrors.dateRangeStart = 'Start date cannot be earlier than today';
     }
   }
 
   if (newOpening.multipleDates && newOpening.dateRangeStart && newOpening.dateRangeEnd) {
-    const startDate = new Date(newOpening.dateRangeStart);
-    const endDate = new Date(newOpening.dateRangeEnd);
-    const maxEndDate = addMonths(today, isPremium ? 3 : 1);
+    const startDate = parseDateInput(newOpening.dateRangeStart);
+    const endDate = parseDateInput(newOpening.dateRangeEnd);
+    const maxEndDate = getOpeningDateLimit(isPremium, today);
     if (startDate > endDate) {
       newErrors.dateRangeEnd = 'End date must be after start date';
     } else if (endDate > maxEndDate) {
-      newErrors.dateRangeEnd = `End date cannot be later than ${isPremium ? '3 months' : '1 month'} from today`;
+      newErrors.dateRangeEnd = `End date cannot be later than ${isPremium ? '1 year' : '1 month'} from today`;
     }
   }
 
   if (!newOpening.multipleDates) {
     const selectedDateOnly = new Date(selectedDate);
     selectedDateOnly.setHours(0, 0, 0, 0);
+    const maxDate = getOpeningDateLimit(isPremium, today);
     if (selectedDateOnly < today) {
       newErrors.date = 'Cannot add openings to past dates';
+    } else if (selectedDateOnly > maxDate) {
+      newErrors.date = `Opening date cannot be later than ${isPremium ? '1 year' : '1 month'} from today`;
     }
   }
 
@@ -180,6 +189,44 @@ export const validateOpeningForm = (
     newErrors.startTime = 'Invalid time format';
   }
 
+  if (newOpening.multipleSlots && newOpening.endTime && !timeRegex.test(newOpening.endTime)) {
+    newErrors.endTime = 'Invalid time format';
+  }
+
+  return newErrors;
+};
+
+export const validateAutomaticScheduleForm = (
+  newOpening: NewOpeningForm,
+): { [key: string]: string } => {
+  const newErrors: { [key: string]: string } = {};
+
+  if (!newOpening.startTime) newErrors.startTime = 'Start time is required';
+  if (!newOpening.worker) newErrors.worker = 'Resource selection is required';
+  if (!newOpening.service) newErrors.service = 'Service selection is required';
+  if (!newOpening.locationFields.city.trim()) newErrors.location = 'City is required';
+  if (newOpening.duration <= 0) newErrors.duration = 'Duration must be greater than 0';
+  if (newOpening.weekdays.size === 0) newErrors.weekdays = 'At least one day must be selected';
+
+  if (newOpening.multipleSlots) {
+    if (newOpening.interval <= 0) newErrors.interval = 'Interval must be greater than 0';
+    if (!newOpening.endTime) newErrors.endTime = 'End time is required for multiple slots';
+    if (newOpening.endTime && parseTime(newOpening.endTime) <= parseTime(newOpening.startTime)) {
+      newErrors.endTime = 'End time must be after start time';
+    } else if (
+      newOpening.endTime
+      && parseTime(newOpening.startTime) + newOpening.interval * 60 > parseTime(newOpening.endTime)
+    ) {
+      newErrors.interval = 'Interval must fit within the selected time range';
+    }
+  } else if (parseTime(newOpening.startTime) + newOpening.duration * 60 >= 24 * 60) {
+    newErrors.duration = 'Opening must end before midnight';
+  }
+
+  const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+  if (newOpening.startTime && !timeRegex.test(newOpening.startTime)) {
+    newErrors.startTime = 'Invalid time format';
+  }
   if (newOpening.multipleSlots && newOpening.endTime && !timeRegex.test(newOpening.endTime)) {
     newErrors.endTime = 'Invalid time format';
   }
@@ -280,4 +327,3 @@ export function generateOpeningRecords({
     }],
   };
 }
-
