@@ -1,9 +1,10 @@
+import { requireTestSecret } from './testCredentials.js';
 import { test, expect, Page } from '@playwright/test';
 
 const BASE = 'http://localhost:8080';
 // TESTER3 = org/provider user (sdeqiu@gmail.com)
 const EMAIL = 'sdeqiu@gmail.com';
-const PASSWORD = 'Soulreap1';
+const PASSWORD = requireTestSecret('TESTER3_PASSWORD1');
 
 const APPT_CARD = '.shadow-soft.cursor-pointer';
 

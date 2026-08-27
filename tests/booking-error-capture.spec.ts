@@ -1,3 +1,4 @@
+import { requireTestSecret } from './testCredentials.js';
 import { test } from '@playwright/test';
 
 test.describe('Booking Error Capture', () => {
@@ -34,7 +35,7 @@ test.describe('Booking Error Capture', () => {
     
     // Sign in with credentials from .secret
     await page.fill('input[type="email"]', 'aaa@aaa.com');
-    await page.fill('input[type="password"]', 'aaaaaa');
+    await page.fill('input[type="password"]', requireTestSecret('TESTER1_PASSWORD1'));
     await page.click('button:has-text("Sign In")');
     
     // Wait for auth

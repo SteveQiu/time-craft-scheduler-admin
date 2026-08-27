@@ -1,3 +1,4 @@
+import { requireTestSecret } from './testCredentials.js';
 import { chromium } from '@playwright/test';
 import fs from 'fs';
 import path from 'path';
@@ -5,7 +6,7 @@ import path from 'path';
 /**
  * Debug Script: Test org calendar showing openings
  * 
- * Credentials: sdeqiu@gmail.com / Soulreap1
+ * Credentials: loaded from the ignored .secret file
  * 
  * Steps:
  * 1. Login with sdeqiu account
@@ -39,7 +40,7 @@ import path from 'path';
     if (!currentUrl.includes('/calendar') && !currentUrl.includes('/dashboard')) {
       console.log('2. Not logged in, attempting login...');
       await page.fill('input[type="email"]', 'sdeqiu@gmail.com');
-      await page.fill('input[type="password"]', 'Soulreap1');
+      await page.fill('input[type="password"]', requireTestSecret('TESTER3_PASSWORD1'));
       await page.click('button:has-text("Sign in")');
       await page.waitForLoadState('networkidle');
       console.log('   ✓ Logged in');

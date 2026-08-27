@@ -1,7 +1,8 @@
+import { requireTestSecret } from './testCredentials.js';
 import { test } from '@playwright/test';
 
 const SDEQIU_EMAIL = 'sdeqiu@gmail.com';
-const SDEQIU_PASSWORD = 'Soulreap1';
+const SDEQIU_PASSWORD = requireTestSecret('TESTER3_PASSWORD1');
 
 test('Debug Supabase auth and calendar access', async ({ page }) => {
   console.log('\n🔐 Testing Supabase Auth with sdeqiu credentials\n');

@@ -1,3 +1,4 @@
+import { requireTestSecret } from './testCredentials.js';
 import { test, expect } from '@playwright/test';
 
 /**
@@ -8,7 +9,7 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Add Opening Feature', () => {
   const _testUser = 'sdeqiu@gmail.com';
-  const _testPassword = 'Soulreap1';
+  const _testPassword = requireTestSecret('TESTER3_PASSWORD1');
 
   test('Cannot add opening with start date earlier than today', async ({ page }) => {
     // Navigate to calendar

@@ -1,3 +1,4 @@
+import { requireTestSecret } from './testCredentials.js';
 import { test } from '@playwright/test';
 
 test.describe('Auth Flow Debug', () => {
@@ -22,7 +23,7 @@ test.describe('Auth Flow Debug', () => {
     // Fill form
     console.log('3. Fill credentials: aaa@aaa.com / aaaaaa');
     await page.fill('input[type="email"]', 'aaa@aaa.com');
-    await page.fill('input[type="password"]', 'aaaaaa');
+    await page.fill('input[type="password"]', requireTestSecret('TESTER1_PASSWORD1'));
     await page.screenshot({ path: 'debug/auth-form-filled.png' });
 
     // Submit form (try pressing Enter)

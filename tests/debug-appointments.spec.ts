@@ -1,3 +1,4 @@
+import { requireTestSecret } from './testCredentials.js';
 import { test, expect } from '@playwright/test';
 
 // Regression test: Appointments page must never render blank for authenticated users.
@@ -10,7 +11,7 @@ test('appointments page renders content for authenticated user', async ({ page }
   await page.goto('http://localhost:8080/auth');
   await page.waitForLoadState('networkidle');
   await page.fill('input[type="email"]', 'sdeqiu@gmail.com');
-  await page.fill('input[type="password"]', 'Soulreap1');
+  await page.fill('input[type="password"]', requireTestSecret('TESTER3_PASSWORD1'));
   await page.press('input[type="password"]', 'Enter');
   await page.waitForNavigation({ waitUntil: 'networkidle' }).catch(() => {});
 
@@ -37,7 +38,7 @@ test('appointments page shows spinner during auth init, not sign-in prompt', asy
   await page.goto('http://localhost:8080/auth');
   await page.waitForLoadState('networkidle');
   await page.fill('input[type="email"]', 'aaa@aaa.com');
-  await page.fill('input[type="password"]', 'aaaaaa');
+  await page.fill('input[type="password"]', requireTestSecret('TESTER1_PASSWORD1'));
   await page.press('input[type="password"]', 'Enter');
   await page.waitForNavigation({ waitUntil: 'networkidle' }).catch(() => {});
 

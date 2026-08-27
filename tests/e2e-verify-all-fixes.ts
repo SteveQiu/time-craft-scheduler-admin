@@ -1,3 +1,4 @@
+import { requireTestSecret } from './testCredentials.js';
 import { chromium } from '@playwright/test';
 import fs from 'fs';
 import path from 'path';
@@ -37,7 +38,7 @@ import path from 'path';
       await page.waitForSelector('input[type="email"]', { timeout: 5000 });
       
       await page.fill('input[type="email"]', 'sdeqiu@gmail.com');
-      await page.fill('input[type="password"]', 'Soulreap1');
+      await page.fill('input[type="password"]', requireTestSecret('TESTER3_PASSWORD1'));
       await page.click('button:has-text("Sign in")');
       
       await page.waitForLoadState('networkidle');

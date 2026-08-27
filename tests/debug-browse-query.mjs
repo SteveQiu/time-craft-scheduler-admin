@@ -1,3 +1,4 @@
+import { requireTestSecret } from './testCredentials.js';
 import { createClient } from '@supabase/supabase-js';
 import * as fs from 'fs';
 
@@ -38,7 +39,7 @@ console.log('=== TEST: Exact Browse Page Query ===\n');
 console.log('Step 1: Signing in...');
 const { data: signInData } = await anonClient.auth.signInWithPassword({
   email: 'aaa@aaa.com',
-  password: 'aaaaaa'
+  password: requireTestSecret('TESTER1_PASSWORD1')
 });
 
 if (!signInData.session) {

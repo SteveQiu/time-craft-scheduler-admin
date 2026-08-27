@@ -1,3 +1,4 @@
+import { requireTestSecret } from './testCredentials.js';
 import { firefox } from 'playwright';
 
 async function validateFix() {
@@ -19,7 +20,7 @@ async function validateFix() {
     console.log('2️⃣ Signing in...');
     await page.goto('http://localhost:8080/auth', { waitUntil: 'networkidle' });
     await page.fill('input[type="email"]', 'aaa@aaa.com');
-    await page.fill('input[type="password"]', 'aaaaaa');
+    await page.fill('input[type="password"]', requireTestSecret('TESTER1_PASSWORD1'));
     await page.click('button:has-text("Sign In")');
     await page.waitForURL('**', { timeout: 5000 }).catch(() => {});
     await page.waitForTimeout(1000);

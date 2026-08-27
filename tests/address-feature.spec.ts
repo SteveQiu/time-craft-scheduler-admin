@@ -1,3 +1,4 @@
+import { requireTestSecret } from './testCredentials.js';
 import { test, expect } from '@playwright/test';
 import fs from 'fs';
 
@@ -18,7 +19,7 @@ test('Address feature - Settings location selects and address form', async ({ pa
   console.log('1. Signing in...');
   await page.goto('http://localhost:8080/auth');
   await page.fill('input[type="email"]', 'aaa@aaa.com');
-  await page.fill('input[type="password"]', 'aaaaaa');
+  await page.fill('input[type="password"]', requireTestSecret('TESTER1_PASSWORD1'));
   await page.press('input[type="password"]', 'Enter');
   await page.waitForNavigation({ timeout: 10000 });
   // Extra wait for Supabase auth state to settle in app

@@ -1,3 +1,4 @@
+import { requireTestSecret } from './testCredentials.js';
 import { test, expect, Page } from '@playwright/test';
 
 const BASE = 'http://localhost:8080';
@@ -6,7 +7,7 @@ const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_PUBLISHABLE_KEY!;
 
 // TESTER1 = aaa@aaa.com (provider with payment methods)
 const EMAIL = 'aaa@aaa.com';
-const PASSWORD = 'aaaaaa';
+const PASSWORD = requireTestSecret('TESTER1_PASSWORD1');
 
 // Bypass hCaptcha by calling Supabase auth API directly and seeding localStorage
 async function login(page: Page) {

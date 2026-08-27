@@ -1,9 +1,10 @@
+import { requireTestSecret } from './testCredentials.js';
 import { test, expect, Page } from '@playwright/test';
 import * as path from 'path';
 
 const BASE = 'http://localhost:8080';
 const EMAIL = 'aaa@aaa.com';
-const PASSWORD = 'aaaaaa';
+const PASSWORD = requireTestSecret('TESTER1_PASSWORD1');
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL!;
 const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_PUBLISHABLE_KEY!;

@@ -1,3 +1,4 @@
+import { requireTestSecret } from './testCredentials.js';
 import { test, expect } from '@playwright/test';
 import * as fs from 'fs';
 
@@ -13,7 +14,7 @@ secretLines.forEach(line => {
 });
 
 const SDEQIU_EMAIL = secrets['TESTER3_EMAIL'] || 'sdeqiu@gmail.com';
-const SDEQIU_PASSWORD = secrets['TESTER3_PASSWORD1'] || 'Soulreap1';
+const SDEQIU_PASSWORD = secrets['TESTER3_PASSWORD1'] || requireTestSecret('TESTER3_PASSWORD1');
 
 test.describe('Validate All 10+ Openings in Org Calendar', () => {
   test('should show all openings across multiple dates', async ({ page }) => {

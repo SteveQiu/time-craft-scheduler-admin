@@ -1,3 +1,4 @@
+import { requireTestSecret } from './testCredentials.js';
 import { test } from '@playwright/test';
 import fs from 'fs';
 
@@ -14,7 +15,7 @@ test.describe('Complete Booking Flow - Fixed', () => {
     console.log('1. Signing in...');
     await page.goto('http://localhost:8080/auth');
     await page.fill('input[type="email"]', 'aaa@aaa.com');
-    await page.fill('input[type="password"]', 'aaaaaa');
+    await page.fill('input[type="password"]', requireTestSecret('TESTER1_PASSWORD1'));
     await page.press('input[type="password"]', 'Enter');
     await page.waitForNavigation({ timeout: 10000 });
     console.log('   ✅ Signed in');

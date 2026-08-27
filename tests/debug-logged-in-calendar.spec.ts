@@ -1,7 +1,8 @@
+import { requireTestSecret } from './testCredentials.js';
 import { test } from '@playwright/test';
 
 const SDEQIU_EMAIL = 'sdeqiu@gmail.com';
-const SDEQIU_PASSWORD = 'Soulreap1';
+const SDEQIU_PASSWORD = requireTestSecret('TESTER3_PASSWORD1');
 
 test('Successful login and calendar access', async ({ page }) => {
   console.log('\n🔐 Login with Enter key and check openings\n');

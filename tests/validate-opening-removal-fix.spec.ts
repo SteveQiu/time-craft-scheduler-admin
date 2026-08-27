@@ -1,3 +1,4 @@
+import { requireTestSecret } from './testCredentials.js';
 import { test, expect } from '@playwright/test';
 import fs from 'fs';
 import path from 'path';
@@ -15,7 +16,7 @@ test.describe('Opening Removal Fix', () => {
     // Login
     await page.goto('http://localhost:8080/signin', { waitUntil: 'networkidle' });
     await page.fill('input[type="email"]', 'sdeqiu@gmail.com');
-    await page.fill('input[type="password"]', 'Soulreap1');
+    await page.fill('input[type="password"]', requireTestSecret('TESTER3_PASSWORD1'));
     await page.click('button:has-text("Sign in")');
     await page.waitForLoadState('networkidle');
 
@@ -90,7 +91,7 @@ test.describe('Opening Removal Fix', () => {
     // Login
     await page.goto('http://localhost:8080/signin', { waitUntil: 'networkidle' });
     await page.fill('input[type="email"]', 'sdeqiu@gmail.com');
-    await page.fill('input[type="password"]', 'Soulreap1');
+    await page.fill('input[type="password"]', requireTestSecret('TESTER3_PASSWORD1'));
     await page.click('button:has-text("Sign in")');
     await page.waitForLoadState('networkidle');
 
@@ -148,7 +149,7 @@ test.describe('Opening Removal Fix', () => {
     // This verifies the fix doesn't have authorization issues
     await page.goto('http://localhost:8080/signin', { waitUntil: 'networkidle' });
     await page.fill('input[type="email"]', 'sdeqiu@gmail.com');
-    await page.fill('input[type="password"]', 'Soulreap1');
+    await page.fill('input[type="password"]', requireTestSecret('TESTER3_PASSWORD1'));
     await page.click('button:has-text("Sign in")');
     await page.waitForLoadState('networkidle');
 

@@ -1,3 +1,4 @@
+import { requireTestSecret } from './testCredentials.js';
 import { test } from '@playwright/test';
 import fs from 'fs';
 
@@ -70,7 +71,7 @@ test.describe('Booking Flow - Complete Debug', () => {
         await page.waitForSelector('input[type="email"]', { timeout: 5000 });
         
         await page.fill('input[type="email"]', 'aaa@aaa.com');
-        await page.fill('input[type="password"]', 'aaaaaa');
+        await page.fill('input[type="password"]', requireTestSecret('TESTER1_PASSWORD1'));
         await page.click('button:has-text("Sign In")');
         
         // Wait for redirect to dashboard

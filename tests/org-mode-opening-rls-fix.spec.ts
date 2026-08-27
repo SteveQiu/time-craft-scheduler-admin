@@ -1,3 +1,4 @@
+import { requireTestSecret } from './testCredentials.js';
 import { test, expect } from '@playwright/test';
 import * as fs from 'fs';
 
@@ -12,7 +13,7 @@ secretLines.forEach(line => {
 });
 
 const SDEQIU_EMAIL = secrets['TESTER3_EMAIL'] || 'sdeqiu@gmail.com';
-const SDEQIU_PASSWORD = secrets['TESTER3_PASSWORD1'] || 'Soulreap1';
+const SDEQIU_PASSWORD = secrets['TESTER3_PASSWORD1'] || requireTestSecret('TESTER3_PASSWORD1');
 
 test.describe('Org Mode Opening Creation - RLS Fix Validation', () => {
   test('Should allow org owner to create openings without RLS errors', async ({ page }) => {

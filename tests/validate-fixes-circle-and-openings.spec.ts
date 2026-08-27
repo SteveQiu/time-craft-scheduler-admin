@@ -1,3 +1,4 @@
+import { requireTestSecret } from './testCredentials.js';
 import { test, expect } from '@playwright/test';
 import fs from 'fs';
 import path from 'path';
@@ -15,7 +16,7 @@ test.describe('Issue 1: Circle Spinning Fix', () => {
     
     // Fill email and password
     await page.fill('input[type="email"]', 'sdeqiu@gmail.com');
-    await page.fill('input[type="password"]', 'Soulreap1');
+    await page.fill('input[type="password"]', requireTestSecret('TESTER3_PASSWORD1'));
     await page.click('button:has-text("Sign in")');
     
     await page.waitForLoadState('networkidle');
@@ -42,7 +43,7 @@ test.describe('Issue 1: Circle Spinning Fix', () => {
     // Login
     await page.goto('http://localhost:8080/signin', { waitUntil: 'networkidle' });
     await page.fill('input[type="email"]', 'sdeqiu@gmail.com');
-    await page.fill('input[type="password"]', 'Soulreap1');
+    await page.fill('input[type="password"]', requireTestSecret('TESTER3_PASSWORD1'));
     await page.click('button:has-text("Sign in")');
     await page.waitForLoadState('networkidle');
 
@@ -87,7 +88,7 @@ test.describe('Issue 2: No Openings Shown for Org Workers', () => {
     // Login
     await page.goto('http://localhost:8080/signin', { waitUntil: 'networkidle' });
     await page.fill('input[type="email"]', 'sdeqiu@gmail.com');
-    await page.fill('input[type="password"]', 'Soulreap1');
+    await page.fill('input[type="password"]', requireTestSecret('TESTER3_PASSWORD1'));
     await page.click('button:has-text("Sign in")');
     await page.waitForLoadState('networkidle');
 
@@ -183,7 +184,7 @@ test.describe('Validation: Both Issues Fixed', () => {
     // Real test: Check that component doesn't re-render infinitely
     await page.goto('http://localhost:8080/signin', { waitUntil: 'networkidle' });
     await page.fill('input[type="email"]', 'sdeqiu@gmail.com');
-    await page.fill('input[type="password"]', 'Soulreap1');
+    await page.fill('input[type="password"]', requireTestSecret('TESTER3_PASSWORD1'));
     await page.click('button:has-text("Sign in")');
     await page.waitForLoadState('networkidle');
 

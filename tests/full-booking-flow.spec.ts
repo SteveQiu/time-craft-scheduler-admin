@@ -1,3 +1,4 @@
+import { requireTestSecret } from './testCredentials.js';
 import { test, Page } from '@playwright/test';
 import fs from 'fs';
 import path from 'path';
@@ -17,9 +18,9 @@ const SUPABASE_URL = process.env.VITE_SUPABASE_URL!;
 const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_PUBLISHABLE_KEY!;
 
 const PROVIDER_EMAIL = 'aaa@aaa.com';
-const PROVIDER_PASSWORD = 'aaaaaa';
+const PROVIDER_PASSWORD = requireTestSecret('TESTER1_PASSWORD1');
 const CUSTOMER_EMAIL = 'ccc@ccc.com';  // TESTER4 (different user to book provider's opening)
-const CUSTOMER_PASSWORD = 'cccccc';
+const CUSTOMER_PASSWORD = requireTestSecret('TESTER3_PASSWORD1');
 
 // Bypass hCaptcha by calling Supabase auth API directly and seeding localStorage
 async function login(page: Page, email: string, password: string) {

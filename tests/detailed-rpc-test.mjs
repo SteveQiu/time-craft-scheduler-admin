@@ -1,3 +1,4 @@
+import { requireTestSecret } from './testCredentials.js';
 import { createClient } from '@supabase/supabase-js';
 import * as fs from 'fs';
 
@@ -60,7 +61,7 @@ if (userApts && userApts.length > 0) {
 // 2. Sign in test user
 const { data: signInData, error: signInError } = await anonClient.auth.signInWithPassword({
   email: 'aaa@aaa.com',
-  password: 'aaaaaa'
+  password: requireTestSecret('TESTER1_PASSWORD1')
 });
 
 if (signInError) {

@@ -7,6 +7,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { requireTestSecret } from './testCredentials.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -39,7 +40,7 @@ console.log('🔑 Test Account Verification\n');
       },
       body: JSON.stringify({
         email: 'aaa@aaa.com',
-        password: 'aaaaaa'
+        password: requireTestSecret('TESTER1_PASSWORD1')
       })
     });
 

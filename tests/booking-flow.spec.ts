@@ -1,3 +1,4 @@
+import { requireTestSecret } from './testCredentials.js';
 /**
  * Booking Flow Tests
  * Tests for:
@@ -13,9 +14,9 @@ const BASE_URL = 'http://localhost:8087'
 
 // Test users from .secret file
 const TEST_USERS = {
-  user1: { email: 'aaa@aaa.com', password: 'aaaaaa', name: 'User A' },
-  user2: { email: 'b@b.com', password: 'bbbbbb', name: 'User B' },
-  user3: { email: 'ccc@ccc.com', password: 'cccccc', name: 'User C' }
+  user1: { email: 'aaa@aaa.com', password: requireTestSecret('TESTER1_PASSWORD1'), name: 'User A' },
+  user2: { email: 'b@b.com', password: requireTestSecret('TESTER2_PASSWORD1'), name: 'User B' },
+  user3: { email: 'ccc@ccc.com', password: requireTestSecret('TESTER3_PASSWORD1'), name: 'User C' }
 }
 
 async function login(page, user) {

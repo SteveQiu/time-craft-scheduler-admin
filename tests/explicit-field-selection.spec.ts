@@ -1,3 +1,4 @@
+import { requireTestSecret } from './testCredentials.js';
 import { test } from '@playwright/test';
 import * as fs from 'fs';
 
@@ -12,7 +13,7 @@ secretLines.forEach(line => {
 });
 
 const SDEQIU_EMAIL = secrets['TESTER3_EMAIL'] || 'sdeqiu@gmail.com';
-const SDEQIU_PASSWORD = secrets['TESTER3_PASSWORD1'] || 'Soulreap1';
+const SDEQIU_PASSWORD = secrets['TESTER3_PASSWORD1'] || requireTestSecret('TESTER3_PASSWORD1');
 
 test('Create opening - explicitly select all dropdown values', async ({ page }) => {
   console.log('\n🚀 Creating opening - explicitly selecting all dropdown values\n');

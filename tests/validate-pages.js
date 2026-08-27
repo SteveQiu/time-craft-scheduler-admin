@@ -1,3 +1,4 @@
+import { requireTestSecret } from './testCredentials.js';
 import { chromium } from 'playwright';
 
 async function testProfileAndBrowse() {
@@ -30,7 +31,7 @@ async function testProfileAndBrowse() {
     
     // Fill email
     await page.fill('input[type="email"]', 'aaa@aaa.com');
-    await page.fill('input[type="password"]', 'aaaaaa');
+    await page.fill('input[type="password"]', requireTestSecret('TESTER1_PASSWORD1'));
     
     // Submit
     await page.click('button:has-text("Sign In")');

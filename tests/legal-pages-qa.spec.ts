@@ -1,3 +1,4 @@
+import { requireTestSecret } from './testCredentials.js';
 import { test, expect } from '@playwright/test';
 
 test.describe('Legal Pages QA — Runtime Verification', () => {
@@ -139,7 +140,7 @@ test.describe('Legal Pages QA — Runtime Verification', () => {
       // Auth with test account
       await page.goto(`${BASE_URL}/auth`);
       await page.locator('input[type="email"]').first().fill('aaa@aaa.com');
-      await page.locator('input[type="password"]').first().fill('aaaaaa');
+      await page.locator('input[type="password"]').first().fill(requireTestSecret('TESTER1_PASSWORD1'));
       await page.getByRole('button', { name: /sign in/i }).last().click();
       await page.waitForURL(/\/(dashboard|calendar)/, { timeout: 30000 });
 
@@ -162,7 +163,7 @@ test.describe('Legal Pages QA — Runtime Verification', () => {
     test('Cancel button visible for Premium users (skip if Free)', async ({ page }) => {
       await page.goto(`${BASE_URL}/auth`);
       await page.locator('input[type="email"]').first().fill('aaa@aaa.com');
-      await page.locator('input[type="password"]').first().fill('aaaaaa');
+      await page.locator('input[type="password"]').first().fill(requireTestSecret('TESTER1_PASSWORD1'));
       await page.getByRole('button', { name: /sign in/i }).last().click();
       await page.waitForURL(/\/(dashboard|calendar)/, { timeout: 10000 });
 
@@ -187,7 +188,7 @@ test.describe('Legal Pages QA — Runtime Verification', () => {
     test('Clicking Cancel opens AlertDialog with correct content', async ({ page }) => {
       await page.goto(`${BASE_URL}/auth`);
       await page.locator('input[type="email"]').first().fill('aaa@aaa.com');
-      await page.locator('input[type="password"]').first().fill('aaaaaa');
+      await page.locator('input[type="password"]').first().fill(requireTestSecret('TESTER1_PASSWORD1'));
       await page.getByRole('button', { name: /sign in/i }).last().click();
       await page.waitForURL(/\/(dashboard|calendar)/, { timeout: 10000 });
 
@@ -227,7 +228,7 @@ test.describe('Legal Pages QA — Runtime Verification', () => {
     test('ESC key closes dialog', async ({ page }) => {
       await page.goto(`${BASE_URL}/auth`);
       await page.locator('input[type="email"]').first().fill('aaa@aaa.com');
-      await page.locator('input[type="password"]').first().fill('aaaaaa');
+      await page.locator('input[type="password"]').first().fill(requireTestSecret('TESTER1_PASSWORD1'));
       await page.getByRole('button', { name: /sign in/i }).last().click();
       await page.waitForURL(/\/(dashboard|calendar)/, { timeout: 10000 });
 
@@ -261,7 +262,7 @@ test.describe('Legal Pages QA — Runtime Verification', () => {
     test('"Keep Premium" button closes dialog without action', async ({ page }) => {
       await page.goto(`${BASE_URL}/auth`);
       await page.locator('input[type="email"]').first().fill('aaa@aaa.com');
-      await page.locator('input[type="password"]').first().fill('aaaaaa');
+      await page.locator('input[type="password"]').first().fill(requireTestSecret('TESTER1_PASSWORD1'));
       await page.getByRole('button', { name: /sign in/i }).last().click();
       await page.waitForURL(/\/(dashboard|calendar)/, { timeout: 10000 });
 

@@ -1,3 +1,4 @@
+import { requireTestSecret } from './testCredentials.js';
 import { firefox } from 'playwright';
 import fs from 'fs';
 import path from 'path';
@@ -32,7 +33,7 @@ async function validateWithFirefox() {
     // 3. Fill login
     console.log('3️⃣ Signing in...');
     await page.fill('input[type="email"]', 'aaa@aaa.com');
-    await page.fill('input[type="password"]', 'aaaaaa');
+    await page.fill('input[type="password"]', requireTestSecret('TESTER1_PASSWORD1'));
     await page.click('button:has-text("Sign In")');
     await page.waitForURL('**/browse', { timeout: 10000 }).catch(() => console.log('   ⚠️ Navigation delayed'));
     await page.waitForTimeout(2000);

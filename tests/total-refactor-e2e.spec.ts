@@ -1,3 +1,4 @@
+import { requireTestSecret } from './testCredentials.js';
 import { test, expect, Browser, BrowserContext, Page } from '@playwright/test';
 import fs from 'fs';
 
@@ -67,7 +68,7 @@ test.describe('Total Refactor E2E', () => {
         await signInBtn.click();
         await providerPage.waitForSelector('input[type="email"]', { timeout: 5000 });
         await providerPage.fill('input[type="email"]', 'qylsteveq@gmail.com');
-        await providerPage.fill('input[type="password"]', 'Soulreap1');
+        await providerPage.fill('input[type="password"]', requireTestSecret('TESTER3_PASSWORD1'));
         await providerPage.click('button[type="submit"]');
         await providerPage.waitForTimeout(2000);
       }
@@ -205,7 +206,7 @@ test.describe('Total Refactor E2E', () => {
       await custSignInBtn.click();
       await customerPage.waitForSelector('input[type="email"]', { timeout: 5000 });
       await customerPage.fill('input[type="email"]', 'aaa@aaa.com');
-      await customerPage.fill('input[type="password"]', 'aaaaaa');
+      await customerPage.fill('input[type="password"]', requireTestSecret('TESTER1_PASSWORD1'));
       await customerPage.click('button[type="submit"]');
       await customerPage.waitForTimeout(2000);
       log('Customer: Authenticated');

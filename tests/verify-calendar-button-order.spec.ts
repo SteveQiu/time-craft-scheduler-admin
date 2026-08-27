@@ -1,3 +1,4 @@
+import { requireTestSecret } from './testCredentials.js';
 import { test, expect } from '@playwright/test';
 import * as fs from 'fs';
 
@@ -16,7 +17,7 @@ test('Calendar page loads without errors - button order fix verified', async ({ 
     }
   });
   const email = secret.TESTER1_EMAIL || 'aaa@aaa.com';
-  const password = secret.TESTER1_PASSWORD1 || 'aaaaaa';
+  const password = secret.TESTER1_PASSWORD1 || requireTestSecret('TESTER1_PASSWORD1');
 
   // Navigate to calendar
   console.log('\n🌐 Navigating to calendar page...');

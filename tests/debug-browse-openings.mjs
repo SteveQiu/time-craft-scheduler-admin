@@ -1,3 +1,4 @@
+import { requireTestSecret } from './testCredentials.js';
 import { createClient } from '@supabase/supabase-js';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -128,7 +129,7 @@ if (err4) {
 console.log('\n5. Testing via authenticated user (aaa@aaa.com)...');
 const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
   email: 'aaa@aaa.com',
-  password: 'aaaaaa'
+  password: requireTestSecret('TESTER1_PASSWORD1')
 });
 
 if (signInError) {

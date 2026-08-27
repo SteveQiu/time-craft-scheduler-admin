@@ -1,8 +1,9 @@
+import { requireTestSecret } from './testCredentials.js';
 import { test, expect, Page } from '@playwright/test';
 
 const BASE = 'http://localhost:8080';
 const EMAIL = 'aaa@aaa.com';
-const PASSWORD = 'aaaaaa';
+const PASSWORD = requireTestSecret('TESTER1_PASSWORD1');
 
 // Appointment cards have both shadow-soft AND cursor-pointer (filter card doesn't)
 const APPT_CARD = '.shadow-soft.cursor-pointer';

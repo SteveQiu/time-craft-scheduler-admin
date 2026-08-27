@@ -1,8 +1,9 @@
+import { requireTestSecret } from './testCredentials.js';
 import { test } from '@playwright/test';
 
 // Use sdeqiu credentials from .secret
 const SDEQIU_EMAIL = 'sdeqiu@gmail.com';
-const SDEQIU_PASSWORD = 'Soulreap1';
+const SDEQIU_PASSWORD = requireTestSecret('TESTER3_PASSWORD1');
 
 test.describe('Debug: sdeqiu org mode openings visibility', () => {
   test('PHASE 0: Debug login page and login process', async ({ page }) => {
