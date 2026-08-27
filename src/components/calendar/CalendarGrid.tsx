@@ -10,6 +10,7 @@ import {
   isDisabledDate,
 } from './calendarUtils';
 import type { Opening } from './types';
+import { formatLocalDate } from '@/lib/date';
 
 interface CalendarGridProps {
   currentDate: Date;
@@ -33,7 +34,7 @@ export function CalendarGrid({
   navigateMonth,
 }: CalendarGridProps) {
   const getOpeningsForDate = (date: Date) => {
-    const dateStr = date.toISOString().split('T')[0];
+    const dateStr = formatLocalDate(date);
     return openings.filter(opening => opening.date === dateStr);
   };
 

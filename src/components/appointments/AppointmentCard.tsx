@@ -10,6 +10,7 @@ import { parseLocation, formatLocation } from '@/lib/address';
 import { toGoogleCalendarUrl, toOutlookUrl, downloadICS } from './calendarExport';
 import { getAppointmentTotal, isAppointmentFree } from '@/lib/appointment/utils';
 import { Appointment } from './types';
+import { formatDateOnly } from '@/lib/date';
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -235,7 +236,7 @@ export function AppointmentCard({
             <div className="text-center sm:text-left">
               <div className="flex items-center space-x-1 text-sm font-medium text-foreground">
                 <Calendar className="h-3 w-3" />
-                <span>{new Date(appointment.date).toLocaleDateString()}</span>
+                <span>{formatDateOnly(appointment.date)}</span>
               </div>
               <div className="flex items-center space-x-1 text-sm text-muted-foreground">
                 <Clock className="h-3 w-3" />

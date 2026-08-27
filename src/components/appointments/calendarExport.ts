@@ -1,4 +1,5 @@
 import { Appointment } from './types';
+import { formatLocalDate, parseLocalDate } from '@/lib/date';
 
 // Calendar export helpers
 const formatDateForCalendar = (date: string, time: string): Date => {
@@ -82,24 +83,21 @@ const downloadICS = (appointments: Appointment[]) => {
 type DateFilter = 'all' | 'today' | 'week' | 'month';
 
 function getWeekStartSunday(dateStr: string): string {
-  const [y, m, d] = dateStr.split('-').map(Number);
-  const date = new Date(y, m - 1, d);
+  const date = parseLocalDate(dateStr);
   const day = date.getDay(); // 0=Sun
   date.setDate(date.getDate() - day);
-  return date.toISOString().slice(0, 10); // YYYY-MM-DD
+  return formatLocalDate(date);
 }
 
 function formatWeekLabel(weekStart: string): string {
-  const [wy, wm, wd] = weekStart.split('-').map(Number);
-  return new Date(wy, wm - 1, wd).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  return parseLocalDate(weekStart).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
 function applyDateFilter(apts: Appointment[], filter: DateFilter): Appointment[] {
   if (filter === 'all') return apts;
   const now = new Date();
   return apts.filter(apt => {
-    const [y, m, d] = apt.date.split('-').map(Number);
-    const aptDate = new Date(y, m - 1, d);
+    const aptDate = parseLocalDate(apt.date);
     if (filter === 'today') {
       return aptDate.toDateString() === now.toDateString();
     }

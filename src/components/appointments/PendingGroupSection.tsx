@@ -10,6 +10,7 @@ import { getAppointmentTotal, isAppointmentFree } from '@/lib/appointment/utils'
 import { toGoogleCalendarUrl, toOutlookUrl, downloadICS } from './calendarExport';
 import { Appointment } from './types';
 import { BookerInfo } from './AppointmentCard';
+import { formatDateOnly } from '@/lib/date';
 
 interface PendingGroupSectionProps {
   openingId: string;
@@ -83,7 +84,7 @@ export function PendingGroupSection({
             <div className="text-center sm:text-left">
               <div className="flex items-center space-x-1 text-sm font-medium text-foreground">
                 <Calendar className="h-3 w-3" />
-                <span>{new Date(first.date).toLocaleDateString()}</span>
+                <span>{formatDateOnly(first.date)}</span>
               </div>
               <div className="flex items-center space-x-1 text-sm text-muted-foreground">
                 <Clock className="h-3 w-3" />

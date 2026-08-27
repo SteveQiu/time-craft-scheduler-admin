@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useOpeningsList } from '@/hooks/useOpeningsList';
 import { BulkEditDialog } from './BulkEditDialog';
 import type { Opening } from './types';
+import { formatDateOnly } from '@/lib/date';
 
 interface OpeningsListViewProps {
   userId: string | undefined;
@@ -15,8 +16,7 @@ interface OpeningsListViewProps {
 const LOCALE = undefined;
 
 function formatDate(dateStr: string) {
-  const d = new Date(dateStr + 'T00:00:00');
-  return d.toLocaleDateString(LOCALE, { weekday: 'short', month: 'short', day: 'numeric' });
+  return formatDateOnly(dateStr, LOCALE, { weekday: 'short', month: 'short', day: 'numeric' });
 }
 
 function formatTime(timeStr: string) {

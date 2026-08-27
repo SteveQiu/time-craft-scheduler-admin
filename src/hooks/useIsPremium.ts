@@ -25,7 +25,7 @@ export function useIsPremium({ userId }: UseIsPremiumParams) {
         .from('subscriptions')
         .select('plan_type, status, expires_at')
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
 
       if (error) {
         if (error.code === 'PGRST116') return false;

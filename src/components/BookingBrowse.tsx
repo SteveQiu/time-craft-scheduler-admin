@@ -14,6 +14,7 @@ import type { OpeningWithProfile, ProviderAccount, CustomInquiryInfo } from '@/t
 import { useLocalBookmarks } from '@/hooks/useLocalBookmarks';
 import { readLocationPreference, type LocationPreference } from '@/lib/locationPreference';
 import { getProfilePhotoPublicUrl } from '@/lib/profilePhotos';
+import { formatLocalDate } from '@/lib/date';
 
 function getUniqueValues(values: string[]) {
   return [...new Set(values)];
@@ -289,7 +290,7 @@ export function BookingBrowse() {
   });
   const localBookmarks = useLocalBookmarks();
 
-  const today = new Date().toISOString().split('T')[0];
+  const today = formatLocalDate(new Date());
 
   // Load location preference on mount — only if URL didn't supply one
   React.useEffect(() => {

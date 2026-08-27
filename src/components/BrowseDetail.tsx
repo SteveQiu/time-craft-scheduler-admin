@@ -18,6 +18,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useIsPremium } from '@/hooks/useIsPremium';
 import { useProfileBranding } from '@/context/ProfileBrandingContext';
 import { getMethodLabel } from '@/lib/payment/methods';
+import { formatDateOnly } from '@/lib/date';
 import type { OpeningWithProfile, ProviderAccount } from '@/types/browse';
 
 function NoAppointmentsState({ onBack }: { onBack: () => void }) {
@@ -310,7 +311,7 @@ export function BrowseDetail({
           <Card className="shadow-soft">
             <CardHeader>
               <h3 className="font-semibold text-foreground">Available Times</h3>
-              <p className="text-sm text-muted-foreground">{new Date(selectedDate).toLocaleDateString()}</p>
+              <p className="text-sm text-muted-foreground">{formatDateOnly(selectedDate)}</p>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 gap-3">
@@ -363,7 +364,7 @@ export function BrowseDetail({
                 <div className="space-y-2 mt-2">
                   <div><strong>Service:</strong> {selectedSlot.service}</div>
                   <div><strong>Worker:</strong> {selectedSlot.worker}</div>
-                  <div><strong>Date:</strong> {new Date(selectedSlot.date).toLocaleDateString()}</div>
+                  <div><strong>Date:</strong> {formatDateOnly(selectedSlot.date)}</div>
                   <div><strong>Time:</strong> {selectedSlot.start_time} - {selectedSlot.end_time}</div>
                   <div><strong>Duration:</strong> {selectedSlot.duration}h</div>
                   {selectedSlot.location && formatLocation(parseLocation(selectedSlot.location)) && (
@@ -410,24 +411,20 @@ export function BrowseDetail({
                   }
                   
                   // Call the book_opening RPC function
-                  const { error } = await supabase.rpc('book_opening', {
+                  const { data: appointmentId, error } = await supabase.rpc('book_opening', {
                     _opening_id: selectedSlot.id,
                     _user_id: user.id
                   });
                   
                   if (error) throw error;
+                  if (!appointmentId) throw new Error('Appointment was created without an ID');
                   
                   setShowBookingDialog(false);
                   setSelectedSlot(null);
                   toast.success('Appointment booked successfully!');
-                  const { data: profiles } = await supabase.rpc('get_public_profile_by_id', { profile_id: selectedSlot.user_id });
-                  const to = (profiles as any)?.[0]?.email;
                   await sendPremiumReminder({
-                    recipientUserId: selectedSlot.user_id,
-                    to,
-                    date: selectedSlot.date,
-                    startTime: selectedSlot.start_time,
-                    type: 'confirm',
+                    appointmentId,
+                    event: 'booking_created',
                   });
                   // Redirect to browse — page reload causes infinite spinner when no slots remain
                   setTimeout(() => navigate('/browse'), 1000);
@@ -449,5 +446,3 @@ export function BrowseDetail({
     </div>
   );
 }
-
-

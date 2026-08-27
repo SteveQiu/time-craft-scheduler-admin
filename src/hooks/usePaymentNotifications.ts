@@ -11,6 +11,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { NOTIFICATION_CONFIG } from '@/config/notificationConfig';
+import { formatDateOnly } from '@/lib/date';
 
 interface UsePaymentNotificationsProps {
   userId: string | undefined;
@@ -47,10 +48,8 @@ export function usePaymentNotifications({
   const isInitialLoad = useRef(true);
   const intervalRef = useRef<number | null>(null);
 
-  const formatDate = (dateStr: string): string => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-  };
+  const formatDate = (dateStr: string): string =>
+    formatDateOnly(dateStr, 'en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
   const showProofNotification = (proof: PaymentProofRow) => {
     if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;

@@ -7,6 +7,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { WorkerInvites } from './WorkerInvites';
 import { useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
+import { formatDateOnly, formatLocalDate } from '@/lib/date';
 
 export function Dashboard() {
   const { user } = useAuth();
@@ -60,19 +61,19 @@ export function Dashboard() {
     },
   });
 
-  const today = new Date().toISOString().split('T')[0];
+  const today = formatLocalDate(new Date());
   const weekFromNow = new Date();
   weekFromNow.setDate(weekFromNow.getDate() + 7);
-  const weekEnd = weekFromNow.toISOString().split('T')[0];
+  const weekEnd = formatLocalDate(weekFromNow);
 
   // Global time range filter
   const getRangeStart = () => {
     const d = new Date();
-    if (timeRange === 'day') return d.toISOString().split('T')[0];
-    if (timeRange === 'week') { d.setDate(d.getDate() - 7); return d.toISOString().split('T')[0]; }
-    if (timeRange === 'month') { d.setMonth(d.getMonth() - 1); return d.toISOString().split('T')[0]; }
+    if (timeRange === 'day') return formatLocalDate(d);
+    if (timeRange === 'week') { d.setDate(d.getDate() - 7); return formatLocalDate(d); }
+    if (timeRange === 'month') { d.setMonth(d.getMonth() - 1); return formatLocalDate(d); }
     d.setFullYear(d.getFullYear() - 1);
-    return d.toISOString().split('T')[0];
+    return formatLocalDate(d);
   };
   const rangeStart = getRangeStart();
   const rangeLabel = timeRange === 'day' ? 'today' : timeRange === 'week' ? 'past 7 days' : timeRange === 'month' ? 'past 30 days' : 'past year';
@@ -151,8 +152,7 @@ export function Dashboard() {
   };
 
   const formatDate = (d: string) => {
-    const date = new Date(d + 'T00:00:00');
-    return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+    return formatDateOnly(d, 'en-US', { weekday: 'short', month: 'short', day: 'numeric' });
   };
 
   const isProvider = (a: any) => a.provider_id === user?.id;

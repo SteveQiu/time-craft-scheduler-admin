@@ -9,6 +9,7 @@ import { Calendar, Clock, MapPin, ArrowRightLeft, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatLocation, parseLocation } from '@/lib/address';
 import { getEffectiveTotal } from '@/lib/utils';
+import { formatDateOnly, formatLocalDate } from '@/lib/date';
 
 interface ModifyAppointmentDialogProps {
   appointmentId: string;
@@ -33,7 +34,7 @@ export function ModifyAppointmentDialog({ appointmentId, currentOpeningId, userI
         .eq('user_id', providerId)
         .eq('worker', workerName)
         .neq('id', currentOpeningId)
-        .gte('date', new Date().toISOString().split('T')[0])
+        .gte('date', formatLocalDate(new Date()))
         .order('date', { ascending: true })
         .order('start_time', { ascending: true });
 
@@ -95,7 +96,7 @@ export function ModifyAppointmentDialog({ appointmentId, currentOpeningId, userI
                   <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
                     <span className="flex items-center gap-1">
                       <Calendar className="h-3 w-3" />
-                      {new Date(opening.date).toLocaleDateString()}
+                      {formatDateOnly(opening.date)}
                     </span>
                     <span className="flex items-center gap-1">
                       <Clock className="h-3 w-3" />

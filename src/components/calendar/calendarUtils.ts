@@ -1,6 +1,7 @@
 import { addMonths } from 'date-fns';
 import type { NewOpeningForm } from './types';
 import { serializeLocation } from '@/lib/address';
+import { formatLocalDate, parseLocalDate } from '@/lib/date';
 
 export const monthNames = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -100,10 +101,7 @@ export const generateDurationOptions = (): { value: number; label: string }[] =>
   return options;
 };
 
-export const parseDateInput = (value: string): Date => {
-  const [year, month, day] = value.split('-').map(Number);
-  return new Date(year, month - 1, day);
-};
+export const parseDateInput = parseLocalDate;
 
 export const validateOpeningForm = (
   newOpening: NewOpeningForm,
@@ -304,7 +302,7 @@ export function generateOpeningRecords({
     return { records };
   }
 
-  const dateStr = selectedDate.toISOString().split('T')[0];
+  const dateStr = formatLocalDate(selectedDate);
   if (newOpening.multipleSlots && newOpening.endTime) {
     const records: OpeningInsertData[] = [];
     const end = parseTime(newOpening.endTime);

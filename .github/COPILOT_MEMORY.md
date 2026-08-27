@@ -66,3 +66,24 @@ recall them. Keep entries short and cite the relevant files.
 - Premium recurring schedules persist in `automatic_opening_templates`; generated `openings` reference `automatic_template_id`. The no-argument `maintain_automatic_openings()` RPC derives `auth.uid()`, verifies premium server-side, recreates deleted matching slots, and keeps available automatic slots within one month of SQL `current_date`. See `supabase/migrations/20260826_add_automatic_opening_schedules.sql` and `20260826_fix_automatic_opening_schedule_atomicity.sql`.
 - `AutomaticScheduleWatcher` runs maintenance once per premium user on authenticated app startup. The Calendar automatic-schedule dialog reuses `OpeningFormDialog` but shows weekdays instead of start/end date fields. See `src/components/AutomaticScheduleWatcher.tsx` and `src/components/Calendar.tsx`.
 - Manual multi-day opening ranges allow Premium users up to one year from today while free users remain limited to one month. Keep picker limits, validation, and plan copy aligned via `getOpeningDateLimit()` in `src/components/calendar/calendarUtils.ts`.
+
+## Date-only values
+
+- Database calendar dates are local `YYYY-MM-DD` values, not UTC timestamps. Use
+  `parseLocalDate()`, `formatLocalDate()`, and `formatDateOnly()` from
+  `src/lib/date.ts`; do not use `new Date("YYYY-MM-DD")` or
+  `toISOString().split("T")[0]` for these values.
+
+## Appointment reminder email
+
+- `reminder-smtp` accepts only `appointmentId` plus `booking_created`,
+  `appointment_confirmed`, or `appointment_denied`. It authorizes the caller against
+  the appointment, derives recipient/content server-side, verifies Premium, and
+  applies a daily limit. See `supabase/functions/reminder-smtp/index.ts` and
+  `src/hooks/useSendReminder.ts`.
+
+## Test credentials
+
+- Tests must load account passwords with `requireTestSecret()` from
+  `tests/testCredentials.js`; never commit live account credentials. Values come from
+  process environment or ignored `.secret`, loaded by `playwright.config.ts`.

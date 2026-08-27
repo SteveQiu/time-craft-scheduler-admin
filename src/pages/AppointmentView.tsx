@@ -11,6 +11,7 @@ import { ROUTES } from '@/config/routes';
 import { supabase } from '@/integrations/supabase/client';
 import { parseLocation, formatLocation } from '@/lib/address';
 import { Appointment } from '@/components/appointments/types';
+import { formatDateOnly } from '@/lib/date';
 
 interface ProviderProfile {
   full_name: string | null;
@@ -241,7 +242,7 @@ export function AppointmentView() {
                 <div className="flex items-center space-x-2">
                   <Calendar className="h-4 w-4 text-muted-foreground" />
                   <p className="font-medium text-foreground">
-                    {new Date(appointment.date).toLocaleDateString(LOCALE, DATE_FORMATS.long)}
+                    {formatDateOnly(appointment.date, LOCALE, DATE_FORMATS.long)}
                   </p>
                 </div>
                 <div className="flex items-center space-x-2">

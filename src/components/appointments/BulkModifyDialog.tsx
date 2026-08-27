@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { parseLocation, formatLocation } from '@/lib/address';
 import { Appointment } from './types';
+import { formatDateOnly } from '@/lib/date';
 
 interface BulkModifyDialogProps {
   open: boolean;
@@ -41,7 +42,7 @@ export function BulkModifyDialog({
           </DialogTitle>
         </DialogHeader>
         <div className="text-sm text-muted-foreground mb-3">
-          <p>Current: {new Date(current.date).toLocaleDateString()} {current.start_time}–{current.end_time}</p>
+          <p>Current: {formatDateOnly(current.date)} {current.start_time}–{current.end_time}</p>
           {current.booker_name && <p>Customer: {current.booker_name}</p>}
         </div>
         <Button variant="ghost" size="sm" className="mb-3 text-muted-foreground" onClick={onSkip}>
@@ -64,7 +65,7 @@ export function BulkModifyDialog({
                   <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
                     <span className="flex items-center gap-1">
                       <Calendar className="h-3 w-3" />
-                      {new Date(opening.date).toLocaleDateString()}
+                      {formatDateOnly(opening.date)}
                     </span>
                     <span className="flex items-center gap-1">
                       <Clock className="h-3 w-3" />
