@@ -19,6 +19,27 @@ const SOCIAL_ICONS: Record<string, React.ReactNode> = {
   facebook: <Facebook className="h-4 w-4" />,
 };
 
+function buildInquiryEmailUrl(email: string, providerName: string): string {
+  const subject = `Custom appointment inquiry for ${providerName}`;
+  const body = [
+    `Hi ${providerName},`,
+    '',
+    'I found your profile on PikAppoint and would like to request a custom appointment time.',
+    '',
+    'Service:',
+    'Preferred date:',
+    'Preferred time:',
+    'Location:',
+    'Additional details:',
+    '',
+    'Please let me know if this request works for you.',
+    '',
+    'Thank you!',
+  ].join('\n');
+
+  return `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
+
 export function CustomInquiryDialog({ open, onClose, providerName, providerId, info }: CustomInquiryDialogProps) {
   const socialLinks = info.social_links
     ? Object.entries(info.social_links).filter(([, url]) => url)
@@ -37,7 +58,7 @@ export function CustomInquiryDialog({ open, onClose, providerName, providerId, i
         <div className="space-y-4 py-2">
           {info.email && (
             <a
-              href={`mailto:${info.email}`}
+              href={buildInquiryEmailUrl(info.email, providerName)}
               className="flex items-center gap-3 text-sm text-foreground hover:text-primary transition-colors"
             >
               <Mail className="h-4 w-4 text-muted-foreground" />
