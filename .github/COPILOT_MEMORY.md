@@ -73,17 +73,3 @@ recall them. Keep entries short and cite the relevant files.
   `parseLocalDate()`, `formatLocalDate()`, and `formatDateOnly()` from
   `src/lib/date.ts`; do not use `new Date("YYYY-MM-DD")` or
   `toISOString().split("T")[0]` for these values.
-
-## Appointment reminder email
-
-- `reminder-smtp` accepts only `appointmentId` plus `booking_created`,
-  `appointment_confirmed`, or `appointment_denied`. It authorizes the caller against
-  the appointment, derives recipient/content server-side, verifies Premium, and
-  applies a daily limit. See `supabase/functions/reminder-smtp/index.ts` and
-  `src/hooks/useSendReminder.ts`.
-
-## Test credentials
-
-- Tests must load account passwords with `requireTestSecret()` from
-  `tests/testCredentials.js`; never commit live account credentials. Values come from
-  process environment or ignored `.secret`, loaded by `playwright.config.ts`.

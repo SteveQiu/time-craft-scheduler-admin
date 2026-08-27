@@ -7,6 +7,7 @@ import { ChevronDown, Trash2, X, Pencil } from 'lucide-react';
 import { DATE_FORMATS, TIME_FORMATS, LOCALE } from '@/config/formats';
 import type { Opening } from './types';
 import { getEffectiveTotal } from '@/lib/utils';
+import { formatLocalDate } from '@/lib/date';
 
 interface DaySlotsPanelProps {
   selectedDate: Date;
@@ -38,7 +39,7 @@ export function DaySlotsPanel({
   openEditDialog,
 }: DaySlotsPanelProps) {
   const getOpeningsForDate = (date: Date) => {
-    const dateStr = date.toISOString().split('T')[0];
+    const dateStr = formatLocalDate(date);
     return openings.filter(opening => opening.date === dateStr);
   };
 

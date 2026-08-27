@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Appointment } from '@/components/appointments/types';
 import { usePremiumReminder } from '@/hooks/usePremiumReminder';
+import { formatLocalDate } from '@/lib/date';
 
 export function useAppointmentActions({
   user,
@@ -292,7 +293,7 @@ export function useAppointmentActions({
       .eq('user_id', apt.provider_id)
       .eq('worker', apt.worker)
       .neq('id', apt.opening_id)
-      .gte('date', new Date().toISOString().split('T')[0])
+      .gte('date', formatLocalDate(new Date()))
       .order('date', { ascending: true })
       .order('start_time', { ascending: true });
     setBulkModifyAvailableOpenings(data || []);

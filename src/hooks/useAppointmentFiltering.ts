@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { Appointment } from '@/components/appointments/types';
 import { DateFilter, applyDateFilter } from '@/components/appointments/calendarExport';
+import { formatLocalDate } from '@/lib/date';
 
 export function useAppointmentFiltering({
   appointments,
@@ -13,7 +14,7 @@ export function useAppointmentFiltering({
   statusFilter: string;
   dateFilter: DateFilter;
 }) {
-  const today = useMemo(() => new Date().toISOString().split('T')[0], []);
+  const today = useMemo(() => formatLocalDate(new Date()), []);
 
   const filteredAppointments = useMemo(
     () =>

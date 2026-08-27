@@ -411,20 +411,21 @@ export function BrowseDetail({
                   }
                   
                   // Call the book_opening RPC function
-                  const { data: appointmentId, error } = await supabase.rpc('book_opening', {
+                  const { error } = await supabase.rpc('book_opening', {
                     _opening_id: selectedSlot.id,
                     _user_id: user.id
                   });
                   
                   if (error) throw error;
-                  if (!appointmentId) throw new Error('Appointment was created without an ID');
                   
                   setShowBookingDialog(false);
                   setSelectedSlot(null);
                   toast.success('Appointment booked successfully!');
                   await sendPremiumReminder({
-                    appointmentId,
-                    event: 'booking_created',
+                    providerUserId: selectedSlot.user_id,
+                    to: selectedSlot.provider_email,
+                    date: selectedSlot.date,
+                    startTime: selectedSlot.start_time,
                   });
                   // Redirect to browse — page reload causes infinite spinner when no slots remain
                   setTimeout(() => navigate('/browse'), 1000);

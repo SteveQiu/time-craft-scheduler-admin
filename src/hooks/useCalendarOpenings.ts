@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import type { Opening } from '@/components/calendar/types';
+import { formatLocalDate } from '@/lib/date';
 
 interface UseCalendarOpeningsParams {
   user: { id: string } | null | undefined;
@@ -20,8 +21,8 @@ export function useCalendarOpenings({ user }: UseCalendarOpeningsParams) {
       const month = currentDate.getMonth();
       const firstDay = new Date(year, month, 1);
       const lastDay = new Date(year, month + 1, 0);
-      const startStr = firstDay.toISOString().split('T')[0];
-      const endStr = lastDay.toISOString().split('T')[0];
+      const startStr = formatLocalDate(firstDay);
+      const endStr = formatLocalDate(lastDay);
 
       let query = supabase
         .from('openings')

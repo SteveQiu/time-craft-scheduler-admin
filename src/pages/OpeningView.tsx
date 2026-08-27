@@ -16,6 +16,7 @@ import { getEffectiveTotal } from '@/lib/utils';
 import { toast } from 'sonner';
 import { usePremiumReminder } from '@/hooks/usePremiumReminder';
 import { ShareDialog } from '@/components/ShareDialog';
+import { formatDateOnly } from '@/lib/date';
 
 const PENDING_BOOKING_KEY = 'pending_booking_opening_id';
 
@@ -137,7 +138,7 @@ export function OpeningView() {
     );
   }
 
-  const formattedDate = new Date(opening.date).toLocaleDateString(LOCALE, DATE_FORMATS.long);
+  const formattedDate = formatDateOnly(opening.date, LOCALE, DATE_FORMATS.long);
   const workerName = opening.worker || '—';
   const workerInitials = (opening.worker || '??').substring(0, 2).toUpperCase();
 

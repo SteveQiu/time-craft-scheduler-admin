@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { NOTIFICATION_CONFIG } from '@/config/notificationConfig';
+import { formatDateOnly, formatLocalDate } from '@/lib/date';
 
 interface UseAppointmentNotificationsProps {
   userId: string | undefined;
@@ -43,14 +44,12 @@ export function useAppointmentNotifications({
     setPermissionStatus(permission);
   };
 
-  const formatDate = (dateStr: string): string => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', { 
+  const formatDate = (dateStr: string): string =>
+    formatDateOnly(dateStr, 'en-US', {
       month: 'short', 
       day: 'numeric', 
       year: 'numeric' 
     });
-  };
 
   const formatTime = (timeStr: string): string => {
     const [hours, minutes] = timeStr.split(':');
@@ -96,7 +95,7 @@ export function useAppointmentNotifications({
     try {
       const lookbackDate = new Date();
       lookbackDate.setDate(lookbackDate.getDate() - NOTIFICATION_CONFIG.lookbackDays);
-      const lookbackCutoff = lookbackDate.toISOString().split('T')[0];
+      const lookbackCutoff = formatLocalDate(lookbackDate);
 
       const { data, error } = await supabase
         .from('appointments')
